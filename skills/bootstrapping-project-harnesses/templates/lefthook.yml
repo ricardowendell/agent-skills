@@ -1,11 +1,31 @@
 pre-commit:
   commands:
+    sensitive-files:
+      run: |
+        staged=$(git diff --cached --name-only)
+        for f in $staged; do
+          case "$f" in
+            *.env|*.env.*|*.db|data/*)
+              echo "ERROR: $f looks sensitive — remove it from the stage."
+              exit 1
+              ;;
+          esac
+        done
     typecheck:
       run: bun run typecheck
     lint:
       run: bun run lint
     security:
-      run: bun audit || true
+      # Block on audit findings when online; skip when the registry is unreachable
+      # so an offline laptop doesn't train people to bypass hooks.
+      run: |
+        if ! bun audit --audit-level=high; then
+          if curl -sI https://registry.npmjs.org >/dev/null 2>&1; then
+            echo "Security audit reported high-severity issues."
+            exit 1
+          fi
+          echo "Offline — skipping security audit."
+        fi
 
 pre-push:
   commands:

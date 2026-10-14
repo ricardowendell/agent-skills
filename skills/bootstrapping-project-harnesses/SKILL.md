@@ -1,6 +1,6 @@
 ---
 name: bootstrapping-project-harnesses
-description: Use when starting a new project, bootstrapping a harness for existing code, or setting up git hooks, CI checks, linter limits, and agent conventions
+description: Use when starting a new project, bootstrapping a harness for existing code, or setting up git hooks, CI checks, linter limits, and agent conventions. Builds the technical harness (hooks, lint limits, CI) and the product-docs skeleton, seeding docs from existing material or a short interview and delegating classification to process-inbox-notes.
 ---
 
 # Bootstrapping Project Harnesses
@@ -13,6 +13,8 @@ This skill covers **two harnesses** that must both exist:
 
 1. **Technical Harness** — sensors, hooks, quality gates (building it right)
 2. **Product Harness** — vision, language, principles, design, voice (building the right thing)
+
+**Scope:** TypeScript/Node projects (bun). Python and other stacks are out of scope for now — do not reach for `mypy`/`ruff` while bootstrapping.
 
 ## The Technical Pillars
 
@@ -34,95 +36,148 @@ This skill covers **two harnesses** that must both exist:
 | Principles | Product design rules (practice > theory, ritual > gamification) | Prevents feature creep |
 | Design System | Colors, typography, components, icons, spacing | Visual consistency |
 | Voice | Tone of voice, what to say and what to avoid | UI copy consistency |
-| Roadmap | Phases, what enters now vs later | Clear scope
+| Roadmap | Phases, what enters now vs later | Clear scope |
+
+## Principles
+
+- **Additive only.** On an existing repo, never overwrite existing keys, scripts, hooks, or config files. Merge into what is there; on a collision, report it and skip. This applies to `package.json`, `justfile`, `lefthook.yml`, and `eslint.config.js`.
+- **Never invent product direction.** Product content comes from the user's existing docs or their answers — never from the agent's imagination.
 
 ## Detection
 
-Check current directory:
-1. .git folder? (repo or empty)
-2. README.md? (has docs)
-3. package.json, pyproject.toml, or Cargo.toml? (language detected)
-4. AGENTS.md or CLAUDE.md? (harness exists)
+Check the current directory, then pick one of four states:
 
-Three paths:
+| State | Signal | Action |
+|---|---|---|
+| Empty | no `.git`, no source | `git init`, full bootstrap |
+| Project, no harness | code exists, no `AGENTS.md` | add sensors + docs skeleton |
+| Partial harness | some sensors exist, audit fails | complete only the missing items |
+| Complete harness | audit passes | stop |
 
-| State | Action |
-|---|---|
-| Empty | Initialize git, create structure, bootstrap |
-| Existing project, no harness | Add sensors |
-| Harness exists | Warn and stop |
+Partial vs complete is read straight off the audit (does `lefthook.yml`, `.prettierrc`, etc. exist) — there is no stored state or version marker.
 
 ## Step by Step
 
-**Before starting:** Create a TodoWrite with each step as a separate todo item. Mark `in_progress` only when actively working on that step. Mark `completed` only after the audit check for that step passes.
+**Before starting:** Create a TodoWrite with each step as a separate item. Mark `in_progress` only when actively working on that step, and `completed` only after that step's audit check passes.
 
-1. Create docs tree (`mkdir -p docs/superpowers/specs docs/superpowers/plans`)
-2. Write AGENTS.md
-3. Add .gitignore
-4. Add `.editorconfig` (prevents whitespace wars)
-5. Install lefthook and commitlint (`bun add -d @commitlint/cli @commitlint/config-conventional && bun x lefthook install`)
-6. Configure lint-staged (TS/Node) — create `lint-staged.config.mjs`
-7. Create justfile (with at minimum: dev, build, typecheck, lint, format, check targets)
-8. Wire pre-commit: typecheck, lint, security (via lefthook in `lefthook.yml`)
-9. Wire pre-push: tests, build (via lefthook in `lefthook.yml`)
-10. Add docs-check script
-11. Configure ESLint with AI rules — create `eslint.config.js` (flat config) with complexity 10, max-params 4, max-lines-per-function 60, max-lines 200
-12. Add dependency-cruiser (layered, optional)
-13. Add CI (optional — `.github/workflows/ci.yml`)
+### The canonical docs layout
+
+Create this tree in Step 1, then seed it in the product steps:
+
+```
+docs/
+  inbox/                       # raw captures (capture-raw-idea)
+  backlog/
+    now-next-later.md          # groom-backlog-to-specs
+    release-plan.md
+  product/
+    vision.md
+    scope.md
+    language.md                # ubiquitous language
+  principles/
+    design.md
+    visual-design.md
+    voice.md
+    product-principles.md
+  experience/                  # user journeys (process-inbox-notes)
+  system/                      # descriptive only; links to architecture.md
+  decisions/                   # ADR-NNNN-*.md
+  specs/                       # SPEC-NNNN-name.md
+  prompts/
+    implementation/            # SPEC-NNNN-*.prompt.md
+  architecture.md              # prescriptive rules (sole normative owner)
+```
+
+`docs/architecture.md` holds the architecture **rules**; `docs/system/` holds
+**descriptions** and must link to `architecture.md` rather than restate its rules.
+
+### Technical steps
+
+1. Create the docs tree above (`mkdir -p …`). No content files yet.
+2. Write `AGENTS.md` from `templates/AGENTS.md.template` — it carries this layout and the routing rules.
+3. Add `.gitignore` from `templates/.gitignore.template`.
+4. Add `.editorconfig` from `templates/.editorconfig.template` (prevents whitespace wars).
+5. Add `README.md` from `templates/README.template`.
+6. Install lefthook + commitlint, and copy `templates/commitlint.config.cjs` and `templates/lefthook.yml`:
+   `bun add -d @commitlint/cli @commitlint/config-conventional && bun x lefthook install`
+7. Add `lint-staged.config.mjs` from `templates/lint-staged.config.mjs`.
+8. Add `justfile` from `templates/justfile.template`.
+9. Ensure `package.json` has the scripts the hooks and justfile call: `dev`, `build`, `typecheck`, `lint`, `format`, `format:check`, `docs:check`. **Merge — never overwrite an existing script.**
+10. Add `.prettierrc` from `templates/.prettierrc.template`.
+11. Add `eslint.config.js` from `templates/eslint.config.js.template` (flat config, AI limits).
+12. Add `docs-check.mjs` from `templates/docs-check.mjs` and wire the `docs:check` script.
+13. (Optional) Add dependency-cruiser from `templates/dependency-cruiser-rules.md`.
+14. (Optional) Add CI from `templates/.github/workflows/ci.yml.template`.
 
 > Optional sidecar: create `.nvmrc` (or `.node-version`) for runtime version pinning.
->
-> Para projetos maiores, considere **DOX** — uma hierarquia de `AGENTS.md` por subdiretório que força o agente a ler o contexto local antes de editar. Veja [agent0ai/dox](https://github.com/agent0ai/dox).
 
-### Product Steps (14–19)
+### Product steps (15–18)
 
-Create these AFTER the technical harness. Each is a Markdown file in `docs/product/`.
+Run these **after** the technical harness, and only with a human present.
 
-14. **Write product vision** — `docs/product/vision.md`. One paragraph each for: problem, audience, solution, guiding phrase.
-15. **Write ubiquitous language** — `docs/product/language.md`. Table mapping product terms → code entities → definitions.
-16. **Write product principles** — `docs/product/principles.md`. 4-6 principles with "why" and "what we avoid."
-17. **Write design system** — `docs/product/design-system.md`. Colors, typography, spacing, components, icons, visual guidelines.
-18. **Write tone of voice** — `docs/product/voice.md`. Voice characteristics, good examples, bad examples.
-19. **Write phase roadmap** — `docs/product/roadmap.md`. Phase table: phase, features, delivery, dependencies.
+15. **Detect existing docs.** If `docs/` already holds any non-empty `.md` (outside the skeleton just created), or the README has a product/about section: keep only the skeleton, record what you found as open questions in `AGENTS.md`, and **stop** with *"Existing docs found — run `/process-inbox` to classify."* Never move, rename, or delete existing files.
+16. **Interview for gaps.** Bounded — one pass, ≤7 questions, each skippable. Ask only what is knowable now:
+    - `product/vision.md` — problem, audience, solution
+    - `product/language.md` — a few core domain terms
+    - `principles/product-principles.md` — short, decision-driving rules
+    - design system / voice — only if the project has UI
+    Do **not** ask about the roadmap — that belongs to `groom-backlog-to-specs`.
+17. **Write answers into the template shapes.** Use `templates/product-*.md` as the structure. Transcribe the user's words; do not invent.
+18. **Degrade to stubs.** For every skipped or unanswered question, leave the heading plus `<!-- Q: … -->` so `process-inbox-notes` can resolve it later.
 
 ### Product Checklist
 
 Before marking product steps done, verify:
 
 - [ ] Vision answers: why, for whom, what problem
-- [ ] Language maps all product terms to code entities
+- [ ] Language maps product terms to code entities
 - [ ] Principles are actionable (guide decisions, not just inspirational)
-- [ ] Design System has hex colors, font names, component patterns
-- [ ] Voice has both "do" and "avoid" examples
-- [ ] Roadmap clearly marks what is MVP vs later
+- [ ] Design System has colors, fonts, component patterns (if UI)
+- [ ] Voice has both "do" and "avoid" examples (if UI)
+- [ ] Unanswered questions are stubs carrying their question, not invented content
 
 ### Templates
 
-The `templates/` directory includes templates for each product doc.
+`templates/` provides the technical files referenced above, plus the
+`product-*.md` structures used in Step 17. The product templates are the **shape**
+for either real content (from the interview) or a stub (heading + `<!-- Q: … -->`).
 
-## Linter Limits
+| Template | Destination |
+|---|---|
+| `product-vision.md` | `docs/product/vision.md` |
+| `product-language.md` | `docs/product/language.md` |
+| `product-principles.md` | `docs/principles/product-principles.md` |
+| `product-design-system.md` | `docs/principles/visual-design.md` |
+| `product-voice.md` | `docs/principles/voice.md` |
+| `product-roadmap.md` | `docs/backlog/release-plan.md` |
 
-| Metric | TS/Node | Python |
-|---|---|---|
-| Cyclomatic complexity | error 10 | error 10 |
-| Max params per function | error 4 | error 5 |
-| Max lines per function | warn 60 | -- |
-| Max lines per file | warn 200 | warn 400 |
-| Min test coverage | optional | 80% |
+`docs-check.mjs` hardcodes the canonical spec paths — change its constants only if
+the repo deviates from the layout above.
+
+## Linter Limits (TS/Node)
+
+| Metric | Limit |
+|---|---|
+| Cyclomatic complexity | error 10 |
+| Max params per function | error 4 |
+| Max lines per function | warn 60 |
+| Max lines per file | warn 200 |
+| Min test coverage | optional |
 
 ## Security Checks
 
-Block .env, .db, and data files at commit. Run GitLeaks. Audit dependencies.
+Block `.env`, `.db`, and data files at commit. Run `bun audit --audit-level=high`.
+Audit dependencies.
 
-## Language Quick Reference
+## Language Quick Reference (TS/Node)
 
-| Component | TS/Node | Python |
-|---|---|---|
-| Type check | tsc --noEmit | mypy |
-| Linter | ESLint | Ruff |
-| Formatter | Prettier | Ruff format |
-| Tests | Vitest or Jest | pytest |
-| Hook manager | Lefthook | Lefthook |
+| Component | Tool |
+|---|---|
+| Type check | `tsc --noEmit` |
+| Linter | ESLint |
+| Formatter | Prettier |
+| Tests | Vitest or Jest |
+| Hook manager | Lefthook |
 
 ## Common Mistakes
 
@@ -133,6 +188,7 @@ Block .env, .db, and data files at commit. Run GitLeaks. Audit dependencies.
 | Just a small project | Small projects grow. Start with structure. |
 | Hooks are optional | Without hooks, agents skip checks under pressure |
 | Security checks are overkill | Leaked credentials are irreversible |
+| Overwriting existing config | Additive only — merge, or report a collision and skip |
 
 ## Verification Gate
 
@@ -143,25 +199,24 @@ Block .env, .db, and data files at commit. Run GitLeaks. Audit dependencies.
 Create a TodoWrite with one item per step BEFORE touching code:
 
 ```
-- [ ] Step 1: git init
+- [ ] Step 1: docs tree
 - [ ] Step 2: AGENTS.md
 - [ ] Step 3: .gitignore
 - [ ] Step 4: .editorconfig
-- [ ] Step 5: lefthook + commitlint (installed AND configured)
-- [ ] Step 6: lint-staged config
-- [ ] Step 7: justfile
-- [ ] Step 8: pre-commit hooks (wired AND working)
-- [ ] Step 9: pre-push hooks (wired AND working)
-- [ ] Step 10: docs-check script
-- [ ] Step 11: ESLint config with AI rules (flat config)
-- [ ] Step 12: dependency-cruiser (optional)
-- [ ] Step 13: CI (optional)
-- [ ] Step 14: product vision
-- [ ] Step 15: ubiquitous language
-- [ ] Step 16: product principles
-- [ ] Step 17: design system
-- [ ] Step 18: tone of voice
-- [ ] Step 19: phase roadmap
+- [ ] Step 5: README.md
+- [ ] Step 6: lefthook + commitlint (installed AND configured)
+- [ ] Step 7: lint-staged config
+- [ ] Step 8: justfile
+- [ ] Step 9: package.json scripts (merged)
+- [ ] Step 10: .prettierrc
+- [ ] Step 11: eslint.config.js (flat config)
+- [ ] Step 12: docs-check script
+- [ ] Step 13: dependency-cruiser (optional)
+- [ ] Step 14: CI (optional)
+- [ ] Step 15: detect existing docs
+- [ ] Step 16: product interview
+- [ ] Step 17: product docs written
+- [ ] Step 18: stubs for anything skipped
 ```
 
 ### At end — audit checklist
@@ -199,52 +254,32 @@ ls .prettierrc
 # 10. justfile has quality targets (check/typecheck/lint)
 grep -q "check:" justfile && echo "OK" || echo "MISSING"
 
-# 11. TypeScript compiles clean
+# 11. package.json has the required scripts
+grep -q '"typecheck"' package.json && grep -q '"lint"' package.json && echo "OK" || echo "MISSING"
+
+# 12. TypeScript compiles clean
 bun x tsc --noEmit 2>&1
 
-# 12. ESLint runs clean (0 errors, warnings allowed)
-bun x eslint packages/ 2>&1 | grep "0 errors" || echo "HAS ERRORS"
+# 13. ESLint runs clean (0 errors, warnings allowed)
+bun run lint 2>&1 | grep "0 errors" || echo "HAS ERRORS"
 
-# 13. Build succeeds
+# 14. Build succeeds
 bun run build
 ```
 
-### For product harness (steps 14-19), also verify:
+### For product docs (steps 15–18), also verify:
 
 ```bash
-# 14. Product docs directory exists
-ls docs/product/
-
-# 15. Vision doc exists
-ls docs/product/vision.md
-
-# 16. Language doc exists
-ls docs/product/language.md
-
-# 17. Principles doc exists
-ls docs/product/principles.md
-
-# 18. Design system doc exists
-ls docs/product/design-system.md
-
-# 19. Voice doc exists
-ls docs/product/voice.md
-
-# 20. Roadmap doc exists
-ls docs/product/roadmap.md
+ls docs/product/ docs/principles/ docs/specs/ docs/prompts/implementation/
 ```
 
 **Do NOT mark any step as completed until its audit command passes.**
 
-### Sub-skill gate
+### Final gate
 
-Load **verification-before-completion** as a sub-skill. Use it to gate the final "all done" claim:
-
-```
-Do: skill "verification-before-completion"
-Goal: confirm all 19 harness steps produce correct output
-Gate: only after ALL audit commands pass
-```
+Only after EVERY audit command passes, state the result explicitly: list which
+commands ran, their output, and anything that failed or was skipped. Do not claim
+"done" on a partial pass — report the gap instead.
 
 ## Later Sensors
 
