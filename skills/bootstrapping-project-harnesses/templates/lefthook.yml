@@ -1,0 +1,20 @@
+pre-commit:
+  commands:
+    typecheck:
+      run: bun run typecheck
+    lint:
+      run: bun run lint
+    security:
+      run: bun audit || true
+
+pre-push:
+  commands:
+    test:
+      run: bun test
+    build:
+      run: bun run build
+
+commit-msg:
+  commands:
+    commitlint:
+      run: bun x commitlint --edit {1}

@@ -1,0 +1,34 @@
+dev:
+    bun run dev
+
+check:
+    bun run typecheck && bun run lint && bun audit || true
+
+ci: check test
+
+typecheck:
+    bun run typecheck
+
+lint:
+    bun run lint
+
+test:
+    bun test
+
+test-watch:
+    bun test --watch
+
+format:
+    bun run format
+
+format-check:
+    bun run format:check
+
+docs-check:
+    bun run docs:check
+
+clean:
+    rm -rf .next node_modules
+
+fresh: clean
+    bun install

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spec To Implementation Prompt"
+  short_description: "Generate implementation prompts from feature specs."
+  default_prompt: "Generate or update an implementation prompt from a docs/specs SPEC file using the repo prompt workflow."

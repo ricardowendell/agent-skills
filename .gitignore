@@ -1,0 +1,6 @@
+# macOS / editor cruft
+.DS_Store
+*.log
+
+# Local scratch (if any)
+*.tmp

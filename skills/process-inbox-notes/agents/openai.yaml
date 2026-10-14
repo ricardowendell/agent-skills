@@ -1,0 +1,4 @@
+interface:
+  display_name: "Process Inbox Notes"
+  short_description: "Turn raw inbox notes into stable product docs."
+  default_prompt: "Process the inbox notes into the product docs."

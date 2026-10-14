@@ -1,0 +1,68 @@
+# Project Name: AI Agents Context
+
+> Merge with project-specific instructions as needed.
+
+## Stack
+
+- Frontend: [tech stack]
+- Backend: [tech stack]
+- Database: [db info]
+- Language: [language/locale]
+
+## Quick Start
+
+```bash
+bun run dev     # start dev server
+bun run check   # typecheck + lint + security
+bun run ci      # check + tests
+```
+
+## Behavioral Guidelines
+
+### Think Before Coding
+
+State assumptions. Ask when uncertain. Present multiple interpretations rather than picking silently. If something is unclear, stop and name what is confusing.
+
+### Simplicity First
+
+Minimum code that solves the problem. Nothing speculative. If 200 lines could be 50, rewrite it. No abstractions for single-use code.
+
+### Surgical Changes
+
+Every changed line traces directly to the user request. Do not improve adjacent code, comments, or formatting. Match existing style. If you find unrelated dead code, mention it. Do not delete it.
+
+### Goal-Driven Execution
+
+Define success criteria before starting. For multi-step tasks:
+
+1. Step: description. Verify: check.
+2. Step: description. Verify: check.
+
+Loop until verified.
+
+Tradeoff: These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+
+## Linter Limits
+
+| Metric | TS/Node | Python |
+|---|---|---|
+| Cyclomatic complexity | error 10 | error 10 |
+| Max params per function | error 4 | error 5 |
+| Max lines per function | warn 60 | -- |
+| Max lines per file | warn 200 | warn 400 |
+| Min test coverage | optional | 80% |
+
+## Security
+
+Never commit .env, .db, data files, or credentials. .gitignore blocks these. Pre-commit hook enforces it.
+
+## Workflow
+
+Capture ideas in docs/inbox (raw) or docs/backlog (decided). Implementation: spec to prompt to code to test to CI. Commit messages follow Conventional Commits (feat:, fix:, refactor:, chore:).
+
+## How to Know It's Working
+
+These guidelines are working if:
+- **Clean diffs** — only requested changes appear
+- **Fewer rewrites** — code is simple the first time
+- **Clarifying questions come first** — before implementation, not after mistakes

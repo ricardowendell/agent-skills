@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -e
+
+command -v just >/dev/null 2>&1 || {
+  echo "Error: just is not installed."
+  echo "Install: https://github.com/casey/just#installation"
+  exit 1
+}
+
+ROOT=$(git rev-parse --show-toplevel)
+
+echo "=== Pre-commit ==="
+
+# Security: block sensitive files
+STAGED=$(git diff --cached --name-only)
+for f in $STAGED; do
+  case "$f" in
+    *.env|*.env.*|*.db|data/*)
+      echo "ERROR: $f appears to contain sensitive data. Remove from stage to commit."
+      exit 1
+      ;;
+  esac
+done
+echo "--- Security check: OK ---"
+
+echo "--- Typecheck ---"
+npm run typecheck
+
+echo "--- Lint ---"
+npm run lint
+
+echo "--- Security audit ---"
+npm audit --audit-level=high 2>/dev/null || echo "(warnings: review output)"
+
+echo "=== Pre-commit passed ==="

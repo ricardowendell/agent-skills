@@ -1,0 +1,4 @@
+interface:
+  display_name: "Check Doc Consistency"
+  short_description: "Review product Markdown docs for contradictions and drift."
+  default_prompt: "Review all Markdown files for consistency and propose scoped edits."

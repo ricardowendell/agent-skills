@@ -1,0 +1,4 @@
+interface:
+  display_name: "Capture Raw Idea"
+  short_description: "Append rough ideas to dated inbox notes."
+  default_prompt: "Capture this as a raw idea:"
