@@ -42,15 +42,41 @@ Loop until verified.
 
 Tradeoff: These guidelines bias toward caution over speed. For trivial tasks, use judgment.
 
+## Docs Layout
+
+Structured thinking workspace. These paths are canonical — follow them unless
+this repo says otherwise.
+
+```
+docs/
+  inbox/                   raw captures
+  backlog/                 now-next-later.md, release-plan.md
+  product/                 vision.md, scope.md, language.md
+  principles/              design.md, visual-design.md, voice.md, product-principles.md
+  experience/              user journeys
+  system/                  descriptive docs (link to architecture.md)
+  decisions/               ADR-NNNN-*.md
+  specs/                   SPEC-NNNN-name.md
+  prompts/implementation/  SPEC-NNNN-*.prompt.md
+  architecture.md          prescriptive architecture rules
+```
+
+- `docs/architecture.md` holds architecture **rules**; `docs/system/` holds
+  **descriptions** and must link to `architecture.md`, not restate its rules.
+- Raw ideas go to `docs/inbox` (`capture-raw-idea`), then are classified with
+  `process-inbox-notes`.
+- Work flows backlog → specs → prompts → code via `groom-backlog-to-specs`,
+  `spec-to-implementation-prompt`, and `implementation-prompt-to-code`.
+
 ## Linter Limits
 
-| Metric | TS/Node | Python |
-|---|---|---|
-| Cyclomatic complexity | error 10 | error 10 |
-| Max params per function | error 4 | error 5 |
-| Max lines per function | warn 60 | -- |
-| Max lines per file | warn 200 | warn 400 |
-| Min test coverage | optional | 80% |
+| Metric | Limit |
+|---|---|
+| Cyclomatic complexity | error 10 |
+| Max params per function | error 4 |
+| Max lines per function | warn 60 |
+| Max lines per file | warn 200 |
+| Min test coverage | optional |
 
 ## Security
 
@@ -58,7 +84,7 @@ Never commit .env, .db, data files, or credentials. .gitignore blocks these. Pre
 
 ## Workflow
 
-Capture ideas in docs/inbox (raw) or docs/backlog (decided). Implementation: spec to prompt to code to test to CI. Commit messages follow Conventional Commits (feat:, fix:, refactor:, chore:).
+Capture ideas in `docs/inbox` (raw) or `docs/backlog` (decided). Implementation flows spec → prompt → code → test → CI. Commit messages follow Conventional Commits (`feat:`, `fix:`, `refactor:`, `chore:`).
 
 ## How to Know It's Working
 

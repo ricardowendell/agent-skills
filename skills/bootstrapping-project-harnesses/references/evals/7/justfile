@@ -1,0 +1,10 @@
+typecheck:
+    bun run typecheck
+
+lint:
+    bun run lint
+
+build:
+    bun run build
+
+check: typecheck lint

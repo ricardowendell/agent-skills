@@ -1,0 +1,17 @@
+{
+  "name": "done-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "docs:check": "node docs-check.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}
