@@ -1,0 +1,13 @@
+{
+  "name": "partial-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "build": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "typescript": "^5.4.0"
+  }
+}
