@@ -1,0 +1,20 @@
+name: skills
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # Frontmatter, id/description budget, broken symlinks, cross-root drift.
+      - run: node scripts/validate-skills.mjs
+      # Every references/evals.md still parses. Full evals need `opencode` and a
+      # model provider key, so they stay local (or run manually).
+      - run: node scripts/run-evals.mjs --list
