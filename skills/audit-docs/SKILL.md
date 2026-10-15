@@ -1,6 +1,6 @@
 ---
-name: check-doc-consistency
-description: Review all Markdown files in a structured product-thinking repository for consistency. Use when the user asks for a consistency checker, documentation review, product-doc audit, contradiction check, duplicate idea review, unclear principle review, misplaced idea review, simplicity-violation review, or architecture/constraints alignment check. Propose scoped edits without expanding product scope.
+name: audit-docs
+description: Audit product-thinking docs for contradictions, duplicates, unclear principles, misplaced ideas, and scope creep. Use when the user asks for a docs consistency check, documentation review, product-doc audit, or an architecture/constraints alignment check. Proposes scoped edits without expanding scope.
 ---
 
 # Check Doc Consistency

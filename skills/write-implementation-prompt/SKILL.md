@@ -1,6 +1,6 @@
 ---
-name: spec-to-implementation-prompt
-description: Generate or update structured implementation prompts from Markdown feature specs. Use when the user asks to create an implementation prompt, convert a spec into a prompt, prepare a coding agent to implement a SPEC file, generate docs/prompts/implementation files, or turn docs/specs/SPEC-*.md into REASONS-style implementation instructions.
+name: write-implementation-prompt
+description: Generate or update a scoped implementation prompt from a ready feature spec. Use when the user asks to create an implementation prompt, convert a spec into a prompt, or prepare a coding agent to implement a SPEC file. Stops if the spec is not `ready`.
 ---
 
 # Spec To Implementation Prompt
@@ -83,4 +83,4 @@ End with:
 
 ## Pipeline
 
-Previous stage: `groom-backlog-to-specs`. Next stage: `implementation-prompt-to-code` — implement the generated prompt. Report the prompt path so it can be run next.
+Previous stage: `groom-backlog`. Next stage: `implement-from-prompt` — implement the generated prompt. Report the prompt path so it can be run next.

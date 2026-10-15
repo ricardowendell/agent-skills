@@ -1,6 +1,6 @@
 ---
-name: bootstrapping-project-harnesses
-description: Use when starting a new project, bootstrapping a harness for existing code, or setting up git hooks, CI checks, linter limits, and agent conventions. Builds the technical harness (hooks, lint limits, CI) and the product-docs skeleton, seeding docs from existing material or a short interview and delegating classification to process-inbox-notes.
+name: bootstrap-project-harness
+description: Set up a project's technical harness (git hooks, lint limits, CI) and the product-docs skeleton. Use when starting a new project, bootstrapping an existing repo, or adding hooks/CI/agent conventions. Seeds docs from existing material or a short interview; delegates classifying existing docs to process-inbox.
 ---
 
 # Bootstrapping Project Harnesses
@@ -66,9 +66,9 @@ Create this tree in Step 1, then seed it in the product steps:
 
 ```
 docs/
-  inbox/                       # raw captures (capture-raw-idea)
+  inbox/                       # raw captures (capture-idea)
   backlog/
-    now-next-later.md          # groom-backlog-to-specs
+    now-next-later.md          # groom-backlog
     release-plan.md
   product/
     vision.md
@@ -79,7 +79,7 @@ docs/
     visual-design.md
     voice.md
     product-principles.md
-  experience/                  # user journeys (process-inbox-notes)
+  experience/                  # user journeys (process-inbox)
   system/                      # descriptive only; links to architecture.md
   decisions/                   # ADR-NNNN-*.md
   specs/                       # SPEC-NNNN-name.md
@@ -121,9 +121,9 @@ Run these **after** the technical harness, and only with a human present.
     - `product/language.md` — a few core domain terms
     - `principles/product-principles.md` — short, decision-driving rules
     - design system / voice — only if the project has UI
-    Do **not** ask about the roadmap — that belongs to `groom-backlog-to-specs`.
+    Do **not** ask about the roadmap — that belongs to `groom-backlog`.
 17. **Write answers into the template shapes.** Use `templates/product-*.md` as the structure. Transcribe the user's words; do not invent.
-18. **Degrade to stubs.** For every skipped or unanswered question, leave the heading plus `<!-- Q: … -->` so `process-inbox-notes` can resolve it later.
+18. **Degrade to stubs.** For every skipped or unanswered question, leave the heading plus `<!-- Q: … -->` so `process-inbox` can resolve it later.
 
 ### Product Checklist
 

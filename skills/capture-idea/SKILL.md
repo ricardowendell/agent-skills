@@ -1,6 +1,6 @@
 ---
-name: capture-raw-idea
-description: Capture rough, unprocessed ideas into raw inbox notes for a structured thinking workspace. Use when the user asks to capture an idea, jot something down, save a thought, add a raw note, brain dump, or quickly preserve input without organizing it yet, especially in repositories with docs/inbox or inbox folders.
+name: capture-idea
+description: Capture a rough idea as a raw inbox note, preserving the user's own wording. Use when the user asks to capture a thought, jot something down, save an idea, brain dump, or preserve input without organizing it yet. Do not classify or move it into product docs — that is process-inbox.
 ---
 
 # Capture Raw Idea
@@ -66,4 +66,4 @@ The script creates the inbox directory and dated descriptive file if needed, ens
 
 ## Pipeline
 
-Entry point of the product-thinking pipeline. Raw notes are organized later by `process-inbox-notes` — do not organize or classify them here.
+Entry point of the product-thinking pipeline. Raw notes are organized later by `process-inbox` — do not organize or classify them here.

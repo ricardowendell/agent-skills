@@ -1,6 +1,6 @@
 ---
-name: groom-backlog-to-specs
-description: Turn product backlog items into small implementation-ready Markdown specs. Use when the user asks to groom the backlog, build specs, create feature specs, convert backlog items into specs, prepare implementation work, define acceptance criteria, or update docs/specs in a structured product-thinking repository.
+name: groom-backlog
+description: Turn a product backlog item into a small, implementation-ready spec. Use when the user asks to groom the backlog, write or update a spec, define acceptance criteria, or prepare work for implementation. Updates an existing spec before creating one and does not expand product scope.
 ---
 
 # Groom Backlog To Specs
@@ -196,4 +196,4 @@ End with:
 
 ## Pipeline
 
-Previous stage: `process-inbox-notes`. Next stage: `spec-to-implementation-prompt` — turn a `ready` spec into an implementation prompt. Call this out when a spec becomes `ready`.
+Previous stage: `process-inbox`. Next stage: `write-implementation-prompt` — turn a `ready` spec into an implementation prompt. Call this out when a spec becomes `ready`.

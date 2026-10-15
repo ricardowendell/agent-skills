@@ -1,6 +1,6 @@
 ---
-name: process-inbox-notes
-description: Process unprocessed inbox notes in a structured product-thinking repository. Use when the user asks to process inbox notes, organize raw notes, turn raw ideas into product docs, extract stable ideas, classify notes into vision/principles/experience/system/constraints/decisions/backlog, or clean up docs/inbox while preserving raw notes.
+name: process-inbox
+description: Turn unprocessed inbox notes into stable product docs, preserving the raw notes. Use when the user asks to process the inbox, organize raw notes, extract stable ideas, or classify notes into vision/principles/experience/system/decisions/backlog. Presents a plan before writing and does not invent product direction.
 ---
 
 # Process Inbox Notes
@@ -72,4 +72,4 @@ End with:
 
 ## Pipeline
 
-Previous stage: `capture-raw-idea`. Next stage: `groom-backlog-to-specs` — turn stable backlog items into specs. Offer this as the next step when processing finishes.
+Previous stage: `capture-idea`. Next stage: `groom-backlog` — turn stable backlog items into specs. Offer this as the next step when processing finishes.

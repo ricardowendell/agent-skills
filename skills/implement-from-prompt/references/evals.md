@@ -10,7 +10,7 @@ Representative prompts and the trajectory this skill should produce.
    - Watch for: implementing out-of-scope behavior or skipping the AC walk-through.
 
 2. **Missing prompt file.**
-   - Points to `spec-to-implementation-prompt` rather than improvising from a vague request.
+   - Points to `write-implementation-prompt` rather than improvising from a vague request.
    - Watch for: inventing scope.
 
 3. **Code reality forces a scope change.**

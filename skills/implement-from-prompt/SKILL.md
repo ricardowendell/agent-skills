@@ -1,6 +1,6 @@
 ---
-name: implementation-prompt-to-code
-description: Implement code from a structured implementation prompt in docs/prompts/implementation. Use when the user asks to implement a prompt, execute an implementation prompt, build from a SPEC prompt, turn docs/prompts/implementation/*.prompt.md into code, or continue the prompt-driven workflow from prompt to verified code.
+name: implement-from-prompt
+description: Implement code from a structured implementation prompt and verify it. Use when the user asks to implement a prompt, build from a SPEC prompt, or continue the prompt-driven workflow to verified code. Preserves the prompt's scope and safeguards.
 ---
 
 # Implementation Prompt To Code
@@ -9,7 +9,7 @@ description: Implement code from a structured implementation prompt in docs/prom
 
 Implement code from a reviewed implementation prompt while preserving its scope, safeguards, and verification plan.
 
-This skill starts from prompt artifacts, not from vague backlog ideas. If no prompt file exists yet, use the `spec-to-implementation-prompt` skill first.
+This skill starts from prompt artifacts, not from vague backlog ideas. If no prompt file exists yet, use the `write-implementation-prompt` skill first.
 
 ## Workflow
 
@@ -82,4 +82,4 @@ End with:
 
 ## Pipeline
 
-Previous stage: `spec-to-implementation-prompt`. After implementation, `check-doc-consistency` can verify the docs still agree with the delivered behavior.
+Previous stage: `write-implementation-prompt`. After implementation, `audit-docs` can verify the docs still agree with the delivered behavior.
