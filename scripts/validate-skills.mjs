@@ -22,12 +22,18 @@ const MAX_DESC = maxDescArg >= 0 ? Number(args[maxDescArg + 1]) : 500
 const ID_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/
 
 const HOME = homedir()
-const ROOTS = [
-  join(HOME, ".agents/skills"),
-  join(HOME, ".claude/skills"),
-  join(HOME, ".codex/skills"),
-  join(HOME, ".config/opencode/skills"),
-].filter((d) => existsSync(d))
+// --root <dir> overrides discovery (for CI, where the repo is not under HOME).
+const rootArg = args.indexOf("--root")
+const ROOTS = (
+  rootArg >= 0
+    ? [args[rootArg + 1]]
+    : [
+        join(HOME, ".agents/skills"),
+        join(HOME, ".claude/skills"),
+        join(HOME, ".codex/skills"),
+        join(HOME, ".config/opencode/skills"),
+      ]
+).filter((d) => existsSync(d))
 
 function* skillFiles(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {

@@ -13,8 +13,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      # Frontmatter, id/description budget, broken symlinks, cross-root drift.
-      - run: node scripts/validate-skills.mjs
+      # --root points discovery at the checkout (the scripts otherwise scan
+      # HOME-based skill roots). Frontmatter, id/description budget, drift.
+      - run: node scripts/validate-skills.mjs --root skills
       # Every references/evals.md still parses. Full evals need `opencode` and a
       # model provider key, so they stay local (or run manually).
-      - run: node scripts/run-evals.mjs --list
+      - run: node scripts/run-evals.mjs --root skills --list

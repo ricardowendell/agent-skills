@@ -39,7 +39,7 @@ import { join, basename, dirname } from "node:path"
 import { homedir, tmpdir } from "node:os"
 
 const argv = process.argv.slice(2)
-const opt = { skill: null, case: null, run: false, list: false, agent: "build", model: null, timeout: 600, standalone: true, concurrency: null, quick: null, level: "fast" }
+const opt = { skill: null, case: null, run: false, list: false, agent: "build", model: null, timeout: 600, standalone: true, concurrency: null, quick: null, level: "fast", root: null }
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i]
   if (a === "--skill") opt.skill = argv[++i]
@@ -55,6 +55,7 @@ for (let i = 0; i < argv.length; i++) {
   else if (a === "--quick") opt.quick = true
   else if (a === "--level") opt.level = argv[++i]
   else if (a === "--full") opt.level = "full"
+  else if (a === "--root") opt.root = argv[++i]
 }
 
 // Resolve level defaults (explicit --quick/--concurrency win).
@@ -66,12 +67,17 @@ if (opt.quick === null) opt.quick = opt.level === "fast"
 if (opt.concurrency === null) opt.concurrency = opt.level === "fast" ? 8 : 4
 
 const HOME = homedir()
-const ROOTS = [
-  join(HOME, ".agents/skills"),
-  join(HOME, ".claude/skills"),
-  join(HOME, ".codex/skills"),
-  join(HOME, ".config/opencode/skills"),
-].filter(existsSync)
+// --root <dir> overrides discovery (for CI, where the repo is not under HOME).
+const ROOTS = (
+  opt.root
+    ? [opt.root]
+    : [
+        join(HOME, ".agents/skills"),
+        join(HOME, ".claude/skills"),
+        join(HOME, ".codex/skills"),
+        join(HOME, ".config/opencode/skills"),
+      ]
+).filter(existsSync)
 const OUT_ROOT = join(HOME, ".local/share/opencode/evals")
 
 // Scrub the vars that make `opencode run` attach to the invoking session's
