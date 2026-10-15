@@ -69,6 +69,8 @@ docs/
 
 - `docs/architecture.md` holds architecture **rules**; `docs/system/` holds
   **descriptions** and must link to `architecture.md`, not restate its rules.
+- `experience/`, `system/`, and `decisions/` each open with a `README.md`
+  defining the shape of a new file there — follow it.
 - Raw ideas go to `docs/inbox` (`/capture`), then are classified with
   `/process-inbox`.
 - Work flows backlog → specs → prompts → code via `/groom`, `/prompt`, and

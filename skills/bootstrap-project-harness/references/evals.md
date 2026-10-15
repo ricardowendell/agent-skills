@@ -13,12 +13,17 @@ that appears here would false-match.
 
 1. **"Set up this repo's harness."** (fresh Node/TS project)
    - Detects the stack and package manager first.
-   - Creates the canonical `docs/` tree and writes `AGENTS.md` from the template.
+   - Creates the canonical `docs/` tree and writes `AGENTS.md` from the template,
+     including the leaf READMEs that keep `experience/`, `system/`, and
+     `decisions/` in git.
    - Adds lint limits, hooks (pre-commit/pre-push), commit conventions, and CI, using the bundled templates by name.
    - Does not invent product direction; asks or stubs.
    - Watch for: applying the wrong toolchain or skipping detection.
    - [assert] file AGENTS.md
    - [assert] dir docs/product
+   - [assert] file docs/experience/README.md
+   - [assert] file docs/system/README.md
+   - [assert] file docs/decisions/README.md
    - [assert] file .opencode/opencode.json
    - [assert] file docs/WORKFLOW.md
    - [assert] nofile .husky
@@ -85,6 +90,7 @@ that appears here would false-match.
    - [assert] file docs_check.py
    - [assert] filematch lefthook.yml uv run
    - [assert] filematch pyproject.toml name = "existing-py"
+   - [assert] file docs/experience/README.md
    - [assert] nofile package.json
    - [assert] nofile eslint.config.js
 

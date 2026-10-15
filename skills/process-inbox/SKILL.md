@@ -42,6 +42,8 @@ Turn raw inbox notes into stable product-thinking documents without losing the o
    - System structure and technical constraints: `docs/system`
    - Product or architecture decisions: `docs/decisions`
    - Future implementation work: `docs/backlog`
+   - `experience/`, `system/`, and `decisions/` each carry a `README.md` defining
+     the shape of a new file there — follow it rather than inventing a format.
 10. Update existing documents before creating new documents.
 11. Create new documents only when an idea is stable, distinct, and does not fit an existing file.
 12. **Changes to the product or principles docs require explicit user confirmation** — even if the user asked to process all notes. State the exact change and wait for approval.

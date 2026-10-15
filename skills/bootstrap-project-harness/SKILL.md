@@ -97,9 +97,9 @@ docs/
     visual-design.md
     voice.md
     product-principles.md
-  experience/                  # user journeys (process-inbox)
+  experience/                  # user journeys (shape in README.md)
   system/                      # descriptive only; links to architecture.md
-  decisions/                   # ADR-NNNN-*.md
+  decisions/                   # ADR-NNNN-*.md (shape in README.md)
   specs/                       # SPEC-NNNN-name.md
   prompts/
     implementation/            # SPEC-NNNN-*.prompt.md
@@ -114,7 +114,11 @@ docs/
 
 ### Technical steps
 
-1. Create the docs tree above (`mkdir -p …`). No content files yet.
+1. Create the docs tree above (`mkdir -p …`), then seed the three leaf READMEs
+   from `templates/{experience,system,decisions}-README.md` — they define the
+   shape of what belongs in each, and they keep those directories in git (empty
+   directories are not tracked). No other content files yet. **Additive only:**
+   skip any README that already exists.
 2. Write `AGENTS.md` from `templates/AGENTS.md.template` — it carries this layout and the routing rules.
 3. Add `.gitignore` from `templates/.gitignore.template`.
 4. Add `.editorconfig` from `templates/.editorconfig.template` (prevents whitespace wars).
@@ -180,6 +184,9 @@ Node), with `templates/python/` the Python set. The product templates are the
 | `product-design-principles.md` | `docs/principles/design.md`             |
 | `WORKFLOW.md`                  | `docs/WORKFLOW.md`                      |
 | `.opencode/opencode.json`      | `.opencode/opencode.json`               |
+| `experience-README.md`         | `docs/experience/README.md`             |
+| `system-README.md`             | `docs/system/README.md`                 |
+| `decisions-README.md`          | `docs/decisions/README.md`              |
 | `ts/spec-sha.mjs`              | `spec-sha.mjs` (repo root)              |
 | `python/docs_check.py`, `python/spec_sha.py` | same paths (repo root)   |
 | `ts/*`                         | TS/Node technical set (steps 6–15)      |
@@ -278,6 +285,7 @@ uv run pytest
 
 ```bash
 ls docs/product/ docs/principles/ docs/specs/ docs/prompts/implementation/
+ls docs/experience/ docs/system/ docs/decisions/
 ```
 
 **Do NOT mark any step as completed until its audit command passes.**
