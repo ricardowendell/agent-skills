@@ -115,7 +115,7 @@ docs/
 
 Run these **after** the technical harness, and only with a human present.
 
-15. **Detect existing docs.** If `docs/` already holds any non-empty `.md` (outside the skeleton just created), or the README has a product/about section: keep only the skeleton, record what you found as open questions in `AGENTS.md`, and **stop** with *"Existing docs found — run `/process-inbox` to classify."* Never move, rename, or delete existing files.
+15. **Detect existing docs.** If `docs/` already holds any non-empty `.md` (outside the skeleton just created), or the README has a product/about section: stop the product phase. Write no product content — do not add, move, rename, or delete any existing file. Record what you found as open questions in `AGENTS.md`, then stop with: *"Existing docs found — run `/process-inbox` to classify."*
 16. **Interview for gaps.** Bounded — one pass, ≤7 questions, each skippable. Ask only what is knowable now:
     - `product/vision.md` — problem, audience, solution
     - `product/language.md` — a few core domain terms
