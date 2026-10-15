@@ -101,17 +101,17 @@ docs/
 3. Add `.gitignore` from `templates/.gitignore.template`.
 4. Add `.editorconfig` from `templates/.editorconfig.template` (prevents whitespace wars).
 5. Add `README.md` from `templates/README.template`.
-6. Install lefthook + commitlint, and copy `templates/commitlint.config.cjs` and `templates/lefthook.yml`:
+6. Install lefthook + commitlint, and copy `templates/ts/commitlint.config.cjs` and `templates/ts/lefthook.yml`:
    `bun add -d @commitlint/cli @commitlint/config-conventional && bun x lefthook install`
-7. Add `lint-staged.config.mjs` from `templates/lint-staged.config.mjs`.
-8. Add `justfile` from `templates/justfile.template`.
+7. Add `lint-staged.config.mjs` from `templates/ts/lint-staged.config.mjs`.
+8. Add `justfile` from `templates/ts/justfile.template`.
 9. Ensure `package.json` has the scripts the hooks and justfile call: `dev`, `build`, `typecheck`, `lint`, `format`, `format:check`, `docs:check`. **Merge — never overwrite an existing script.**
-10. Add `.prettierrc` from `templates/.prettierrc.template`.
-11. Add `eslint.config.js` from `templates/eslint.config.js.template` (flat config, AI limits).
-12. Add `docs-check.mjs` and `spec-sha.mjs` from `templates/` and wire the `docs:check` script.
+10. Add `.prettierrc` from `templates/ts/.prettierrc.template`.
+11. Add `eslint.config.js` from `templates/ts/eslint.config.js.template` (flat config, AI limits).
+12. Add `docs-check.mjs` and `spec-sha.mjs` from `templates/ts/` and wire the `docs:check` script.
 13. Write `docs/WORKFLOW.md` from `templates/WORKFLOW.md`, and add `.opencode/opencode.json` from `templates/.opencode/opencode.json` at the repo root (**merge — never overwrite**).
-14. (Optional) Add dependency-cruiser from `templates/dependency-cruiser-rules.md`.
-15. (Optional) Add CI from `templates/.github/workflows/ci.yml.template`.
+14. (Optional) Add dependency-cruiser from `templates/ts/dependency-cruiser-rules.md`.
+15. (Optional) Add CI from `templates/ts/.github/workflows/ci.yml.template`.
 
 > Optional sidecar: create `.nvmrc` (or `.node-version`) for runtime version pinning.
 
@@ -142,9 +142,11 @@ Before marking product steps done, verify:
 
 ### Templates
 
-`templates/` provides the technical files referenced above, plus the
-`product-*.md` structures used in Step 18. The product templates are the **shape**
-for either real content (from the interview) or a stub (heading + `<!-- Q: … -->`).
+`templates/` holds the **stack-neutral** product and docs files. The technical
+files live under `templates/<stack>/` — currently `templates/ts/` (TypeScript/
+Node), with `templates/python/` the Python set. The product templates are the
+**shape** for either real content (from the interview) or a stub (heading +
+`<!-- Q: … -->`).
 
 | Template                       | Destination                             |
 | ------------------------------ | --------------------------------------- |
@@ -159,10 +161,11 @@ for either real content (from the interview) or a stub (heading + `<!-- Q: … -
 | `product-design-principles.md` | `docs/principles/design.md`             |
 | `WORKFLOW.md`                  | `docs/WORKFLOW.md`                      |
 | `.opencode/opencode.json`      | `.opencode/opencode.json`               |
-| `spec-sha.mjs`                 | `spec-sha.mjs` (repo root)              |
+| `ts/spec-sha.mjs`              | `spec-sha.mjs` (repo root)              |
 
-`docs-check.mjs` hardcodes the canonical spec paths — change its constants only if
-the repo deviates from the layout above.
+`docs-check.mjs` and `spec-sha.mjs` (under `templates/<stack>/`) hardcode the
+canonical spec paths — change their constants only if the repo deviates from the
+layout above.
 
 ## Linter Limits (TS/Node)
 

@@ -1,14 +1,52 @@
 # Development Workflow
 
-> The map, not the manual.
+> The map, not the manual. Each step is a skill or command that carries its own
+> detail; this file only says what runs when, and in what order.
 
 ## The loop
 
-1. `/capture "idea"` — save a raw thought in `docs/inbox`.
-2. `/process-inbox` — classify stable ideas into the product docs.
-3. `/groom <item>` — turn a backlog item into a spec.
-4. `/prompt <SPEC>` — turn a `ready` spec into an implementation prompt.
-5. `/implement <prompt>` — build it and update the spec.
-6. `/docs-check` — audit the docs for drift.
+1. **Capture** — `/capture "idea"` — save a raw thought in `docs/inbox`, your wording preserved.
+2. **Process** — `/process-inbox` — classify stable ideas into vision / principles / backlog.
+3. **Groom** — `/groom <backlog item>` — turn a decided item into a small spec (stops at the readiness gate).
+4. **Prompt** — `/prompt <SPEC>` — turn a `ready` spec into an implementation prompt.
+5. **Implement** — `/implement <prompt>` — build it, add tests, flip the spec `in_progress` → `implemented`.
+6. **Check** — `/docs-check` — audit the docs for drift. (`bun run docs:check` also runs in the gates.)
 
-Gates: commits run typecheck + lint + security; pushes run build + docs:check.
+## If it goes wrong
+
+`/undo` rolls back the last response **and the files it changed**, then returns
+the prompt to the composer — edit it and re-run. Snapshots are Git-backed and
+cover the session's active directory, so run the session at the repo root.
+
+## Which command when
+
+| You want to…                           | Run              |
+| -------------------------------------- | ---------------- |
+| Save a half-formed idea                | `/capture`       |
+| Organize raw notes into docs           | `/process-inbox` |
+| Turn a backlog item into a spec        | `/groom`         |
+| Turn a ready spec into a prompt        | `/prompt`        |
+| Implement a prompt                     | `/implement`     |
+| Audit docs for contradictions or drift | `/docs-check`    |
+| Set up a new repo's harness and docs   | `/bootstrap`     |
+| Stress-test a plan before building     | `/blind-spots`   |
+
+## Worked example
+
+`/capture "users lose drafts when the tab closes"` → `/process-inbox` files it
+under backlog → `/groom` writes `SPEC-0007-draft-autosave.md` (`status: ready`)
+→ `/prompt SPEC-0007` writes the implementation prompt → `/implement` builds it,
+adds `tests/draft-autosave.test.ts`, sets the spec `implemented` → `/docs-check`
+confirms nothing drifted.
+
+## Beyond the loop
+
+`find-blind-spots` (pressure-test a design), `simplify` (reduce complexity after
+tests pass), `audit-docs` (periodic doc drift), `graphify` (architecture
+questions), `agent-browser` / `webapp-testing` (verify UI), `impeccable`
+(frontend design), `clonedeps` (read a dependency's source).
+
+## Gates you will hit
+
+Commits run typecheck + lint + security; pushes run tests + build + docs:check.
+Never commit `.env`, `.db`, or data files.
