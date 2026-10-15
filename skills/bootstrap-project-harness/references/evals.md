@@ -1,8 +1,8 @@
 # Evals
 
 Representative prompts and the trajectory this skill should produce. Fixtures for
-cases 1, 2, 3, 5, 7, and 9 live in `references/evals/<n>/` and are copied into
-the scratch repo before the prompt runs.
+cases 1, 2, 3, 5, 7, 9, 10, and 11 live in `references/evals/<n>/` and are copied
+into the scratch repo before the prompt runs.
 
 Assertions: `- [assert] <kind> <arg>` is machine-checked after the case — `file`,
 `nofile` (file exists/absent), `dir`/`nodir` (directory), `filematch` (file
@@ -87,3 +87,19 @@ that appears here would false-match.
    - [assert] filematch pyproject.toml name = "existing-py"
    - [assert] nofile package.json
    - [assert] nofile eslint.config.js
+
+10. **"Bootstrap this Python repo."** (fixture: `black` + `isort` + `pre-commit` already configured)
+   - Detects Python, then finds a **competing toolchain** and reports the collision instead of adding ruff/mypy.
+   - Leaves `pyproject.toml` untouched; adds no ruff config and no competing hook manager.
+   - Watch for: stacking ruff on top of black.
+   - [assert] unchanged pyproject.toml
+   - [assert] nofile ruff.toml
+   - [assert] nofile .ruff.toml
+   - [assert] nofile lefthook.yml
+
+11. **"Set up the harness here."** (fixture: a Poetry project)
+   - Detects Python, but a **competing package manager** (`poetry.lock` / `[tool.poetry]`) means it stops and reports instead of imposing uv.
+   - Adds no uv artifacts.
+   - Watch for: running `uv sync` or writing a uv lock.
+   - [assert] unchanged pyproject.toml
+   - [assert] nofile uv.lock

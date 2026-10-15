@@ -50,9 +50,9 @@ This skill covers **two harnesses** that must both exist:
 
 Run in order; stop at the first match:
 
-1. `uv.lock` or `.python-version` → **Python (uv)**.
+1. `uv.lock` → **Python (uv)**.
 2. `bun.lock` or `tsconfig.json` → **TS/Node**.
-3. `pyproject.toml` → **Python, but verify uv** — if uv is absent (`poetry.lock`/`pdm.lock`/`requirements.txt`, no uv marker), **stop and report**; do not impose uv.
+3. Any Python marker (`pyproject.toml`, `.python-version`, `requirements.txt`) → **Python**. If another package manager owns the repo (`poetry.lock`/`[tool.poetry]`, `pdm.lock`/`[tool.pdm]`, `Pipfile`, `requirements.in`) → **stop and report**; do not impose uv.
 4. `package.json` alone → **TS/Node**.
 5. Nothing → **ask**.
 

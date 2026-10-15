@@ -5,8 +5,11 @@ Toolchain: **uv** (env, deps, Python versions), **ruff** (lint + format),
 **commitizen** (commit messages), **Lefthook** (hooks). Technical templates live
 in `templates/python/`.
 
-Requires uv and just. uv is a hard requirement for this stack — a `pyproject.toml`
-without uv (poetry/pdm/pip-tools) is **reported and stopped**, not migrated.
+Requires uv and just. A repo owned by another package manager
+(`poetry.lock`/`[tool.poetry]`, `pdm.lock`/`[tool.pdm]`, `Pipfile`,
+`requirements.in`) is **reported and stopped**, not migrated. A repo that merely
+already has `black`/`flake8`/`isort`/`mypy`/`pre-commit` is also **reported and
+stopped** — do not add ruff/mypy alongside.
 
 ## Linter limits (ruff)
 
