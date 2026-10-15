@@ -26,7 +26,7 @@ scratch repo before the prompt runs.
    - Watch for: asking about the roadmap, or inventing answers.
 
 5. **"Bootstrap this repo."** (existing `docs/` with real content)
-   - Creates only the skeleton, records open questions in `AGENTS.md`, and stops.
+   - Stops the product phase: writes no product content, records open questions in `AGENTS.md`.
    - Tells the user to run `/process-inbox`; moves, renames, and deletes nothing.
    - Watch for: rewriting or relocating existing docs.
 
