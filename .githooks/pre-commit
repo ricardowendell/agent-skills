@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+# Pre-commit health check for the skills repo.
+#   - validate-skills.mjs : frontmatter, id/description budget, cross-tree drift
+#   - run-evals.mjs --list : every references/evals.md still parses
+# Enable once with: git config core.hooksPath .githooks
+set -e
+
+node "$HOME/.config/opencode/scripts/validate-skills.mjs"
+node "$HOME/.config/opencode/scripts/run-evals.mjs" --list > /dev/null
+echo "skills pre-commit: ok"
