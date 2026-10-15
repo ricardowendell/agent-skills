@@ -12,6 +12,12 @@
 5. **Implement** — `/implement <prompt>` — build it, add tests, flip the spec `in_progress` → `implemented`.
 6. **Check** — `/docs-check` — audit the docs for drift. (`bun run docs:check` also runs in the gates.)
 
+## If it goes wrong
+
+`/undo` rolls back the last response **and the files it changed**, then returns
+the prompt to the composer — edit it and re-run. Snapshots are Git-backed and
+cover the session's active directory, so run the session at the repo root.
+
 ## Which command when
 
 | You want to…                           | Run              |
