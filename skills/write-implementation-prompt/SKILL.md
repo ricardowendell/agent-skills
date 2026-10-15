@@ -26,7 +26,7 @@ Concept names below are stable; resolve literal paths from `AGENTS.md`.
 5. Check open questions. If any block implementation, stop and list them instead of inventing answers.
 6. Read any existing prompts for specs with overlapping domain or shared patterns. Mirror their structure where applicable.
 7. Search the affected domain modules for existing functions that overlap with the spec's requirements. Note reusable functions in the Operations section to prevent duplication.
-8. Run `node spec-sha.mjs <spec path>` and create or update the implementation prompt for the spec, recording the output as `spec_sha` in the prompt frontmatter.
+8. Run the project's spec-hash helper (`node spec-sha.mjs` or `uv run python spec_sha.py`, per the harness) and create or update the implementation prompt for the spec, recording the output as `spec_sha` in the prompt frontmatter.
 
 ## Prompt Structure
 
@@ -35,7 +35,7 @@ Use this shape:
 ```markdown
 ---
 spec: SPEC-000N
-spec_sha: <output of `node spec-sha.mjs docs/specs/SPEC-000N-name.md`>
+spec_sha: <output of the project's spec-hash helper for docs/specs/SPEC-000N-name.md>
 ---
 
 # Implementation Prompt: SPEC-000N Name
