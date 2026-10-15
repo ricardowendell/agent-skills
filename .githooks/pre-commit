@@ -5,6 +5,7 @@
 # Enable once with: git config core.hooksPath .githooks
 set -e
 
-node "$HOME/.config/opencode/scripts/validate-skills.mjs"
-node "$HOME/.config/opencode/scripts/run-evals.mjs" --list > /dev/null
+ROOT=$(git rev-parse --show-toplevel)
+node "$ROOT/scripts/validate-skills.mjs"
+node "$ROOT/scripts/run-evals.mjs" --list > /dev/null
 echo "skills pre-commit: ok"
