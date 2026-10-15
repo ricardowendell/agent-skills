@@ -13,21 +13,20 @@ This skill creates prompt artifacts. It does not implement code.
 
 ## Workflow
 
-Paths below follow a common docs layout; adjust them to the project's conventions.
+Concept names below are stable; resolve literal paths from `AGENTS.md`.
 
 1. Read `AGENTS.md`.
-2. Read:
-   - `docs/system/prompt-driven-development.md`
-   - `docs/architecture.md` (module structure, SRP, DIP, naming conventions)
-   - `docs/prompts/README.md`
-   - `docs/prompts/implementation/README.md`
-   - the requested `docs/specs/SPEC-*.md`
+2. Read, resolving paths from `AGENTS.md`:
+   - the prompt-driven-development system doc, if present
+   - the architecture doc (module structure, SRP, DIP, naming conventions)
+   - the prompts index and the implementation-prompts index
+   - the requested spec
 3. Read source docs and related decisions listed in the spec frontmatter.
 4. Check the spec status. If status is not `ready`, stop — list what is blocking readiness instead of generating a prompt from an incomplete spec.
 5. Check open questions. If any block implementation, stop and list them instead of inventing answers.
 6. Read any existing prompts for specs with overlapping domain or shared patterns. Mirror their structure where applicable.
 7. Search the affected domain modules for existing functions that overlap with the spec's requirements. Note reusable functions in the Operations section to prevent duplication.
-8. Create or update `docs/prompts/implementation/SPEC-000N-short-name.prompt.md`.
+8. Create or update the implementation prompt for the spec, in the implementation-prompts folder.
 
 ## Prompt Structure
 

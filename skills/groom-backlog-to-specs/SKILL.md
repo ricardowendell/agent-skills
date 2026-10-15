@@ -11,26 +11,24 @@ Create or update implementation specs from existing product direction without ex
 
 Use this skill to turn backlog items into specs that are small, testable, and aligned with the current product boundary.
 
-Paths below follow a common product-thinking layout. If the repo's layout differs, discover it from `AGENTS.md` (or the repo README) and map the same concepts; do not assume these exact paths exist.
+Concept names below are stable; literal paths are illustrative. If the repo's layout differs, discover it from `AGENTS.md` (or the repo README) and map the same concepts — do not assume these exact paths exist.
 
 ## Workflow
 
 1. Read `AGENTS.md` first.
-2. Read:
-   - `docs/specs/README.md`
-   - `docs/product/vision.md`
-   - `docs/product/scope.md`
-   - `docs/backlog/release-plan.md`
-   - `docs/backlog/now-next-later.md`
-   - relevant files in `docs/experience`, `docs/system`, and `docs/decisions`
-   - `docs/principles/design.md`, `docs/principles/voice.md`, `docs/principles/visual-design.md`
+2. Read, resolving paths from `AGENTS.md`:
+   - the specs index
+   - product vision and scope
+   - the release plan and the now/next/later backlog
+   - relevant `experience`, `system`, and `decisions` docs
+   - the design, voice, and visual-design principles, plus `product-principles.md`
 3. **Identify information gaps before writing.** For each backlog item, check:
    - Is the user intent clear enough to write a scope and flow?
    - Is there a matching experience doc that describes this flow? If not, flag it — the spec may be introducing new product ground.
    - Are all `depends_on` specs already in `implemented` status? If not, note the dependency risk.
    - Are there open specs with partially overlapping scope? If so, surface the conflict before writing.
    If any gap is critical, ask the user to resolve it before grooming. Do not guess product direction.
-4. Check whether a matching spec already exists in `docs/specs`.
+4. Check whether a matching spec already exists in the specs folder.
 5. Update the existing spec when possible. Create a new spec only when needed.
 6. **Assess size and blast radius before writing scope.** A spec is too broad if it:
    - Touches more than one feature area simultaneously (e.g., home + closing + data model + new flow).
@@ -40,14 +38,14 @@ Paths below follow a common product-thinking layout. If the repo's layout differ
    When too broad, split into smaller specs and present the split to the user before continuing.
    State the blast radius in terms of which feature areas are affected and which existing specs could regress — not file paths.
 7. Keep each spec narrow enough for one coherent implementation task.
-8. **Run the full design principles check.** For each principle in `docs/principles/design.md`, briefly assess whether the spec's flow and scope respects it. Flag violations or tensions explicitly, quoting the principle from the repo's own doc rather than paraphrasing it here. For any spec that places content on a UI surface, also ask whether showing it there creates accumulated weight over time.
+8. **Run the full design principles check.** For each principle in the design principles doc, briefly assess whether the spec's flow and scope respects it. Flag violations or tensions explicitly, quoting the principle from the repo's own doc rather than paraphrasing it here. For any spec that places content on a UI surface, also ask whether showing it there creates accumulated weight over time.
 9. **Check UI state completeness.** For any spec with interactive UI, confirm the scope covers:
    - Happy path
    - Empty state (nothing to show yet)
    - Loading state (if async)
    - Error state (if data can fail)
    If a state is out of scope, call it out explicitly in Non-Goals.
-10. **Check user-visible copy.** Any new copy introduced by the spec must be flagged for review against `docs/principles/voice.md`. Mark it in the spec with a note like `(copy: pending voice review)` until reviewed. Do not invent copy that has not been validated.
+10. **Check user-visible copy.** Any new copy introduced by the spec must be flagged for review against the voice principles doc. Mark it in the spec with a note like `(copy: pending voice review)` until reviewed. Do not invent copy that has not been validated.
 11. **Run a lightweight security check.** For any spec that handles user data:
     - Is all data user-scoped? Nothing leaks across users.
     - Does any migration touch existing rows in a potentially destructive way?
@@ -76,7 +74,7 @@ Paths below follow a common product-thinking layout. If the repo's layout differ
 
 ## Spec Rules
 
-- Store specs in `docs/specs`.
+- Store specs in the specs folder (per `AGENTS.md`).
 - Use filenames like `SPEC-0001-morning-check-in.md`.
 - Keep status in YAML frontmatter.
 - Use these statuses:
@@ -164,13 +162,13 @@ Too broad:
 
 ## Product Guardrails
 
-Derive scope boundaries from `docs/product/scope.md` and `docs/backlog/release-plan.md`. Before adding anything to a spec, verify that it falls within the current product boundary. Prefer removing or narrowing scope over adding details. A spec should reduce ambiguity, not create a feature factory.
+Derive scope boundaries from the product scope doc and the release plan. Before adding anything to a spec, verify that it falls within the current product boundary. Prefer removing or narrowing scope over adding details. A spec should reduce ambiguity, not create a feature factory.
 
 ## Design Principles Compliance
 
-Before finalizing any spec, run a brief check against all principles in `docs/principles/design.md`. This is not a deep audit — one sentence per principle is enough. The goal is to catch violations early, not to write design commentary.
+Before finalizing any spec, run a brief check against all principles in the design principles doc. This is not a deep audit — one sentence per principle is enough. The goal is to catch violations early, not to write design commentary.
 
-For UI specs, also check `docs/principles/visual-design.md` for tap targets, motion, spacing, and token usage — at the behavior level, not the implementation level.
+For UI specs, also check the visual-design principles doc for tap targets, motion, spacing, and token usage — at the behavior level, not the implementation level.
 
 ## Prompt Readiness
 

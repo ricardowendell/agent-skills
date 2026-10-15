@@ -13,12 +13,12 @@ This skill starts from prompt artifacts, not from vague backlog ideas. If no pro
 
 ## Workflow
 
-Paths below follow a common docs layout; adjust them to the project's conventions.
+Concept names below are stable; resolve literal paths from `AGENTS.md`.
 
 1. Read `AGENTS.md` (or the project's equivalent agent configuration file).
-2. Read:
-   - `docs/system/prompt-driven-development.md` if it exists
-   - the requested `docs/prompts/implementation/*.prompt.md`
+2. Read, resolving paths from `AGENTS.md`:
+   - the prompt-driven-development system doc, if present
+   - the requested implementation prompt
    - the source spec or design doc listed in the prompt
    - related docs and ADRs referenced by the spec or prompt
 3. Confirm the prompt has enough detail to implement. If it has blocking gaps, stop and update the spec or prompt first.
