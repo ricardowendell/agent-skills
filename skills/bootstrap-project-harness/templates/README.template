@@ -5,39 +5,33 @@ Brief description of what this project does and who it is for.
 ## Quick Start
 
 ```bash
-bun install
-bun run dev
+just fresh   # install dependencies
+just dev     # start the dev server (if the project has one)
 ```
-
-Open http://localhost:3000.
 
 ## Commands
 
-| Command | Action |
-|---|---|
-| `bun run dev` | Start dev server |
-| `bun run check` | Typecheck, lint, security audit |
-| `bun test` | Run tests |
-| `bun run ci` | Check + tests |
-| `bun run format` | Format code with Prettier |
+| Command           | Action                                      |
+| ----------------- | ------------------------------------------- |
+| `just check`      | typecheck + lint + format + security + docs |
+| `just test`       | run the tests                               |
+| `just ci`         | check + tests                               |
+| `just format`     | format the code                             |
+| `just docs-check` | audit the docs for drift                    |
+
+The stack-specific commands behind these recipes live in the `justfile`.
 
 ## Tech Stack
 
-- [Framework/Language]
+- [Language / runtime]
+- [Framework]
 - [Database]
 - [Key libraries]
 
 ## Project Structure
 
 ```
-src/
-  app/        entry points and routes
-  components/ reusable UI
-  lib/        business logic and infrastructure
-  tests/      cross-feature tests
+src/          application code
+tests/        tests
 docs/         structured thinking workspace
 ```
-
-## Agent Conventions
-
-See AGENTS.md for agent behavior rules, linter limits, and workflow.

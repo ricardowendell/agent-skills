@@ -10,7 +10,7 @@
 3. **Groom** — `/groom <backlog item>` — turn a decided item into a small spec (stops at the readiness gate).
 4. **Prompt** — `/prompt <SPEC>` — turn a `ready` spec into an implementation prompt.
 5. **Implement** — `/implement <prompt>` — build it, add tests, flip the spec `in_progress` → `implemented`.
-6. **Check** — `/docs-check` — audit the docs for drift. (`bun run docs:check` also runs in the gates.)
+6. **Check** — `/docs-check` — audit the docs for drift. (`just docs-check` also runs in the gates.)
 
 ## If it goes wrong
 
@@ -48,5 +48,5 @@ questions), `agent-browser` / `webapp-testing` (verify UI), `impeccable`
 
 ## Gates you will hit
 
-Commits run typecheck + lint + security; pushes run tests + build + docs:check.
-Never commit `.env`, `.db`, or data files.
+Commits run lint + types + security; pushes run tests + docs-check. Never
+commit `.env`, `.db`, or data files.

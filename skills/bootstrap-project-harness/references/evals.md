@@ -1,8 +1,8 @@
 # Evals
 
 Representative prompts and the trajectory this skill should produce. Fixtures for
-cases 1, 2, 3, 5, and 7 live in `references/evals/<n>/` and are copied into the
-scratch repo before the prompt runs.
+cases 1, 2, 3, 5, 7, and 9 live in `references/evals/<n>/` and are copied into
+the scratch repo before the prompt runs.
 
 Assertions: `- [assert] <kind> <arg>` is machine-checked after the case — `file`,
 `nofile` (file exists/absent), `dir`/`nodir` (directory), `filematch` (file
@@ -74,3 +74,16 @@ that appears here would false-match.
    - Watch for: superpowers paths or husky hooks.
    - [assert] nofile .husky
    - [assert] nofile docs/superpowers
+
+9. **"Bootstrap this Python repo."** (fixture: an existing `pyproject.toml` + `.python-version`)
+   - Detects **Python (uv)**, not TypeScript.
+   - Adds the Python technical set (justfile, lefthook, pyproject tool config, CI) and the docs skeleton.
+   - Preserves the existing project name; adds no `package.json` or ESLint config.
+   - Watch for: applying the Node templates to a Python repo.
+   - [assert] file docs/WORKFLOW.md
+   - [assert] file .opencode/opencode.json
+   - [assert] file docs_check.py
+   - [assert] filematch lefthook.yml uv run
+   - [assert] filematch pyproject.toml name = "existing-py"
+   - [assert] nofile package.json
+   - [assert] nofile eslint.config.js

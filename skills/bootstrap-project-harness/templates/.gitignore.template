@@ -17,6 +17,11 @@ node_modules/
 dist/
 build/
 coverage/
+.coverage
+htmlcov/
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
 *.tsbuildinfo
 
 # Env

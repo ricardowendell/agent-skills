@@ -19,3 +19,5 @@ jobs:
       # Every references/evals.md still parses. Full evals need `opencode` and a
       # model provider key, so they stay local (or run manually).
       - run: node scripts/run-evals.mjs --root skills --list
+      # The JS and Python docs-check sensors must agree (references/docs-check.md).
+      - run: node scripts/check-sensor-parity.mjs

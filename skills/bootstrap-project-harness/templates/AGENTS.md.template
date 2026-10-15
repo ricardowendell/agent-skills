@@ -18,9 +18,9 @@ Start with `/capture "idea"`, then move work forward with `/groom`, `/prompt`, a
 ## Quick Start
 
 ```bash
-bun run dev     # start dev server
-bun run check   # typecheck + lint + security
-bun run ci      # check + tests
+just dev     # start dev server (if the project has one)
+just check   # typecheck + lint + format + security + docs
+just ci      # check + tests
 ```
 
 ## Behavioral Guidelines
