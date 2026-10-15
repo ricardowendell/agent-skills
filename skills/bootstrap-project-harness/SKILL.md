@@ -1,6 +1,6 @@
 ---
 name: bootstrap-project-harness
-description: Set up a project's technical harness (git hooks, lint limits, CI) and the product-docs skeleton. Use when starting a new project, bootstrapping an existing repo, or adding hooks/CI/agent conventions. Seeds docs from existing material or a short interview; delegates classifying existing docs to process-inbox.
+description: Set up a project's technical harness (git hooks, lint limits, CI) and the product-docs skeleton, for TypeScript/Node or Python (uv). Use when starting a new project, bootstrapping an existing repo, or adding hooks/CI/agent conventions. Seeds docs from existing material or a short interview; delegates classifying existing docs to process-inbox.
 ---
 
 # Bootstrapping Project Harnesses
@@ -14,7 +14,7 @@ This skill covers **two harnesses** that must both exist:
 1. **Technical Harness** — sensors, hooks, quality gates (building it right)
 2. **Product Harness** — vision, language, principles, design, voice (building the right thing)
 
-**Scope:** TypeScript/Node projects (bun). Python and other stacks are out of scope for now — do not reach for `mypy`/`ruff` while bootstrapping.
+**Scope:** TypeScript/Node (bun) and Python (uv). Detect the stack first (see Detection → Stack) and take technical files from `templates/<stack>/`. Other stacks are out of scope.
 
 ## The Technical Pillars
 
@@ -40,10 +40,28 @@ This skill covers **two harnesses** that must both exist:
 
 ## Principles
 
-- **Additive only.** On an existing repo, never overwrite existing keys, scripts, hooks, or config files. Merge into what is there; on a collision, report it and skip. This applies to `package.json`, `justfile`, `lefthook.yml`, and `eslint.config.js`.
+- **Additive only.** On an existing repo, never overwrite existing keys, scripts, hooks, or config files. Merge into what is there; on a collision, report it and skip. This applies to `package.json`, `pyproject.toml`, `justfile`, `lefthook.yml`, `eslint.config.js`, and `.opencode/`.
+- **Report competing toolchains.** If the repo already uses a different linter / type checker / test stack (Python: `black`/`flake8`/`isort`/`mypy`/`pre-commit`; TS: `husky`/`tslint`), do **not** add the harness's tools alongside it — report the collision and stop.
 - **Never invent product direction.** Product content comes from the user's existing docs or their answers — never from the agent's imagination.
 
 ## Detection
+
+### Stack
+
+Run in order; stop at the first match:
+
+1. `uv.lock` or `.python-version` → **Python (uv)**.
+2. `bun.lock` or `tsconfig.json` → **TS/Node**.
+3. `pyproject.toml` → **Python, but verify uv** — if uv is absent (`poetry.lock`/`pdm.lock`/`requirements.txt`, no uv marker), **stop and report**; do not impose uv.
+4. `package.json` alone → **TS/Node**.
+5. Nothing → **ask**.
+
+Record the result in `AGENTS.md` (`## Stack`). A stray `package.json` (frontend
+build, JS tooling) does not make a Python repo a monorepo. If rules 1 and 2 both
+fire, harness the directory whose manifest is nearest the current one; if that
+is ambiguous, **ask which directory**.
+
+### Harness state
 
 Check the current directory, then pick one of four states:
 
@@ -101,19 +119,20 @@ docs/
 3. Add `.gitignore` from `templates/.gitignore.template`.
 4. Add `.editorconfig` from `templates/.editorconfig.template` (prevents whitespace wars).
 5. Add `README.md` from `templates/README.template`.
-6. Install lefthook + commitlint, and copy `templates/ts/commitlint.config.cjs` and `templates/ts/lefthook.yml`:
-   `bun add -d @commitlint/cli @commitlint/config-conventional && bun x lefthook install`
-7. Add `lint-staged.config.mjs` from `templates/ts/lint-staged.config.mjs`.
-8. Add `justfile` from `templates/ts/justfile.template`.
-9. Ensure `package.json` has the scripts the hooks and justfile call: `dev`, `build`, `typecheck`, `lint`, `format`, `format:check`, `docs:check`. **Merge — never overwrite an existing script.**
-10. Add `.prettierrc` from `templates/ts/.prettierrc.template`.
-11. Add `eslint.config.js` from `templates/ts/eslint.config.js.template` (flat config, AI limits).
-12. Add `docs-check.mjs` and `spec-sha.mjs` from `templates/ts/` and wire the `docs:check` script.
+6. **Hooks.** Install lefthook and the stack's commit-message linter, then copy `templates/<stack>/lefthook.yml`:
+   - TS: `bun add -d @commitlint/cli @commitlint/config-conventional && bun x lefthook install`, plus `templates/ts/commitlint.config.cjs`.
+   - Python: `uv add --dev commitizen` (config lives in `pyproject.toml`), then install lefthook per its docs.
+7. **Lint/format config.** TS: add `lint-staged.config.mjs` from `templates/ts/`. Python: nothing here — `ruff` config lives in `pyproject.toml` (step 9).
+8. Add `justfile` from `templates/<stack>/justfile.template`.
+9. **Deps and scripts** (**merge — never overwrite**). TS: ensure `package.json` has `dev`, `build`, `typecheck`, `lint`, `format`, `format:check`, `docs:check`. Python: merge `pyproject.toml` from `templates/python/`, add tool deps with `uv add --dev`, then `uv sync` so `uv.lock` exists and is committed (CI runs `uv sync --locked`).
+10. **Formatter.** TS: add `.prettierrc` from `templates/ts/`. Python: `ruff format` (already configured in step 9). OpenCode's built-in formatter (global `formatter: true`) formats both after edits.
+11. **Linter.** TS: add `eslint.config.js` from `templates/ts/` (flat config, AI limits). Python: `ruff check` (already configured in step 9).
+12. Add `docs-check` and `spec-sha`/`spec_sha` from `templates/<stack>/`.
 13. Write `docs/WORKFLOW.md` from `templates/WORKFLOW.md`, and add `.opencode/opencode.json` from `templates/.opencode/opencode.json` at the repo root (**merge — never overwrite**).
-14. (Optional) Add dependency-cruiser from `templates/ts/dependency-cruiser-rules.md`.
-15. (Optional) Add CI from `templates/ts/.github/workflows/ci.yml.template`.
+14. (Optional) TS only: add dependency-cruiser from `templates/ts/dependency-cruiser-rules.md`.
+15. (Optional) Add CI from `templates/<stack>/.github/workflows/ci.yml.template`.
 
-> Optional sidecar: create `.nvmrc` (or `.node-version`) for runtime version pinning.
+> Optional sidecar: `templates/ts/.nvmrc.template` (TS) or `templates/python/.python-version.template` (Python) for runtime version pinning.
 
 ### Product steps (16–19)
 
@@ -162,35 +181,20 @@ Node), with `templates/python/` the Python set. The product templates are the
 | `WORKFLOW.md`                  | `docs/WORKFLOW.md`                      |
 | `.opencode/opencode.json`      | `.opencode/opencode.json`               |
 | `ts/spec-sha.mjs`              | `spec-sha.mjs` (repo root)              |
+| `python/docs_check.py`, `python/spec_sha.py` | same paths (repo root)   |
+| `ts/*`                         | TS/Node technical set (steps 6–15)      |
+| `python/*`                     | Python technical set (steps 6–15)       |
 
 `docs-check.mjs` and `spec-sha.mjs` (under `templates/<stack>/`) hardcode the
 canonical spec paths — change their constants only if the repo deviates from the
 layout above.
 
-## Linter Limits (TS/Node)
+## Stack specifics
 
-| Metric                  | Limit    |
-| ----------------------- | -------- |
-| Cyclomatic complexity   | error 10 |
-| Max params per function | error 4  |
-| Max lines per function  | warn 60  |
-| Max lines per file      | warn 200 |
-| Min test coverage       | optional |
+Per-stack linter limits, security commands, and language quick reference:
 
-## Security Checks
-
-Block `.env`, `.db`, and data files at commit. Run `bun audit --audit-level=high`.
-Audit dependencies.
-
-## Language Quick Reference (TS/Node)
-
-| Component    | Tool           |
-| ------------ | -------------- |
-| Type check   | `tsc --noEmit` |
-| Linter       | ESLint         |
-| Formatter    | Prettier       |
-| Tests        | Vitest or Jest |
-| Hook manager | Lefthook       |
+- **TypeScript/Node** → `references/typescript.md`
+- **Python (uv)** → `references/python.md`
 
 ## Common Mistakes
 
@@ -202,6 +206,9 @@ Audit dependencies.
 | Hooks are optional           | Without hooks, agents skip checks under pressure      |
 | Security checks are overkill | Leaked credentials are irreversible                   |
 | Overwriting existing config  | Additive only — merge, or report a collision and skip |
+| Treating Python like Node    | Different stack: uv/ruff/mypy/pytest, not bun/eslint  |
+| Adding ruff beside black     | Competing toolchains — report and stop, don't stack   |
+| Imposing uv on a poetry repo | Detect the manager; report and stop if it isn't uv    |
 
 ## Verification Gate
 
@@ -217,13 +224,13 @@ Create a TodoWrite with one item per step BEFORE touching code:
 - [ ] Step 3: .gitignore
 - [ ] Step 4: .editorconfig
 - [ ] Step 5: README.md
-- [ ] Step 6: lefthook + commitlint (installed AND configured)
-- [ ] Step 7: lint-staged config
+- [ ] Step 6: hooks + commit linter (installed AND configured)
+- [ ] Step 7: lint/format config
 - [ ] Step 8: justfile
-- [ ] Step 9: package.json scripts (merged)
-- [ ] Step 10: .prettierrc
-- [ ] Step 11: eslint.config.js (flat config)
-- [ ] Step 12: docs-check + spec-sha scripts
+- [ ] Step 9: deps + scripts (merged) / uv.lock
+- [ ] Step 10: formatter
+- [ ] Step 11: linter
+- [ ] Step 12: docs-check + spec-hash scripts
 - [ ] Step 13: WORKFLOW.md + .opencode config
 - [ ] Step 14: dependency-cruiser (optional)
 - [ ] Step 15: CI (optional)
@@ -235,53 +242,36 @@ Create a TodoWrite with one item per step BEFORE touching code:
 
 ### At end — audit checklist
 
-Run ALL of these commands and verify the expected output:
+Run ALL of these and verify the expected output.
+
+**Shared:**
 
 ```bash
-# 1. Git exists
 git status
-
-# 2. AGENTS.md exists
-ls AGENTS.md
-
-# 3. README.md exists
-ls README.md
-
-# 4. .editorconfig exists
-ls .editorconfig
-
-# 5. Lefthook configured
-ls lefthook.yml
-
-# 6. Lefthook hooks installed
+ls AGENTS.md README.md .editorconfig lefthook.yml
 ls -d .git/hooks/pre-commit .git/hooks/pre-push .git/hooks/commit-msg
-
-# 7. lint-staged configured
-ls lint-staged.config.mjs
-
-# 8. ESLint configured with flat config
-ls eslint.config.js
-
-# 9. Prettier configured
-ls .prettierrc
-
-# 10. justfile has quality targets (check/typecheck/lint)
 grep -q "check:" justfile && echo "OK" || echo "MISSING"
-
-# 11. package.json has the required scripts
-grep -q '"typecheck"' package.json && grep -q '"lint"' package.json && echo "OK" || echo "MISSING"
-
-# 12. TypeScript compiles clean
-bun x tsc --noEmit 2>&1
-
-# 13. ESLint runs clean (0 errors, warnings allowed)
-bun run lint 2>&1 | grep "0 errors" || echo "HAS ERRORS"
-
-# 14. Build succeeds
-bun run build
-
-# 15. Workflow index and project config exist
 ls docs/WORKFLOW.md .opencode/opencode.json
+```
+
+**TypeScript/Node:**
+
+```bash
+ls lint-staged.config.mjs eslint.config.js .prettierrc
+bun x tsc --noEmit 2>&1
+bun run lint 2>&1 | grep "0 errors" || echo "HAS ERRORS"
+bun run build
+```
+
+**Python (uv):**
+
+```bash
+ls .python-version pyproject.toml uv.lock
+uv run ruff check .
+uv run ruff format --check .
+uv run mypy .
+uv run python docs_check.py
+uv run pytest
 ```
 
 ### For product docs (steps 16–19), also verify:

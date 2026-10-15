@@ -246,7 +246,7 @@ function runCase(skill, c) {
   if (opt.standalone) args.push("--standalone")
   if (opt.model) args.push("--model", opt.model)
   const prompt = opt.quick
-    ? `${c.prompt}\n\nWork fast: skip \`bun install\`, builds, and the full audit command list, and do not commit. Otherwise follow the skill's normal rules — including any step that requires user confirmation.`
+    ? `${c.prompt}\n\nWork fast: skip dependency installs (\`bun install\`/\`uv sync\`), builds, and the full audit command list, and do not commit. Otherwise follow the skill's normal rules — including any step that requires user confirmation.`
     : c.prompt
   args.push(prompt)
 

@@ -1,0 +1,40 @@
+# Development commands. Run `just` to list them.
+
+dev:
+    uv run python -m REPLACE_ME   # replace with the project's entrypoint
+
+check:
+    uv run ruff check .
+    uv run ruff format --check .
+    uv run mypy .
+    uv run pip-audit || true
+    uv run python docs_check.py
+
+ci: check test
+
+typecheck:
+    uv run mypy .
+
+lint:
+    uv run ruff check .
+
+format:
+    uv run ruff format .
+
+format-check:
+    uv run ruff format --check .
+
+test:
+    uv run pytest
+
+test-watch:
+    uv run pytest -f
+
+docs-check:
+    uv run python docs_check.py
+
+clean:
+    rm -rf .venv .pytest_cache .ruff_cache .mypy_cache
+
+fresh:
+    uv sync

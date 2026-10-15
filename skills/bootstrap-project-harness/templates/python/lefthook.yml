@@ -1,0 +1,42 @@
+pre-commit:
+  commands:
+    sensitive-files:
+      run: |
+        staged=$(git diff --cached --name-only)
+        for f in $staged; do
+          case "$f" in
+            *.env|*.env.*|*.db|data/*)
+              echo "ERROR: $f looks sensitive — remove it from the stage."
+              exit 1
+              ;;
+          esac
+        done
+    lint:
+      run: uv run ruff check .
+    format:
+      run: uv run ruff format --check .
+    typecheck:
+      run: uv run mypy .
+    security:
+      # Block on audit findings when online; skip when the index is unreachable
+      # so an offline laptop doesn't train people to bypass hooks.
+      run: |
+        if ! uv run pip-audit; then
+          if curl -sI https://pypi.org >/dev/null 2>&1; then
+            echo "Security audit reported vulnerabilities."
+            exit 1
+          fi
+          echo "Offline — skipping security audit."
+        fi
+
+pre-push:
+  commands:
+    test:
+      run: uv run pytest
+    docs-check:
+      run: uv run python docs_check.py
+
+commit-msg:
+  commands:
+    commitizen:
+      run: uv run cz check --commit-msg-file {1}
