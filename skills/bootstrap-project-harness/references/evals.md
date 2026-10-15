@@ -1,7 +1,7 @@
 # Evals
 
 Representative prompts and the trajectory this skill should produce. Fixtures for
-cases 1, 3, 5, and 7 live in `references/evals/<n>/` and are copied into the
+cases 1, 2, 3, 5, and 7 live in `references/evals/<n>/` and are copied into the
 scratch repo before the prompt runs.
 
 Assertions: `- [assert] <kind> <arg>` is machine-checked after the case — `file`,
@@ -27,6 +27,8 @@ that appears here would false-match.
    - Reports what changed and how to run the checks.
    - Watch for: rewriting existing tooling or changing unrelated files.
    - [assert] file AGENTS.md
+   - [assert] filematch package.json custom-build-untouched
+   - [assert] unchanged .prettierrc
    - [assert] nofile .husky
    - [assert] nofile docs/superpowers
 

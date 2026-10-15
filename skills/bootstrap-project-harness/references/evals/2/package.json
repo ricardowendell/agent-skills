@@ -1,0 +1,13 @@
+{
+  "name": "existing-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "start": "bun run src/index.ts",
+    "custom:build": "echo custom-build-untouched"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}
