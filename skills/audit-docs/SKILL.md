@@ -1,6 +1,7 @@
 ---
 name: audit-docs
 description: Audit product-thinking docs for contradictions, duplicates, unclear principles, misplaced ideas, and scope creep. Use when the user asks for a docs consistency check, documentation review, product-doc audit, or an architecture/constraints alignment check. Proposes scoped edits without expanding scope.
+stack-agnostic: true
 ---
 
 # Check Doc Consistency

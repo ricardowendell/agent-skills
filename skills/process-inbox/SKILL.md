@@ -1,6 +1,7 @@
 ---
 name: process-inbox
 description: Turn unprocessed inbox notes into stable product docs, preserving the raw notes. Use when the user asks to process the inbox, organize raw notes, extract stable ideas, or classify notes into vision/principles/experience/system/decisions/backlog. Presents a plan before writing and does not invent product direction.
+stack-agnostic: true
 ---
 
 # Process Inbox Notes

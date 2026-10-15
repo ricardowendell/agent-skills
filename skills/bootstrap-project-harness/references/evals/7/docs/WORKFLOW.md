@@ -12,6 +12,9 @@
 5. **Implement** — `/implement <prompt>` — build it, add tests, flip the spec `in_progress` → `implemented`.
 6. **Check** — `/docs-check` — audit the docs for drift. (`just docs-check` also runs in the gates.)
 
+Between **Prompt** and **Implement**, stress-test the prompt with `/blind-spots` —
+the last cheap checkpoint before code exists.
+
 ## If it goes wrong
 
 `/undo` rolls back the last response **and the files it changed**, then returns

@@ -1,6 +1,7 @@
 ---
 name: find-blind-spots
 description: Interview the user adversarially about a plan or design until every branch of the decision tree is resolved. Use when the user asks to find blind spots, stress-test this, challenge my design, poke holes, pressure-test an idea, or wants adversarial feedback before committing to an approach.
+stack-agnostic: true
 ---
 
 # Find Blind Spots

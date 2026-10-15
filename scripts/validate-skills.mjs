@@ -82,6 +82,7 @@ function frontmatter(text) {
     hasDesc: !!dLine,
     hasVersion: /^version:/m.test(fm),
     hasInstalled: /^installed:/m.test(fm),
+    hasStackAgnostic: /^stack-agnostic:\s*true\b/m.test(fm),
   }
 }
 
@@ -120,6 +121,28 @@ for (const root of ROOTS) {
     }
     if (versioned && !fm.hasInstalled)
       warnings.push(`${file}: looks installed (version marker) — add 'installed: true' so it is not renamed`)
+
+    // Stack-agnostic skills must not hardcode one stack. Mentioning both is fine
+    // ("run `node spec-sha.mjs` or `uv run python spec_sha.py`"); mentioning
+    // exactly one is the smell this rule exists to catch.
+    if (fm.hasStackAgnostic) {
+      // Blank the frontmatter (keeping line numbers) so a skill's own name or
+      // description can't trigger the rule.
+      const body = text.replace(/^---\n[\s\S]*?\n---/, (m) => m.replace(/[^\n]/g, " "))
+      const NODE = /\b(bun|npm|pnpm|yarn|deno|node|tsc|eslint|prettier|package\.json)\b/
+      const PY = /\b(python3?|pip3?|ruff|mypy|pytest|poetry|pdm|uv|pyproject\.toml|requirements\.txt)\b/
+      const hits = (re) =>
+        body
+          .split("\n")
+          .flatMap((line, i) => (re.test(line) ? [[line.match(re)[1], i + 1]] : []))
+      const nodeHits = hits(NODE)
+      const pyHits = hits(PY)
+      const only = nodeHits.length && !pyHits.length ? nodeHits : pyHits.length && !nodeHits.length ? pyHits : []
+      if (only.length)
+        warnings.push(
+          `${file}: stack-agnostic skill hardcodes '${only[0][0]}' (line ${only[0][1]}) — make it stack-neutral, or mention both stacks`,
+        )
+    }
 
     const hash = createHash("md5").update(text).digest("hex").slice(0, 8)
     if (!seen.has(id)) seen.set(id, [])

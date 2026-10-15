@@ -1,6 +1,7 @@
 ---
 name: write-implementation-prompt
 description: Generate or update a scoped implementation prompt from a ready feature spec. Use when the user asks to create an implementation prompt, convert a spec into a prompt, or prepare a coding agent to implement a SPEC file. Stops if the spec is not `ready`.
+stack-agnostic: true
 ---
 
 # Spec To Implementation Prompt
@@ -89,3 +90,5 @@ End with:
 ## Pipeline
 
 Previous stage: `groom-backlog`. Next stage: `implement-from-prompt` — implement the generated prompt. Report the prompt path so it can be run next.
+
+Before implementing, offer to **stress-test the prompt with `find-blind-spots`** (`/blind-spots`). The prompt is the last artifact before code, and this is the cheapest place to catch a wrong assumption — once code exists, the same mistake costs a rewrite.

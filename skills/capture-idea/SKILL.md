@@ -1,6 +1,7 @@
 ---
 name: capture-idea
 description: Capture a rough idea as a raw inbox note, preserving the user's own wording. Use when the user asks to capture a thought, jot something down, save an idea, brain dump, or preserve input without organizing it yet. Do not classify or move it into product docs — that is process-inbox.
+stack-agnostic: true
 ---
 
 # Capture Raw Idea
@@ -47,22 +48,12 @@ Use this shape:
 
 Use the user's local time when available. If multiple ideas are provided, keep them together under the same timestamp unless the user asks to split them.
 
-## Script
+## Writing the note
 
-For deterministic appends, run the bundled script from this skill's base directory
-(the directory OpenCode reports for the skill):
-
-```bash
-python3 scripts/capture_raw_idea.py --workspace <workspace-root> --text "<idea>"
-```
-
-Optionally pass a filename title:
-
-```bash
-python3 scripts/capture_raw_idea.py --workspace <workspace-root> --title "design principles suficiente" --text "<idea>"
-```
-
-The script creates the inbox directory and dated descriptive file if needed, ensures the note is marked `status: unprocessed`, then appends the timestamped entry.
+Use the normal file tools — no shell required, and no language runtime assumed.
+Create the inbox directory and a dated descriptive file (or append to an existing
+one), ensure the note carries `status: unprocessed`, then append the timestamped
+entry.
 
 ## Pipeline
 

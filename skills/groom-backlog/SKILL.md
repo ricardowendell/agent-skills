@@ -1,6 +1,7 @@
 ---
 name: groom-backlog
 description: Turn a product backlog item into a small, implementation-ready spec. Use when the user asks to groom the backlog, write or update a spec, define acceptance criteria, or prepare work for implementation. Updates an existing spec before creating one and does not expand product scope.
+stack-agnostic: true
 ---
 
 # Groom Backlog To Specs
