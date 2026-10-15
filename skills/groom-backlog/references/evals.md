@@ -3,6 +3,10 @@
 Representative prompts and the trajectory this skill should produce. Use these
 to check triggering and behavior after edits.
 
+Assertions: `- [assert] <kind> <arg>` is machine-checked after the case (`file`,
+`nofile`, `dir`, `nodir`, `filematch` — glob-capable, `grep`/`nogrep`,
+`unchanged`/`changed`). A case's fixture lives in `references/evals/<n>/`.
+
 1. **"Groom the backlog."**
    - Reads `AGENTS.md`, product docs, and existing specs first.
    - Creates or updates small specs in `docs/specs/SPEC-*.md` as `draft`.
@@ -21,3 +25,10 @@ to check triggering and behavior after edits.
 4. **"Groom the backlog" in a repo whose docs layout differs from the default.**
    - Discovers the real layout from `AGENTS.md`/README and maps the same concepts.
    - Watch for: assuming `docs/product/vision.md` exists.
+
+5. **"Groom the weekly digest email backlog item."** (fixture: existing backlog + scope)
+   - Writes a small spec under `docs/specs` with YAML frontmatter (an `id` and a `status`).
+   - Leaves the backlog item in place.
+   - Watch for: expanding scope beyond the item, or rewriting the backlog file.
+   - [assert] filematch docs/specs/*.md id: SPEC-
+   - [assert] unchanged docs/backlog/now-next-later.md
