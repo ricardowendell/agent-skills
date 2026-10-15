@@ -37,7 +37,7 @@ Look for:
 - Features that violate the simplicity philosophy.
 - Architecture decisions or components not reflected in constraints.
 - Backlog items that imply product scope expansion without support from vision or constraints.
-- Product-facing language that conflicts with Brazilian Portuguese interface direction.
+- Product-facing language that conflicts with the project's interface language direction (per `AGENTS.md`).
 
 ## Edit Policy
 

@@ -19,6 +19,8 @@ that appears here would false-match.
    - Watch for: applying the wrong toolchain or skipping detection.
    - [assert] file AGENTS.md
    - [assert] dir docs/product
+   - [assert] file .opencode/opencode.json
+   - [assert] file docs/WORKFLOW.md
    - [assert] nofile .husky
    - [assert] nofile docs/superpowers
 
@@ -63,6 +65,8 @@ that appears here would false-match.
    - Watch for: re-adding hooks or clobbering config.
    - [assert] unchanged docs/specs/SPEC-0001-demo.md
    - [assert] unchanged docs/prompts/implementation/SPEC-0001-demo.prompt.md
+   - [assert] unchanged .opencode/opencode.json
+   - [assert] unchanged docs/WORKFLOW.md
 
 8. **Any bootstrap.**
    - Produces no `docs/superpowers/` paths and no husky files.

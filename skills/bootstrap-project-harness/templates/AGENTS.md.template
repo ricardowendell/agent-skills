@@ -2,6 +2,12 @@
 
 > Merge with project-specific instructions as needed.
 
+## How to Work Here
+
+Spec-driven loop: **capture → process → groom → prompt → implement → docs-check**.
+Start with `/capture "idea"`, then move work forward with `/groom`, `/prompt`, and
+`/implement`. Full map: `docs/WORKFLOW.md`.
+
 ## Stack
 
 - Frontend: [tech stack]
@@ -63,10 +69,10 @@ docs/
 
 - `docs/architecture.md` holds architecture **rules**; `docs/system/` holds
   **descriptions** and must link to `architecture.md`, not restate its rules.
-- Raw ideas go to `docs/inbox` (`capture-raw-idea`), then are classified with
-  `process-inbox-notes`.
-- Work flows backlog → specs → prompts → code via `groom-backlog-to-specs`,
-  `spec-to-implementation-prompt`, and `implementation-prompt-to-code`.
+- Raw ideas go to `docs/inbox` (`/capture`), then are classified with
+  `/process-inbox`.
+- Work flows backlog → specs → prompts → code via `/groom`, `/prompt`, and
+  `/implement`.
 
 ## Linter Limits
 

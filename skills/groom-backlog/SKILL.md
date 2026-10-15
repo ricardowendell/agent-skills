@@ -17,7 +17,7 @@ Concept names below are stable; literal paths are illustrative. If the repo's la
 
 1. Read `AGENTS.md` first.
 2. Read, resolving paths from `AGENTS.md`:
-   - the specs index
+   - all existing specs (`docs/specs/SPEC-*.md`)
    - product vision and scope
    - the release plan and the now/next/later backlog
    - relevant `experience`, `system`, and `decisions` docs
@@ -27,7 +27,7 @@ Concept names below are stable; literal paths are illustrative. If the repo's la
    - Is there a matching experience doc that describes this flow? If not, flag it — the spec may be introducing new product ground.
    - Are all `depends_on` specs already in `implemented` status? If not, note the dependency risk.
    - Are there open specs with partially overlapping scope? If so, surface the conflict before writing.
-   If any gap is critical, ask the user to resolve it before grooming. Do not guess product direction.
+     If any gap is critical, ask the user to resolve it before grooming. Do not guess product direction.
 4. Check whether a matching spec already exists in the specs folder.
 5. Update the existing spec when possible. Create a new spec only when needed.
 6. **Assess size and blast radius before writing scope.** A spec is too broad if it:
@@ -35,8 +35,8 @@ Concept names below are stable; literal paths are illustrative. If the repo's la
    - Introduces more than one schema migration.
    - Changes behavior in core shared logic that other specs depend on.
    - Cannot be summarized in one sentence of user outcome.
-   When too broad, split into smaller specs and present the split to the user before continuing.
-   State the blast radius in terms of which feature areas are affected and which existing specs could regress — not file paths.
+     When too broad, split into smaller specs and present the split to the user before continuing.
+     State the blast radius in terms of which feature areas are affected and which existing specs could regress — not file paths.
 7. Keep each spec narrow enough for one coherent implementation task.
 8. **Run the full design principles check.** For each principle in the design principles doc, briefly assess whether the spec's flow and scope respects it. Flag violations or tensions explicitly, quoting the principle from the repo's own doc rather than paraphrasing it here. For any spec that places content on a UI surface, also ask whether showing it there creates accumulated weight over time.
 9. **Check UI state completeness.** For any spec with interactive UI, confirm the scope covers:
@@ -44,13 +44,13 @@ Concept names below are stable; literal paths are illustrative. If the repo's la
    - Empty state (nothing to show yet)
    - Loading state (if async)
    - Error state (if data can fail)
-   If a state is out of scope, call it out explicitly in Non-Goals.
+     If a state is out of scope, call it out explicitly in Non-Goals.
 10. **Check user-visible copy.** Any new copy introduced by the spec must be flagged for review against the voice principles doc. Mark it in the spec with a note like `(copy: pending voice review)` until reviewed. Do not invent copy that has not been validated.
 11. **Run a lightweight security check.** For any spec that handles user data:
     - Is all data user-scoped? Nothing leaks across users.
     - Does any migration touch existing rows in a potentially destructive way?
     - Does any AI-generated content get displayed as trusted HTML or interpreted as code?
-    Flag concerns in Prompt Notes > Safeguards. Do not prescribe implementation — just name the boundary.
+      Flag concerns in Prompt Notes > Safeguards. Do not prescribe implementation — just name the boundary.
 12. Preserve uncertainty in `Open Questions`.
 13. **Verify testability.** Every Acceptance Criterion must be independently verifiable — either by a user action and an observable result, or by a system state that can be queried. If a criterion cannot be verified without reading implementation internals, rewrite it or move it to Prompt Notes.
     Each spec should produce at least:
@@ -70,7 +70,7 @@ Concept names below are stable; literal paths are illustrative. If the repo's la
     - [ ] All AC are independently verifiable.
     - [ ] All `depends_on` specs are `implemented`, or the dependency risk is documented.
     - [ ] No unresolved cross-spec scope conflicts.
-    If any item fails, keep status `draft` and list what is blocking.
+          If any item fails, keep status `draft` and list what is blocking.
 
 ## Spec Rules
 
@@ -85,6 +85,8 @@ Concept names below are stable; literal paths are illustrative. If the repo's la
   - `paused`
   - `rejected`
 - Start new specs as `draft` unless the user asks to mark them ready.
+- This skill owns the `draft` → `ready` transition (and `paused`/`rejected`);
+  `implement-from-prompt` owns `ready` → `in_progress` → `implemented`.
 - Link source docs and related ADRs in frontmatter.
 - Use the project's interface language for product-facing copy. Internal spec prose may stay in English unless the user requests otherwise.
 
@@ -105,6 +107,7 @@ related_decisions:
   - docs/decisions/ADR-0001-example.md
 depends_on: []
 blocks: []
+tests: []
 ---
 
 # SPEC-0001: Morning Check-In

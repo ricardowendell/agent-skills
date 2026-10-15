@@ -25,11 +25,11 @@ Concept names below are stable; resolve literal paths from `AGENTS.md`.
 4. Read the relevant codebase before editing: existing patterns, helpers, and tests in the affected area. Check for existing functions with similar logic and reuse or extend them (DRY) rather than duplicating. Follow the layering and dependency rules the project documents.
 5. Confirm the Operations order mentally before touching code.
 6. Read the Safeguards section. It defines forbidden scope, non-goals, and privacy boundaries. Treat any violation as a bug, not a tradeoff. Keep it visible throughout implementation.
-7. Implement only the Operations in the prompt. Apply the Norms section for product tone, copy, accessibility, and commit conventions.
+7. Set the source spec `status: in_progress`, then implement only the Operations in the prompt. Apply the Norms section for product tone, copy, accessibility, and commit conventions.
 8. Add or update tests required by the prompt.
 9. Run the verification commands that are available locally.
 10. Walk through each Acceptance Criterion in the source spec. Confirm each passes — including all UI states the spec defines (happy path, empty, loading, error). Call out any that are no-ops or deferred.
-11. If code realities force a scope or design change, update the prompt/spec before treating the implementation as done.
+11. If code realities force a scope or design change, update the prompt/spec before treating the implementation as done. When every Acceptance Criterion passes, set the source spec `status: implemented` and populate its `tests:` list with the test files added or updated.
 
 ## Implementation Rules
 

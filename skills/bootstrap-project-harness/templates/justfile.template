@@ -2,7 +2,8 @@ dev:
     bun run dev
 
 check:
-    bun run typecheck && bun run lint && bun audit || true
+    bun run typecheck && bun run lint && (bun audit || true)
+    bun run docs:check
 
 ci: check test
 

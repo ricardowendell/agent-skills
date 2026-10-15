@@ -33,6 +33,8 @@ pre-push:
       run: bun test
     build:
       run: bun run build
+    docs-check:
+      run: bun run docs:check
 
 commit-msg:
   commands:

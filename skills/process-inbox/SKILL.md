@@ -33,7 +33,7 @@ Turn raw inbox notes into stable product-thinking documents without losing the o
    - Any detected conflicts with existing vision, principles, or decisions.
    - Cases where multiple destinations are plausible — list the options.
    - Open questions that need user input before proceeding.
-   Ask the user to confirm, redirect, or resolve ambiguities before making any changes. Do not proceed to writing until confirmed.
+     Ask the user to confirm, redirect, or resolve ambiguities before making any changes. Do not proceed to writing until confirmed.
 9. After confirmation, classify confirmed ideas into the right destination (folders per `AGENTS.md`):
    - Product direction, philosophy, and constraints: `docs/product`
    - Design and AI rules: `docs/principles`
@@ -56,7 +56,7 @@ Turn raw inbox notes into stable product-thinking documents without losing the o
 
 - Preserve the user's intent and terminology.
 - Keep docs concise and useful for product, design, and engineering decisions.
-- Prefer Brazilian Portuguese for product-facing interface language.
+- Use the project's interface language (resolved from `AGENTS.md`) for product-facing copy.
 - Avoid speculative features and feature bloat.
 - Do not turn every idea into a feature.
 - Do not treat exploratory thinking as a decision.

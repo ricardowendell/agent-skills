@@ -18,25 +18,25 @@ This skill covers **two harnesses** that must both exist:
 
 ## The Technical Pillars
 
-| Pillar | What | Why |
-|---|---|---|
-| Guides | AGENTS.md, principles | Tell agents how to behave |
-| Pre-commit sensors | typecheck + lint + security | Fast feedback during coding |
-| Pre-push sensors | tests + build | Regression protection |
-| Repeated sensors | docs-check, modularity | Catch drift over time |
-| Self-correction | Custom lint messages | Agents fix before human sees |
-| Commit conventions | commitlint | Reviewable history |
+| Pillar             | What                        | Why                          |
+| ------------------ | --------------------------- | ---------------------------- |
+| Guides             | AGENTS.md, principles       | Tell agents how to behave    |
+| Pre-commit sensors | typecheck + lint + security | Fast feedback during coding  |
+| Pre-push sensors   | tests + build               | Regression protection        |
+| Repeated sensors   | docs-check, modularity      | Catch drift over time        |
+| Self-correction    | Custom lint messages        | Agents fix before human sees |
+| Commit conventions | commitlint                  | Reviewable history           |
 
 ## The Product Pillars
 
-| Pillar | What | Why |
-|---|---|---|
-| Vision | Why product exists, for whom, problem solved | Guides scope decisions |
-| Language | Ubiquitous glossary: product term ↔ code entity | Prevents terminology drift |
-| Principles | Product design rules (practice > theory, ritual > gamification) | Prevents feature creep |
-| Design System | Colors, typography, components, icons, spacing | Visual consistency |
-| Voice | Tone of voice, what to say and what to avoid | UI copy consistency |
-| Roadmap | Phases, what enters now vs later | Clear scope |
+| Pillar        | What                                                            | Why                        |
+| ------------- | --------------------------------------------------------------- | -------------------------- |
+| Vision        | Why product exists, for whom, problem solved                    | Guides scope decisions     |
+| Language      | Ubiquitous glossary: product term ↔ code entity                 | Prevents terminology drift |
+| Principles    | Product design rules (practice > theory, ritual > gamification) | Prevents feature creep     |
+| Design System | Colors, typography, components, icons, spacing                  | Visual consistency         |
+| Voice         | Tone of voice, what to say and what to avoid                    | UI copy consistency        |
+| Roadmap       | Phases, what enters now vs later                                | Clear scope                |
 
 ## Principles
 
@@ -47,12 +47,12 @@ This skill covers **two harnesses** that must both exist:
 
 Check the current directory, then pick one of four states:
 
-| State | Signal | Action |
-|---|---|---|
-| Empty | no `.git`, no source | `git init`, full bootstrap |
-| Project, no harness | code exists, no `AGENTS.md` | add sensors + docs skeleton |
-| Partial harness | some sensors exist, audit fails | complete only the missing items |
-| Complete harness | audit passes | stop |
+| State               | Signal                          | Action                          |
+| ------------------- | ------------------------------- | ------------------------------- |
+| Empty               | no `.git`, no source            | `git init`, full bootstrap      |
+| Project, no harness | code exists, no `AGENTS.md`     | add sensors + docs skeleton     |
+| Partial harness     | some sensors exist, audit fails | complete only the missing items |
+| Complete harness    | audit passes                    | stop                            |
 
 Partial vs complete is read straight off the audit (does `lefthook.yml`, `.prettierrc`, etc. exist) — there is no stored state or version marker.
 
@@ -86,10 +86,13 @@ docs/
   prompts/
     implementation/            # SPEC-NNNN-*.prompt.md
   architecture.md              # prescriptive rules (sole normative owner)
+  WORKFLOW.md                  # one-page workflow index
 ```
 
 `docs/architecture.md` holds the architecture **rules**; `docs/system/` holds
 **descriptions** and must link to `architecture.md` rather than restate its rules.
+`docs/WORKFLOW.md` is the developer entry point. `.opencode/opencode.json`
+(repo root) loads `architecture.md` and `principles/design.md` as instructions.
 
 ### Technical steps
 
@@ -105,25 +108,26 @@ docs/
 9. Ensure `package.json` has the scripts the hooks and justfile call: `dev`, `build`, `typecheck`, `lint`, `format`, `format:check`, `docs:check`. **Merge — never overwrite an existing script.**
 10. Add `.prettierrc` from `templates/.prettierrc.template`.
 11. Add `eslint.config.js` from `templates/eslint.config.js.template` (flat config, AI limits).
-12. Add `docs-check.mjs` from `templates/docs-check.mjs` and wire the `docs:check` script.
-13. (Optional) Add dependency-cruiser from `templates/dependency-cruiser-rules.md`.
-14. (Optional) Add CI from `templates/.github/workflows/ci.yml.template`.
+12. Add `docs-check.mjs` and `spec-sha.mjs` from `templates/` and wire the `docs:check` script.
+13. Write `docs/WORKFLOW.md` from `templates/WORKFLOW.md`, and add `.opencode/opencode.json` from `templates/.opencode/opencode.json` at the repo root (**merge — never overwrite**).
+14. (Optional) Add dependency-cruiser from `templates/dependency-cruiser-rules.md`.
+15. (Optional) Add CI from `templates/.github/workflows/ci.yml.template`.
 
 > Optional sidecar: create `.nvmrc` (or `.node-version`) for runtime version pinning.
 
-### Product steps (15–18)
+### Product steps (16–19)
 
 Run these **after** the technical harness, and only with a human present.
 
-15. **Detect existing docs.** If `docs/` already holds any non-empty `.md` (outside the skeleton just created), or the README has a product/about section: stop the product phase. Write no product content — do not add, move, rename, or delete any existing file. Record what you found as open questions in `AGENTS.md`, then stop with: *"Existing docs found — run `/process-inbox` to classify."*
-16. **Interview for gaps.** Bounded — one pass, ≤7 questions, each skippable. Ask only what is knowable now:
+16. **Detect existing docs.** If `docs/` already holds any non-empty `.md` (outside the skeleton just created), or the README has a product/about section: stop the product phase. Write no product content — do not add, move, rename, or delete any existing file. Record what you found as open questions in `AGENTS.md`, then stop with: _"Existing docs found — run `/process-inbox` to classify."_
+17. **Interview for gaps.** Bounded — one pass, ≤7 questions, each skippable. Ask only what is knowable now:
     - `product/vision.md` — problem, audience, solution
     - `product/language.md` — a few core domain terms
     - `principles/product-principles.md` — short, decision-driving rules
     - design system / voice — only if the project has UI
-    Do **not** ask about the roadmap — that belongs to `groom-backlog`.
-17. **Write answers into the template shapes.** Use `templates/product-*.md` as the structure. Transcribe the user's words; do not invent.
-18. **Degrade to stubs.** For every skipped or unanswered question, leave the heading plus `<!-- Q: … -->` so `process-inbox` can resolve it later.
+      Do **not** ask about the roadmap — that belongs to `groom-backlog`.
+18. **Write answers into the template shapes.** Use `templates/product-*.md` as the structure. Transcribe the user's words; do not invent.
+19. **Degrade to stubs.** For every skipped or unanswered question, leave the heading plus `<!-- Q: … -->` so `process-inbox` can resolve it later.
 
 ### Product Checklist
 
@@ -139,30 +143,36 @@ Before marking product steps done, verify:
 ### Templates
 
 `templates/` provides the technical files referenced above, plus the
-`product-*.md` structures used in Step 17. The product templates are the **shape**
+`product-*.md` structures used in Step 18. The product templates are the **shape**
 for either real content (from the interview) or a stub (heading + `<!-- Q: … -->`).
 
-| Template | Destination |
-|---|---|
-| `product-vision.md` | `docs/product/vision.md` |
-| `product-language.md` | `docs/product/language.md` |
-| `product-principles.md` | `docs/principles/product-principles.md` |
-| `product-design-system.md` | `docs/principles/visual-design.md` |
-| `product-voice.md` | `docs/principles/voice.md` |
-| `product-roadmap.md` | `docs/backlog/release-plan.md` |
+| Template                       | Destination                             |
+| ------------------------------ | --------------------------------------- |
+| `product-vision.md`            | `docs/product/vision.md`                |
+| `product-language.md`          | `docs/product/language.md`              |
+| `product-principles.md`        | `docs/principles/product-principles.md` |
+| `product-design-system.md`     | `docs/principles/visual-design.md`      |
+| `product-voice.md`             | `docs/principles/voice.md`              |
+| `product-roadmap.md`           | `docs/backlog/release-plan.md`          |
+| `product-scope.md`             | `docs/product/scope.md`                 |
+| `architecture.md.template`     | `docs/architecture.md`                  |
+| `product-design-principles.md` | `docs/principles/design.md`             |
+| `WORKFLOW.md`                  | `docs/WORKFLOW.md`                      |
+| `.opencode/opencode.json`      | `.opencode/opencode.json`               |
+| `spec-sha.mjs`                 | `spec-sha.mjs` (repo root)              |
 
 `docs-check.mjs` hardcodes the canonical spec paths — change its constants only if
 the repo deviates from the layout above.
 
 ## Linter Limits (TS/Node)
 
-| Metric | Limit |
-|---|---|
-| Cyclomatic complexity | error 10 |
-| Max params per function | error 4 |
-| Max lines per function | warn 60 |
-| Max lines per file | warn 200 |
-| Min test coverage | optional |
+| Metric                  | Limit    |
+| ----------------------- | -------- |
+| Cyclomatic complexity   | error 10 |
+| Max params per function | error 4  |
+| Max lines per function  | warn 60  |
+| Max lines per file      | warn 200 |
+| Min test coverage       | optional |
 
 ## Security Checks
 
@@ -171,24 +181,24 @@ Audit dependencies.
 
 ## Language Quick Reference (TS/Node)
 
-| Component | Tool |
-|---|---|
-| Type check | `tsc --noEmit` |
-| Linter | ESLint |
-| Formatter | Prettier |
-| Tests | Vitest or Jest |
-| Hook manager | Lefthook |
+| Component    | Tool           |
+| ------------ | -------------- |
+| Type check   | `tsc --noEmit` |
+| Linter       | ESLint         |
+| Formatter    | Prettier       |
+| Tests        | Vitest or Jest |
+| Hook manager | Lefthook       |
 
 ## Common Mistakes
 
-| Mistake | Reality |
-|---|---|
-| Defaults are fine | ESLint defaults miss AI failure modes |
-| I will add tests later | Pre-push without tests = broken code |
-| Just a small project | Small projects grow. Start with structure. |
-| Hooks are optional | Without hooks, agents skip checks under pressure |
-| Security checks are overkill | Leaked credentials are irreversible |
-| Overwriting existing config | Additive only — merge, or report a collision and skip |
+| Mistake                      | Reality                                               |
+| ---------------------------- | ----------------------------------------------------- |
+| Defaults are fine            | ESLint defaults miss AI failure modes                 |
+| I will add tests later       | Pre-push without tests = broken code                  |
+| Just a small project         | Small projects grow. Start with structure.            |
+| Hooks are optional           | Without hooks, agents skip checks under pressure      |
+| Security checks are overkill | Leaked credentials are irreversible                   |
+| Overwriting existing config  | Additive only — merge, or report a collision and skip |
 
 ## Verification Gate
 
@@ -210,13 +220,14 @@ Create a TodoWrite with one item per step BEFORE touching code:
 - [ ] Step 9: package.json scripts (merged)
 - [ ] Step 10: .prettierrc
 - [ ] Step 11: eslint.config.js (flat config)
-- [ ] Step 12: docs-check script
-- [ ] Step 13: dependency-cruiser (optional)
-- [ ] Step 14: CI (optional)
-- [ ] Step 15: detect existing docs
-- [ ] Step 16: product interview
-- [ ] Step 17: product docs written
-- [ ] Step 18: stubs for anything skipped
+- [ ] Step 12: docs-check + spec-sha scripts
+- [ ] Step 13: WORKFLOW.md + .opencode config
+- [ ] Step 14: dependency-cruiser (optional)
+- [ ] Step 15: CI (optional)
+- [ ] Step 16: detect existing docs
+- [ ] Step 17: product interview
+- [ ] Step 18: product docs written
+- [ ] Step 19: stubs for anything skipped
 ```
 
 ### At end — audit checklist
@@ -265,9 +276,12 @@ bun run lint 2>&1 | grep "0 errors" || echo "HAS ERRORS"
 
 # 14. Build succeeds
 bun run build
+
+# 15. Workflow index and project config exist
+ls docs/WORKFLOW.md .opencode/opencode.json
 ```
 
-### For product docs (steps 15–18), also verify:
+### For product docs (steps 16–19), also verify:
 
 ```bash
 ls docs/product/ docs/principles/ docs/specs/ docs/prompts/implementation/
