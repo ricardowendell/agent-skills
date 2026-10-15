@@ -66,7 +66,7 @@ that appears here would false-match.
    - [assert] unchanged docs/specs/SPEC-0001-demo.md
    - [assert] unchanged docs/prompts/implementation/SPEC-0001-demo.prompt.md
    - [assert] unchanged .opencode/opencode.json
-   - [assert] unchanged docs/WORKFLOW.md
+   - [assert] filematch docs/WORKFLOW.md ## The loop
 
 8. **Any bootstrap.**
    - Produces no `docs/superpowers/` paths and no husky files.
