@@ -17,9 +17,8 @@ the last cheap checkpoint before code exists.
 
 ## If it goes wrong
 
-`/undo` rolls back the last response **and the files it changed**, then returns
-the prompt to the composer — edit it and re-run. Snapshots are Git-backed and
-cover the session's active directory, so run the session at the repo root.
+Revert what the response changed with `git restore` (or `git checkout`), adjust
+the prompt, then re-run. Small commits keep rollback cheap.
 
 ## Which command when
 
@@ -45,9 +44,10 @@ confirms nothing drifted.
 ## Beyond the loop
 
 `find-blind-spots` (pressure-test a design), `simplify` (reduce complexity after
-tests pass), `audit-docs` (periodic doc drift), `graphify` (architecture
-questions), `agent-browser` / `webapp-testing` (verify UI), `impeccable`
-(frontend design), `clonedeps` (read a dependency's source).
+tests pass), `audit-docs` (periodic doc drift), `record-decision` (record the
+choice as an ADR), `tighten-harness` (raise the bar once the code earns it),
+`graphify` (architecture questions), `agent-browser` / `webapp-testing` (verify
+UI), `impeccable` (frontend design), `clonedeps` (read a dependency's source).
 
 ## Gates you will hit
 

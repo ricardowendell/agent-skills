@@ -21,6 +21,8 @@ loads `SKILL.md` files works: OpenCode, Claude Code, Codex, and similar.
 | [`implement-from-prompt`](skills/implement-from-prompt) | Implements a structured prompt and verifies the result, preserving the prompt's scope and safeguards. |
 | [`find-blind-spots`](skills/find-blind-spots) | Interviews you adversarially about a plan until every branch of the decision tree is resolved. Cheapest checkpoint before implementation. |
 | [`audit-docs`](skills/audit-docs) | Read-only audit of product docs: contradictions, duplicates, unclear principles, misplaced ideas, scope creep. Proposes scoped edits, never expands scope. |
+| [`record-decision`](skills/record-decision) | Records a decision made in the conversation as a short ADR: status, context, decision, consequences. Supersedes the old ADR instead of editing it, and asks instead of inventing a rationale. |
+| [`tighten-harness`](skills/tighten-harness) | Raises the quality bar on purpose: measures the headroom the code already has, then tightens one lint, test, or gate limit with evidence. Config-only, and never loosens a gate to make it pass. |
 
 ## The pipeline
 
@@ -32,9 +34,41 @@ capture-idea → process-inbox → groom-backlog → write-implementation-prompt
 `bootstrap-project-harness` runs once, at the start of a project. `audit-docs`
 runs periodically, or as a gate before a release.
 
-The skills name each other rather than depending on a specific command runner,
-so you can bind them to the slash commands of your agent (for example
-`/capture`, `/groom`, `/prompt`, `/implement`) or call them by name.
+Two skills sit outside the loop: `record-decision` records the choices the loop
+produces, and `tighten-harness` raises the bar the loop has to clear.
+
+## Commands
+
+`commands/` holds thin slash-command stubs that call each skill, and `agents/`
+holds the read-only `spec-reviewer` subagent used by `docs-check`. Neither is
+required — the skills work when called by name.
+
+| Command | Skill |
+| --- | --- |
+| `/capture` | `capture-idea` |
+| `/process-inbox` | `process-inbox` |
+| `/groom` | `groom-backlog` |
+| `/prompt` | `write-implementation-prompt` |
+| `/implement` | `implement-from-prompt` |
+| `/docs-check` | `audit-docs` |
+| `/bootstrap` | `bootstrap-project-harness` |
+| `/blind-spots` | `find-blind-spots` |
+| `/record-decision` | `record-decision` |
+| `/tighten-harness` | `tighten-harness` |
+
+```sh
+# OpenCode
+cp ~/src/agent-skills/commands/*.md ~/.config/opencode/commands/
+cp ~/src/agent-skills/agents/*.md   ~/.config/opencode/agents/
+
+# Claude Code
+cp ~/src/agent-skills/claude/commands/*.md ~/.claude/commands/
+cp ~/src/agent-skills/claude/agents/*.md   ~/.claude/agents/
+```
+
+`claude/commands/` is the same set without the OpenCode-only frontmatter
+(`agent:`, `subagent:`), and `claude/agents/spec-reviewer.md` uses Claude Code's
+`tools:` field instead.
 
 ## Install
 
