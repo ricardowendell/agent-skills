@@ -65,7 +65,7 @@ run, because it only preserves your wording.
 | 1 | Capture | `/capture "idea"` | your words | `docs/inbox/<date>-<slug>.md` (`status: unprocessed`) | never — it only preserves |
 | 2 | Process | `/process-inbox` | inbox notes | edits under `product/`, `principles/`, `experience/`, `system/`, `decisions/`, `backlog/` | a note is still exploratory, or a product-doc change lacks your confirmation |
 | 3 | Groom | `/groom <backlog item>` | backlog + product docs | `docs/specs/SPEC-NNNN-<slug>.md` (`status: ready`) | intent is unclear, scope is too broad, or a gap blocks implementation |
-| 4 | Prompt | `/prompt SPEC-NNNN` | the `ready` spec | `docs/prompts/implementation/SPEC-NNNN-<slug>.prompt.md` | the spec is not `ready` |
+| 4 | Prompt | `/prompt SPEC-NNNN` | the `ready` spec | `docs/prompts/SPEC-NNNN-<slug>.prompt.md` | the spec is not `ready` |
 | 5 | Blind spots *(optional)* | `/blind-spots` | the prompt | the prompt, with open branches resolved | the plan still has an open branch |
 | 6 | Implement | `/implement <prompt>` | prompt + spec | code, tests; spec moves `in_progress` → `implemented` | an acceptance criterion fails, or scope would change |
 | 7 | Audit | `/docs-check` | all docs | findings + proposed edits | nothing — it is read-only |
@@ -95,14 +95,17 @@ docs/
   system/                   # descriptions; links to architecture.md
   decisions/                # ADR-NNNN-*.md
   specs/                    # SPEC-NNNN-*.md
-  prompts/implementation/   # SPEC-NNNN-*.prompt.md
+  prompts/                  # SPEC-NNNN-*.prompt.md
   architecture.md           # the normative architecture rules
   WORKFLOW.md               # one-page index of this loop, for the repo
 ```
 
 `architecture.md` holds the rules; `system/` only describes and links to them.
 If your repo already uses a different layout, the skills still work: concept
-names are stable, and literal paths come from `AGENTS.md`.
+names are stable, and literal paths come from `AGENTS.md`. The `docs-check`
+sensor is the exception — it expects `docs/specs/` and `docs/prompts/`, and
+discovers prompts recursively, so a subfolder per prompt kind is allowed but not
+required.
 
 ## Spec lifecycle
 

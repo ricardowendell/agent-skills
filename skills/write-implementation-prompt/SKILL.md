@@ -20,7 +20,7 @@ Concept names below are stable; resolve literal paths from `AGENTS.md`.
 2. Read, resolving paths from `AGENTS.md`:
    - the prompt-driven-development system doc, if present
    - the architecture doc (module structure, SRP, DIP, naming conventions)
-   - existing prompts (`docs/prompts/implementation/*.prompt.md`)
+   - existing prompts (`docs/prompts/*.prompt.md`)
    - the requested spec
 3. Read source docs and related decisions listed in the spec frontmatter.
 4. Check the spec status. If status is not `ready`, stop — list what is blocking readiness instead of generating a prompt from an incomplete spec.

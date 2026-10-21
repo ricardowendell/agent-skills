@@ -4,7 +4,7 @@ import path from "node:path";
 
 const ROOT = process.cwd();
 const SPEC_DIR = path.join(ROOT, "docs", "specs");
-const PROMPT_DIR = path.join(ROOT, "docs", "prompts", "implementation");
+const PROMPT_DIR = path.join(ROOT, "docs", "prompts");
 
 const KNOWN_STATUSES = new Set([
   "draft",

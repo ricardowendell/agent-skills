@@ -6,7 +6,7 @@ A fixture for case 1 lives in `references/evals/1/` and is copied into the
 scratch repo before the prompt runs. `- [assert] <kind> <arg>` lines are
 machine-checked after the case (see `run-evals.mjs`).
 
-1. **"Implement docs/prompts/implementation/SPEC-0007-demo.prompt.md."** (fixture: a `ready` spec + its prompt)
+1. **"Implement docs/prompts/SPEC-0007-demo.prompt.md."** (fixture: a `ready` spec + its prompt)
    - Reads `AGENTS.md`, the prompt, and its source spec first.
    - Implements only the Operations; applies Norms and keeps Safeguards visible.
    - Sets the source spec `status: in_progress`, then `implemented`, and populates `tests:`.
@@ -15,7 +15,7 @@ machine-checked after the case (see `run-evals.mjs`).
    - Watch for: implementing out-of-scope behavior or skipping the AC walk-through.
    - [assert] filematch src/index.ts double
    - [assert] filematch docs/specs/SPEC-0007-demo.md status: implemented
-   - [assert] filematch docs/prompts/implementation/SPEC-0007-demo.prompt.md ## Safeguards
+   - [assert] filematch docs/prompts/SPEC-0007-demo.prompt.md ## Safeguards
 
 2. **Missing prompt file.**
    - Points to `write-implementation-prompt` rather than improvising from a vague request.

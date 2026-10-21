@@ -69,7 +69,7 @@ that appears here would false-match.
    - `docs-check` runs clean against the existing spec and prompt.
    - Watch for: re-adding hooks or clobbering config.
    - [assert] unchanged docs/specs/SPEC-0001-demo.md
-   - [assert] unchanged docs/prompts/implementation/SPEC-0001-demo.prompt.md
+   - [assert] unchanged docs/prompts/SPEC-0001-demo.prompt.md
    - [assert] unchanged .opencode/opencode.json
    - [assert] filematch docs/WORKFLOW.md ## The loop
 

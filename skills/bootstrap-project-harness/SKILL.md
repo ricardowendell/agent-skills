@@ -101,8 +101,7 @@ docs/
   system/                      # descriptive only; links to architecture.md
   decisions/                   # ADR-NNNN-*.md (shape in README.md)
   specs/                       # SPEC-NNNN-name.md
-  prompts/
-    implementation/            # SPEC-NNNN-*.prompt.md
+  prompts/                   # SPEC-NNNN-*.prompt.md
   architecture.md              # prescriptive rules (sole normative owner)
   WORKFLOW.md                  # one-page workflow index
 ```
@@ -284,7 +283,7 @@ uv run pytest
 ### For product docs (steps 16–19), also verify:
 
 ```bash
-ls docs/product/ docs/principles/ docs/specs/ docs/prompts/implementation/
+ls docs/product/ docs/principles/ docs/specs/ docs/prompts/
 ls docs/experience/ docs/system/ docs/decisions/
 ```
 

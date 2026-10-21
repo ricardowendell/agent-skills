@@ -1,4 +1,4 @@
 interface:
   display_name: "Implementation Prompt To Code"
   short_description: "Implement code from approved implementation prompts."
-  default_prompt: "Implement the code described by a docs/prompts/implementation prompt, preserving scope and verification requirements."
+  default_prompt: "Implement the code described by a docs/prompts prompt, preserving scope and verification requirements."

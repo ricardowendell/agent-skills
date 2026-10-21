@@ -8,7 +8,9 @@ enforces that they agree. Change this file and both implementations together.
 ## Inputs
 
 - Specs: `docs/specs/SPEC-NNNN-<name>.md`
-- Prompts: `docs/prompts/implementation/SPEC-NNNN-<name>.prompt.md`
+- Prompts: `docs/prompts/**/SPEC-NNNN-<name>.prompt.md` — discovered recursively,
+  so a subfolder per prompt kind (`implementation/`, `review/`, …) is allowed but
+  not required. Flat files under `docs/prompts/` are the canonical layout.
 
 Frontmatter is a small YAML subset (scalars plus `- item` lists). Anything else
 in the file is ignored.

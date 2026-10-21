@@ -15,7 +15,7 @@ from pathlib import Path
 
 ROOT = Path.cwd()
 SPEC_DIR = ROOT / "docs" / "specs"
-PROMPT_DIR = ROOT / "docs" / "prompts" / "implementation"
+PROMPT_DIR = ROOT / "docs" / "prompts"
 
 KNOWN_STATUSES = {"draft", "ready", "in_progress", "implemented", "paused", "rejected"}
 
