@@ -21,3 +21,12 @@ jobs:
       - run: node scripts/run-evals.mjs --root skills --list
       # The JS and Python docs-check sensors must agree (references/docs-check.md).
       - run: node scripts/check-sensor-parity.mjs
+      # This repo ships authored skills only. Third-party skills stay installed
+      # locally (see README) and must never become tracked files again.
+      - name: No third-party skills redistributed
+        run: |
+          test -f LICENSE
+          if git ls-files skills | grep -E '^skills/(agent-browser|impeccable|graphify|find-skills|orchestration)/'; then
+            echo "::error::third-party skill tracked; it is not redistributed in this repo"
+            exit 1
+          fi
