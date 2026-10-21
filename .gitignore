@@ -4,3 +4,16 @@
 
 # Local scratch (if any)
 *.tmp
+
+# Local skill state (upstream installs tracked by the skills CLI)
+.skill-lock.json
+
+# Third-party skills kept locally, not redistributed in this repo
+skills/agent-browser/
+skills/impeccable/
+skills/graphify/
+skills/find-skills/
+skills/orchestration/
+
+# Secrets
+.env*
