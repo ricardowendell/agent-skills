@@ -103,6 +103,7 @@ docs/
   specs/                       # SPEC-NNNN-name.md
   prompts/                   # SPEC-NNNN-*.prompt.md
   architecture.md              # prescriptive rules (sole normative owner)
+  pipeline.md                  # PDLC policy: mode, gates, release tier
   WORKFLOW.md                  # one-page workflow index
 ```
 
@@ -180,6 +181,7 @@ Node), with `templates/python/` the Python set. The product templates are the
 | `product-roadmap.md`           | `docs/backlog/release-plan.md`          |
 | `product-scope.md`             | `docs/product/scope.md`                 |
 | `architecture.md.template`     | `docs/architecture.md`                  |
+| `pipeline.md.template`         | `docs/pipeline.md`                      |
 | `product-design-principles.md` | `docs/principles/design.md`             |
 | `WORKFLOW.md`                  | `docs/WORKFLOW.md`                      |
 | `.opencode/opencode.json`      | `.opencode/opencode.json`               |
@@ -257,7 +259,7 @@ git status
 ls AGENTS.md README.md .editorconfig lefthook.yml
 ls -d .git/hooks/pre-commit .git/hooks/pre-push .git/hooks/commit-msg
 grep -q "check:" justfile && echo "OK" || echo "MISSING"
-ls docs/WORKFLOW.md .opencode/opencode.json
+ls docs/WORKFLOW.md .opencode/opencode.json docs/pipeline.md
 ```
 
 **TypeScript/Node:**

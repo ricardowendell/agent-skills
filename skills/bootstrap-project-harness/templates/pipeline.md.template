@@ -1,0 +1,45 @@
+---
+mode: direct            # direct | orchestrated
+release_tier: B         # A | B
+---
+
+# Pipeline
+
+Como este repo decide entre fluxo direto e orquestrado, e o que cada estágio
+exige. Este arquivo é a **policy**: muda só via human gate (retro), e a evolução
+fica versionada no git.
+
+## Mode selection
+
+- **direct** (default): 1 task, sem dependências → `/implement` direto (worker
+  única, worktree opcional). Sem cerimônia.
+- **orchestrated**: multi-task com dependências reais → `pdlc_plan` (DAG em
+  waves) → `pdlc_dispatch` (worktrees) → workers → `pdlc_verify` →
+  `pdlc_merge`.
+
+## Estágios
+
+| Estágio | Exit artifact | Gate | Evidência |
+| --- | --- | --- | --- |
+| backlog | task .md no Backlog.md | — | — |
+| ready | spec pronta | human (groom) | spec_sha |
+| in_progress | implementação no worktree | — | — |
+| verify | diff revisado | reviewer (read-only) | APPROVE |
+| merged | merge no main | human (merge sign-off) | merge concluído |
+| released | tag | release gate | tag + changelog |
+
+## Transições (policy-as-code)
+
+Regras determinísticas em `src/core.mjs` (`LEGAL_TRANSITIONS`,
+`EVIDENCE_REQUIRED`). Toda transição que exige evidência só acontece com a prova
+do gate — nunca por declaração do agente. Doc-lying é impossível por construção.
+
+## Release tier
+
+- **A** (artifact distribuído): semver bump + CHANGELOG + tag.
+- **B** (interno): tag seca, sem cerimônia.
+
+## Ways of working
+
+Evolui via retro (Learn loop). Propostas de mudança passam por human gate e
+ficam versionadas aqui — o blame deste arquivo é o changelog do processo.
