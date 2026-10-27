@@ -17,8 +17,9 @@ The output is a verdict with evidence. Not a rewrite, not a list of preferences.
 
 Concept names below are stable; resolve literal paths from `AGENTS.md`.
 
-1. Read `AGENTS.md`. Resolve: the specs directory, the prompts directory, the
-   architecture doc, the pipeline or workflow doc, and the gate commands.
+1. Read `AGENTS.md` (or the project's equivalent agent configuration file).
+   Resolve: the specs directory, the prompts directory, the architecture doc, the
+   pipeline or workflow doc, and the gate commands.
 2. Fix the review object and record it: base ref, head sha, and range. Use the
    worktree diff, a branch range, or the pull request the user names.
 3. Read the source spec named in the prompt frontmatter (`spec:`), plus the
