@@ -68,6 +68,7 @@ wording.
 | `groom-backlog` | Turns a backlog item into a small spec with acceptance criteria | `/groom` |
 | `write-implementation-prompt` | Turns a `ready` spec into a scoped implementation prompt | `/prompt` |
 | `implement-from-prompt` | Builds it, tests it, and flips the spec to `implemented` | `/implement` |
+| `review-code` | Reviews a diff or PR against its spec; returns APPROVE or REJECT with evidence | `/review-code` |
 | `find-blind-spots` | Interviews you until every branch of a plan is closed | `/blind-spots` |
 | `audit-docs` | Read-only drift and contradiction audit of the product docs | `/docs-check` |
 | `record-decision` | Records a decision as an ADR, including what was traded away | `/record-decision` |
