@@ -134,6 +134,11 @@ kind is allowed but not required.
 | OpenCode | `~/.config/opencode/skills/` | `~/.config/opencode/commands/` | `~/.config/opencode/agents/` |
 | Claude Code | `~/.claude/skills/` | `~/.claude/commands/` | `~/.claude/agents/` |
 | Codex | `~/.codex/skills/` | call by name | — |
+| GitHub Copilot CLI | `~/.agents/skills/` (native, no install) | call by name | `~/.copilot/agents/` |
+
+Copilot CLI discovers `~/.agents/skills` on its own — verified with
+`copilot skill list`. Prompt files (`.github/prompts/`) and custom agents are
+IDE-facing and not shipped here; the skills need no adapter.
 
 Commands are optional: the skills work when named in a request. To install the
 stubs and the read-only `spec-reviewer` subagent:
