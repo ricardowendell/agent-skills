@@ -1,6 +1,7 @@
 ---
 mode: direct            # direct | orchestrated
 release_tier: B         # A | B
+retry_budget: 1         # retries before escalating (policy i: 1)
 ---
 
 # Pipeline
