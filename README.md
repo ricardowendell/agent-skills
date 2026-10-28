@@ -17,7 +17,8 @@ manual, and most skills read your `AGENTS.md` before acting.
 > under backlog → `/groom` writes `docs/specs/SPEC-0007-draft-autosave.md`
 > (`status: ready`) → `/prompt SPEC-0007` writes the implementation prompt →
 > `/implement` builds it, adds `tests/draft-autosave.test.ts`, and sets the spec
-> `implemented` → `/docs-check` confirms nothing drifted.
+> `implemented` → `/review-code` walks the acceptance criteria and approves the
+> diff → `/docs-check` confirms nothing drifted.
 
 Every stage between capture and audit can refuse. That is the design: a skill
 that cannot refuse is just a prompt.
@@ -84,7 +85,8 @@ wording.
 | 4 | Prompt | the `ready` spec | `docs/prompts/SPEC-NNNN-<slug>.prompt.md` | the spec is not `ready` |
 | 5 | Blind spots *(optional)* | the prompt | the prompt, with open branches resolved | the plan still has an open branch |
 | 6 | Implement | prompt + spec | code, tests; spec moves `in_progress` → `implemented` | an acceptance criterion fails, or scope would change |
-| 7 | Audit | all docs | findings + proposed edits | nothing — it is read-only |
+| 7 | Review | diff + spec | no files — a verdict with evidence | an AC lacks evidence, a gate fails, or the change cannot be isolated |
+| 8 | Audit | all docs | findings + proposed edits | nothing — it is read-only |
 
 The spec status is the contract between stages:
 
@@ -93,6 +95,8 @@ The spec status is the contract between stages:
 - `/prompt` refuses any other status, so a half-groomed spec cannot become code.
 - `/implement` marks `in_progress` before editing, and `implemented` only after
   walking **every** acceptance criterion and populating `tests:`.
+- `/review-code` never approves with a failing or unrun gate; it produces the
+  evidence, and the project's gate records the transition.
 - `/docs-check` catches drift after the fact — it never edits.
 
 ## Where files go

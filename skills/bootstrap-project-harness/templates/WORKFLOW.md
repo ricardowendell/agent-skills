@@ -10,7 +10,8 @@
 3. **Groom** — `/groom <backlog item>` — turn a decided item into a small spec (stops at the readiness gate).
 4. **Prompt** — `/prompt <SPEC>` — turn a `ready` spec into an implementation prompt.
 5. **Implement** — `/implement <prompt>` — build it, add tests, flip the spec `in_progress` → `implemented`.
-6. **Check** — `/docs-check` — audit the docs for drift. (`just docs-check` also runs in the gates.)
+6. **Review** — `/review-code` — read the diff against the spec; APPROVE or REJECT with evidence.
+7. **Check** — `/docs-check` — audit the docs for drift. (`just docs-check` also runs in the gates.)
 
 Between **Prompt** and **Implement**, stress-test the prompt with `/blind-spots` —
 the last cheap checkpoint before code exists.
@@ -29,6 +30,7 @@ the prompt, then re-run. Small commits keep rollback cheap.
 | Turn a backlog item into a spec        | `/groom`         |
 | Turn a ready spec into a prompt        | `/prompt`        |
 | Implement a prompt                     | `/implement`     |
+| Review a diff against its spec         | `/review-code`   |
 | Audit docs for contradictions or drift | `/docs-check`    |
 | Set up a new repo's harness and docs   | `/bootstrap`     |
 | Stress-test a plan before building     | `/blind-spots`   |
@@ -38,8 +40,9 @@ the prompt, then re-run. Small commits keep rollback cheap.
 `/capture "users lose drafts when the tab closes"` → `/process-inbox` files it
 under backlog → `/groom` writes `SPEC-0007-draft-autosave.md` (`status: ready`)
 → `/prompt SPEC-0007` writes the implementation prompt → `/implement` builds it,
-adds `tests/draft-autosave.test.ts`, sets the spec `implemented` → `/docs-check`
-confirms nothing drifted.
+adds `tests/draft-autosave.test.ts`, sets the spec `implemented` → `/review-code`
+walks the acceptance criteria and returns APPROVE → `/docs-check` confirms
+nothing drifted.
 
 ## Beyond the loop
 

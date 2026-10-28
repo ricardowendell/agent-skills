@@ -3,6 +3,11 @@
 Representative prompts and the trajectory this skill should produce. No fixture:
 these cases assert behavior, not artifacts.
 
+A fixture would need a git history (a base commit plus a change to review), and
+the eval runner stages fixtures as a plain tree with no `git init`. Until the
+runner can stage history, these cases stay behavior-only — the REJECT path is
+asserted by the trajectory, not by a repository.
+
 1. **"Review this PR against SPEC-0007."** (diff satisfies every AC)
    - Fixes the range and head sha before reading code.
    - Walks each acceptance criterion and records code plus test per criterion.
