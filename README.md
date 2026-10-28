@@ -7,9 +7,9 @@ Agent skills for a product-thinking workflow: capture an idea, turn it into a
 spec, implement it from a scoped prompt, and keep the docs honest.
 
 They are plain Markdown — `SKILL.md`, optional `references/`, no runtime or
-dependencies — so OpenCode, Claude Code, Codex, or any agent that loads
-`SKILL.md` files can use them. This README is the map; each `SKILL.md` is the
-manual, and most skills read your `AGENTS.md` before acting.
+dependencies — so OpenCode, Claude Code, Codex, GitHub Copilot CLI, or any agent
+that loads `SKILL.md` files can use them. This README is the map; each `SKILL.md`
+is the manual, and most skills read your `AGENTS.md` before acting.
 
 ## What a session looks like
 
@@ -134,11 +134,12 @@ kind is allowed but not required.
 | OpenCode | `~/.config/opencode/skills/` | `~/.config/opencode/commands/` | `~/.config/opencode/agents/` |
 | Claude Code | `~/.claude/skills/` | `~/.claude/commands/` | `~/.claude/agents/` |
 | Codex | `~/.codex/skills/` | call by name | — |
-| GitHub Copilot CLI | `~/.agents/skills/` (native, no install) | call by name | `~/.copilot/agents/` |
+| GitHub Copilot CLI | `~/.agents/skills/` (native, no install) | call by name | custom agents, selected manually |
 
 Copilot CLI discovers `~/.agents/skills` on its own — verified with
 `copilot skill list`. Prompt files (`.github/prompts/`) and custom agents are
-IDE-facing and not shipped here; the skills need no adapter.
+IDE-facing and not shipped here, and a skill cannot delegate to them; the skills
+need no adapter.
 
 Commands are optional: the skills work when named in a request. To install the
 stubs and the read-only `spec-reviewer` subagent:
