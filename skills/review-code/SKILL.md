@@ -1,6 +1,6 @@
 ---
 name: review-code
-description: Review a code change (pull request, branch, or worktree diff) against its source spec and return APPROVE or REJECT with evidence. Use when the user asks for a PR review, code review, diff review, or a merge verdict. Read-only: never edits, never merges, and never approves without walking every acceptance criterion.
+description: "Review a code change (pull request, branch, or worktree diff) against its source spec and return APPROVE or REJECT with evidence. Use when the user asks for a PR review, code review, diff review, or a merge verdict. Read-only: never edits, never merges, and never approves without walking every acceptance criterion."
 stack-agnostic: true
 ---
 

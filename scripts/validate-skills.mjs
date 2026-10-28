@@ -7,13 +7,15 @@
 //   3. Description length stays within a sane budget (default 500 chars).
 //   4. No drift: the same skill ID defined by two different trees with different content.
 //   5. No broken symlinks in the roots.
+//   6. Frontmatter values parse as YAML (an unquoted value with ': ' breaks loaders).
 //
 // Usage:  node ~/.config/opencode/scripts/validate-skills.mjs [--max-desc N]
 // Exit:   0 = clean (warnings allowed), 1 = errors found.
 
 import { readFileSync, readdirSync, lstatSync, realpathSync, existsSync } from "node:fs"
+import { execFileSync } from "node:child_process"
 import { createHash } from "node:crypto"
-import { join, basename, dirname } from "node:path"
+import { join, basename, dirname, relative } from "node:path"
 import { homedir } from "node:os"
 
 const args = process.argv.slice(2)
@@ -34,6 +36,26 @@ const ROOTS = (
         join(HOME, ".config/opencode/skills"),
       ]
 ).filter((d) => existsSync(d))
+
+// In `--root` mode (CI) the checkout may still contain untracked third-party
+// installs. Those are not ours to gate, so only tracked files get strict errors.
+let tracked = null
+if (rootArg >= 0) {
+  try {
+    const out = execFileSync("git", ["-C", args[rootArg + 1], "ls-files", "-z"], {
+      encoding: "utf8",
+    })
+    tracked = new Set(out.split("\0").filter(Boolean))
+  } catch {}
+}
+function isTracked(file) {
+  if (!tracked || rootArg < 0) return true
+  try {
+    return tracked.has(relative(args[rootArg + 1], file))
+  } catch {
+    return true
+  }
+}
 
 function* skillFiles(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -75,6 +97,14 @@ function frontmatter(text) {
     }
     description = block.join(" ")
   }
+  const badScalars = []
+  for (const line of fm.split("\n")) {
+    const hit = line.match(/^([A-Za-z0-9_-]+):\s*(.+)$/)
+    if (!hit) continue
+    const value = hit[2].trim()
+    const quoted = /^["'[{>|]/.test(value)
+    if (!quoted && /:\s/.test(value)) badScalars.push(hit[1])
+  }
   return {
     name,
     description,
@@ -83,6 +113,7 @@ function frontmatter(text) {
     hasVersion: /^version:/m.test(fm),
     hasInstalled: /^installed:/m.test(fm),
     hasStackAgnostic: /^stack-agnostic:\s*true\b/m.test(fm),
+    badScalars,
   }
 }
 
@@ -107,6 +138,13 @@ for (const root of ROOTS) {
       continue
     }
     if (!fm.hasName) errors.push(`${file}: missing 'name'`)
+    if (fm.badScalars.length) {
+      // Strict only for files this repo owns: a third-party install (untracked,
+      // or living in a user root) warns instead of blocking local commits.
+      const msg = `${file}: unquoted YAML value with ': ' in ${fm.badScalars.join(", ")} — quote it (strict loaders reject the file)`
+      if (rootArg >= 0 && isTracked(file)) errors.push(msg)
+      else warnings.push(msg)
+    }
     if (!fm.hasDesc) warnings.push(`${file}: missing 'description' (skill will not be advertised)`)
     if (!ID_RE.test(id)) warnings.push(`${file}: ID '${id}' is not lowercase kebab-case`)
     if (fm.description.length > MAX_DESC)
