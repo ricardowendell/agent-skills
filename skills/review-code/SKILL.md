@@ -96,6 +96,10 @@ human merge sign-off, or back to implementation.
   Confirm with `git status --porcelain` before and after; an identical result is
   the proof.
 - Never approve with a failing or unrun gate.
+- **No self-serve fallback.** Without a spec, the fallback ("no spec: review for
+  regressions and safety") must come from the user's own message. Never adopt it
+  yourself, and never describe it as declared when it was not: an absent or
+  unanswered question is not a declaration, whatever the run mode.
 - Do not invent acceptance criteria; do not mark a missing AC satisfied because
   the code looks reasonable.
 - Do not reopen product decisions in review. If the spec is wrong, raise it as an
