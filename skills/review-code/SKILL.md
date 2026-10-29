@@ -25,7 +25,9 @@ Concept names below are stable; resolve literal paths from `AGENTS.md`.
 3. Read the source spec named in the prompt frontmatter (`spec:`), plus the
    prompt's Safeguards. If the project records a spec hash and it no longer
    matches the spec file, the contract moved after the code was written — reject
-   as a stale spec instead of reviewing code against a moving target.
+   as a stale spec instead of reviewing code against a moving target. Stop there:
+   record `SPEC: <id> (spec hash: mismatch)` with the verdict and send it back,
+   rather than walking ACs that changed under the diff.
 4. Walk the acceptance criteria one by one. For each, record the code that
    satisfies it and the test that proves it. An AC without both is a blocking
    finding; do not replace evidence with an impression.
