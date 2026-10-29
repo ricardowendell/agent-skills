@@ -189,6 +189,11 @@ node scripts/check-sensor-parity.mjs
 drift, and broken symlinks. The full eval run stays local, since it needs a model
 provider.
 
+A case normally ships a fixture tree under `references/evals/<n>/`. When the
+skill needs history (a diff to review, a branch to compare), the case ships a
+`git.json` manifest instead: the tree is committed as `main`, `change.patch` is
+applied on a branch, and that branch is left checked out.
+
 ## Optional companion skills
 
 Some instructions (notably the `bootstrap-project-harness` workflow template)

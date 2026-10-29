@@ -31,11 +31,18 @@
 // OPENCODE*/AI_AGENT) so the agent honours the scratch cwd. Without this the
 // child attaches to the shared server and edits the directory you launched from.
 //
+// Fixtures: `references/evals/<n>/` is copied into the scratch dir. A case that
+// brings a `git.json` manifest is staged instead: `{ "base": "../base",
+// "remove": ["docs/specs"], "branch": "feature", "message": "...", "patch":
+// "change.patch" }` commits the base tree as `main`, prunes `remove`, applies
+// the patch on `branch`, and leaves that branch checked out.
+//
 // Output: transcripts under ~/.local/share/opencode/evals/<skill>/<n>.md
 
-import { readFileSync, readdirSync, lstatSync, realpathSync, existsSync, mkdtempSync, cpSync, mkdirSync, writeFileSync } from "node:fs"
-import { spawn } from "node:child_process"
-import { join, basename, dirname } from "node:path"
+import { readFileSync, readdirSync, lstatSync, realpathSync, existsSync, mkdtempSync, cpSync, mkdirSync, writeFileSync, unlinkSync, rmSync } from "node:fs"
+import { spawn, execFileSync } from "node:child_process"
+import { createHash } from "node:crypto"
+import { join, basename, dirname, resolve } from "node:path"
 import { homedir, tmpdir } from "node:os"
 
 const argv = process.argv.slice(2)
@@ -161,16 +168,38 @@ function discoverEvals() {
 //   [assert] filematch <path> <re>  scratch file content matches regex
 //   [assert] grep <regex>         regex matches the transcript (see caveat)
 //   [assert] nogrep <regex>       regex does not match the transcript
-//   [assert] unchanged <path>     scratch file byte-identical to the fixture copy
-//   [assert] changed <path>       scratch file differs from the fixture copy
+//   [assert] reply <regex>        regex matches the agent's text replies only
+//   [assert] noreply <regex>      regex does not match the agent's text replies
+//   [assert] verdict APPROVE|REJECT  the reply's `VERDICT:` line names this one
+//   [assert] unchanged <path>     scratch file unmodified since staging
+//   [assert] changed <path>       scratch file modified since staging
 //
 // Caveat: the transcript contains the skill's own text, so grep against it can
-// match this eval file. Prefer file/dir/filematch/unchanged assertions.
-function evaluateAssertions(c, scratch, out) {
+// match this eval file. Prefer reply/noreply/verdict (assistant text only) or
+// filesystem assertions.
+// `unchanged`/`changed` compare against the tree as it was staged, not against
+// the fixture file: a git fixture's reviewed files legitimately differ from the
+// base commit, and what the assertion cares about is whether the skill edited
+// anything afterwards.
+function snapshotTree(root) {
+  const map = new Map()
+  const walk = (dir, rel) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      if (e.name === ".git" || e.name === "node_modules") continue
+      const p = join(dir, e.name)
+      const r = rel ? `${rel}/${e.name}` : e.name
+      if (e.isDirectory()) walk(p, r)
+      else if (e.isFile()) map.set(r, createHash("md5").update(readFileSync(p)).digest("hex"))
+    }
+  }
+  walk(root, "")
+  return map
+}
+
+function evaluateAssertions(c, scratch, out, text = "", snapshot = new Map()) {
   const results = []
   for (const { kind, arg } of c.assert || []) {
     const p = join(scratch, arg)
-    const fixture = join(c.skillDir, "references/evals", String(c.n), arg)
     let pass = false
     let detail = ""
     switch (kind) {
@@ -221,12 +250,24 @@ function evaluateAssertions(c, scratch, out) {
       case "nogrep":
         pass = !new RegExp(arg).test(out)
         break
+      case "reply":
+        pass = new RegExp(arg).test(text)
+        break
+      case "noreply":
+        pass = !new RegExp(arg).test(text)
+        break
+      case "verdict": {
+        const m = /^\s*VERDICT:\s*([A-Za-z]+)/m.exec(text)
+        pass = !!m && m[1].toUpperCase() === arg.trim().toUpperCase()
+        if (!m) detail = "no VERDICT: line in the reply"
+        break
+      }
       case "unchanged":
       case "changed": {
-        const a = existsSync(p) ? readFileSync(p) : null
-        const b = existsSync(fixture) ? readFileSync(fixture) : null
-        if (kind === "unchanged") pass = a !== null && b !== null && a.equals(b)
-        else pass = a !== null && b !== null && !a.equals(b)
+        const a = existsSync(p) ? createHash("md5").update(readFileSync(p)).digest("hex") : null
+        const b = snapshot.has(arg) ? snapshot.get(arg) : null
+        if (kind === "unchanged") pass = a !== null && b !== null && a === b
+        else pass = a !== null && b !== null && a !== b
         break
       }
       default:
@@ -237,10 +278,81 @@ function evaluateAssertions(c, scratch, out) {
   return results
 }
 
+// The assistant's own words, without the tool output or the skill's text — so
+// `reply`/`verdict` assertions cannot be satisfied by the skill's own template.
+function replyText(out) {
+  const parts = []
+  for (const line of out.split("\n")) {
+    const s = line.trim()
+    if (!s.startsWith("{")) continue
+    try {
+      const ev = JSON.parse(s)
+      if (ev.type === "text" && ev.part?.text) parts.push(ev.part.text)
+    } catch {}
+  }
+  return parts.join("\n")
+}
+
+// Stage the fixture in the scratch dir. A bare directory is copied as-is. When
+// the case ships a `git.json` manifest, the tree is committed as `main`, the
+// patch is applied on a new branch, and that branch stays checked out — so a
+// review case sees a real base..head range instead of an unversioned tree.
+function stageFixture(skill, c, scratch) {
+  const caseDir = join(skill.dir, "references/evals", String(c.n))
+  const manifest = join(caseDir, "git.json")
+  const isGit = existsSync(manifest)
+  const spec = isGit ? JSON.parse(readFileSync(manifest, "utf8")) : {}
+  const baseDir = isGit ? resolve(caseDir, spec.base ?? ".") : caseDir
+  if (!existsSync(baseDir)) return
+  cpSync(baseDir, scratch, {
+    recursive: true,
+    filter: (src) => !/(^|\/)(git\.json|change\.patch)$/.test(src),
+  })
+  if (!isGit) return
+
+  // `remove` prunes paths from the base before the first commit — for a case
+  // where the artefact under review (a spec, a prompt) must not exist yet.
+  for (const rel of spec.remove ?? []) rmSync(join(scratch, rel), { recursive: true, force: true })
+
+  const git = (...args) =>
+    execFileSync(
+      "git",
+      ["-c", "user.name=Eval", "-c", "user.email=eval@example.com", "-c", "commit.gpgsign=false", ...args],
+      { cwd: scratch, stdio: "pipe", encoding: "utf8" },
+    )
+  git("init", "-q", "-b", "main")
+  git("add", "-A")
+  git("commit", "-q", "-m", "chore: fixture base")
+  if (spec.branch) git("checkout", "-q", "-b", spec.branch)
+  if (spec.patch) {
+    const tmp = join(scratch, ".eval-change.patch")
+    writeFileSync(tmp, readFileSync(join(caseDir, spec.patch), "utf8"))
+    try {
+      git("apply", "--whitespace=nowarn", tmp)
+    } finally {
+      unlinkSync(tmp)
+    }
+  }
+  git("add", "-A")
+  git("commit", "-q", "-m", spec.message ?? "change under review")
+}
+
 function runCase(skill, c) {
   const scratch = mkdtempSync(join(tmpdir(), `eval-${skill.id}-${c.n}-`))
-  const fixture = join(skill.dir, "references/evals", String(c.n))
-  if (existsSync(fixture)) cpSync(fixture, scratch, { recursive: true })
+  const dir = join(OUT_ROOT, skill.id)
+  mkdirSync(dir, { recursive: true })
+  const file = join(dir, `${c.n}.md`)
+  try {
+    stageFixture(skill, c, scratch)
+  } catch (e) {
+    writeFileSync(
+      file,
+      `# Eval: ${skill.id} case ${c.n}\n\n**Prompt:** ${c.prompt}\n\n**Scratch:** ${scratch}\n` +
+        `**Fixture:** failed to stage\n\n\`\`\`\n${e.message}\n${e.stderr ?? ""}\n\`\`\`\n`,
+    )
+    return Promise.resolve({ code: "fixture-error", file, failedAsserts: 0 })
+  }
+  const snapshot = snapshotTree(scratch)
 
   const args = ["run", "--format", "json", "--auto", "--agent", opt.agent]
   if (opt.standalone) args.push("--standalone")
@@ -249,10 +361,6 @@ function runCase(skill, c) {
     ? `${c.prompt}\n\nWork fast: skip dependency installs (\`bun install\`/\`uv sync\`), builds, and the full audit command list, and do not commit. Otherwise follow the skill's normal rules — including any step that requires user confirmation.`
     : c.prompt
   args.push(prompt)
-
-  const dir = join(OUT_ROOT, skill.id)
-  mkdirSync(dir, { recursive: true })
-  const file = join(dir, `${c.n}.md`)
 
   return new Promise((resolve) => {
     // detached => the child leads its own process group, so we can kill the
@@ -294,7 +402,7 @@ function runCase(skill, c) {
         child.stderr?.destroy()
         child.unref()
       } catch {}
-      const asserts = evaluateAssertions(c, scratch, out)
+      const asserts = evaluateAssertions(c, scratch, out, replyText(out), snapshot)
       const failedAsserts = asserts.filter((a) => !a.pass).length
       const assertBlock = asserts.length
         ? `## Assertions (auto-checked)\n\n${asserts
