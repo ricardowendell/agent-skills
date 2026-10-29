@@ -15,7 +15,7 @@ Capture a decision that was actually made, including what was traded away, so th
 1. Read `AGENTS.md` first.
 2. Resolve from `AGENTS.md`: the decisions folder (illustratively `docs/decisions`) and the architecture doc. If the repo has no decisions folder, ask before creating one.
 3. Read the decisions `README.md`, because it defines the local format, and the existing ADRs. The next number is the highest existing `ADR-NNNN` plus one.
-4. **Confirm the decision is made.** It is made when the user states what will be done and something was traded away. If the options are still being weighed, stop and say so — an option under discussion is not a decision.
+4. **Confirm the decision is made.** It is made when the user states what will be done and something was traded away. If the options are still being weighed, stop and say so — an option under discussion is not a decision. Write nothing in that case: no ADR file, and no row in the index.
 5. Collect the minimum:
    - **Context** — the forces that make this a real choice.
    - **Decision** — what was chosen, in one or two sentences.
@@ -34,6 +34,8 @@ Capture a decision that was actually made, including what was traded away, so th
 - **Do not mine the inbox.** Decisions found in raw notes belong to `process-inbox`.
 - **Do not restate vision or principles.** Reference them; they are not the decision.
 - **Supersede, never edit, an accepted ADR.** History is the point.
+- **All or nothing.** The ADR file and its index row land together. Never add an
+  index entry for a decision that was not recorded.
 - **Do not open a decision record for reversible, local choices** (naming, formatting). Say why it does not need one.
 
 ## Output
