@@ -28,7 +28,7 @@ Concept names below are stable; literal paths are illustrative. If the repo's la
    - Is there a matching experience doc that describes this flow? If not, flag it — the spec may be introducing new product ground.
    - Are all `depends_on` specs already in `implemented` status? If not, note the dependency risk.
    - Are there open specs with partially overlapping scope? If so, surface the conflict before writing.
-     If any gap is critical, ask the user to resolve it before grooming. Do not guess product direction.
+     If any gap is critical, ask the user to resolve it before grooming. Do not guess product direction, and do not read silence as an answer: if the question goes unanswered, keep the spec `draft` and name the gap that blocked `ready` — write no invented content.
 4. Check whether a matching spec already exists in the specs folder.
 5. Update the existing spec when possible. Create a new spec only when needed.
 6. **Assess size and blast radius before writing scope.** A spec is too broad if it:

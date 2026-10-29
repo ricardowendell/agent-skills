@@ -21,7 +21,7 @@ Capture a decision that was actually made, including what was traded away, so th
    - **Decision** — what was chosen, in one or two sentences.
    - **Alternatives considered** — only those the user actually mentioned, with the reason they lost.
    - **Consequences** — what this makes easy, and what it makes hard.
-6. **Ask for anything missing. Never invent rationale, constraints, or alternatives.** A plausible-sounding reason the user never gave is worse than an open question.
+6. **Ask for anything missing. Never invent rationale, constraints, or alternatives.** A plausible-sounding reason the user never gave is worse than an open question. An unanswered question is not an answer: if the missing half never arrives, leave the decision unrecorded.
 7. If the decision replaces an existing ADR: write the new ADR first, then set the old one's status to `superseded by ADR-NNNN`. Do not rewrite the old decision.
 8. Write `ADR-NNNN-short-name.md` in the decisions folder, following the fields the local `README.md` defines. When it defines none, use Status, Context, Decision, Consequences, and Alternatives considered (when given).
 9. Update the decisions index only if one already exists, and only additively: append the new row, link the new ADR, never renumber existing entries.
