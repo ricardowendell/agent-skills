@@ -1,0 +1,7 @@
+{
+  "base": "../base",
+  "remove": ["docs/specs", "docs/prompts"],
+  "branch": "feature/cart-tax",
+  "message": "feat(cart): add tax-aware total",
+  "patch": "change.patch"
+}

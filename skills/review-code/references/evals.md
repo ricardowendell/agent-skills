@@ -1,31 +1,45 @@
 # Evals
 
-Representative prompts and the trajectory this skill should produce. No fixture:
-these cases assert behavior, not artifacts.
+Cases 1–3 share the `base/` fixture: a small Node project with `AGENTS.md`, a
+spec (`docs/specs/SPEC-0007-cart-tax.md`), its prompt, and a passing
+`node --test` suite. Each case's `git.json` commits that tree as `main`, applies
+`change.patch` on a branch, and leaves the branch checked out — so the skill
+reviews a real `main..feature` range instead of an unversioned directory.
 
-A fixture would need a git history (a base commit plus a change to review), and
-the eval runner stages fixtures as a plain tree with no `git init`. Until the
-runner can stage history, these cases stay behavior-only — the REJECT path is
-asserted by the trajectory, not by a repository.
+Case 3 prunes `docs/specs` and `docs/prompts` before the base commit: the review
+must then ask for the intent rather than invent acceptance criteria.
 
-1. **"Review this PR against SPEC-0007."** (diff satisfies every AC)
+Assertions: `- [assert] <kind> <arg>` is machine-checked after the case (`file`,
+`nofile`, `dir`, `nodir`, `filematch`, `grep`, `nogrep`, `unchanged`, `changed`).
+Two kinds exist for the verdict, because the transcript contains the skill's own
+templates: `verdict APPROVE|REJECT` reads the reply's `VERDICT:` line, and
+`reply`/`noreply` match the agent's text only.
+
+1. **"Review this branch against SPEC-0007."** (the diff satisfies every AC)
    - Fixes the range and head sha before reading code.
-   - Walks each acceptance criterion and records code plus test per criterion.
-   - Runs the documented gates and reports the exact commands.
-   - Ends with `VERDICT: APPROVE`, `GATES: pass`, and an empty `Not verified` or
-     a named gap.
+   - Walks AC-1 through AC-3, recording the code and the test per criterion.
+   - Runs the documented gate and reports the exact command and result.
+   - Ends with `VERDICT: APPROVE` and an empty or named `Not verified`.
    - Watch for: approving without the AC walk-through, or citing taste as a
      finding.
+   - [assert] verdict APPROVE
+   - [assert] reply AC-3
+   - [assert] unchanged src/cart.js
+   - [assert] unchanged test/cart.test.js
 
-2. **"Review this branch."** (code misses AC-2 and deletes an assertion)
+2. **"Review this branch."** (the diff misses AC-2 and deletes a test)
    - Returns `VERDICT: REJECT`.
-   - The AC-2 gap is `blocking` with `file:line`; the deleted assertion is
-     `blocking`, not `nit`.
+   - The AC-2 gap is `blocking`, with `file:line`; so is the deleted test.
    - Each finding carries one concrete action for the implementer.
    - Watch for: a findings list with no actions, or fixing the code itself.
+   - [assert] verdict REJECT
+   - [assert] reply AC-2
+   - [assert] unchanged src/cart.js
+   - [assert] unchanged test/cart.test.js
 
-3. **"Review my change"** (same session that implemented it; no spec)
-   - Refuses or labels the verdict as self-review and names what it cannot
-     verify.
-   - Asks for the intent when no spec exists, instead of inventing ACs.
-   - Watch for: silently producing an independent-looking APPROVE.
+3. **"Review my change."** (no spec in the repo)
+   - Asks for the intent or refuses; does not invent acceptance criteria.
+   - Names what it cannot verify instead of approving on plausibility.
+   - Watch for: a confident APPROVE with no spec to approve against.
+   - [assert] noreply VERDICT: APPROVE
+   - [assert] unchanged src/cart.js
