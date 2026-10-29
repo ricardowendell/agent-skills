@@ -267,7 +267,8 @@ function evaluateAssertions(c, scratch, out, text = "", snapshot = new Map()) {
         break
       }
       case "verdict": {
-        const m = /^\s*VERDICT:\s*([A-Za-z]+)/m.exec(text)
+        // Tolerate markdown decoration: the contract is the token, not the styling.
+        const m = /^\s*(?:[#>*_`-]+\s*)*VERDICT:[*_`]*\s*([A-Za-z]+)/m.exec(text)
         pass = !!m && m[1].toUpperCase() === arg.trim().toUpperCase()
         if (!m) detail = "no VERDICT: line in the reply"
         break
