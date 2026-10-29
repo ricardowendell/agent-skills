@@ -181,6 +181,14 @@ function discoverEvals() {
 // the fixture file: a git fixture's reviewed files legitimately differ from the
 // base commit, and what the assertion cares about is whether the skill edited
 // anything afterwards.
+function safeRegex(pattern) {
+  try {
+    return new RegExp(pattern)
+  } catch {
+    return null
+  }
+}
+
 function snapshotTree(root) {
   const map = new Map()
   const walk = (dir, rel) => {
@@ -245,17 +253,19 @@ function evaluateAssertions(c, scratch, out, text = "", snapshot = new Map()) {
         break
       }
       case "grep":
-        pass = new RegExp(arg).test(out)
-        break
       case "nogrep":
-        pass = !new RegExp(arg).test(out)
-        break
       case "reply":
-        pass = new RegExp(arg).test(text)
+      case "noreply": {
+        const re = safeRegex(arg)
+        if (!re) {
+          detail = "invalid regex"
+          break
+        }
+        const haystack = kind === "grep" || kind === "nogrep" ? out : text
+        const hit = re.test(haystack)
+        pass = kind === "nogrep" || kind === "noreply" ? !hit : hit
         break
-      case "noreply":
-        pass = !new RegExp(arg).test(text)
-        break
+      }
       case "verdict": {
         const m = /^\s*VERDICT:\s*([A-Za-z]+)/m.exec(text)
         pass = !!m && m[1].toUpperCase() === arg.trim().toUpperCase()
