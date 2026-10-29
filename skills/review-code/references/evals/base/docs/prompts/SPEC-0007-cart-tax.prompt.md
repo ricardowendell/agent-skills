@@ -1,5 +1,6 @@
 ---
 spec: SPEC-0007
+spec_sha: f5aab834f3a6fc743922a0a51b31c1715cb693e3cb6bddd60ec9c5e24df0b654
 stack: node
 ---
 

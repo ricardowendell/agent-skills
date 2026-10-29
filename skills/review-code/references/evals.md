@@ -1,10 +1,11 @@
 # Evals
 
-Cases 1–3 share the `base/` fixture: a small Node project with `AGENTS.md`, a
-spec (`docs/specs/SPEC-0007-cart-tax.md`), its prompt, and a passing
-`node --test` suite. Each case's `git.json` commits that tree as `main`, applies
-`change.patch` on a branch, and leaves the branch checked out — so the skill
-reviews a real `main..feature` range instead of an unversioned directory.
+Cases 1–4 share the `base/` fixture: a small Node project with `AGENTS.md`, a
+spec (`docs/specs/SPEC-0007-cart-tax.md`), its prompt stamped with `spec_sha`,
+and a passing `node --test` suite. Each case's `git.json` commits that tree as
+`main`, applies `change.patch` on a branch, and leaves the branch checked out —
+so the skill reviews a real `main..feature` range instead of an unversioned
+directory.
 
 Case 3 prunes `docs/specs` and `docs/prompts` before the base commit: the review
 must then ask for the intent rather than invent acceptance criteria.
@@ -43,3 +44,16 @@ templates: `verdict APPROVE|REJECT` reads the reply's `VERDICT:` line, and
    - Watch for: a confident APPROVE with no spec to approve against.
    - [assert] noreply VERDICT: APPROVE
    - [assert] unchanged src/cart.js
+
+4. **"Review this branch against SPEC-0007."** (the spec moved after the prompt was stamped)
+   - Computes the spec hash and finds it no longer matches the prompt's `spec_sha`.
+   - Rejects as a stale spec instead of reviewing code against a contract that
+     changed underneath it.
+   - Names the moved spec as the blocking finding, with the action that fixes it
+     (re-stamp the prompt, or re-groom the spec).
+   - Watch for: reviewing the diff anyway, or approving because the code looks
+     right against the new wording.
+   - [assert] verdict REJECT
+   - [assert] reply spec hash:.*mismatch
+   - [assert] unchanged src/cart.js
+   - [assert] unchanged test/cart.test.js
