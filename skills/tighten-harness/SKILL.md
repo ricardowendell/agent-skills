@@ -19,7 +19,7 @@ A ratchet is one small, reversible tightening of a signal that already exists. I
 3. **Inventory the sensors and their exact thresholds.** Record value plus file and line, for example the file-length ceiling, the function-length ceiling, the cyclomatic-complexity ceiling, the parameter ceiling, the coverage floor, and any rule sitting at `warn` that could be `error`.
 4. **Measure headroom.** Run the gates as they are and collect real numbers: which files sit closest to each ceiling, how many rules currently have zero violations, what the actual coverage is. Do not estimate, and do not reuse numbers from an older session.
 5. **Pick exactly one ratchet** with the best signal-to-churn ratio. State the expected churn: how many files or rules would violate the new value today. A ratchet that would break dozens of files is a project, not a ratchet.
-6. **Propose before applying:** the exact diff, the measurement that justifies it, the expected churn, and how to revert. Wait for approval.
+6. **Propose before applying:** the exact diff, the measurement that justifies it, the expected churn, and how to revert. Wait for approval. An unanswered or absent approval is **not** approval: in a non-interactive or auto-approved run, stop after the proposal and apply nothing.
 7. **Apply configuration only.** Then run every gate that can run locally. If the tighter value surfaces violations, report them as a follow-up list — do not fix source in the same pass, and do not relax the value you just set.
 8. Record the new baseline in the commit message or the PR body, so the next session knows the ratchet already happened.
 
