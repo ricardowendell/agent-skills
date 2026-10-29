@@ -34,7 +34,7 @@ Turn raw inbox notes into stable product-thinking documents without losing the o
    - Any detected conflicts with existing vision, principles, or decisions.
    - Cases where multiple destinations are plausible — list the options.
    - Open questions that need user input before proceeding.
-     Ask the user to confirm, redirect, or resolve ambiguities before making any changes. Do not proceed to writing until confirmed.
+     Ask the user to confirm, redirect, or resolve ambiguities before making any changes. Do not proceed to writing until confirmed. **Silence is not consent:** if no confirmation arrives — a non-interactive or auto-approved run, an unanswered question — stop after the plan and write nothing, not even the note's `status` or an empty destination file. A confirmation covers only the items it names.
 9. After confirmation, classify confirmed ideas into the right destination (folders per `AGENTS.md`):
    - Product direction, philosophy, and constraints: `docs/product`
    - Design and AI rules: `docs/principles`

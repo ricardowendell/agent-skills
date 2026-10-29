@@ -14,4 +14,6 @@ Assertions: `- [assert] <kind> <arg>` is machine-checked after the case (`file`,
      product direction.
    - [assert] dir docs/inbox
    - [assert] filematch docs/inbox/2026-01-01-digest-email.md digest email
+   - [assert] unchanged docs/inbox/2026-01-01-digest-email.md
+   - [assert] nodir docs/backlog
    - [assert] unchanged docs/product/vision.md
