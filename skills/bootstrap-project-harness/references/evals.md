@@ -4,6 +4,12 @@ Representative prompts and the trajectory this skill should produce. Fixtures fo
 cases 1, 2, 3, 5, 7, 9, 10, and 11 live in `references/evals/<n>/` and are copied
 into the scratch repo before the prompt runs.
 
+The runner copies a plain tree: no `.git`, no history. That limits what a case can
+assert. Case 7's fixture is a harness from before the current templates, but with
+no `.git` and no source the skill reads it as an empty repo, so the case asserts
+additive completion rather than the "complete harness → stop" path. That stop
+path stays manual until the runner can stage a committed repository.
+
 Assertions: `- [assert] <kind> <arg>` is machine-checked after the case — `file`,
 `nofile` (file exists/absent), `dir`/`nodir` (directory), `filematch` (file
 content matches a regex), `grep`/`nogrep` (regex on the transcript),
@@ -26,6 +32,8 @@ that appears here would false-match.
    - [assert] file docs/decisions/README.md
    - [assert] file .opencode/opencode.json
    - [assert] file docs/WORKFLOW.md
+   - [assert] file docs/pipeline.md
+   - [assert] filematch docs/pipeline.md release_tier
    - [assert] nofile .husky
    - [assert] nofile docs/superpowers
 
@@ -64,13 +72,21 @@ that appears here would false-match.
    - Watch for: filling stubs with invented content.
    - [assert] filematch docs/product/vision.md <!-- Q:
 
-7. **"Set up the harness here."** (already-bootstrapped repo)
-   - Audit passes → reports the harness is complete and stops; no duplicate hooks.
-   - `docs-check` runs clean against the existing spec and prompt.
-   - Watch for: re-adding hooks or clobbering config.
+7. **"Set up the harness here."** (harness predating the current templates)
+   - The runner copies a plain tree: no `.git`, no source. The skill therefore
+     reads the repo as empty and runs a full bootstrap, which is the correct
+     behaviour for that signal — see the note at the top of this file.
+   - Existing content survives: the spec, its prompt, the product vision, the
+     README, and the OpenCode config are byte-identical afterwards.
+   - The missing canonical files are seeded, including `docs/pipeline.md`.
+   - Watch for: clobbering existing docs or config while filling gaps.
    - [assert] unchanged docs/specs/SPEC-0001-demo.md
    - [assert] unchanged docs/prompts/SPEC-0001-demo.prompt.md
    - [assert] unchanged .opencode/opencode.json
+   - [assert] unchanged docs/product/vision.md
+   - [assert] unchanged README.md
+   - [assert] file docs/pipeline.md
+   - [assert] file docs/architecture.md
    - [assert] filematch docs/WORKFLOW.md ## The loop
 
 8. **Any bootstrap.**
@@ -86,6 +102,7 @@ that appears here would false-match.
    - Preserves the existing project name; adds no `package.json` or ESLint config.
    - Watch for: applying the Node templates to a Python repo.
    - [assert] file docs/WORKFLOW.md
+   - [assert] file docs/pipeline.md
    - [assert] file .opencode/opencode.json
    - [assert] file docs_check.py
    - [assert] filematch lefthook.yml uv run

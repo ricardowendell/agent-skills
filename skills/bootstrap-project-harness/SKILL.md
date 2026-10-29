@@ -132,7 +132,7 @@ docs/
 10. **Formatter.** TS: add `.prettierrc` from `templates/ts/`. Python: `ruff format` (already configured in step 9). OpenCode's built-in formatter (global `formatter: true`) formats both after edits.
 11. **Linter.** TS: add `eslint.config.js` from `templates/ts/` (flat config, AI limits). Python: `ruff check` (already configured in step 9).
 12. Add `docs-check` and `spec-sha`/`spec_sha` from `templates/<stack>/`.
-13. Write `docs/WORKFLOW.md` from `templates/WORKFLOW.md`, and add `.opencode/opencode.json` from `templates/.opencode/opencode.json` at the repo root (**merge — never overwrite**).
+13. Write `docs/WORKFLOW.md` from `templates/WORKFLOW.md`, write `docs/pipeline.md` from `templates/pipeline.md.template`, and add `.opencode/opencode.json` from `templates/.opencode/opencode.json` at the repo root (**merge — never overwrite**).
 14. (Optional) TS only: add dependency-cruiser from `templates/ts/dependency-cruiser-rules.md`.
 15. (Optional) Add CI from `templates/<stack>/.github/workflows/ci.yml.template`.
 
