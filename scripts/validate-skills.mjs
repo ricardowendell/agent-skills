@@ -186,6 +186,17 @@ for (const root of ROOTS) {
         )
     }
 
+    // A step that waits for approval is where a model is most tempted to read
+    // "no answer" as "yes" (see process-inbox's eval). Require the clause that
+    // says what silence means, next to the gate.
+    const plain = text.replace(/[*_`]/g, "")
+    const gate = /\b(?:wait for|until)\s+(?:the user'?s\s+)?(?:explicit\s+)?(?:approval|confirmation)\b|\brequires?\s+explicit\s+user\s+confirmation\b/i
+    const silence = /silence is not consent|unanswered[^.]{0,40}not (?:approval|consent|an answer)|absent or unanswered/i
+    if (gate.test(plain) && !silence.test(plain))
+      warnings.push(
+        `${file}: consent gate without a silence clause — say that an unanswered approval/confirmation is not consent`,
+      )
+
     const hash = createHash("md5").update(text).digest("hex").slice(0, 8)
     if (!seen.has(id)) seen.set(id, [])
     seen.get(id).push({ root, file, real, hash })
