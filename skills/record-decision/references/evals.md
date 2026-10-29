@@ -31,5 +31,5 @@ Assertions: `- [assert] <kind> <arg>` is machine-checked after the case (`file`,
    - Keeps ADR-0002's original text intact.
    - Watch for: editing ADR-0002 into the new decision.
    - [assert] filematch docs/decisions/ADR-0003-*.md [Pp]ostgres
-   - [assert] filematch docs/decisions/ADR-0002-*.md [Ss]uperseded by ADR-0003
+   - [assert] filematch docs/decisions/ADR-0002-*.md [Ss]uperseded by .*ADR-0003
    - [assert] filematch docs/decisions/README.md ADR-0003

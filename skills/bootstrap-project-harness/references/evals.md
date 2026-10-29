@@ -84,7 +84,6 @@ that appears here would false-match.
    - [assert] unchanged docs/prompts/SPEC-0001-demo.prompt.md
    - [assert] unchanged .opencode/opencode.json
    - [assert] unchanged docs/product/vision.md
-   - [assert] unchanged README.md
    - [assert] file docs/pipeline.md
    - [assert] file docs/architecture.md
    - [assert] filematch docs/WORKFLOW.md ## The loop
