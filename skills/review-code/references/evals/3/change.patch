@@ -13,7 +13,7 @@ index bfb177f..27c1bb8 100644
 +  return Math.round(value * 100) / 100
 +}
 diff --git a/test/cart.test.js b/test/cart.test.js
-index 2eef984..8f25647 100644
+index 2eef984..0af73a7 100644
 --- a/test/cart.test.js
 +++ b/test/cart.test.js
 @@ -1,7 +1,7 @@
@@ -35,7 +35,7 @@ index 2eef984..8f25647 100644
 +})
 +
 +test("total hides binary float noise", () => {
-+  assert.equal(total([{ price: 0.1, qty: 1 }], 0.2), 0.12)
++  assert.equal(total([{ price: 1.1, qty: 1 }], 0.1), 1.21)
 +})
 +
 +test("total rejects a negative rate", () => {

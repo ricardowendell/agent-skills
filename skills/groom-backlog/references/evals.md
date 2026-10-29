@@ -25,7 +25,7 @@ Assertions: `- [assert] <kind> <arg>` is machine-checked after the case (`file`,
    - Keeps it `draft` and lists exactly what is blocking readiness.
    - Watch for: obeying the instruction blindly and flipping the status.
    - [assert] filematch docs/specs/SPEC-0003*.md status: draft
-   - [assert] unchanged docs/specs/SPEC-0003-onboarding.md
+   - [assert] filematch docs/specs/SPEC-0003-onboarding.md SPEC-0001
 
 4. **"Groom the backlog" in a repo whose docs layout differs from the default.**
    - Discovers the real layout from `AGENTS.md`/README and maps the same concepts.
