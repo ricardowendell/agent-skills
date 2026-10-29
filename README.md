@@ -194,6 +194,11 @@ skill needs history (a diff to review, a branch to compare), the case ships a
 `git.json` manifest instead: the tree is committed as `main`, `change.patch` is
 applied on a branch, and that branch is left checked out.
 
+Pick assertions to match what the skill may do. `unchanged` is for a file the
+skill must never touch — code under review, prose being audited. For a file it
+may annotate (a backlog item, an index row), assert that the original text
+survives; byte-identity fails the first time the skill adds a useful pointer.
+
 ## Optional companion skills
 
 Some instructions (notably the `bootstrap-project-harness` workflow template)

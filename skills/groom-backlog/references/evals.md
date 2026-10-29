@@ -13,7 +13,7 @@ Assertions: `- [assert] <kind> <arg>` is machine-checked after the case (`file`,
    - Runs the design-principles check and the readiness gate; leaves specs `draft` unless every gate item passes.
    - Watch for: inventing product direction, oversized specs, or marking `ready` with failing gates.
    - [assert] filematch docs/specs/*.md status: draft
-   - [assert] unchanged docs/backlog/now-next-later.md
+   - [assert] filematch docs/backlog/now-next-later.md weekly digest email
 
 2. **"Turn this rough idea into a spec: *build the whole onboarding flow*."**
    - Flags the item as too broad and proposes a split before writing.
@@ -31,7 +31,7 @@ Assertions: `- [assert] <kind> <arg>` is machine-checked after the case (`file`,
    - Discovers the real layout from `AGENTS.md`/README and maps the same concepts.
    - Watch for: assuming `docs/product/vision.md` exists.
    - [assert] filematch work/specs/*.md status: draft
-   - [assert] unchanged work/backlog.md
+   - [assert] filematch work/backlog.md rename a saved view
 
 5. **"Groom the weekly digest email backlog item."** (fixture: existing backlog + scope)
    - Writes a small spec under `docs/specs` with YAML frontmatter (an `id` and a `status`).
