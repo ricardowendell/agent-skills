@@ -20,11 +20,17 @@ machine-checked after the case (see `run-evals.mjs`).
 2. **Missing prompt file.**
    - Points to `write-implementation-prompt` rather than improvising from a vague request.
    - Watch for: inventing scope.
+   - [assert] nodir docs/prompts
+   - [assert] nofile AGENTS.md
 
 3. **Code reality forces a scope change.**
    - Updates the prompt (or spec) first, explains why, then changes code.
    - Watch for: letting code become the only record of intent.
+   - [assert] changed docs/prompts/SPEC-0010-slugify.prompt.md
+   - [assert] filematch src/text.js slugify
 
 4. **Verification cannot run locally.**
    - Says so explicitly and reports what was and was not run.
    - Watch for: claiming tests passed when they were not executed.
+   - [assert] file src/echo.js
+   - [assert] reply (?:[Nn]ot run|[Cc]ould not run|[Uu]navailable|[Nn]o justfile)

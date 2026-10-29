@@ -19,11 +19,17 @@ machine-checked after the case (see `run-evals.mjs`).
 2. **"Make a prompt for SPEC-0008."** (status `draft`)
    - Stops and lists what blocks readiness instead of generating a prompt.
    - Watch for: generating from an incomplete spec.
+   - [assert] nodir docs/prompts
+   - [assert] unchanged docs/specs/SPEC-0008-export.md
 
 3. **Open questions that block implementation.**
    - Lists the questions instead of inventing answers.
    - Watch for: fabricating decisions to fill gaps.
+   - [assert] nodir docs/prompts
+   - [assert] unchanged docs/specs/SPEC-0009-audit-log.md
 
 4. **A spec overlapping an existing prompt's domain.**
    - Mirrors the existing prompt structure and notes reusable functions in Operations.
    - Watch for: duplicating helpers already present.
+   - [assert] filematch docs/prompts/SPEC-0011-*.prompt.md spec_sha:
+   - [assert] unchanged docs/specs/SPEC-0011-bulk-import.md
