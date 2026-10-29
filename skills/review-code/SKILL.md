@@ -49,7 +49,9 @@ Stop and say why, instead of producing a verdict, when:
 - The change cannot be isolated: no identifiable base ref, no PR target, or a
   worktree that mixes several unrelated changes.
 - There is no spec and the user has not declared the intent to review against
-  ("no spec: review for regressions and safety").
+  ("no spec: review for regressions and safety"). An unanswered question is not
+  a declaration: in a non-interactive or auto-approved run, stop and ask instead
+  of adopting the fallback yourself.
 - The implementation and the review would run in the same session. Say that
   independence is compromised and suggest a fresh session. Proceed only if the
   user insists, and label the verdict as self-review.
