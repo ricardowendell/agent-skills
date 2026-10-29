@@ -2,10 +2,15 @@
 # Pre-commit health check for the skills repo.
 #   - validate-skills.mjs : frontmatter, id/description budget, cross-tree drift
 #   - run-evals.mjs --list : every references/evals.md still parses
+#   - check-sensor-parity.mjs : the JS and Python docs-check sensors agree
+# Mirrors .github/workflows/skills.yml, scoped to this checkout (`--root skills`)
+# so third-party installs under $HOME never leak warnings into a commit.
 # Enable once with: git config core.hooksPath .githooks
 set -e
 
 ROOT=$(git rev-parse --show-toplevel)
-node "$ROOT/scripts/validate-skills.mjs"
-node "$ROOT/scripts/run-evals.mjs" --list > /dev/null
+cd "$ROOT"
+node scripts/validate-skills.mjs --root skills
+node scripts/run-evals.mjs --root skills --list > /dev/null
+node scripts/check-sensor-parity.mjs > /dev/null
 echo "skills pre-commit: ok"

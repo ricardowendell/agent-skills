@@ -123,6 +123,10 @@ const seen = new Map() // id -> [{root, path, realpath, hash}]
 
 for (const root of ROOTS) {
   for (const file of skillFiles(root)) {
+    // --root mode is a repo gate: untracked trees (local third-party installs,
+    // vendored copies) are not part of the commit, so they are skipped instead
+    // of warned about. Staged files are in the index, so they stay in scope.
+    if (rootArg >= 0 && !isTracked(file)) continue
     let text, real
     try {
       text = readFileSync(file, "utf8")
