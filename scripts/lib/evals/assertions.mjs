@@ -93,8 +93,10 @@ export function usageStats(out) {
 }
 
 export function skillLoads(out) {
+  // An errored attempt is not a load: a denied or failed `skill` call must never
+  // satisfy `assert: skill` or the gate.
   return toolCalls(out)
-    .filter((t) => t.tool === "skill")
+    .filter((t) => t.tool === "skill" && t.status === "completed")
     .map((t) => ({
       id: t.input.id ?? t.input.name ?? t.meta.name ?? "",
       directory: t.meta.directory ?? t.input.directory ?? "",

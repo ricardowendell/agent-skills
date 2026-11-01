@@ -253,6 +253,37 @@ make a run cheaper: a cheaper run is a different test.
 The scratch dir is not an OS sandbox — the agent can still write outside it. The
 protection is `unchanged` plus the fixture's own `git status`.
 
+### Does the skill add value?
+
+Two opt-in modes answer that without leaving the runner:
+
+```sh
+# with the skill pinned in the scratch dir (default)
+node scripts/run-evals.mjs --skill review-code --run
+# control arm: nothing staged, the skill tool denied
+node scripts/run-evals.mjs --skill review-code --run --no-skill
+# plus a second opinion over the expect: lines
+node scripts/run-evals.mjs --skill review-code --run --judge
+```
+
+`--no-skill` stages the same fixture with the skill tool denied and no copy in
+`.opencode/skills/`, and records `arm: without-skill`; the gate then requires
+that no skill loaded. It measures whether the skill is *used and needed*, not
+whether its text is unreachable — an agent can still read an installed copy from
+disk, so treat a strong control-arm result as "this task may not need a skill",
+not as proof that it ignored one.
+
+`--judge [model]` scores every `expect:` line against the agent's reply and its
+command log, with the system prompt in `scripts/lib/evals/judge.mjs`. It is
+opt-in because it costs a model call per case, it never sees the `why:` line,
+and its verdict can fail a case that passed deterministically but never rescue
+one that failed. The threshold is `--judge-threshold` (default 0.8); an
+expectation the judge cannot decide is `unverifiable` and does not dilute the
+score. Treat the first runs as calibration: a case where both arms fail the same
+expectation is usually a badly written expectation, not a regression. The first
+review-code run did exactly that — both arms omitted the case's `Not verified`
+line, which the deterministic assertions could not see.
+
 ### Artifacts and regressions
 
 Every case writes `<skill>/<n>.md` (transcript) and `<skill>/<n>.json` (status,

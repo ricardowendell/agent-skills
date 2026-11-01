@@ -28,6 +28,13 @@
 //                         full     every runnable case
 //   --concurrency <n>   override the level's concurrency
 //   --root <dir>        skill root to discover (CI passes the checkout)
+//   --no-skill          control arm: do not stage the skill and deny the skill
+//                       tool, so the same case can be measured without it
+//   --judge <model>     grade the expect: lines with a judge model (opt-in; it
+//                       can fail a case that passed, never rescue one)
+//   --judge-threshold   minimum judge score (default 0.8)
+//   --baseline <file>   compare this run against a stored run JSON
+//   --save-baseline     store this run as baseline.json
 //   --shared            run against the shared server: NOT isolated, the child
 //                       inherits the launch directory. Needs --i-know.
 //
@@ -44,7 +51,7 @@
 //
 // Output: transcripts under ~/.local/share/opencode/evals/<skill>/<n>.md
 
-import { readdirSync, lstatSync, realpathSync, existsSync, mkdirSync, writeFileSync } from "node:fs"
+import { readdirSync, lstatSync, realpathSync, existsSync, mkdirSync, writeFileSync, appendFileSync, readFileSync } from "node:fs"
 import { spawn, spawnSync } from "node:child_process"
 import { join, basename, dirname } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -53,6 +60,7 @@ import { readEvals } from "./lib/evals/parse.mjs"
 import { evaluateAssertions, replyText, skillGate, skillLoads, toolCalls, usageStats } from "./lib/evals/assertions.mjs"
 import { stageFixture, stageSkill, snapshotTree, makeScratch } from "./lib/evals/fixture.mjs"
 import { classify, summarize, PASSED, UNSCORED } from "./lib/evals/result.mjs"
+import { judgePrompt, runJudge, judgeOutcome } from "./lib/evals/judge.mjs"
 import { summarizeRun, compareRuns, formatComparison, readRun } from "./lib/evals/report.mjs"
 
 const argv = process.argv.slice(2)
@@ -72,6 +80,9 @@ const opt = {
   root: null,
   baseline: null,
   saveBaseline: false,
+  noSkill: false,
+  judge: null,
+  judgeThreshold: 0.8,
 }
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i]
@@ -91,6 +102,15 @@ for (let i = 0; i < argv.length; i++) {
   else if (a === "--root") opt.root = argv[++i]
   else if (a === "--baseline") opt.baseline = argv[++i]
   else if (a === "--save-baseline") opt.saveBaseline = true
+  else if (a === "--no-skill") opt.noSkill = true
+  else if (a === "--judge") {
+    const v = argv[i + 1]
+    if (v && !v.startsWith("--")) {
+      opt.judge = v
+      i++
+    } else opt.judge = "default"
+  }
+  else if (a === "--judge-threshold") opt.judgeThreshold = Number(argv[++i])
   else if (a === "--quick") {
     console.error("--quick is gone: it appended \"skip installs/builds/audit\" to the prompt, which tested a different policy. Use --level behavior or --level smoke.")
     process.exit(1)
@@ -217,9 +237,12 @@ let unscored = 0
 console.log(
   `Isolation: standalone=${opt.standalone}` + (opt.standalone ? ", child env scrubbed (OPENCODE*, AI_AGENT), skill pinned in scratch\n" : " (--shared: NOT isolated)\n"),
 )
-console.log(`Level: ${opt.level} (concurrency=${opt.concurrency}, agent=${opt.agent}, model=${opt.model ?? "default"})\n`)
+console.log(
+  `Level: ${opt.level} (concurrency=${opt.concurrency}, agent=${opt.agent}, model=${opt.model ?? "default"}, arm=${opt.noSkill ? "without-skill" : "with-skill"}` +
+    `${opt.judge ? `, judge=${opt.judge}@${opt.judgeThreshold}` : ""})\n`,
+)
 
-function runCase(skill, c) {
+async function runCase(skill, c) {
   const scratch = makeScratch(skill.id, c.n)
   const dir = join(OUT_ROOT, skill.id)
   mkdirSync(dir, { recursive: true })
@@ -235,13 +258,16 @@ function runCase(skill, c) {
     )
   }
 
-  let pinned
+  let pinned = { hash: null }
   try {
-    pinned = stageSkill(skill, scratch)
     stageFixture(skill, c, scratch)
+    // --no-skill is the control arm: the skill is not staged and the tool is
+    // denied, so a difference against the pinned run is attributable to the skill.
+    if (opt.noSkill) denySkillTool(scratch)
+    else pinned = stageSkill(skill, scratch)
   } catch (e) {
     writeFailure("fixture failed to stage", `${e.message}\n${e.stderr ?? ""}`)
-    return Promise.resolve({
+    return {
       skill: skill.id,
       case: c.n,
       status: "failed",
@@ -251,7 +277,7 @@ function runCase(skill, c) {
       skillHash: null,
       assertions: [],
       transcript: file,
-    })
+    }
   }
   const snapshot = snapshotTree(scratch)
 
@@ -264,7 +290,7 @@ function runCase(skill, c) {
         `## Expectations (human-checked)\n\n${c.expect.map((e) => `- [ ] ${e}`).join("\n")}\n\n` +
         `## Assertions (auto-checked)\n\nnot run at --level smoke\n`,
     )
-    return Promise.resolve({
+    return {
       skill: skill.id,
       case: c.n,
       status: "staged",
@@ -276,7 +302,7 @@ function runCase(skill, c) {
       execution: { durationMs: Date.now() - started },
       meta: { repoSha: meta.repoSha, agent: meta.agent, model: meta.model, level: meta.level },
       transcript: file,
-    })
+    }
   }
 
   const args = ["run", "--format", "json", "--auto", "--agent", opt.agent]
@@ -284,7 +310,7 @@ function runCase(skill, c) {
   if (opt.model) args.push("--model", opt.model)
   args.push(c.prompt)
 
-  return new Promise((resolve) => {
+  const agentRun = new Promise((resolve) => {
     // detached => the child leads its own process group, so we can kill the
     // whole tree. A lingering grandchild holding the stdout pipe can otherwise
     // keep 'close' from ever firing, so a hard timer guarantees resolution.
@@ -324,9 +350,14 @@ function runCase(skill, c) {
       } catch {}
       const durationMs = Date.now() - started
       const asserts = evaluateAssertions(c, scratch, out, replyText(out), snapshot)
-      const gate = skillGate(out, scratch, skill.id)
+      const gate = opt.noSkill
+        ? { ok: skillLoads(out).length === 0, reason: skillLoads(out).length ? `loaded ${skillLoads(out).map((l) => l.id).join(", ")} although --no-skill` : "no skill loaded (control arm)" }
+        : skillGate(out, scratch, skill.id)
       const verdict = classify({ exit: code, asserts, skillGate: gate })
       const usage = usageStats(out)
+      const skillLabel = opt.noSkill
+        ? `**Skill:** ${gate.ok ? "not loaded (control arm)" : "LOADED — the control arm is broken"} (${gate.reason})`
+        : `**Skill:** ${gate.ok ? "loaded" : "MISSING"} (${gate.reason})`
       const result = {
         skill: skill.id,
         case: c.n,
@@ -338,6 +369,7 @@ function runCase(skill, c) {
         skillGate: { ok: gate.ok, reason: gate.reason, loaded: skillLoads(out).map((l) => l.id) },
         assertions: asserts.map(({ kind, arg, pass, detail }) => ({ kind, arg, pass, detail })),
         execution: { exit: code, durationMs, tokens: usage.tokens, cost: usage.cost, steps: usage.steps, toolCalls: toolCalls(out).length },
+        arm: opt.noSkill ? "without-skill" : "with-skill",
         meta: { repoSha: meta.repoSha, agent: meta.agent, model: meta.model, level: meta.level },
         transcript: file,
       }
@@ -351,13 +383,13 @@ function runCase(skill, c) {
         file,
         `# Eval: ${skill.id} case ${c.n}\n\n**Prompt:** ${c.prompt}\n\n` +
           `**Scratch:** ${scratch}\n**Exit:** ${code}\n**Status:** ${verdict.status}${verdict.reason ? ` — ${verdict.reason}` : ""}\n` +
-          `**Skill:** ${gate.ok ? "loaded" : "MISSING"} (${gate.reason})\n**Skill hash:** ${pinned.hash}\n` +
+          `${skillLabel}\n**Skill hash:** ${pinned.hash}\n` +
           `**Repo:** ${meta.repoSha}  **Agent:** ${meta.agent}  **Model:** ${meta.model}  **Level:** ${meta.level}  **Duration:** ${durationMs}ms\n\n` +
           `## Expectations (human-checked)\n\n${c.expect.map((e) => `- [ ] ${e}`).join("\n")}\n\n` +
           assertBlock +
           `## Transcript\n\n\`\`\`\n${out}\n\`\`\`\n\n${err ? `## stderr\n\n\`\`\`\n${err}\n\`\`\`\n` : ""}`,
       )
-      resolve(result)
+      resolve({ result, out, gate })
     }
 
     const hardTimer = setTimeout(() => finish("timeout"), opt.timeout * 1000)
@@ -369,6 +401,71 @@ function runCase(skill, c) {
       finish("error")
     })
   })
+
+  const outcome = await agentRun
+  let result = outcome.result
+  if (opt.judge && result.status !== "staged" && result.status !== "failed") {
+    const graded = await gradeCase(c, outcome.out, result)
+    result = graded.result
+    writeFileSync(join(dir, `${c.n}.json`), JSON.stringify(result, null, 2))
+    appendFileSync(file, graded.section)
+    patchHeader(file, result)
+  }
+  return result
+}
+
+// Optional second opinion over the expectations. It can fail a case that passed
+// deterministically and never rescue one that failed.
+async function gradeCase(c, out, result) {
+  const prompt = judgePrompt(c, {
+    reply: replyText(out),
+    shell: toolCalls(out)
+      .filter((t) => t.tool === "shell")
+      .map((t) => `${String(t.input.command ?? "").split("\n")[0]}  [exit ${t.exit ?? "?"}]`),
+  })
+  const judged = await runJudge({ model: opt.judge, prompt, env: CHILD_ENV, timeout: Math.min(opt.timeout, 300) })
+  const outcome = judgeOutcome(judged.parsed, opt.judgeThreshold)
+  const passed = outcome.ok
+  const updated = {
+    ...result,
+    semantic: {
+      model: opt.judge,
+      threshold: opt.judgeThreshold,
+      score: outcome.score,
+      expectations: judged.parsed?.verdicts ?? [],
+      reason: outcome.reason,
+    },
+  }
+  if (!passed) {
+    updated.status = "failed"
+    updated.reason = outcome.reason
+  }
+  const section =
+    `\n## Semantic check (${opt.judge})\n\n` +
+    `**Score:** ${outcome.score.toFixed(2)} (threshold ${opt.judgeThreshold}) — ${passed ? "ok" : outcome.reason}\n\n` +
+    (judged.parsed?.verdicts ?? []).map((v) => `- [${v.verdict === "met" ? "x" : " "}] ${v.i}: ${v.verdict}${v.evidence ? ` — ${v.evidence}` : ""}`).join("\n") +
+    "\n"
+  return { result: updated, section }
+}
+
+// The header is written before the judge runs, so the status line has to be
+// rewritten once the semantic verdict lands.
+function patchHeader(file, { status, reason }) {
+  const md = readFileSync(file, "utf8").replace(/^\*\*Status:\*\*.*$/m, `**Status:** ${status}${reason ? ` — ${reason}` : ""}`)
+  writeFileSync(file, md)
+}
+
+// Deny the skill tool and let the fixture's own config survive: a --no-skill run
+// must still stage the case, only without the artefact under test.
+function denySkillTool(scratch) {
+  const file = join(scratch, ".opencode/opencode.json")
+  mkdirSync(dirname(file), { recursive: true })
+  let config = {}
+  try {
+    config = JSON.parse(readFileSync(file, "utf8"))
+  } catch {}
+  config.tools = { ...(config.tools ?? {}), skill: false }
+  writeFileSync(file, JSON.stringify(config, null, 2))
 }
 
 const startedAt = Date.now()
