@@ -181,23 +181,88 @@ The repo ships the same checks its CI runs:
 
 ```sh
 node scripts/validate-skills.mjs --root skills
-node scripts/run-evals.mjs --root skills --list
+node scripts/run-evals.mjs --root skills --list --check
+node --test scripts/lib/evals/*.test.mjs
 node scripts/check-sensor-parity.mjs
 ```
 
 `validate-skills.mjs` checks frontmatter, the description budget, cross-tree
-drift, and broken symlinks. The full eval run stays local, since it needs a model
-provider.
+drift, and broken symlinks. `--check` rejects a case with no prompt, an unknown
+assertion kind, or a duplicate number. The unit tests cover the runner itself —
+parser, globs, assertions, staging — and need neither `opencode` nor a provider.
+The behavioural run stays local, since it needs both.
+
+### Case format
+
+```md
+1. **Review against SPEC-0007.**
+   - prompt: Review this branch against SPEC-0007.
+   - why: the diff satisfies every AC
+   - expect: Runs the documented gate and reports the command and result.
+   - assert: verdict APPROVE
+   - needs: gates
+```
+
+`prompt` is the only text sent to the agent. `why` records the scenario for a
+reader and is never sent — before this split, the parenthetical note was appended
+to the prompt, which told the agent the answer. `expect` lines stay
+human-checked. `status: manual` keeps a case in the file (as design intent) while
+excluding it from a run. `needs: gates` lets `--level behavior` skip an expensive
+case; nothing is tagged today, so behaviour equals full until a case earns the
+tag.
 
 A case normally ships a fixture tree under `references/evals/<n>/`. When the
 skill needs history (a diff to review, a branch to compare), the case ships a
 `git.json` manifest instead: the tree is committed as `main`, `change.patch` is
 applied on a branch, and that branch is left checked out.
 
-Pick assertions to match what the skill may do. `unchanged` is for a file the
+### Assertions
+
+Every filesystem kind takes a glob (`*` inside a segment, `**` across them), and
+a pattern that matches nothing fails — a wildcard with no effect must not read as
+a pass.
+
+| kind | passes when |
+| --- | --- |
+| `file` / `dir` | at least one file / directory matches |
+| `nofile` / `nodir` | nothing matches |
+| `filematch` | a matching file's content matches the regex |
+| `unchanged` / `changed` | every match is identical / different from staging |
+| `reply` / `noreply` | the assistant's own text matches / does not match |
+| `verdict` | the reply's `VERDICT:` line names the expected token |
+| `ran` / `ranpass` | a shell command matching the regex executed / exited 0 |
+| `tool` / `notool` | the named tool was used / was not |
+| `skill` / `noskill` | the id was loaded from inside the scratch dir / no skill was |
+
+Pick the kind that matches what the skill may do. `unchanged` is for a file the
 skill must never touch — code under review, prose being audited. For a file it
 may annotate (a backlog item, an index row), assert that the original text
 survives; byte-identity fails the first time the skill adds a useful pointer.
+
+### What a run proves
+
+Each case stages its fixture and a copy of the skill under review in a scratch
+dir. The copy lands in `<scratch>/.opencode/skills/<id>/`, which shadows a global
+install of the same id, and the transcript records its hash — otherwise a local
+run could quietly test the installed skill and a CI run could test none. A case
+counts as `passed` only when the process exits 0, at least one assertion ran,
+every assertion passed, and that copy was the skill that loaded; a case with no
+assertions is `unscored` and fails the run. Nothing is appended to the prompt to
+make a run cheaper: a cheaper run is a different test.
+
+The scratch dir is not an OS sandbox — the agent can still write outside it. The
+protection is `unchanged` plus the fixture's own `git status`.
+
+### Artifacts and regressions
+
+Every case writes `<skill>/<n>.md` (transcript) and `<skill>/<n>.json` (status,
+per-assertion results, loaded skill, token and cost totals, duration, tool-call
+count, repo sha and model) under `~/.local/share/opencode/evals/`. The run writes
+`last-run.json`; `--save-baseline` keeps the current run as `baseline.json`, and
+the next full run compares against it automatically. A case that moves from
+`passed` to `failed` (or to `unscored`) is a regression and fails the run; a case
+that disappears from an explicit `--baseline` comparison is reported as missing
+rather than assumed fine.
 
 ## Optional companion skills
 
