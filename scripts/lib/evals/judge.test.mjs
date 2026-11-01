@@ -15,6 +15,13 @@ test("the judge prompt carries the expectations but never the scenario note", ()
   assert.ok(!p.includes("the diff satisfies every AC"), "the why line leaked into the judge prompt")
 })
 
+test("watch-for lines are marked negative so the judge does not require them", () => {
+  const p = judgePrompt({ expect: ["Runs the gate.", "Watch for: approving without evidence."] }, { reply: "ok" })
+  assert.match(p, /1\. Runs the gate\./)
+  assert.match(p, /2\. \[NEGATIVE\] Watch for: approving without evidence\./)
+  assert.match(p, /Mark it "met" when the reply shows the agent did not fall into it/)
+})
+
 test("parses a fenced verdict and computes the score", () => {
   const text = 'Here you go:\n```json\n{"expectations":[{"i":1,"verdict":"met","evidence":"AC-1..AC-3"},{"i":2,"verdict":"not-met","evidence":"never ran"}],"score":0.5}\n```'
   const p = parseJudge(text)

@@ -19,7 +19,8 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - expect: Fixes the range and head sha before reading code.
    - expect: Walks AC-1 through AC-3, recording the code and the test per criterion.
    - expect: Runs the documented gate and reports the exact command and result.
-   - expect: Ends with `VERDICT: APPROVE` and an empty or named `Not verified`.
+   - expect: States `VERDICT: APPROVE` once, backed by the AC table.
+   - expect: Carries a `Not verified` section, empty or explicitly named.
    - expect: Watch for: approving without the AC walk-through, or citing taste as a finding.
    - assert: verdict APPROVE
    - assert: reply Not verified

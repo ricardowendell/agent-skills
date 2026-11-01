@@ -501,10 +501,12 @@ async function runCaseReps(skill, c) {
   // Staging is deterministic: repeating it would only re-copy the same tree.
   const times = opt.level === "smoke" ? 1 : opt.repeat
   const reps = []
-  for (let i = 1; i <= opt.repeat; i++) {
-    const r = await runCase(skill, c, times > 1 ? { index: i } : null)
-    reps.push(r)
-    if (times > 1) process.stdout.write(`     rep ${i}/${opt.repeat}: ${r.status}${r.reason ? ` (${r.reason})` : ""}\n`)
+  for (let i = 1; i <= times; i++) {
+    // Buffered: printing per repetition interleaves with the other lanes.
+    reps.push(await runCase(skill, c, times > 1 ? { index: i } : null))
+  }
+  if (times > 1) {
+    process.stdout.write(`     ${reps.map((r, i) => `r${i + 1}:${r.status}`).join(" ")}\n`)
   }
   if (times === 1) return reps[0]
 

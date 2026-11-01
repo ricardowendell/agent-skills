@@ -26,12 +26,22 @@ For each expectation decide, from the evidence only:
 - "unverifiable": the evidence does not say either way. Use this freely; do not
   guess from what a good run would look like.
 
+A line marked [NEGATIVE] describes a failure mode to avoid, not a requirement.
+Mark it "met" when the reply shows the agent did not fall into it, and "not-met"
+when it did. Do not require the failure to appear.
+
 Answer with one JSON object and nothing else:
 {"expectations":[{"i":1,"verdict":"met|not-met|unverifiable","evidence":"short quote or command"}],"score":0.0}
 score is met / (met + not-met), ignoring unverifiable.`
 
+// "Watch for:" lines name the failure the case exists to catch; requiring them
+// to appear would score every good run as broken.
+const isNegative = (text) => /^(watch for|avoid)\b/i.test(text.trim())
+
 export function judgePrompt(c, { reply, shell = [] }) {
-  const expectations = c.expect.map((e, i) => `${i + 1}. ${e}`).join("\n")
+  const expectations = c.expect
+    .map((e, i) => `${i + 1}. ${isNegative(e) ? "[NEGATIVE] " : ""}${e}`)
+    .join("\n")
   const commands = shell.length ? shell.map((cmd) => `$ ${cmd}`).join("\n") : "(no shell commands)"
   return [
     SYSTEM,
