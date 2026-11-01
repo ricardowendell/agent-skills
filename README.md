@@ -267,6 +267,8 @@ node scripts/run-evals.mjs --skill review-code --run
 node scripts/run-evals.mjs --skill review-code --run --no-skill
 # plus a second opinion over the expect: lines
 node scripts/run-evals.mjs --skill review-code --run --judge
+# every trigger case, three times each
+node scripts/run-evals.mjs --tag trigger --repeat 3 --run
 ```
 
 `--no-skill` stages the same fixture with the skill tool denied and no copy in
@@ -286,6 +288,13 @@ score. Treat the first runs as calibration: a case where both arms fail the same
 expectation is usually a badly written expectation, not a regression. The first
 review-code run did exactly that — both arms omitted the case's `Not verified`
 line, which the deterministic assertions could not see.
+
+ 
+### Selecting cases
+
+`--tag <a,b>` keeps the cases carrying every listed tag; `--tag trigger` is the
+routing set, and a filtered run is never compared against the implicit baseline
+(a subset would report every unselected case as missing).
 
 ### Repetitions
 

@@ -62,6 +62,7 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
 
 5. **Trigger: a branch is handed over for review.**
    - prompt: Review this branch before I merge it.
+   - tags: trigger
    - why: the prompt never names the skill; it has to be recognised from the description
    - gate: off
    - expect: Loads `review-code` rather than starting an ad-hoc read of the diff.
@@ -69,6 +70,7 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
 
 6. **Near-miss: a failure being debugged, not a change being reviewed.**
    - prompt: Why did my build fail on Node 20?
+   - tags: trigger
    - why: same vocabulary (branch, build, failure) without a change to approve
    - gate: off
    - expect: Does not pull in `review-code` for a diagnosis.

@@ -18,6 +18,7 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
 
 2. **Trigger: a thought is handed over to keep.**
    - prompt: Jot this down before I forget: maybe a weekly digest email.
+   - tags: trigger
    - why: no skill named; "jot this down" is the trigger the description promises
    - gate: off
    - expect: Loads `capture-idea` rather than filing it straight into product docs.
@@ -25,6 +26,7 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
 
 3. **Routing: an inbox that already holds notes is processed, not captured.**
    - prompt: Process the inbox.
+   - tags: trigger
    - why: capture and process share vocabulary; picking the wrong one leaves the notes unclassified
    - gate: off
    - expect: Routes to `process-inbox`.

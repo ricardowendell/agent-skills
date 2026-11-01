@@ -36,6 +36,7 @@
 //   --repeat <n>        run each selected case n times (default 1); the case
 //                       passes only when every repetition does
 //   --min-pass <ratio>  relax that to a rate, explicitly (default 1)
+//   --tag <a,b>         only cases carrying every listed tag
 //   --baseline <file>   compare this run against a stored run JSON
 //   --save-baseline     store this run as baseline.json
 //   --shared            run against the shared server: NOT isolated, the child
@@ -88,6 +89,7 @@ const opt = {
   judgeThreshold: 0.8,
   repeat: 1,
   minPass: 1,
+  tags: [],
 }
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i]
@@ -117,6 +119,7 @@ for (let i = 0; i < argv.length; i++) {
   }
   else if (a === "--judge-threshold") opt.judgeThreshold = Number(argv[++i])
   else if (a === "--repeat") opt.repeat = Number(argv[++i])
+  else if (a === "--tag") opt.tags.push(...argv[++i].split(",").map((t) => t.trim()).filter(Boolean))
   else if (a === "--min-pass") opt.minPass = Number(argv[++i])
   else if (a === "--quick") {
     console.error("--quick is gone: it appended \"skip installs/builds/audit\" to the prompt, which tested a different policy. Use --level behavior or --level smoke.")
@@ -227,15 +230,16 @@ if (errors.length && (opt.check || opt.run)) {
   process.exit(1)
 }
 
-const runnable = plan.filter(({ c }) => c.status === "run")
-const manual = plan.filter(({ c }) => c.status === "manual")
+const tagged = opt.tags.length ? plan.filter(({ c }) => opt.tags.every((t) => c.tags.includes(t))) : plan
+const runnable = tagged.filter(({ c }) => c.status === "run")
+const manual = tagged.filter(({ c }) => c.status === "manual")
 const skipped = opt.level === "behavior" ? runnable.filter(({ c }) => c.needs.includes("gates")) : []
 const selected = runnable.filter((p) => !skipped.includes(p))
 
 if (opt.list || !opt.run) {
-  console.log(`Parsed ${plan.length} case(s): ${runnable.length} runnable, ${manual.length} manual\n`)
-  for (const { skill, c } of plan) {
-    const marks = [c.status === "manual" ? "manual" : "", c.needs.length ? `needs:${c.needs.join("+")}` : "", `${c.expect.length} expectations`]
+  console.log(`Parsed ${tagged.length} case(s)${opt.tags.length ? ` tagged ${opt.tags.join("+")}` : ""}: ${runnable.length} runnable, ${manual.length} manual\n`)
+  for (const { skill, c } of tagged) {
+    const marks = [c.status === "manual" ? "manual" : "", c.needs.length ? `needs:${c.needs.join("+")}` : "", c.tags.length ? `tags:${c.tags.join("+")}` : "", `${c.expect.length} expectations`]
       .filter(Boolean)
       .join("  ")
     const prompt = (c.prompt || c.title).replace(/\n/g, " ")
@@ -577,7 +581,8 @@ if (opt.level === "smoke") {
   // An explicit --baseline is strict (a case missing from the run is a hole);
   // the implicit baseline.json is advisory, so a targeted --case run does not
   // report every unselected case as missing.
-  const target = opt.baseline ?? (opt.saveBaseline || opt.skill || opt.case ? null : join(OUT_ROOT, "baseline.json"))
+  const filtered = Boolean(opt.skill || opt.case || opt.tags.length)
+  const target = opt.baseline ?? (opt.saveBaseline || filtered ? null : join(OUT_ROOT, "baseline.json"))
   if (target && existsSync(target)) {
     const comparison = compareRuns(readRun(target), summary)
     console.log(`\n${formatComparison(comparison, target)}`)

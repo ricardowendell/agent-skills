@@ -38,6 +38,7 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
 
 4. **Trigger: a decision is stated in passing.**
    - prompt: We decided to drop the queue and write straight to Postgres. Record that.
+   - tags: trigger
    - why: the word "decision" is absent; "record that" is the only signal
    - gate: off
    - expect: Loads `record-decision` instead of writing prose wherever it happens to be.
@@ -45,6 +46,7 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
 
 5. **Near-miss: an open question with no decision in it.**
    - prompt: Postgres or SQLite for a single-user app?
+   - tags: trigger
    - why: asks for a recommendation. Consulting the skill is fine — writing an ADR for something nobody decided is not, so the assertion watches the artefact, not the tool call.
    - gate: off
    - expect: Answers the question and files nothing.
