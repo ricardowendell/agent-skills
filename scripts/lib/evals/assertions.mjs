@@ -146,7 +146,7 @@ function check(kind, arg, { scratch, out, text, snapshot }) {
 
   if (kind === "verdict") {
     // Tolerate markdown decoration: the contract is the token, not the styling.
-    const m = /^\s*(?:[#>*_`-]+\s*)*VERDICT:[*_`]*\s*([A-Za-z]+)/m.exec(text)
+    const m = /^\s*(?:[#>*_`-]+\s*)*VERDICT:\s*[*_`]*\s*([A-Za-z]+)/m.exec(text)
     if (!m) return push(false, "no VERDICT: line in the reply")
     return push(m[1].toUpperCase() === arg.trim().toUpperCase(), `got ${m[1].toUpperCase()}`)
   }

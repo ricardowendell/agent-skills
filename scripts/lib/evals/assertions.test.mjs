@@ -87,6 +87,9 @@ test("reply reads the assistant text, not tool output", () => {
 })
 
 test("verdict tolerates markdown decoration but not a missing line", () => {
+  // The token can be bolded on either side of the colon.
+  assert.equal(one({ kind: "verdict", arg: "APPROVE" }, "/tmp", transcript({ text: "VERDICT: **APPROVE**" })).pass, true)
+  assert.equal(one({ kind: "verdict", arg: "APPROVE" }, "/tmp", transcript({ text: "**VERDICT:** APPROVE" })).pass, true)
   const decorated = transcript({ text: "## **VERDICT: REJECT**" })
   assert.equal(one({ kind: "verdict", arg: "REJECT" }, "/tmp", decorated).pass, true)
   assert.equal(one({ kind: "verdict", arg: "APPROVE" }, "/tmp", decorated).pass, false)
