@@ -1,35 +1,40 @@
 #!/usr/bin/env node
 // run-evals.mjs — run the prose evals in a skill's references/evals.md.
 //
-// Semi-automated v1: for each numbered case it runs the prompt with `opencode run`
-// inside an isolated scratch directory and saves the full transcript for review.
-// Expectations stay human-checked (no automatic pass/fail yet).
+// For each numbered case it stages the fixture and the skill under review in an
+// isolated scratch directory, runs `opencode run` there, and checks the case's
+// machine-checkable assertions against the resulting filesystem and transcript.
+// Prose expectations stay human-checked; a run only passes when it was actually
+// scored (>= 1 assertion) and the skill that loaded was the one under review.
 //
 // Usage:
-//   node ~/.config/opencode/scripts/run-evals.mjs                    # all skills, all cases (dry unless --run)
-//   node ~/.config/opencode/scripts/run-evals.mjs --skill graphify
-//   node ~/.config/opencode/scripts/run-evals.mjs --case 2 --run
-//   node ~/.config/opencode/scripts/run-evals.mjs --list             # list parsed cases only
-//   node ~/.config/opencode/scripts/run-evals.mjs --run              # actually execute (default is dry-run)
+//   node scripts/run-evals.mjs --list --check      # validate every case (CI)
+//   node scripts/run-evals.mjs --skill review-code --run
+//   node scripts/run-evals.mjs --case 2 --run
+//   node scripts/run-evals.mjs --level full --run
 //
 // Flags:
-//   --skill <id>      limit to one skill
-//   --case <n>        limit to one case number
-//   --run             execute (otherwise prints the plan / dry-run)
-//   --agent <name>    agent to use (default: build)
-//   --model <ref>     model override, provider/model#variant
-//   --timeout <sec>   per-case timeout (default: 600)
-//   --shared          use the shared service instead of a private server
-//                     (NOT isolated — the child inherits the launch directory)
-//   --level <fast|full>  fast (default): --quick + concurrency 8, proves behaviour;
-//                        full: runs the audit commands, concurrency 4, slower
-//   --full               shorthand for --level full
-//   --concurrency <n>    override the level's concurrency
-//   --quick              override: scaffold only (skip installs/builds/audit)
+//   --skill <id>        limit to one skill
+//   --case <n>          limit to one case number
+//   --run               execute (default is a dry run)
+//   --list              list parsed cases
+//   --check             exit 1 on validation errors (unknown kind, no prompt)
+//   --agent <name>      agent to use (default: build)
+//   --model <ref>       model override, provider/model#variant
+//   --timeout <sec>     per-case timeout (default: 600)
+//   --level <name>      smoke | behavior (default) | full
+//                         smoke    parse + validate + stage, no model
+//                         behavior cases without `needs: gates`
+//                         full     every runnable case
+//   --concurrency <n>   override the level's concurrency
+//   --root <dir>        skill root to discover (CI passes the checkout)
+//   --shared            run against the shared server: NOT isolated, the child
+//                       inherits the launch directory. Needs --i-know.
 //
 // Isolation: cases run with `--standalone` and a scrubbed child env (no
-// OPENCODE*/AI_AGENT) so the agent honours the scratch cwd. Without this the
-// child attaches to the shared server and edits the directory you launched from.
+// OPENCODE*/AI_AGENT) so the agent honours the scratch cwd. The skill under
+// review is copied to <scratch>/.opencode/skills/<id>/, which shadows any global
+// install of the same id; each run records that copy's hash.
 //
 // Fixtures: `references/evals/<n>/` is copied into the scratch dir. A case that
 // brings a `git.json` manifest is staged instead: `{ "base": "../base",
@@ -39,57 +44,77 @@
 //
 // Output: transcripts under ~/.local/share/opencode/evals/<skill>/<n>.md
 
-import { readFileSync, readdirSync, lstatSync, realpathSync, existsSync, mkdtempSync, cpSync, mkdirSync, writeFileSync, unlinkSync, rmSync } from "node:fs"
-import { spawn, execFileSync } from "node:child_process"
-import { createHash } from "node:crypto"
-import { join, basename, dirname, resolve } from "node:path"
-import { homedir, tmpdir } from "node:os"
+import { readdirSync, lstatSync, realpathSync, existsSync, mkdirSync, writeFileSync } from "node:fs"
+import { spawn, spawnSync } from "node:child_process"
+import { join, basename, dirname } from "node:path"
+import { fileURLToPath } from "node:url"
+import { homedir } from "node:os"
+import { readEvals } from "./lib/evals/parse.mjs"
+import { evaluateAssertions, replyText, skillGate, skillLoads, toolCalls, usageStats } from "./lib/evals/assertions.mjs"
+import { stageFixture, stageSkill, snapshotTree, makeScratch } from "./lib/evals/fixture.mjs"
+import { classify, summarize, PASSED, UNSCORED } from "./lib/evals/result.mjs"
+import { summarizeRun, compareRuns, formatComparison, readRun } from "./lib/evals/report.mjs"
 
 const argv = process.argv.slice(2)
-const opt = { skill: null, case: null, run: false, list: false, agent: "build", model: null, timeout: 600, standalone: true, concurrency: null, quick: null, level: "fast", root: null }
+const opt = {
+  skill: null,
+  case: null,
+  run: false,
+  list: false,
+  check: false,
+  agent: "build",
+  model: null,
+  timeout: 600,
+  standalone: true,
+  iKnow: false,
+  concurrency: null,
+  level: "behavior",
+  root: null,
+  baseline: null,
+  saveBaseline: false,
+}
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i]
   if (a === "--skill") opt.skill = argv[++i]
   else if (a === "--case") opt.case = Number(argv[++i])
   else if (a === "--run") opt.run = true
   else if (a === "--list") opt.list = true
+  else if (a === "--check") opt.check = true
   else if (a === "--agent") opt.agent = argv[++i]
   else if (a === "--model") opt.model = argv[++i]
   else if (a === "--timeout") opt.timeout = Number(argv[++i])
   else if (a === "--standalone") opt.standalone = true
   else if (a === "--shared") opt.standalone = false
+  else if (a === "--i-know") opt.iKnow = true
   else if (a === "--concurrency") opt.concurrency = Number(argv[++i])
-  else if (a === "--quick") opt.quick = true
   else if (a === "--level") opt.level = argv[++i]
-  else if (a === "--full") opt.level = "full"
   else if (a === "--root") opt.root = argv[++i]
+  else if (a === "--baseline") opt.baseline = argv[++i]
+  else if (a === "--save-baseline") opt.saveBaseline = true
+  else if (a === "--quick") {
+    console.error("--quick is gone: it appended \"skip installs/builds/audit\" to the prompt, which tested a different policy. Use --level behavior or --level smoke.")
+    process.exit(1)
+  } else if (a === "--full") opt.level = "full"
 }
 
-// Resolve level defaults (explicit --quick/--concurrency win).
-if (opt.level !== "fast" && opt.level !== "full") {
-  console.error(`unknown --level '${opt.level}' (expected fast|full)`)
+if (!["smoke", "behavior", "full"].includes(opt.level)) {
+  console.error(`unknown --level '${opt.level}' (expected smoke|behavior|full)`)
   process.exit(1)
 }
-if (opt.quick === null) opt.quick = opt.level === "fast"
-if (opt.concurrency === null) opt.concurrency = opt.level === "fast" ? 8 : 4
+if (!opt.standalone && !opt.iKnow) {
+  console.error("--shared runs the agent in your launch directory, not a scratch dir. Re-run with --i-know if that is what you want.")
+  process.exit(1)
+}
+if (opt.concurrency === null) opt.concurrency = opt.level === "smoke" ? 1 : 4
 
 const HOME = homedir()
-// --root <dir> overrides discovery (for CI, where the repo is not under HOME).
 const ROOTS = (
   opt.root
     ? [opt.root]
-    : [
-        join(HOME, ".agents/skills"),
-        join(HOME, ".claude/skills"),
-        join(HOME, ".codex/skills"),
-        join(HOME, ".config/opencode/skills"),
-      ]
+    : [join(HOME, ".agents/skills"), join(HOME, ".claude/skills"), join(HOME, ".codex/skills"), join(HOME, ".config/opencode/skills")]
 ).filter(existsSync)
 const OUT_ROOT = join(HOME, ".local/share/opencode/evals")
 
-// Scrub the vars that make `opencode run` attach to the invoking session's
-// server/project instead of the scratch cwd — the cause of eval runs editing
-// the launch directory.
 const CHILD_ENV = { ...process.env }
 for (const k of Object.keys(CHILD_ENV)) {
   if (/^OPENCODE/i.test(k) || k === "AI_AGENT") delete CHILD_ENV[k]
@@ -120,30 +145,6 @@ function* skillDirs(dir, seen = new Set()) {
   }
 }
 
-// Parse "N. **\"prompt\"**" cases from an evals.md file.
-function parseCases(md) {
-  const cases = []
-  const lines = md.split("\n")
-  let cur = null
-  for (const line of lines) {
-    const m = line.match(/^\s*(\d+)\.\s+\*\*(.+?)\*\*(.*)$/)
-    if (m) {
-      if (cur) cases.push(cur)
-      const n = Number(m[1])
-      let prompt = (m[2] + (m[3] ? " " + m[3].trim() : "")).trim()
-      if (/^".*"$/.test(prompt)) prompt = prompt.slice(1, -1).trim()
-      cur = { n, prompt, expect: [], assert: [] }
-    } else if (cur && /^\s*[-*]\s+/.test(line)) {
-      const item = line.replace(/^\s*[-*]\s+/, "").trim()
-      const a = item.match(/^\[assert\]\s+(\w+)\s+(.+)$/)
-      if (a) cur.assert.push({ kind: a[1], arg: a[2].trim() })
-      else cur.expect.push(item)
-    }
-  }
-  if (cur) cases.push(cur)
-  return cases
-}
-
 function discoverEvals() {
   const found = []
   const seen = new Set()
@@ -160,218 +161,128 @@ function discoverEvals() {
   return found
 }
 
-// Evaluate optional machine-checkable assertions:
-//   [assert] file <path>          scratch file exists
-//   [assert] nofile <path>        scratch file absent
-//   [assert] dir <path>           scratch directory exists
-//   [assert] nodir <path>         scratch directory absent
-//   [assert] filematch <path> <re>  scratch file content matches regex
-//   [assert] grep <regex>         regex matches the transcript (see caveat)
-//   [assert] nogrep <regex>       regex does not match the transcript
-//   [assert] reply <regex>        regex matches the agent's text replies only
-//   [assert] noreply <regex>      regex does not match the agent's text replies
-//   [assert] verdict APPROVE|REJECT  the reply's `VERDICT:` line names this one
-//   [assert] unchanged <path>     scratch file unmodified since staging
-//   [assert] changed <path>       scratch file modified since staging
-//
-// Caveat: the transcript contains the skill's own text, so grep against it can
-// match this eval file. Prefer reply/noreply/verdict (assistant text only) or
-// filesystem assertions.
-// `unchanged`/`changed` compare against the tree as it was staged, not against
-// the fixture file: a git fixture's reviewed files legitimately differ from the
-// base commit, and what the assertion cares about is whether the skill edited
-// anything afterwards.
-function safeRegex(pattern) {
-  try {
-    return new RegExp(pattern)
-  } catch {
-    return null
+function repoSha() {
+  const r = spawnSync("git", ["rev-parse", "--short", "HEAD"], { cwd: dirname(fileURLToPath(import.meta.url)), encoding: "utf8" })
+  return r.status === 0 ? r.stdout.trim() : "unknown"
+}
+
+const skills = discoverEvals().filter((s) => !opt.skill || s.id === opt.skill)
+if (!skills.length) {
+  console.error(opt.skill ? `no skill "${opt.skill}" with references/evals.md` : "no skills with references/evals.md found")
+  process.exit(1)
+}
+
+const plan = []
+const warnings = []
+const errors = []
+for (const s of skills) {
+  const parsed = readEvals(s.evals)
+  errors.push(...parsed.errors.map((e) => `${s.id}: ${e}`))
+  warnings.push(...parsed.warnings.map((w) => `${s.id}: ${w}`))
+  for (const c of parsed.cases) {
+    if (opt.case && c.n !== opt.case) continue
+    plan.push({ skill: s, c })
   }
 }
 
-function snapshotTree(root) {
-  const map = new Map()
-  const walk = (dir, rel) => {
-    for (const e of readdirSync(dir, { withFileTypes: true })) {
-      if (e.name === ".git" || e.name === "node_modules") continue
-      const p = join(dir, e.name)
-      const r = rel ? `${rel}/${e.name}` : e.name
-      if (e.isDirectory()) walk(p, r)
-      else if (e.isFile()) map.set(r, createHash("md5").update(readFileSync(p)).digest("hex"))
-    }
-  }
-  walk(root, "")
-  return map
+for (const w of warnings) console.error(`warn: ${w}`)
+for (const e of errors) console.error(`error: ${e}`)
+if (errors.length && (opt.check || opt.run)) {
+  console.error(`\n${errors.length} validation error(s); refusing to run.`)
+  process.exit(1)
 }
 
-function evaluateAssertions(c, scratch, out, text = "", snapshot = new Map()) {
-  const results = []
-  for (const { kind, arg } of c.assert || []) {
-    const p = join(scratch, arg)
-    let pass = false
-    let detail = ""
-    switch (kind) {
-      case "file":
-        pass = existsSync(p)
-        break
-      case "nofile":
-        pass = !existsSync(p)
-        break
-      case "dir":
-      case "nodir": {
-        let isDir = false
-        try {
-          readdirSync(p)
-          isDir = true
-        } catch {}
-        pass = kind === "dir" ? isDir : !isDir
-        break
-      }
-      case "filematch": {
-        const sp = arg.indexOf(" ")
-        const fp = sp === -1 ? arg : arg.slice(0, sp)
-        const re = sp === -1 ? null : new RegExp(arg.slice(sp + 1).trim())
-        try {
-          if (re && fp.includes("*")) {
-            // Glob: pass if ANY file matching the pattern has content matching re.
-            const dir = join(scratch, dirname(fp))
-            const rx = new RegExp(
-              "^" + basename(fp).replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*") + "$",
-            )
-            let names = []
-            try {
-              names = readdirSync(dir)
-            } catch {}
-            pass = names.some((n) => rx.test(n) && re.test(readFileSync(join(dir, n), "utf8")))
-          } else {
-            const full = join(scratch, fp)
-            pass = !!re && existsSync(full) && re.test(readFileSync(full, "utf8"))
-          }
-        } catch {
-          pass = false
-        }
-        break
-      }
-      case "grep":
-      case "nogrep":
-      case "reply":
-      case "noreply": {
-        const re = safeRegex(arg)
-        if (!re) {
-          detail = "invalid regex"
-          break
-        }
-        const haystack = kind === "grep" || kind === "nogrep" ? out : text
-        const hit = re.test(haystack)
-        pass = kind === "nogrep" || kind === "noreply" ? !hit : hit
-        break
-      }
-      case "verdict": {
-        // Tolerate markdown decoration: the contract is the token, not the styling.
-        const m = /^\s*(?:[#>*_`-]+\s*)*VERDICT:[*_`]*\s*([A-Za-z]+)/m.exec(text)
-        pass = !!m && m[1].toUpperCase() === arg.trim().toUpperCase()
-        if (!m) detail = "no VERDICT: line in the reply"
-        break
-      }
-      case "unchanged":
-      case "changed": {
-        const a = existsSync(p) ? createHash("md5").update(readFileSync(p)).digest("hex") : null
-        const b = snapshot.has(arg) ? snapshot.get(arg) : null
-        if (kind === "unchanged") pass = a !== null && b !== null && a === b
-        else pass = a !== null && b !== null && a !== b
-        break
-      }
-      default:
-        detail = `unknown assert kind '${kind}'`
-    }
-    results.push({ kind, arg, pass, detail })
+const runnable = plan.filter(({ c }) => c.status === "run")
+const manual = plan.filter(({ c }) => c.status === "manual")
+const skipped = opt.level === "behavior" ? runnable.filter(({ c }) => c.needs.includes("gates")) : []
+const selected = runnable.filter((p) => !skipped.includes(p))
+
+if (opt.list || !opt.run) {
+  console.log(`Parsed ${plan.length} case(s): ${runnable.length} runnable, ${manual.length} manual\n`)
+  for (const { skill, c } of plan) {
+    const marks = [c.status === "manual" ? "manual" : "", c.needs.length ? `needs:${c.needs.join("+")}` : "", `${c.expect.length} expectations`]
+      .filter(Boolean)
+      .join("  ")
+    const prompt = (c.prompt || c.title).replace(/\n/g, " ")
+    console.log(`  ${skill.id} #${c.n}: ${prompt.slice(0, 64)}${prompt.length > 64 ? "…" : ""}  [${marks}]`)
   }
-  return results
+  if (opt.level === "behavior" && skipped.length) console.log(`\n${skipped.length} case(s) skipped at --level behavior (needs: gates).`)
+  if (!opt.run) console.log(`\nDry run. Re-run with --run to execute (agent=${opt.agent}, level=${opt.level}, timeout=${opt.timeout}s).`)
+  process.exit(opt.check && errors.length ? 1 : 0)
 }
 
-// The assistant's own words, without the tool output or the skill's text — so
-// `reply`/`verdict` assertions cannot be satisfied by the skill's own template.
-function replyText(out) {
-  const parts = []
-  for (const line of out.split("\n")) {
-    const s = line.trim()
-    if (!s.startsWith("{")) continue
-    try {
-      const ev = JSON.parse(s)
-      if (ev.type === "text" && ev.part?.text) parts.push(ev.part.text)
-    } catch {}
-  }
-  return parts.join("\n")
-}
-
-// Stage the fixture in the scratch dir. A bare directory is copied as-is. When
-// the case ships a `git.json` manifest, the tree is committed as `main`, the
-// patch is applied on a new branch, and that branch stays checked out — so a
-// review case sees a real base..head range instead of an unversioned tree.
-function stageFixture(skill, c, scratch) {
-  const caseDir = join(skill.dir, "references/evals", String(c.n))
-  const manifest = join(caseDir, "git.json")
-  const isGit = existsSync(manifest)
-  const spec = isGit ? JSON.parse(readFileSync(manifest, "utf8")) : {}
-  const baseDir = isGit ? resolve(caseDir, spec.base ?? ".") : caseDir
-  if (!existsSync(baseDir)) return
-  cpSync(baseDir, scratch, {
-    recursive: true,
-    filter: (src) => !/(^|\/)(git\.json|change\.patch)$/.test(src),
-  })
-  if (!isGit) return
-
-  // `remove` prunes paths from the base before the first commit — for a case
-  // where the artefact under review (a spec, a prompt) must not exist yet.
-  for (const rel of spec.remove ?? []) rmSync(join(scratch, rel), { recursive: true, force: true })
-
-  const git = (...args) =>
-    execFileSync(
-      "git",
-      ["-c", "user.name=Eval", "-c", "user.email=eval@example.com", "-c", "commit.gpgsign=false", ...args],
-      { cwd: scratch, stdio: "pipe", encoding: "utf8" },
-    )
-  git("init", "-q", "-b", "main")
-  git("add", "-A")
-  git("commit", "-q", "-m", "chore: fixture base")
-  if (spec.branch) git("checkout", "-q", "-b", spec.branch)
-  if (spec.patch) {
-    const tmp = join(scratch, ".eval-change.patch")
-    writeFileSync(tmp, readFileSync(join(caseDir, spec.patch), "utf8"))
-    try {
-      git("apply", "--whitespace=nowarn", tmp)
-    } finally {
-      unlinkSync(tmp)
-    }
-  }
-  git("add", "-A")
-  git("commit", "-q", "-m", spec.message ?? "change under review")
-}
+let ok = 0
+let fail = 0
+let unscored = 0
+console.log(
+  `Isolation: standalone=${opt.standalone}` + (opt.standalone ? ", child env scrubbed (OPENCODE*, AI_AGENT), skill pinned in scratch\n" : " (--shared: NOT isolated)\n"),
+)
+console.log(`Level: ${opt.level} (concurrency=${opt.concurrency}, agent=${opt.agent}, model=${opt.model ?? "default"})\n`)
 
 function runCase(skill, c) {
-  const scratch = mkdtempSync(join(tmpdir(), `eval-${skill.id}-${c.n}-`))
+  const scratch = makeScratch(skill.id, c.n)
   const dir = join(OUT_ROOT, skill.id)
   mkdirSync(dir, { recursive: true })
   const file = join(dir, `${c.n}.md`)
-  try {
-    stageFixture(skill, c, scratch)
-  } catch (e) {
+  const started = Date.now()
+  const meta = { skill: skill.id, case: c.n, repoSha: repoSha(), agent: opt.agent, model: opt.model ?? "default", level: opt.level }
+
+  const writeFailure = (reason, err = "") => {
     writeFileSync(
       file,
       `# Eval: ${skill.id} case ${c.n}\n\n**Prompt:** ${c.prompt}\n\n**Scratch:** ${scratch}\n` +
-        `**Fixture:** failed to stage\n\n\`\`\`\n${e.message}\n${e.stderr ?? ""}\n\`\`\`\n`,
+        `**Status:** failed\n**Reason:** ${reason}\n\n\`\`\`\n${err}\n\`\`\`\n`,
     )
-    return Promise.resolve({ code: "fixture-error", file, failedAsserts: 0 })
+  }
+
+  let pinned
+  try {
+    pinned = stageSkill(skill, scratch)
+    stageFixture(skill, c, scratch)
+  } catch (e) {
+    writeFailure("fixture failed to stage", `${e.message}\n${e.stderr ?? ""}`)
+    return Promise.resolve({
+      skill: skill.id,
+      case: c.n,
+      status: "failed",
+      reason: "fixture failed to stage",
+      title: c.title,
+      prompt: c.prompt,
+      skillHash: null,
+      assertions: [],
+      transcript: file,
+    })
   }
   const snapshot = snapshotTree(scratch)
+
+  // smoke proves the fixture and the pinned skill stage cleanly, without a model.
+  if (opt.level === "smoke") {
+    writeFileSync(
+      file,
+      `# Eval: ${skill.id} case ${c.n}\n\n**Prompt:** ${c.prompt}\n\n**Scratch:** ${scratch}\n**Status:** staged\n` +
+        `**Skill hash:** ${pinned.hash}\n**Repo:** ${meta.repoSha}  **Agent:** ${meta.agent}  **Level:** smoke\n\n` +
+        `## Expectations (human-checked)\n\n${c.expect.map((e) => `- [ ] ${e}`).join("\n")}\n\n` +
+        `## Assertions (auto-checked)\n\nnot run at --level smoke\n`,
+    )
+    return Promise.resolve({
+      skill: skill.id,
+      case: c.n,
+      status: "staged",
+      reason: "staged only (smoke)",
+      title: c.title,
+      prompt: c.prompt,
+      skillHash: pinned.hash,
+      assertions: [],
+      execution: { durationMs: Date.now() - started },
+      meta: { repoSha: meta.repoSha, agent: meta.agent, model: meta.model, level: meta.level },
+      transcript: file,
+    })
+  }
 
   const args = ["run", "--format", "json", "--auto", "--agent", opt.agent]
   if (opt.standalone) args.push("--standalone")
   if (opt.model) args.push("--model", opt.model)
-  const prompt = opt.quick
-    ? `${c.prompt}\n\nWork fast: skip dependency installs (\`bun install\`/\`uv sync\`), builds, and the full audit command list, and do not commit. Otherwise follow the skill's normal rules — including any step that requires user confirmation.`
-    : c.prompt
-  args.push(prompt)
+  args.push(c.prompt)
 
   return new Promise((resolve) => {
     // detached => the child leads its own process group, so we can kill the
@@ -404,8 +315,6 @@ function runCase(skill, c) {
       finished = true
       clearTimeout(hardTimer)
       killTree()
-      // Release the pipe handles; otherwise a detached service holding them
-      // keeps this process alive forever.
       try {
         child.stdout?.removeAllListeners()
         child.stderr?.removeAllListeners()
@@ -413,24 +322,42 @@ function runCase(skill, c) {
         child.stderr?.destroy()
         child.unref()
       } catch {}
+      const durationMs = Date.now() - started
       const asserts = evaluateAssertions(c, scratch, out, replyText(out), snapshot)
-      const failedAsserts = asserts.filter((a) => !a.pass).length
+      const gate = skillGate(out, scratch, skill.id)
+      const verdict = classify({ exit: code, asserts, skillGate: gate })
+      const usage = usageStats(out)
+      const result = {
+        skill: skill.id,
+        case: c.n,
+        status: verdict.status,
+        reason: verdict.reason,
+        title: c.title,
+        prompt: c.prompt,
+        skillHash: pinned.hash,
+        skillGate: { ok: gate.ok, reason: gate.reason, loaded: skillLoads(out).map((l) => l.id) },
+        assertions: asserts.map(({ kind, arg, pass, detail }) => ({ kind, arg, pass, detail })),
+        execution: { exit: code, durationMs, tokens: usage.tokens, cost: usage.cost, steps: usage.steps, toolCalls: toolCalls(out).length },
+        meta: { repoSha: meta.repoSha, agent: meta.agent, model: meta.model, level: meta.level },
+        transcript: file,
+      }
+      writeFileSync(join(dir, `${c.n}.json`), JSON.stringify(result, null, 2))
       const assertBlock = asserts.length
         ? `## Assertions (auto-checked)\n\n${asserts
             .map((a) => `- [${a.pass ? "x" : " "}] ${a.kind} ${a.arg}${a.detail ? ` (${a.detail})` : ""}`)
             .join("\n")}\n\n`
-        : ""
+        : "## Assertions (auto-checked)\n\nnone — case is unscored\n\n"
       writeFileSync(
         file,
         `# Eval: ${skill.id} case ${c.n}\n\n**Prompt:** ${c.prompt}\n\n` +
-          `**Scratch:** ${scratch}\n**Exit:** ${code}\n**Assertions:** ${
-            asserts.length - failedAsserts
-          }/${asserts.length} passed\n\n` +
+          `**Scratch:** ${scratch}\n**Exit:** ${code}\n**Status:** ${verdict.status}${verdict.reason ? ` — ${verdict.reason}` : ""}\n` +
+          `**Skill:** ${gate.ok ? "loaded" : "MISSING"} (${gate.reason})\n**Skill hash:** ${pinned.hash}\n` +
+          `**Repo:** ${meta.repoSha}  **Agent:** ${meta.agent}  **Model:** ${meta.model}  **Level:** ${meta.level}  **Duration:** ${durationMs}ms\n\n` +
           `## Expectations (human-checked)\n\n${c.expect.map((e) => `- [ ] ${e}`).join("\n")}\n\n` +
           assertBlock +
           `## Transcript\n\n\`\`\`\n${out}\n\`\`\`\n\n${err ? `## stderr\n\n\`\`\`\n${err}\n\`\`\`\n` : ""}`,
       )
-      resolve({ code, file, failedAsserts })
+      resolve(result)
     }
 
     const hardTimer = setTimeout(() => finish("timeout"), opt.timeout * 1000)
@@ -444,53 +371,57 @@ function runCase(skill, c) {
   })
 }
 
-const skills = discoverEvals().filter((s) => !opt.skill || s.id === opt.skill)
-if (!skills.length) {
-  console.error(opt.skill ? `no skill "${opt.skill}" with references/evals.md` : "no skills with references/evals.md found")
-  process.exit(1)
-}
-
-const plan = []
-for (const s of skills) {
-  const cases = parseCases(readFileSync(s.evals, "utf8")).filter((c) => !opt.case || c.n === opt.case)
-  for (const c of cases) plan.push({ skill: s, c })
-}
-
-if (opt.list || !opt.run) {
-  console.log(`Parsed ${plan.length} case(s):\n`)
-  for (const { skill, c } of plan) {
-    console.log(`  ${skill.id} #${c.n}: ${c.prompt.slice(0, 72)}${c.prompt.length > 72 ? "…" : ""}  [${c.expect.length} expectations]`)
-  }
-  if (!opt.run) console.log(`\nDry run. Re-run with --run to execute (agent=${opt.agent}, timeout=${opt.timeout}s).`)
-  process.exit(0)
-}
-
-let ok = 0
-let fail = 0
-console.log(
-  `Isolation: standalone=${opt.standalone}` +
-    (opt.standalone
-      ? ", child env scrubbed (OPENCODE*, AI_AGENT)\n"
-      : " (--shared: NOT isolated — cases run in your launch directory!)\n"),
-)
-const queue = [...plan]
-const lanes = Math.max(1, Math.min(opt.concurrency, queue.length))
-console.log(`Level: ${opt.level} (quick=${opt.quick}, concurrency=${lanes})\n`)
+const startedAt = Date.now()
+const queue = [...selected]
+const lanes = Math.max(1, Math.min(opt.concurrency, queue.length || 1))
+const results = []
 async function lane() {
   while (queue.length) {
     const { skill, c } = queue.shift()
-    c.skillDir = skill.dir
-    process.stdout.write(`→ ${skill.id} #${c.n}: ${c.prompt.slice(0, 60)}… `)
+    process.stdout.write(`→ ${skill.id} #${c.n}: ${c.prompt.replace(/\n/g, " ").slice(0, 56)}… `)
     const r = await runCase(skill, c)
-    const good = r.code === 0 && (r.failedAsserts ?? 0) === 0
-    console.log(
-      good
-        ? `done (${r.file})`
-        : `exit ${r.code}${r.failedAsserts ? `, ${r.failedAsserts} assert(s) failed` : ""} (${r.file})`,
-    )
-    good ? ok++ : fail++
+    results.push(r)
+    if (r.status === PASSED) ok++
+    else if (r.status === UNSCORED) unscored++
+    else fail++
+    console.log(`${r.status}${r.reason ? ` (${r.reason})` : ""} — ${r.transcript}`)
   }
 }
 await Promise.all(Array.from({ length: lanes }, lane))
-console.log(`\n${ok} ok, ${fail} failed. Transcripts in ${OUT_ROOT}`)
-process.exit(fail ? 1 : 0)
+
+const totals = summarize(results)
+console.log(
+  `\n${totals.passed} passed, ${totals.failed} failed, ${totals.unscored} unscored` +
+    (totals.staged ? `, ${totals.staged} staged` : "") +
+    ` (of ${totals.total}). Transcripts in ${OUT_ROOT}`,
+)
+if (skipped.length) console.log(`${skipped.length} case(s) skipped at --level ${opt.level} (needs: gates).`)
+
+const runFile = join(OUT_ROOT, "last-run.json")
+const summary = summarizeRun({ results, repoSha: repoSha(), agent: opt.agent, model: opt.model ?? "default", level: opt.level, startedAt: new Date(startedAt).toISOString() })
+writeFileSync(runFile, JSON.stringify(summary, null, 2))
+console.log(`Run artifact: ${runFile}`)
+
+let regressed = false
+if (opt.level === "smoke") {
+  if (opt.baseline || opt.saveBaseline) console.error("baselines compare behaviour, not staging; skipping (--level smoke)")
+} else {
+  if (opt.saveBaseline) {
+    writeFileSync(join(OUT_ROOT, "baseline.json"), JSON.stringify(summary, null, 2))
+    console.log(`Baseline saved: ${join(OUT_ROOT, "baseline.json")}`)
+  }
+  // An explicit --baseline is strict (a case missing from the run is a hole);
+  // the implicit baseline.json is advisory, so a targeted --case run does not
+  // report every unselected case as missing.
+  const target = opt.baseline ?? (opt.saveBaseline || opt.skill || opt.case ? null : join(OUT_ROOT, "baseline.json"))
+  if (target && existsSync(target)) {
+    const comparison = compareRuns(readRun(target), summary)
+    console.log(`\n${formatComparison(comparison, target)}`)
+    regressed = comparison.regressions.length > 0 || (Boolean(opt.baseline) && comparison.missing.length > 0)
+  } else if (opt.baseline) {
+    console.error(`no baseline at ${target} — run once with --save-baseline first`)
+    regressed = true
+  }
+}
+
+process.exit(totals.failed || totals.unscored || regressed ? 1 : 0)
