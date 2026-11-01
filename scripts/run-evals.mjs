@@ -505,9 +505,7 @@ async function runCaseReps(skill, c) {
     // Buffered: printing per repetition interleaves with the other lanes.
     reps.push(await runCase(skill, c, times > 1 ? { index: i } : null))
   }
-  if (times > 1) {
-    process.stdout.write(`     ${reps.map((r, i) => `r${i + 1}:${r.status}`).join(" ")}\n`)
-  }
+  const repLine = times > 1 ? reps.map((r, i) => `r${i + 1}:${r.status}`).join(" ") : ""
   if (times === 1) return reps[0]
 
   const agg = aggregateReps(reps, opt.minPass)
@@ -542,6 +540,7 @@ async function runCaseReps(skill, c) {
     arm: artifact.arm,
     meta: artifact.meta,
     transcript: join(dir, `${c.n}.r1.md`),
+    repLine,
   }
 }
 
@@ -552,14 +551,14 @@ const results = []
 async function lane() {
   while (queue.length) {
     const { skill, c } = queue.shift()
-    process.stdout.write(`→ ${skill.id} #${c.n}: ${c.prompt.replace(/\n/g, " ").slice(0, 56)}… `)
+    process.stdout.write(`→ ${skill.id} #${c.n}… `)
     const r = await runCaseReps(skill, c)
     results.push(r)
     if (r.status === PASSED) ok++
     else if (r.status === UNSCORED) unscored++
     else fail++
     const rate = r.reps ? ` [${r.passed}/${r.reps}]` : ""
-    console.log(`${r.status}${rate}${r.reason ? ` (${r.reason})` : ""} — ${r.transcript}`)
+    console.log(`${skill.id} #${c.n}: ${r.status}${rate}${r.reason ? ` (${r.reason})` : ""} — ${r.transcript}` + (r.repLine ? `\n     ${r.repLine}` : ""))
   }
 }
 await Promise.all(Array.from({ length: lanes }, lane))
