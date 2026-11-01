@@ -45,11 +45,11 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
 3. **Review a branch with no spec in the repo.**
    - prompt: Review this branch before I merge it.
    - tags: matrix
-   - why: no spec in the repo. The prompt is shared with trigger case 5 on purpose: the trigger measures whether the skill is reached, this case what it does once it is.
+   - why: no spec in the repo. The prompt is shared with trigger case 5 on purpose: the trigger measures whether the skill is reached, this case what it does once it is. Measured at 6 repetitions with the skill and 3 without: 6/6 withhold, 2/3 approve. The control rep that passed answered in Portuguese ("Veredicto: Request changes"), which the English token match does not see.
    - expect: Asks for the intent or refuses; does not invent acceptance criteria.
    - expect: Names what it cannot verify instead of approving on plausibility.
    - expect: Watch for: a confident APPROVE with no spec to approve against.
-   - assert: noreply verdict:?\s*\**\s*(?:approve|request changes)\b(?!\s+(?:or|nor)\b)|\bLGTM\b|\blooks good\b|\bship it\b
+   - assert: noreply verdict:?\s*\**\s*(?:approve|reject|request changes)\b(?!\s+(?:or|nor)\b)|\bLGTM\b|\blooks good\b|\bship it\b
    - assert: reply spec
    - assert: unchanged src/cart.js
 

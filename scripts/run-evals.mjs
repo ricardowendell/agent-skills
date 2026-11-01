@@ -62,7 +62,7 @@ import { fileURLToPath } from "node:url"
 import { homedir } from "node:os"
 import { readEvals } from "./lib/evals/parse.mjs"
 import { scrubEnv } from "./lib/evals/agent.mjs"
-import { stageFixture, stageSkill, snapshotTree, makeScratch, denySkillTool } from "./lib/evals/fixture.mjs"
+import { stageFixture, stageSkill, makeScratch, denySkillTool } from "./lib/evals/fixture.mjs"
 import { summarize, aggregateReps, PASSED, UNSCORED } from "./lib/evals/result.mjs"
 import { executeCase } from "./lib/evals/execute.mjs"
 import { summarizeRun, compareRuns, formatComparison, readRun } from "./lib/evals/report.mjs"
@@ -305,31 +305,18 @@ async function runCase(skill, c, rep = null) {
     )
   }
 
-  let pinned = { hash: null }
-  try {
-    stageFixture(skill, c, scratch)
-    // --no-skill is the control arm: the skill is not staged and the tool is
-    // denied, so a difference against the pinned run is attributable to the skill.
-    if (opt.noSkill) denySkillTool(scratch)
-    else pinned = stageSkill(skill, scratch)
-  } catch (e) {
-    writeFailure("fixture failed to stage", `${e.message}\n${e.stderr ?? ""}`)
-    return {
-      skill: skill.id,
-      case: c.n,
-      status: "failed",
-      reason: "fixture failed to stage",
-      title: c.title,
-      prompt: c.prompt,
-      skillHash: null,
-      assertions: [],
-      transcript: file,
-    }
-  }
-  const snapshot = snapshotTree(scratch)
-
   // smoke proves the fixture and the pinned skill stage cleanly, without a model.
+  // It stages for itself; every other level stages inside executeCase.
   if (opt.level === "smoke") {
+    let pinned = { hash: null }
+    try {
+      stageFixture(skill, c, scratch)
+      if (opt.noSkill) denySkillTool(scratch)
+      else pinned = stageSkill(skill, scratch)
+    } catch (e) {
+      writeFailure("fixture failed to stage", `${e.message}\n${e.stderr ?? ""}`)
+      return { skill: skill.id, case: c.n, status: "failed", reason: "fixture failed to stage", title: c.title, prompt: c.prompt, skillHash: null, assertions: [], transcript: file }
+    }
     writeFileSync(
       file,
       `# Eval: ${skill.id} case ${c.n}\n\n**Prompt:** ${c.prompt}\n\n**Scratch:** ${scratch}\n**Status:** staged\n` +
