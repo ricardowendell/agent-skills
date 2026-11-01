@@ -152,9 +152,15 @@ const ROOTS = (
     : [join(HOME, ".agents/skills"), join(HOME, ".claude/skills"), join(HOME, ".codex/skills"), join(HOME, ".config/opencode/skills")]
 ).filter(existsSync)
 const OUT_ROOT = join(HOME, ".local/share/opencode/evals")
-// The control arm writes beside the real one: overwriting the same files would
+// Each configuration writes beside the others: overwriting the same files would
 // destroy the comparison the arm exists to make.
-const outDirFor = (skill) => join(OUT_ROOT, opt.noSkill ? `${skill.id}--without-skill` : skill.id)
+const slug = (s) => s.replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").toLowerCase()
+const outDirFor = (skill) => {
+  const parts = [skill.id]
+  if (opt.model) parts.push(slug(opt.model))
+  if (opt.noSkill) parts.push("without-skill")
+  return join(OUT_ROOT, parts.join("--"))
+}
 
 const CHILD_ENV = { ...process.env }
 for (const k of Object.keys(CHILD_ENV)) {
