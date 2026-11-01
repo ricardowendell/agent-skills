@@ -1,9 +1,10 @@
 ---
 id: TASK-2
 title: 'review-code: caso de eval com fixture de git'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-10-29T13:26:00Z'
+updated_date: '2026-11-01T22:53:00Z'
 labels: []
 dependencies: []
 ordinal: 2000
@@ -17,8 +18,8 @@ Com o runner estagiando git, o review-code ganha um caso que prova o veredito co
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 caso 1 roda a partir de references/evals/1/ num repo git
-- [ ] #2 transcript mostra VERDICT: REJECT e o AC-2 como blocking com file:line
-- [ ] #3 casos behavior-only existentes continuam passando
-- [ ] #4 validate-skills.mjs verde e SKILL.md aponta a fixture
+- [x] #1 caso 1 roda a partir de references/evals/1/ num repo git
+- [x] #2 transcript mostra VERDICT: REJECT e o AC-2 como blocking com file:line
+- [x] #3 casos behavior-only existentes continuam passando
+- [x] #4 validate-skills.mjs verde e SKILL.md aponta a fixture
 <!-- AC:END -->

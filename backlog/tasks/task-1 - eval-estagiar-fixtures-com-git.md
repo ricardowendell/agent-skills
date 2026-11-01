@@ -1,9 +1,10 @@
 ---
 id: TASK-1
 title: 'eval: estagiar fixtures com git'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-10-29T13:26:00Z'
+updated_date: '2026-11-01T22:53:00Z'
 labels: []
 dependencies: []
 ordinal: 1000
@@ -17,8 +18,8 @@ scripts/run-evals.mjs:241-243 estagia cada caso com mkdtemp + cpSync(fixture, sc
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 fixture marcada roda num repo git com commit base antes do caso
-- [ ] #2 asserts file/nofile/unchanged/changed seguem funcionando num repo
-- [ ] #3 --list e dry-run não criam repositório nem tocam a fixture
-- [ ] #4 node scripts/validate-skills.mjs verde
+- [x] #1 fixture marcada roda num repo git com commit base antes do caso
+- [x] #2 asserts file/nofile/unchanged/changed seguem funcionando num repo
+- [x] #3 --list e dry-run não criam repositório nem tocam a fixture
+- [x] #4 node scripts/validate-skills.mjs verde
 <!-- AC:END -->
