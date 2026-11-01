@@ -4,6 +4,7 @@ title: 'eval: re-medir a matriz 2x2 depois do fix do gabarito'
 status: To Do
 assignee: []
 created_date: '2026-11-01T22:53:00Z'
+updated_date: '2026-11-01T22:59:00Z'
 labels: []
 dependencies: []
 ordinal: 4000
@@ -21,3 +22,15 @@ c876d88 parou de estagiar references/evals.md e references/evals/ junto com a sk
 - [ ] #2 contagem por caso e braço igual entre runner e Promptfoo
 - [ ] #3 números antigos marcados como obsoletos onde aparecerem
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-11-01T22:59:00Z
+
+---
+
+Groomed into docs/specs/SPEC-0001-remeasure-eval-matrix.md (status: draft — second model and AC-6 scope are open).
+
+---
+<!-- COMMENTS:END -->
