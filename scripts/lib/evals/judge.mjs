@@ -26,6 +26,9 @@ For each expectation decide, from the evidence only:
 - "unverifiable": the evidence does not say either way. Use this freely; do not
   guess from what a good run would look like.
 
+Evidence must be one contiguous passage copied verbatim from the reply or the
+command log. Never join two quotes with an ellipsis.
+
 A line marked [NEGATIVE] describes a failure mode to avoid, not a requirement.
 Mark it "met" when the reply shows the agent did not fall into it, and "not-met"
 when it did. Do not require the failure to appear.
@@ -126,10 +129,20 @@ export function verifyEvidence(parsed, source) {
   if (!parsed) return parsed
   const norm = (s) => String(s ?? "").replace(/\s+/g, " ").trim().toLowerCase()
   const hay = norm(source)
+  // Judges often cite several passages joined by "..." anyway, so the check is
+  // per segment and forgiving: one short unquoted aside must not sink a verdict
+  // whose other half is right there. Most of the evidence has to be findable.
+  const segments = (evidence) =>
+    String(evidence ?? "")
+      .split(/\.\.\.|…|\s\|\s|;\s/)
+      .map(norm)
+      .map((part) => part.replace(/^[a-z ]{0,12}:\s*/, "").replace(/^[`"']+/, "").replace(/[`"']+$/, ""))
+      .filter((s) => s.length >= 8)
   const verdicts = parsed.verdicts.map((v) => {
     if (v.verdict !== "met") return v
-    const quote = norm(v.evidence)
-    if (quote.length >= 8 && hay.includes(quote)) return v
+    const parts = segments(v.evidence)
+    const found = parts.filter((p) => hay.includes(p)).length
+    if (parts.length && found / parts.length >= 0.5) return v
     return { ...v, verdict: "unverifiable", unverified: true }
   })
   const met = verdicts.filter((v) => v.verdict === "met").length

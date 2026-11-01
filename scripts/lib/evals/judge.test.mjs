@@ -82,3 +82,19 @@ test("a not-met verdict needs no quote, and keeps failing", () => {
   assert.equal(out.score, 0)
   assert.equal(judgeOutcome(out, 0.8).ok, false)
 })
+
+test("compound evidence counts when most of its segments are real", () => {
+  const reply = "Captured to inbox/2026-11-01-digest.md with status unprocessed."
+  const parsed = {
+    verdicts: [
+      { i: 1, verdict: "met", evidence: 'Reply: "Captured to inbox/2026-11-01-digest.md" ... "status unprocessed"' },
+      { i: 2, verdict: "met", evidence: "a line the agent never wrote ... nor this one" },
+    ],
+    met: 2,
+    unmet: 0,
+    score: 1,
+  }
+  const out = verifyEvidence(parsed, reply)
+  assert.equal(out.verdicts[0].verdict, "met")
+  assert.equal(out.verdicts[1].verdict, "unverifiable")
+})

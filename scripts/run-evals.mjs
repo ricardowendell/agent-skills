@@ -61,11 +61,10 @@ import { join, basename, dirname } from "node:path"
 import { fileURLToPath } from "node:url"
 import { homedir } from "node:os"
 import { readEvals } from "./lib/evals/parse.mjs"
-import { evaluateAssertions, replyText, skillGate, skillLoads, toolCalls, usageStats } from "./lib/evals/assertions.mjs"
-import { agentArgs, runAgent, scrubEnv } from "./lib/evals/agent.mjs"
+import { scrubEnv } from "./lib/evals/agent.mjs"
 import { stageFixture, stageSkill, snapshotTree, makeScratch, denySkillTool } from "./lib/evals/fixture.mjs"
-import { classify, summarize, aggregateReps, PASSED, UNSCORED } from "./lib/evals/result.mjs"
-import { judgePrompt, runJudge, judgeOutcome } from "./lib/evals/judge.mjs"
+import { summarize, aggregateReps, PASSED, UNSCORED } from "./lib/evals/result.mjs"
+import { executeCase } from "./lib/evals/execute.mjs"
 import { summarizeRun, compareRuns, formatComparison, readRun } from "./lib/evals/report.mjs"
 
 const argv = process.argv.slice(2)
@@ -353,38 +352,42 @@ async function runCase(skill, c, rep = null) {
     }
   }
 
-  const args = agentArgs({ prompt: c.prompt, model: opt.model, agent: opt.agent, standalone: opt.standalone })
-  const { out, err, code } = await runAgent({ args, cwd: scratch, env: CHILD_ENV, timeoutMs: opt.timeout * 1000 })
-  const durationMs = Date.now() - started
+  let exec
+  try {
+    exec = await executeCase({
+      skill,
+      c,
+      scratch,
+      arm: opt.noSkill ? "without-skill" : "with-skill",
+      model: opt.model,
+      agent: opt.agent,
+      standalone: opt.standalone,
+      timeoutMs: opt.timeout * 1000,
+      env: CHILD_ENV,
+      judge: opt.judge ? { model: JUDGE_MODEL, threshold: opt.judgeThreshold, selfJudged: SELF_JUDGED } : null,
+    })
+  } catch (e) {
+    writeFailure("fixture failed to stage", `${e.message}\n${e.stderr ?? ""}`)
+    return {
+      skill: skill.id,
+      case: c.n,
+      status: "failed",
+      reason: "fixture failed to stage",
+      title: c.title,
+      prompt: c.prompt,
+      skillHash: null,
+      assertions: [],
+      transcript: file,
+    }
+  }
 
-  const asserts = evaluateAssertions(c, scratch, out, replyText(out), snapshot)
-  const gate =
-    c.gate === "off"
-      ? { ok: true, reason: "case does not gate on the skill (trigger/routing case)" }
-      : opt.noSkill
-        ? {
-            ok: skillLoads(out).length === 0,
-            reason: skillLoads(out).length ? `loaded ${skillLoads(out).map((l) => l.id).join(", ")} although --no-skill` : "no skill loaded (control arm)",
-          }
-        : skillGate(out, scratch, skill.id)
-  const verdict = classify({ exit: code, asserts, skillGate: gate })
-  const usage = usageStats(out)
+  const { result: core, out, err, code, pinned: staged, gate, asserts, verdict, judged, durationMs } = exec
   const skillLabel = opt.noSkill
     ? `**Skill:** ${gate.ok ? "not loaded (control arm)" : "LOADED — the control arm is broken"} (${gate.reason})`
     : `**Skill:** ${gate.ok ? "loaded" : "MISSING"} (${gate.reason})`
 
   let result = {
-    skill: skill.id,
-    case: c.n,
-    status: verdict.status,
-    reason: verdict.reason,
-    title: c.title,
-    prompt: c.prompt,
-    skillHash: pinned.hash,
-    skillGate: { ok: gate.ok, reason: gate.reason, loaded: skillLoads(out).map((l) => l.id) },
-    assertions: asserts.map(({ kind, arg, pass, detail }) => ({ kind, arg, pass, detail })),
-    execution: { exit: code, durationMs, tokens: usage.tokens, cost: usage.cost, steps: usage.steps, toolCalls: toolCalls(out).length },
-    arm: opt.noSkill ? "without-skill" : "with-skill",
+    ...core,
     ...(rep ? { rep: rep.index } : {}),
     meta: { repoSha: meta.repoSha, agent: meta.agent, model: meta.model, level: meta.level },
     transcript: file,
@@ -400,62 +403,25 @@ async function runCase(skill, c, rep = null) {
     file,
     `# Eval: ${skill.id} case ${c.n}\n\n**Prompt:** ${c.prompt}\n\n` +
       `**Scratch:** ${scratch}\n**Exit:** ${code}\n**Status:** ${verdict.status}${verdict.reason ? ` — ${verdict.reason}` : ""}\n` +
-      `${skillLabel}\n**Skill hash:** ${pinned.hash}\n` +
+      `${skillLabel}\n**Skill hash:** ${staged.hash}\n` +
       `**Repo:** ${meta.repoSha}  **Agent:** ${meta.agent}  **Model:** ${meta.model}  **Level:** ${meta.level}  **Duration:** ${durationMs}ms\n\n` +
       `## Expectations (human-checked)\n\n${c.expect.map((e) => `- [ ] ${e}`).join("\n")}\n\n` +
       assertBlock +
       `## Transcript\n\n\`\`\`\n${out}\n\`\`\`\n\n${err ? `## stderr\n\n\`\`\`\n${err}\n\`\`\`\n` : ""}`,
   )
 
-  if (opt.judge && result.status !== "staged" && result.status !== "failed") {
-    const graded = await gradeCase(c, out, result)
-    result = graded.result
-    if (!rep) writeFileSync(join(dir, `${c.n}.json`), JSON.stringify(result, null, 2))
-    appendFileSync(file, graded.section)
+  if (judged) {
+    const { outcome, parsed, threshold } = judged
+    const section =
+      `\n## Semantic check (${JUDGE_MODEL})\n\n` +
+      `**Score:** ${outcome.score.toFixed(2)} (threshold ${threshold}) — ${outcome.ok ? "ok" : outcome.reason}\n\n` +
+      (parsed?.verdicts ?? []).map((v) => `- [${v.verdict === "met" ? "x" : " "}] ${v.i}: ${v.verdict}${v.evidence ? ` — ${v.evidence}` : ""}`).join("\n") +
+      "\n"
+    appendFileSync(file, section)
     patchHeader(file, result)
+    if (!rep) writeFileSync(join(dir, `${c.n}.json`), JSON.stringify(result, null, 2))
   }
   return result
-}
-
-// Optional second opinion over the expectations. It can fail a case that passed
-// deterministically and never rescue one that failed.
-async function gradeCase(c, out, result) {
-  const reply = replyText(out)
-  const shell = toolCalls(out)
-    .filter((t) => t.tool === "shell")
-    .map((t) => `${String(t.input.command ?? "").split("\n")[0]}  [exit ${t.exit ?? "?"}]`)
-  const prompt = judgePrompt(c, { reply, shell })
-  // The judge may only cite what the run actually said or ran.
-  const judged = await runJudge({
-    model: opt.judge,
-    prompt,
-    source: [reply, ...shell].join("\n"),
-    env: CHILD_ENV,
-    timeout: Math.min(opt.timeout, 300),
-  })
-  const outcome = judgeOutcome(judged.parsed, opt.judgeThreshold)
-  const passed = outcome.ok
-  const updated = {
-    ...result,
-    semantic: {
-      model: JUDGE_MODEL,
-      selfJudged: SELF_JUDGED,
-      threshold: opt.judgeThreshold,
-      score: outcome.score,
-      expectations: judged.parsed?.verdicts ?? [],
-      reason: outcome.reason,
-    },
-  }
-  if (!passed) {
-    updated.status = "failed"
-    updated.reason = outcome.reason
-  }
-  const section =
-    `\n## Semantic check (${opt.judge})\n\n` +
-    `**Score:** ${outcome.score.toFixed(2)} (threshold ${opt.judgeThreshold}) — ${passed ? "ok" : outcome.reason}\n\n` +
-    (judged.parsed?.verdicts ?? []).map((v) => `- [${v.verdict === "met" ? "x" : " "}] ${v.i}: ${v.verdict}${v.evidence ? ` — ${v.evidence}` : ""}`).join("\n") +
-    "\n"
-  return { result: updated, section }
 }
 
 // The header is written before the judge runs, so the status line has to be
