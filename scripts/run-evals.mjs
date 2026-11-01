@@ -162,6 +162,19 @@ const outDirFor = (skill) => {
   return join(OUT_ROOT, parts.join("--"))
 }
 
+// Without --model the child inherits the config's `model`, so the artifact would
+// say "default" and a matrix row would be unattributable. Resolve it by hand.
+function resolveModel() {
+  if (opt.model) return opt.model
+  try {
+    const config = JSON.parse(readFileSync(join(HOME, ".config/opencode/opencode.json"), "utf8"))
+    return config.model ? `${config.model} (config default)` : "default"
+  } catch {
+    return "default"
+  }
+}
+const EFFECTIVE_MODEL = resolveModel()
+
 const CHILD_ENV = { ...process.env }
 for (const k of Object.keys(CHILD_ENV)) {
   if (/^OPENCODE/i.test(k) || k === "AI_AGENT") delete CHILD_ENV[k]
@@ -277,7 +290,7 @@ async function runCase(skill, c, rep = null) {
   mkdirSync(dir, { recursive: true })
   const file = join(dir, `${c.n}${rep ? `.r${rep.index}` : ""}.md`)
   const started = Date.now()
-  const meta = { skill: skill.id, case: c.n, repoSha: repoSha(), agent: opt.agent, model: opt.model ?? "default", level: opt.level }
+  const meta = { skill: skill.id, case: c.n, repoSha: repoSha(), agent: opt.agent, model: EFFECTIVE_MODEL, level: opt.level }
 
   const writeFailure = (reason, err = "") => {
     writeFileSync(
@@ -578,7 +591,7 @@ console.log(
 if (skipped.length) console.log(`${skipped.length} case(s) skipped at --level ${opt.level} (needs: gates).`)
 
 const runFile = join(OUT_ROOT, "last-run.json")
-const summary = summarizeRun({ results, repoSha: repoSha(), agent: opt.agent, model: opt.model ?? "default", level: opt.level, startedAt: new Date(startedAt).toISOString() })
+const summary = summarizeRun({ results, repoSha: repoSha(), agent: opt.agent, model: EFFECTIVE_MODEL, level: opt.level, startedAt: new Date(startedAt).toISOString() })
 writeFileSync(runFile, JSON.stringify(summary, null, 2))
 console.log(`Run artifact: ${runFile}`)
 
