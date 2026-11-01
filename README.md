@@ -256,6 +256,12 @@ make a run cheaper: a cheaper run is a different test.
 The scratch dir is not an OS sandbox — the agent can still write outside it. The
 protection is `unchanged` plus the fixture's own `git status`.
 
+The eval corpus is never staged. `references/evals.md` holds every case's prompt,
+expectations and assertions, and `references/evals/<n>/` the fixtures of the
+other cases; an agent that reads either can satisfy a case without exercising the
+skill. Forty of the first 194 transcripts did exactly that, and closing the leak
+moved one trigger near-miss from 3/3 to 0/3 — rerun anything measured before.
+
 ### Does the skill add value?
 
 Two opt-in modes answer that without leaving the runner:
@@ -270,6 +276,11 @@ node scripts/run-evals.mjs --skill review-code --run --judge
 # every trigger case, three times each
 node scripts/run-evals.mjs --tag trigger --repeat 3 --run
 ```
+
+`--judge` records whether it graded its own homework: a judge that is also the
+model under test is reported as `selfJudged`, and it may only cite text the run
+actually produced — a quote it cannot find counts as `unverifiable`, never as
+`met`.
 
 `--no-skill` stages the same fixture with the skill tool denied and no copy in
 `.opencode/skills/`, and records `arm: without-skill`; the gate then requires
@@ -331,6 +342,19 @@ Where no other skill owns the prompt, even that is not stable: `find-blind-spots
 name the request as someone else's job. Both are `status: manual` with the
 measured load rate recorded, because the assertion would track the model's
 curiosity rather than its routing.
+
+### Replay
+
+```sh
+node scripts/replay-evals.mjs --quiet
+```
+
+Re-judges recorded transcripts without calling a model. `reply`, `noreply`,
+`verdict`, `tool`, `ran`, `ranpass`, `skill` and `notskill` replay exactly;
+`file`/`unchanged` need the scratch tree and are skipped. Use it to see what an
+assertion change would do to the runs you already have, before paying for new
+ones. A verdict that came from `--judge`, or a case whose assertions changed
+after the run, will read as a difference — look, don't assume.
 
 ### Matrix runs with Promptfoo
 

@@ -118,6 +118,26 @@ export function parseJudge(text) {
   return null
 }
 
+// A judge can invent the quote it calls evidence. Only `met` is checked: a
+// not-met that cannot be pointed at keeps failing (closing the gap the other way
+// would let a judge's mistake rescue a case), while an unfound quote becomes
+// unverifiable, which removes it from the score instead of counting for it.
+export function verifyEvidence(parsed, source) {
+  if (!parsed) return parsed
+  const norm = (s) => String(s ?? "").replace(/\s+/g, " ").trim().toLowerCase()
+  const hay = norm(source)
+  const verdicts = parsed.verdicts.map((v) => {
+    if (v.verdict !== "met") return v
+    const quote = norm(v.evidence)
+    if (quote.length >= 8 && hay.includes(quote)) return v
+    return { ...v, verdict: "unverifiable", unverified: true }
+  })
+  const met = verdicts.filter((v) => v.verdict === "met").length
+  const unmet = verdicts.filter((v) => v.verdict === "not-met").length
+  const score = met + unmet === 0 ? 0 : met / (met + unmet)
+  return { ...parsed, verdicts, met, unmet, score, unverified: verdicts.filter((v) => v.unverified).length }
+}
+
 export function judgeOutcome(parsed, threshold) {
   if (!parsed) return { ok: false, score: 0, reason: "judge returned no parsable verdict" }
   const unmet = parsed.verdicts.filter((v) => v.verdict === "not-met")
@@ -137,7 +157,7 @@ export function judgeOutcome(parsed, threshold) {
 
 // A judge run needs no repo and no skill: a bare scratch dir with the skill tool
 // denied keeps it from reading the fixture and grading the wrong artefact.
-export function runJudge({ model, prompt, timeout = 300, env = process.env }) {
+export function runJudge({ model, prompt, source, timeout = 300, env = process.env }) {
   const scratch = mkdtempSync(join(tmpdir(), "eval-judge-"))
   mkdirSync(join(scratch, ".opencode"), { recursive: true })
   writeFileSync(join(scratch, ".opencode/opencode.json"), JSON.stringify({ tools: { skill: false } }))
@@ -181,10 +201,12 @@ export function runJudge({ model, prompt, timeout = 300, env = process.env }) {
         .filter((ev) => ev?.type === "text" && ev.part?.text)
         .map((ev) => ev.part.text)
         .join("\n")
-      resolve({ code, reply, parsed: parseJudge(reply) })
+      resolve({ code, reply, parsed: verifyEvidence(parseJudge(reply), source ?? reply) })
     }
     const timer = setTimeout(() => finish("timeout"), timeout * 1000)
     child.stdout.on("data", (d) => (out += d))
+    // Drained and discarded: an unread stderr pipe fills and blocks the child.
+    child.stderr.on("data", () => {})
     child.on("close", (code) => finish(code ?? "closed"))
     child.on("error", () => finish("error"))
   })

@@ -1,6 +1,6 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { judgePrompt, parseJudge, judgeOutcome } from "./judge.mjs"
+import { judgePrompt, parseJudge, judgeOutcome, verifyEvidence } from "./judge.mjs"
 
 const c = {
   title: "Review against SPEC-0007.",
@@ -54,4 +54,31 @@ test("all met above the threshold passes", () => {
   const ok = judgeOutcome(parseJudge('{"expectations":[{"i":1,"verdict":"met"},{"i":2,"verdict":"met"}],"score":1}'), 0.8)
   assert.equal(ok.ok, true)
   assert.equal(ok.score, 1)
+})
+
+test("a quote the run never said does not count as evidence", () => {
+  const parsed = {
+    verdicts: [
+      { i: 1, verdict: "met", evidence: "AC-1 — src/cart.js:6, test total rejects NaN" },
+      { i: 2, verdict: "met", evidence: "the agent invented this sentence" },
+    ],
+    met: 2,
+    unmet: 0,
+    score: 1,
+  }
+  const out = verifyEvidence(parsed, "AC-1 — src/cart.js:6, test   total rejects NaN")
+  assert.equal(out.verdicts[0].verdict, "met")
+  assert.equal(out.verdicts[1].verdict, "unverifiable")
+  assert.equal(out.unverified, 1)
+  // Only the verified one is scored, so the case is not carried by a guess.
+  assert.equal(out.score, 1)
+  assert.equal(out.met, 1)
+})
+
+test("a not-met verdict needs no quote, and keeps failing", () => {
+  const parsed = { verdicts: [{ i: 1, verdict: "not-met", evidence: "" }], met: 0, unmet: 1, score: 0 }
+  const out = verifyEvidence(parsed, "a reply that says nothing about it")
+  assert.equal(out.verdicts[0].verdict, "not-met")
+  assert.equal(out.score, 0)
+  assert.equal(judgeOutcome(out, 0.8).ok, false)
 })

@@ -176,6 +176,13 @@ function resolveModel() {
 }
 const EFFECTIVE_MODEL = resolveModel()
 
+// A judge that is the model under test grades its own homework. It still runs —
+// it is the only option without a second provider — but the artifact and the
+// console say so, because the score is evidence of agreement, not of quality.
+const TARGET = EFFECTIVE_MODEL.replace(/ \(config default\)$/, "")
+const JUDGE_MODEL = opt.judge ? (opt.judge === "default" ? TARGET : opt.judge) : null
+const SELF_JUDGED = JUDGE_MODEL !== null && JUDGE_MODEL === TARGET
+
 const CHILD_ENV = scrubEnv()
 
 function* skillDirs(dir, seen = new Set()) {
@@ -273,6 +280,7 @@ if (opt.list || !opt.run) {
 let ok = 0
 let fail = 0
 let unscored = 0
+if (SELF_JUDGED) console.error(`judge: ${JUDGE_MODEL} is also the model under test (self-judged)`)
 console.log(
   `Isolation: standalone=${opt.standalone}` + (opt.standalone ? ", child env scrubbed (OPENCODE*, AI_AGENT), skill pinned in scratch\n" : " (--shared: NOT isolated)\n"),
 )
@@ -412,19 +420,26 @@ async function runCase(skill, c, rep = null) {
 // Optional second opinion over the expectations. It can fail a case that passed
 // deterministically and never rescue one that failed.
 async function gradeCase(c, out, result) {
-  const prompt = judgePrompt(c, {
-    reply: replyText(out),
-    shell: toolCalls(out)
-      .filter((t) => t.tool === "shell")
-      .map((t) => `${String(t.input.command ?? "").split("\n")[0]}  [exit ${t.exit ?? "?"}]`),
+  const reply = replyText(out)
+  const shell = toolCalls(out)
+    .filter((t) => t.tool === "shell")
+    .map((t) => `${String(t.input.command ?? "").split("\n")[0]}  [exit ${t.exit ?? "?"}]`)
+  const prompt = judgePrompt(c, { reply, shell })
+  // The judge may only cite what the run actually said or ran.
+  const judged = await runJudge({
+    model: opt.judge,
+    prompt,
+    source: [reply, ...shell].join("\n"),
+    env: CHILD_ENV,
+    timeout: Math.min(opt.timeout, 300),
   })
-  const judged = await runJudge({ model: opt.judge, prompt, env: CHILD_ENV, timeout: Math.min(opt.timeout, 300) })
   const outcome = judgeOutcome(judged.parsed, opt.judgeThreshold)
   const passed = outcome.ok
   const updated = {
     ...result,
     semantic: {
-      model: opt.judge,
+      model: JUDGE_MODEL,
+      selfJudged: SELF_JUDGED,
       threshold: opt.judgeThreshold,
       score: outcome.score,
       expectations: judged.parsed?.verdicts ?? [],

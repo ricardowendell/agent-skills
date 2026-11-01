@@ -56,6 +56,13 @@ function copyTree(src, dest, filter) {
   cpSync(src, dest, { recursive: true, filter })
 }
 
+// The eval corpus is the answer key: `references/evals.md` holds every case's
+// prompt, expectations and assertions, and `references/evals/<n>/` the fixtures
+// of the other cases. An agent that can read them can satisfy a case without
+// exercising the skill, and 40 of the first 194 transcripts did. The skill is
+// staged without them; `stageFixture` reads the case's fixture from the repo.
+const CORPUS = /(^|\/)(node_modules|\.git|evals|evals\.md)$/
+
 // Copy the skill under review into the scratch dir, returning its id and hash.
 // A project-local skill shadows the global install of the same id (verified:
 // the `skill` tool reports `directory` inside the scratch dir), so this is what
@@ -64,7 +71,7 @@ function copyTree(src, dest, filter) {
 export function stageSkill(skill, scratch) {
   const dest = join(scratch, ".opencode/skills", skill.id)
   rmSync(dest, { recursive: true, force: true })
-  copyTree(skill.dir, dest, (src) => !/(^|\/)(node_modules|\.git)$/.test(src))
+  copyTree(skill.dir, dest, (src) => !CORPUS.test(src))
   const exclude = join(scratch, ".git/info/exclude")
   if (existsSync(exclude)) {
     const cur = readFileSync(exclude, "utf8")

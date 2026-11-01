@@ -80,14 +80,14 @@ export default class SkillEvalProvider {
     let semantic = null
     if (this.config.judge && status === "passed") {
       const threshold = this.config.judge.threshold ?? 0.8
+      const reply = replyText(out)
+      const shell = toolCalls(out)
+        .filter((t) => t.tool === "shell")
+        .map((t) => `${String(t.input.command ?? "").split("\n")[0]}  [exit ${t.exit ?? "?"}]`)
       const judged = await runJudge({
         model: this.config.judge.model,
-        prompt: judgePrompt(c, {
-          reply: replyText(out),
-          shell: toolCalls(out)
-            .filter((t) => t.tool === "shell")
-            .map((t) => `${String(t.input.command ?? "").split("\n")[0]}  [exit ${t.exit ?? "?"}]`),
-        }),
+        prompt: judgePrompt(c, { reply, shell }),
+        source: [reply, ...shell].join("\n"),
         env: CHILD_ENV,
       })
       const outcome = judgeOutcome(judged.parsed, threshold)

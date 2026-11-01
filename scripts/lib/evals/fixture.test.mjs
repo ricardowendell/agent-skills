@@ -20,6 +20,24 @@ function git(cwd, ...args) {
   return r.stdout.trim()
 }
 
+test("the staged skill carries no eval corpus", () => {
+  const skillDir = files(mkdtempSync(join(tmpdir(), "fixture-skill-")), {
+    "SKILL.md": "---\nname: demo\n---\n",
+    "references/notes.md": "kept\n",
+    "references/evals.md": "- prompt: the answer\n",
+    "references/evals/1/AGENTS.md": "# another case's fixture\n",
+  })
+  const scratch = makeScratch("demo", 9)
+  const pinned = stageSkill({ id: "demo", dir: skillDir }, scratch)
+  const staged = join(scratch, ".opencode/skills/demo")
+  assert.equal(existsSync(join(staged, "SKILL.md")), true)
+  assert.equal(existsSync(join(staged, "references/notes.md")), true)
+  assert.equal(existsSync(join(staged, "references/evals.md")), false)
+  assert.equal(existsSync(join(staged, "references/evals")), false)
+  // The hash describes what the agent could see, so it must move too.
+  assert.match(pinned.hash, /^[0-9a-f]{64}$/)
+})
+
 test("a plain fixture is copied whole", () => {
   const skillDir = files(mkdtempSync(join(tmpdir(), "fixture-skill-")), {
     "SKILL.md": "---\nname: demo\n---\n",
