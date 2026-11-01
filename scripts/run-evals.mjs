@@ -366,7 +366,9 @@ async function runCase(skill, c, rep = null) {
       } catch {}
       const durationMs = Date.now() - started
       const asserts = evaluateAssertions(c, scratch, out, replyText(out), snapshot)
-      const gate = opt.noSkill
+      const gate = c.gate === "off"
+        ? { ok: true, reason: "case does not gate on the skill (trigger/routing case)" }
+        : opt.noSkill
         ? { ok: skillLoads(out).length === 0, reason: skillLoads(out).length ? `loaded ${skillLoads(out).map((l) => l.id).join(", ")} although --no-skill` : "no skill loaded (control arm)" }
         : skillGate(out, scratch, skill.id)
       const verdict = classify({ exit: code, asserts, skillGate: gate })

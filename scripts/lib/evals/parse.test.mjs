@@ -81,6 +81,14 @@ test("duplicate case numbers are an error", () => {
   assert.ok(errors.some((e) => /duplicate case number/.test(e)))
 })
 
+test("gate: off is parsed, and anything else is rejected", () => {
+  const ok = parseCases(`1. **T.**\n   - prompt: do it\n   - gate: off\n   - assert: skill x\n`)
+  assert.equal(ok.cases[0].gate, "off")
+  assert.deepEqual(ok.errors, [])
+  const bad = parseCases(`1. **T.**\n   - prompt: do it\n   - gate: sideways\n   - assert: skill x\n`)
+  assert.ok(bad.errors.some((e) => /unknown gate/.test(e)))
+})
+
 test("unquote strips one layer of quotes only", () => {
   assert.equal(unquote('"Review this branch."'), "Review this branch.")
   assert.equal(unquote('"Say "hi"."'), 'Say "hi".')

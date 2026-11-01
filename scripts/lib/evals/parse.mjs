@@ -41,11 +41,12 @@ export const ASSERT_KINDS = new Set([
   "tool",
   "notool",
   "skill",
+  "notskill",
   "noskill",
 ])
 
 const STATUSES = new Set(["run", "manual"])
-const FIELD = /^(prompt|expect|why|status|needs|tags|assert):\s*(.*)$/
+const FIELD = /^(prompt|expect|why|status|needs|tags|gate|assert):\s*(.*)$/
 const CASE = /^\s*(\d+)\.\s+\*\*(.+?)\*\*\s*(.*)$/
 const BULLET = /^\s*[-*]\s+(.*)$/
 const LEGACY_ASSERT = /^\[assert\]\s+(\w+)\s+(.+)$/
@@ -73,6 +74,7 @@ function emptyCase(n, title, note) {
     expect: [],
     assert: [],
     status: "run",
+    gate: "auto",
     needs: [],
     tags: [],
   }
@@ -87,6 +89,7 @@ function finishCase(c) {
     expect: c.expect,
     assert: c.assert,
     status: c.status,
+    gate: c.gate,
     needs: c.needs,
     tags: c.tags,
   }
@@ -156,6 +159,10 @@ export function parseCases(md) {
             cur.status = value.trim()
             target = null
             break
+          case "gate":
+            cur.gate = value.trim()
+            target = null
+            break
           case "needs":
             cur.needs.push(...value.split(",").map((s) => s.trim()).filter(Boolean))
             target = null
@@ -208,6 +215,7 @@ export function validate(cases) {
     seen.add(c.n)
 
     if (!STATUSES.has(c.status)) errors.push(`${at}: unknown status '${c.status}' (expected run|manual)`)
+    if (!["auto", "off"].includes(c.gate)) errors.push(`${at}: unknown gate '${c.gate}' (expected auto|off)`)
     if (!c.prompt && c.status !== "manual") errors.push(`${at}: no prompt (add "- prompt:" or "- status: manual")`)
     if (c.legacy) warnings.push(`${at}: legacy syntax — the title is used as the prompt`)
 

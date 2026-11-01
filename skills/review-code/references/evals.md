@@ -59,3 +59,17 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - assert: reply spec hash:.*mismatch
    - assert: unchanged src/cart.js
    - assert: unchanged test/cart.test.js
+
+5. **Trigger: a branch is handed over for review.**
+   - prompt: Review this branch before I merge it.
+   - why: the prompt never names the skill; it has to be recognised from the description
+   - gate: off
+   - expect: Loads `review-code` rather than starting an ad-hoc read of the diff.
+   - assert: skill review-code
+
+6. **Near-miss: a failure being debugged, not a change being reviewed.**
+   - prompt: Why did my build fail on Node 20?
+   - why: same vocabulary (branch, build, failure) without a change to approve
+   - gate: off
+   - expect: Does not pull in `review-code` for a diagnosis.
+   - assert: notskill review-code

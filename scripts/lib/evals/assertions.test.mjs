@@ -115,19 +115,32 @@ test("the skill gate requires the pinned copy inside the scratch dir", () => {
   const inside = transcript({
     tools: [{ tool: "skill", input: { id: "review-code" }, meta: { name: "review-code", directory: join(scratch, ".opencode/skills/review-code") } }],
   })
-  assert.equal(one({ kind: "skill", arg: "review-code" }, scratch, inside).pass, true)
   assert.equal(skillGate(inside, scratch, "review-code").ok, true)
 
   const outside = transcript({
     tools: [{ tool: "skill", input: { id: "review-code" }, meta: { name: "review-code", directory: "/Users/wendell/.agents/skills/review-code" } }],
   })
-  const r = one({ kind: "skill", arg: "review-code" }, scratch, outside)
-  assert.equal(r.pass, false)
-  assert.match(r.detail, /loaded from/)
+  assert.equal(skillGate(outside, scratch, "review-code").ok, false, "a global install passed the provenance gate")
+  // Routing and provenance answer different questions: the assertion only says
+  // which skill was chosen.
+  assert.equal(one({ kind: "skill", arg: "review-code" }, scratch, outside).pass, true)
 
   const none = transcript({ text: "did it myself" })
   assert.equal(skillGate(none, scratch, "review-code").ok, false)
   assert.equal(one({ kind: "noskill" }, scratch, none).pass, true)
+})
+
+test("notskill allows a different skill to load", () => {
+  const out = transcript({ tools: [{ tool: "skill", input: { id: "process-inbox" }, meta: { directory: "/tmp/x" } }] })
+  assert.equal(one({ kind: "notskill", arg: "capture-idea" }, "/tmp", out).pass, true)
+  assert.equal(one({ kind: "notskill", arg: "process-inbox" }, "/tmp", out).pass, false)
+  assert.equal(one({ kind: "skill", arg: "process-inbox" }, "/tmp", out).pass, true)
+})
+
+test("an errored skill call is not a load", () => {
+  const out = transcript({ tools: [{ tool: "skill", input: { id: "review-code" }, status: "error", meta: {} }] })
+  assert.equal(one({ kind: "skill", arg: "review-code" }, "/tmp", out).pass, false)
+  assert.equal(one({ kind: "notskill", arg: "review-code" }, "/tmp", out).pass, true)
 })
 
 test("ran and ranpass read the shell commands, not the reply", () => {

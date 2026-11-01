@@ -18,7 +18,8 @@
 //   ranpass <re>           ...and at least one of those executions exited 0
 //   tool <name>            the named tool was used
 //   notool <name>          it was not
-//   skill <id>             the id's skill was loaded from inside the scratch dir
+//   skill <id>             the id's skill was loaded
+//   notskill <id>          it was not (other skills may load: routing, not silence)
 //   noskill                no skill was loaded at all
 
 import { readFileSync, realpathSync } from "node:fs"
@@ -109,6 +110,11 @@ export function skillGate(out, scratch, expectedId) {
   if (!loads.length) return { ok: false, reason: `skill '${expectedId}' was not loaded`, loads }
   const hit = loads.find((l) => l.id === expectedId || !expectedId)
   if (!hit) return { ok: false, reason: `loaded ${loads.map((l) => l.id).join(", ")} instead of '${expectedId}'`, loads }
+  // Provenance lives here, not in the `skill` assertion: an id match from the
+  // global install would mean the run tested something other than the checkout.
+  if (!isInside(scratch, hit.directory)) {
+    return { ok: false, reason: `'${hit.id}' loaded from ${hit.directory || "an unknown path"}, outside the scratch dir`, loads }
+  }
   return { ok: true, reason: `loaded ${hit.id}`, loads }
 }
 
@@ -161,12 +167,13 @@ function check(kind, arg, { scratch, out, text, snapshot }) {
     return push(used.length === 0, used.length ? `${used.length} call(s)` : "")
   }
 
-  if (kind === "skill") {
+  // `skill` is routing evidence: did this id get chosen? Provenance (is it the
+  // checkout's copy?) is the case gate's job, not this assertion's.
+  if (kind === "skill" || kind === "notskill") {
     const loads = skillLoads(out)
     const hit = loads.find((l) => l.id === arg.trim())
-    if (!hit) return push(false, "not loaded")
-    const inside = isInside(scratch, hit.directory)
-    return push(inside, inside ? "" : `loaded from ${hit.directory || "unknown path"}`)
+    if (kind === "skill") return push(!!hit, hit ? `from ${hit.directory || "unknown path"}` : "not loaded")
+    return push(!hit, hit ? `loaded from ${hit.directory || "unknown path"}` : "")
   }
 
   if (kind === "noskill") {

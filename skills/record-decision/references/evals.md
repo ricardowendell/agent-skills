@@ -35,3 +35,19 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - assert: filematch docs/decisions/ADR-0003-*.md [Pp]ostgres
    - assert: filematch docs/decisions/ADR-0002-*.md [Ss]uperseded by .*ADR-0003
    - assert: filematch docs/decisions/README.md ADR-0003
+
+4. **Trigger: a decision is stated in passing.**
+   - prompt: We decided to drop the queue and write straight to Postgres. Record that.
+   - why: the word "decision" is absent; "record that" is the only signal
+   - gate: off
+   - expect: Loads `record-decision` instead of writing prose wherever it happens to be.
+   - assert: skill record-decision
+
+5. **Near-miss: an open question with no decision in it.**
+   - prompt: Postgres or SQLite for a single-user app?
+   - why: asks for a recommendation. Consulting the skill is fine — writing an ADR for something nobody decided is not, so the assertion watches the artefact, not the tool call.
+   - gate: off
+   - expect: Answers the question and files nothing.
+   - expect: Says what is missing before an ADR could exist.
+   - assert: nofile docs/decisions/ADR-0003-*.md
+   - assert: unchanged docs/decisions/README.md
