@@ -1,6 +1,6 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { classify, PASSED, FAILED, UNSCORED } from "./result.mjs"
+import { classify, aggregateReps, PASSED, FAILED, UNSCORED } from "./result.mjs"
 
 const pass = { kind: "file", arg: "AGENTS.md", pass: true }
 const fail = { kind: "verdict", arg: "APPROVE", pass: false }
@@ -34,4 +34,29 @@ test("everything green and the right skill loaded passes", () => {
 
 test("no gate means no gate check (cases that should not load a skill)", () => {
   assert.equal(classify({ exit: 0, asserts: [pass], skillGate: null }).status, PASSED)
+})
+
+test("every repetition must pass by default", () => {
+  const agg = aggregateReps([{ status: "passed" }, { status: "failed", reason: "judge: expectation 4" }, { status: "passed" }])
+  assert.equal(agg.status, "failed")
+  assert.equal(agg.passRate, 2 / 3)
+  assert.match(agg.reason, /2\/3 repetitions/)
+  assert.match(agg.reason, /expectation 4/)
+})
+
+test("a flake can pass only when the bar is lowered explicitly", () => {
+  const reps = [{ status: "passed" }, { status: "passed" }, { status: "failed", reason: "verdict" }]
+  assert.equal(aggregateReps(reps, 0.66).status, "passed")
+  assert.match(aggregateReps(reps, 0.66).reason, /min 0.66/)
+})
+
+test("all repetitions unscored is unscored, not failed", () => {
+  const agg = aggregateReps([{ status: "unscored" }, { status: "unscored" }])
+  assert.equal(agg.status, "unscored")
+})
+
+test("a mix of unscored and passed follows the pass rate", () => {
+  const agg = aggregateReps([{ status: "passed" }, { status: "unscored" }])
+  assert.equal(agg.status, "failed")
+  assert.equal(agg.passRate, 0.5)
 })

@@ -33,6 +33,9 @@
 //   --judge <model>     grade the expect: lines with a judge model (opt-in; it
 //                       can fail a case that passed, never rescue one)
 //   --judge-threshold   minimum judge score (default 0.8)
+//   --repeat <n>        run each selected case n times (default 1); the case
+//                       passes only when every repetition does
+//   --min-pass <ratio>  relax that to a rate, explicitly (default 1)
 //   --baseline <file>   compare this run against a stored run JSON
 //   --save-baseline     store this run as baseline.json
 //   --shared            run against the shared server: NOT isolated, the child
@@ -59,7 +62,7 @@ import { homedir } from "node:os"
 import { readEvals } from "./lib/evals/parse.mjs"
 import { evaluateAssertions, replyText, skillGate, skillLoads, toolCalls, usageStats } from "./lib/evals/assertions.mjs"
 import { stageFixture, stageSkill, snapshotTree, makeScratch } from "./lib/evals/fixture.mjs"
-import { classify, summarize, PASSED, UNSCORED } from "./lib/evals/result.mjs"
+import { classify, summarize, aggregateReps, PASSED, UNSCORED } from "./lib/evals/result.mjs"
 import { judgePrompt, runJudge, judgeOutcome } from "./lib/evals/judge.mjs"
 import { summarizeRun, compareRuns, formatComparison, readRun } from "./lib/evals/report.mjs"
 
@@ -83,6 +86,8 @@ const opt = {
   noSkill: false,
   judge: null,
   judgeThreshold: 0.8,
+  repeat: 1,
+  minPass: 1,
 }
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i]
@@ -111,6 +116,8 @@ for (let i = 0; i < argv.length; i++) {
     } else opt.judge = "default"
   }
   else if (a === "--judge-threshold") opt.judgeThreshold = Number(argv[++i])
+  else if (a === "--repeat") opt.repeat = Number(argv[++i])
+  else if (a === "--min-pass") opt.minPass = Number(argv[++i])
   else if (a === "--quick") {
     console.error("--quick is gone: it appended \"skip installs/builds/audit\" to the prompt, which tested a different policy. Use --level behavior or --level smoke.")
     process.exit(1)
@@ -123,6 +130,14 @@ if (!["smoke", "behavior", "full"].includes(opt.level)) {
 }
 if (!opt.standalone && !opt.iKnow) {
   console.error("--shared runs the agent in your launch directory, not a scratch dir. Re-run with --i-know if that is what you want.")
+  process.exit(1)
+}
+if (!Number.isInteger(opt.repeat) || opt.repeat < 1) {
+  console.error(`--repeat expects a positive integer (got ${opt.repeat})`)
+  process.exit(1)
+}
+if (!(opt.minPass > 0 && opt.minPass <= 1)) {
+  console.error(`--min-pass expects a ratio in (0, 1] (got ${opt.minPass})`)
   process.exit(1)
 }
 if (opt.concurrency === null) opt.concurrency = opt.level === "smoke" ? 1 : 4
@@ -239,14 +254,15 @@ console.log(
 )
 console.log(
   `Level: ${opt.level} (concurrency=${opt.concurrency}, agent=${opt.agent}, model=${opt.model ?? "default"}, arm=${opt.noSkill ? "without-skill" : "with-skill"}` +
-    `${opt.judge ? `, judge=${opt.judge}@${opt.judgeThreshold}` : ""})\n`,
+    `${opt.judge ? `, judge=${opt.judge}@${opt.judgeThreshold}` : ""}` +
+    `${opt.repeat > 1 ? `, repeat=${opt.repeat}@min-pass=${opt.minPass}` : ""})\n`,
 )
 
-async function runCase(skill, c) {
+async function runCase(skill, c, rep = null) {
   const scratch = makeScratch(skill.id, c.n)
   const dir = join(OUT_ROOT, skill.id)
   mkdirSync(dir, { recursive: true })
-  const file = join(dir, `${c.n}.md`)
+  const file = join(dir, `${c.n}${rep ? `.r${rep.index}` : ""}.md`)
   const started = Date.now()
   const meta = { skill: skill.id, case: c.n, repoSha: repoSha(), agent: opt.agent, model: opt.model ?? "default", level: opt.level }
 
@@ -370,6 +386,7 @@ async function runCase(skill, c) {
         assertions: asserts.map(({ kind, arg, pass, detail }) => ({ kind, arg, pass, detail })),
         execution: { exit: code, durationMs, tokens: usage.tokens, cost: usage.cost, steps: usage.steps, toolCalls: toolCalls(out).length },
         arm: opt.noSkill ? "without-skill" : "with-skill",
+        ...(rep ? { rep: rep.index } : {}),
         meta: { repoSha: meta.repoSha, agent: meta.agent, model: meta.model, level: meta.level },
         transcript: file,
       }
@@ -407,7 +424,7 @@ async function runCase(skill, c) {
   if (opt.judge && result.status !== "staged" && result.status !== "failed") {
     const graded = await gradeCase(c, outcome.out, result)
     result = graded.result
-    writeFileSync(join(dir, `${c.n}.json`), JSON.stringify(result, null, 2))
+    if (!rep) writeFileSync(join(dir, `${c.n}.json`), JSON.stringify(result, null, 2))
     appendFileSync(file, graded.section)
     patchHeader(file, result)
   }
@@ -468,6 +485,53 @@ function denySkillTool(scratch) {
   writeFileSync(file, JSON.stringify(config, null, 2))
 }
 
+// Repetitions exist because one verdict from a non-deterministic agent is one
+// draw. The case passes only when every repetition does, unless --min-pass says
+// otherwise out loud.
+async function runCaseReps(skill, c) {
+  // Staging is deterministic: repeating it would only re-copy the same tree.
+  const times = opt.level === "smoke" ? 1 : opt.repeat
+  const reps = []
+  for (let i = 1; i <= opt.repeat; i++) {
+    const r = await runCase(skill, c, times > 1 ? { index: i } : null)
+    reps.push(r)
+    if (times > 1) process.stdout.write(`     rep ${i}/${opt.repeat}: ${r.status}${r.reason ? ` (${r.reason})` : ""}\n`)
+  }
+  if (times === 1) return reps[0]
+
+  const agg = aggregateReps(reps, opt.minPass)
+  const dir = join(OUT_ROOT, skill.id)
+  const artifact = {
+    skill: skill.id,
+    case: c.n,
+    title: c.title,
+    prompt: c.prompt,
+    status: agg.status,
+    reason: agg.reason,
+    passRate: agg.passRate,
+    reps: agg.total,
+    skillHash: reps[0]?.skillHash ?? null,
+    arm: reps[0]?.arm,
+    meta: reps[0]?.meta ?? {},
+    repetitions: reps,
+  }
+  writeFileSync(join(dir, `${c.n}.json`), JSON.stringify(artifact, null, 2))
+  return {
+    skill: skill.id,
+    case: c.n,
+    title: c.title,
+    prompt: c.prompt,
+    status: agg.status,
+    reason: agg.reason,
+    passRate: agg.passRate,
+    reps: agg.total,
+    skillHash: artifact.skillHash,
+    arm: artifact.arm,
+    meta: artifact.meta,
+    transcript: join(dir, `${c.n}.r1.md`),
+  }
+}
+
 const startedAt = Date.now()
 const queue = [...selected]
 const lanes = Math.max(1, Math.min(opt.concurrency, queue.length || 1))
@@ -476,12 +540,13 @@ async function lane() {
   while (queue.length) {
     const { skill, c } = queue.shift()
     process.stdout.write(`→ ${skill.id} #${c.n}: ${c.prompt.replace(/\n/g, " ").slice(0, 56)}… `)
-    const r = await runCase(skill, c)
+    const r = await runCaseReps(skill, c)
     results.push(r)
     if (r.status === PASSED) ok++
     else if (r.status === UNSCORED) unscored++
     else fail++
-    console.log(`${r.status}${r.reason ? ` (${r.reason})` : ""} — ${r.transcript}`)
+    const rate = r.reps ? ` [${r.passed ?? Math.round(r.passRate * r.reps)}/${r.reps}]` : ""
+    console.log(`${r.status}${rate}${r.reason ? ` (${r.reason})` : ""} — ${r.transcript}`)
   }
 }
 await Promise.all(Array.from({ length: lanes }, lane))

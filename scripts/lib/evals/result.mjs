@@ -28,3 +28,32 @@ export function summarize(results) {
   for (const r of results) count[r.status] = (count[r.status] ?? 0) + 1
   return { ...count, total: results.length }
 }
+
+// A single run of a non-deterministic agent is one draw, not a measurement.
+// Repetitions turn it into a pass rate; the case still passes by default only
+// when every repetition passed, so a flake is visible instead of averaged away.
+export function aggregateReps(reps, minPass = 1) {
+  const total = reps.length
+  const passed = reps.filter((r) => r.status === PASSED).length
+  const unscored = reps.filter((r) => r.status === UNSCORED).length
+  const passRate = total ? passed / total : 0
+  const failedReason = reps.find((r) => r.status === FAILED)?.reason ?? ""
+
+  if (total && unscored === total) return { status: UNSCORED, passRate, passed, total, reason: "no repetition was scored" }
+  if (passRate >= minPass) {
+    return {
+      status: PASSED,
+      passRate,
+      passed,
+      total,
+      reason: passed === total ? "" : `${passed}/${total} repetitions passed (min ${minPass})`,
+    }
+  }
+  return {
+    status: FAILED,
+    passRate,
+    passed,
+    total,
+    reason: `${passed}/${total} repetitions passed (min ${minPass})${failedReason ? `: ${failedReason}` : ""}`,
+  }
+}

@@ -284,6 +284,17 @@ expectation is usually a badly written expectation, not a regression. The first
 review-code run did exactly that — both arms omitted the case's `Not verified`
 line, which the deterministic assertions could not see.
 
+### Repetitions
+
+One verdict from a non-deterministic agent is one draw. `--repeat <n>` runs each
+selected case n times and writes `.r1.md`, `.r2.md`, … plus one JSON with the
+full repetition list; the case passes only when every repetition does. Flakes are
+therefore visible as a pass rate (`[4/5]` in the console, `passRate` and
+`repetitions` in the artifact) instead of being averaged into a green run.
+`--min-pass <ratio>` lowers that bar in writing when a known-flaky case needs to
+land; it is never the default. Staging is deterministic, so `--level smoke`
+ignores `--repeat`.
+
 ### Artifacts and regressions
 
 Every case writes `<skill>/<n>.md` (transcript) and `<skill>/<n>.json` (status,
