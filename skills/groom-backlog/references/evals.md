@@ -44,3 +44,19 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - expect: Watch for: expanding scope beyond the item, or rewriting the backlog file.
    - assert: filematch docs/specs/*.md id: SPEC-
    - assert: filematch docs/backlog/now-next-later.md weekly digest email that summarizes the week's activity
+
+6. **Trigger: a backlog item too vague to build.**
+   - prompt: The "notifications" item is too vague to build — turn it into something a coder could pick up.
+   - tags: trigger
+   - why: "groom" and "spec" never appear; the signal is a backlog item that cannot be implemented as written
+   - gate: off
+   - expect: Loads `groom-backlog` and produces or updates a spec, not code.
+   - assert: skill groom-backlog
+
+7. **Near-miss: a ready spec that needs a prompt, not a groom.**
+   - prompt: SPEC-0004 is ready — write the implementation prompt for it.
+   - tags: trigger
+   - why: same pipeline and the same input document; the next artefact is a prompt, not another pass over the spec
+   - gate: off
+   - expect: Routes to `write-implementation-prompt` without re-grooming a spec already marked ready.
+   - assert: notskill groom-backlog

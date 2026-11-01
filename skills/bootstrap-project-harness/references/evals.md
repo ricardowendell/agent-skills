@@ -134,3 +134,19 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - expect: Watch for: running `uv sync` or writing a uv lock.
    - assert: unchanged pyproject.toml
    - assert: nofile uv.lock
+
+12. **Trigger: an empty repo is handed over.**
+   - prompt: I just cloned this repo and there is nothing here — set up lint, hooks and CI in one go.
+   - tags: trigger
+   - why: the skill is never named; "set up lint, hooks and CI" is the bootstrap the description promises
+   - gate: off
+   - expect: Loads `bootstrap-project-harness` rather than installing tools one by one from the request.
+   - assert: skill bootstrap-project-harness
+
+13. **Near-miss: an existing harness that stopped biting.**
+   - prompt: Our CI is green but nothing is actually enforced — the lint limit is 400 and tests are not blocking. Make one of those stricter.
+   - tags: trigger
+   - why: same vocabulary (lint, CI, hooks); the ask is a deliberate ratchet on a harness that already exists
+   - gate: off
+   - expect: Does not re-bootstrap a harness that is already in place.
+   - assert: notskill bootstrap-project-harness

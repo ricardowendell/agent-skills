@@ -12,3 +12,19 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - expect: Watch for: rewriting docs, or inventing new scope.
    - assert: unchanged docs/product/vision.md
    - assert: unchanged docs/principles/design.md
+
+2. **Trigger: two docs disagree, and the skill is not named.**
+   - prompt: Does anything in our product docs contradict the principles we wrote down? I think they drifted apart.
+   - tags: trigger
+   - why: no skill named; "contradict" plus "drifted apart" is the consistency signal the description promises
+   - gate: off
+   - expect: Loads `audit-docs` rather than reading the docs and offering an opinion off the cuff.
+   - assert: skill audit-docs
+
+3. **Near-miss: a doc change to review, not a doc set to audit.**
+   - prompt: I rewrote docs/architecture.md — review my changes before I open the PR.
+   - tags: trigger
+   - why: same object and the word "review", but the question is about one diff, which is `review-code` territory
+   - gate: off
+   - expect: Does not audit the whole doc set for a single change under review.
+   - assert: notskill audit-docs

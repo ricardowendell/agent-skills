@@ -39,3 +39,19 @@ machine-checked after the case (see `run-evals.mjs`).
    - expect: Watch for: claiming tests passed when they were not executed.
    - assert: file src/echo.js
    - assert: reply (?:[Nn]ot run|[Cc]ould not run|[Uu]navailable|[Nn]o justfile)
+
+5. **Trigger: an approved prompt is handed over to build.**
+   - prompt: The prompt in docs/prompts/SPEC-0007-demo.prompt.md is approved — go build it and run its checks.
+   - tags: trigger
+   - why: "implement" is never used; the signal is an approved prompt plus the expectation that its checks run
+   - gate: off
+   - expect: Loads `implement-from-prompt` and follows the prompt, not the request.
+   - assert: skill implement-from-prompt
+
+6. **Near-miss: the same prompt, to be judged rather than executed.**
+   - prompt: Read docs/prompts/SPEC-0007-demo.prompt.md and tell me whether it is good enough to hand to an agent.
+   - tags: trigger
+   - why: same artefact and the same agent-facing framing; the deliverable is an assessment, not code
+   - gate: off
+   - expect: Does not start implementing a prompt it was asked to evaluate.
+   - assert: notskill implement-from-prompt

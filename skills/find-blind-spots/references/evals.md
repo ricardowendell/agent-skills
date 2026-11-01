@@ -22,3 +22,20 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - expect: Watch for: a bulleted list of generic "have you considered…" prompts that a one-word answer closes.
    - assert: reply \?
    - assert: nodir docs
+
+3. **Trigger: a design about to be locked in, no skill named.**
+   - prompt: I am about to replace the job queue with a cron poller. What am I not seeing?
+   - tags: trigger
+   - why: "blind spots" never appears; the signal is a decision about to be committed to plus a request for what is missing
+   - gate: off
+   - expect: Loads `find-blind-spots` and starts asking, rather than listing risks off the cuff.
+   - assert: skill find-blind-spots
+
+4. **Near-miss: the same plan, but to be decomposed, not challenged.**
+   - prompt: Turn the plan in plan.md into tasks I can drop on the board.
+   - tags: trigger
+   - status: manual
+   - why: same artefact and a planning verb; the deliverable is a task list, not an adversarial interview. Measured 2/3 then 1/3 loads at `--repeat 3`: the agent sometimes loads the skill to check, then says the request is a breakdown job. The reply was correct every time, so the routing assertion measures noise, not behaviour.
+   - gate: off
+   - expect: Does not start an interrogation of a plan the user only wants broken into tasks.
+   - assert: notskill find-blind-spots

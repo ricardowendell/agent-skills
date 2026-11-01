@@ -39,3 +39,20 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - assert: nofile eslint.config.js
    - assert: nofile justfile
    - assert: nofile lefthook.yml
+
+4. **Trigger: a cleaner codebase than the limits assume.**
+   - prompt: We just finished the refactor and the code is much cleaner than the limits allow. Where can we raise the bar?
+   - tags: trigger
+   - why: "tighten" and "harness" never appear; the signal is a milestone plus headroom above the current limits
+   - gate: off
+   - expect: Loads `tighten-harness` and measures before proposing a ratchet.
+   - assert: skill tighten-harness
+
+5. **Near-miss: fixing the offending file, not the threshold.**
+   - prompt: The linter says src/huge.js is too long — split it into smaller modules.
+   - tags: trigger
+   - status: manual
+   - why: the same ceiling the skill reasons about, but the ask is source work, which this skill never does. Measured 1/3 then 1/3 loads at `--repeat 3`: every reply refused the config change and named the request as a refactor, so only the routing is unstable.
+   - gate: off
+   - expect: Does not turn a refactor request into a harness change.
+   - assert: notskill tighten-harness

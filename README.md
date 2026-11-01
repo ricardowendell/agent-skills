@@ -326,6 +326,12 @@ consulting a skill is the correct guardrail: `record-decision` answering
 "Postgres or SQLite?" may load the skill to find its own rule, and the case
 fails only if it files an ADR nobody decided.
 
+Where no other skill owns the prompt, even that is not stable: `find-blind-spots`
+#4 and `tighten-harness` #5 load the skill in one or two of three runs and then
+name the request as someone else's job. Both are `status: manual` with the
+measured load rate recorded, because the assertion would track the model's
+curiosity rather than its routing.
+
 ### Matrix runs with Promptfoo
 
 Repetition, a model × arm matrix and cost reporting are commodity work, so they

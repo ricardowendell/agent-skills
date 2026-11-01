@@ -39,3 +39,19 @@ machine-checked after the case (see `run-evals.mjs`).
    - expect: Watch for: duplicating helpers already present.
    - assert: filematch docs/prompts/SPEC-0011-*.prompt.md spec_sha:
    - assert: unchanged docs/specs/SPEC-0011-bulk-import.md
+
+5. **Trigger: a ready spec that has to become executable.**
+   - prompt: SPEC-0012 is ready. Turn it into something a coding agent can execute without asking me questions.
+   - tags: trigger
+   - why: "prompt" would be the output, not the skill name; the signal is a ready spec plus an agent that must not need to ask
+   - gate: off
+   - expect: Loads `write-implementation-prompt` and pins the spec by hash.
+   - assert: skill write-implementation-prompt
+
+6. **Near-miss: the same spec, but to be summarised.**
+   - prompt: Summarise SPEC-0012 into three bullets for the standup.
+   - tags: trigger
+   - why: same document and the same reader; a summary is not an executable prompt, so pinning the spec would be wasted work
+   - gate: off
+   - expect: Answers with a summary and starts no prompt file.
+   - assert: notskill write-implementation-prompt
