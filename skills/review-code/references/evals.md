@@ -21,6 +21,7 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - expect: Ends with `VERDICT: APPROVE` and an empty or named `Not verified`.
    - expect: Watch for: approving without the AC walk-through, or citing taste as a finding.
    - assert: verdict APPROVE
+   - assert: reply Not verified
    - assert: ranpass npm test
    - assert: reply AC-3
    - assert: unchanged src/cart.js
