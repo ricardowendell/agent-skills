@@ -515,6 +515,7 @@ async function runCaseReps(skill, c) {
     status: agg.status,
     reason: agg.reason,
     passRate: agg.passRate,
+    passed: agg.passed,
     reps: agg.total,
     skillHash: reps[0]?.skillHash ?? null,
     arm: reps[0]?.arm,
@@ -530,6 +531,7 @@ async function runCaseReps(skill, c) {
     status: agg.status,
     reason: agg.reason,
     passRate: agg.passRate,
+    passed: agg.passed,
     reps: agg.total,
     skillHash: artifact.skillHash,
     arm: artifact.arm,
@@ -551,7 +553,7 @@ async function lane() {
     if (r.status === PASSED) ok++
     else if (r.status === UNSCORED) unscored++
     else fail++
-    const rate = r.reps ? ` [${r.passed ?? Math.round(r.passRate * r.reps)}/${r.reps}]` : ""
+    const rate = r.reps ? ` [${r.passed}/${r.reps}]` : ""
     console.log(`${r.status}${rate}${r.reason ? ` (${r.reason})` : ""} — ${r.transcript}`)
   }
 }
