@@ -24,7 +24,8 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
 3. **Near-miss: a doc change to review, not a doc set to audit.**
    - prompt: I rewrote docs/architecture.md — review my changes before I open the PR.
    - tags: trigger
-   - why: same object and the word "review", but the question is about one diff, which is `review-code` territory
+   - status: manual
+   - why: same object and the word "review", but the question is about one diff, which is `review-code` territory. Measured 3/3 loads before the description drew that line and 1/3 after it, and the run that still loaded then declined to audit — so what remains is the model checking, not the skill claiming the task. A permanent red would be noise.
    - gate: off
    - expect: Does not audit the whole doc set for a single change under review.
    - assert: notskill audit-docs
