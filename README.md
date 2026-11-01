@@ -200,6 +200,7 @@ The behavioural run stays local, since it needs both.
    - why: the diff satisfies every AC
    - expect: Runs the documented gate and reports the command and result.
    - assert: verdict APPROVE
+   - gate: off
    - needs: gates
 ```
 
@@ -209,7 +210,8 @@ to the prompt, which told the agent the answer. `expect` lines stay
 human-checked. `status: manual` keeps a case in the file (as design intent) while
 excluding it from a run. `needs: gates` lets `--level behavior` skip an expensive
 case; nothing is tagged today, so behaviour equals full until a case earns the
-tag.
+tag. `gate: off` releases a case from the provenance gate — required by trigger
+cases, which ask whether a skill was chosen at all.
 
 A case normally ships a fixture tree under `references/evals/<n>/`. When the
 skill needs history (a diff to review, a branch to compare), the case ships a
@@ -232,7 +234,8 @@ a pass.
 | `verdict` | the reply's `VERDICT:` line names the expected token |
 | `ran` / `ranpass` | a shell command matching the regex executed / exited 0 |
 | `tool` / `notool` | the named tool was used / was not |
-| `skill` / `noskill` | the id was loaded from inside the scratch dir / no skill was |
+| `skill` / `notskill` | the id was loaded / was not (other skills may load) |
+| `noskill` | no skill was loaded at all |
 
 Pick the kind that matches what the skill may do. `unchanged` is for a file the
 skill must never touch — code under review, prose being audited. For a file it
@@ -294,6 +297,25 @@ therefore visible as a pass rate (`[4/5]` in the console, `passRate` and
 `--min-pass <ratio>` lowers that bar in writing when a known-flaky case needs to
 land; it is never the default. Staging is deterministic, so `--level smoke`
 ignores `--repeat`.
+
+### Triggers
+
+A trigger case pairs a prompt that should reach a skill with a near-miss that
+should not, and asserts routing instead of artefacts:
+
+```md
+6. **Near-miss: a failure being debugged, not a change being reviewed.**
+   - prompt: Why did my build fail on Node 20?
+   - gate: off
+   - assert: notskill review-code
+```
+
+`skill <id>` is routing evidence only; provenance (is it the checkout's copy?)
+stays in the case gate, so a trigger case can assert that a *different* skill
+was chosen. Near-misses assert the outcome, not the tool call, whenever
+consulting a skill is the correct guardrail: `record-decision` answering
+"Postgres or SQLite?" may load the skill to find its own rule, and the case
+fails only if it files an ADR nobody decided.
 
 ### Artifacts and regressions
 
