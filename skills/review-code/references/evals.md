@@ -50,6 +50,7 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - expect: Names what it cannot verify instead of approving on plausibility.
    - expect: Watch for: a confident APPROVE with no spec to approve against.
    - assert: noreply VERDICT: APPROVE
+   - assert: reply spec|intent|acceptance
    - assert: unchanged src/cart.js
 
 4. **Review this branch against SPEC-0007.**

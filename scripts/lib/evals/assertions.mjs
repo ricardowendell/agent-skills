@@ -138,7 +138,8 @@ function check(kind, arg, { scratch, out, text, snapshot }) {
   const push = (pass, detail = "") => ({ kind, arg, pass, detail })
 
   if (kind === "reply" || kind === "noreply") {
-    const re = safeRegex(arg)
+    // Case-insensitive: the case is about what was said, not its capitalisation.
+    const re = safeRegex(arg, "i")
     if (!re) return push(false, "invalid regex")
     const hit = re.test(text)
     return push(kind === "reply" ? hit : !hit)
@@ -253,9 +254,9 @@ export function isInside(root, candidate) {
   return candidate === raw(root) || candidate.startsWith(raw(root) + "/")
 }
 
-export function safeRegex(pattern) {
+export function safeRegex(pattern, flags = "") {
   try {
-    return new RegExp(pattern)
+    return new RegExp(pattern, flags)
   } catch {
     return null
   }

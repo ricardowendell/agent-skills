@@ -326,6 +326,24 @@ consulting a skill is the correct guardrail: `record-decision` answering
 "Postgres or SQLite?" may load the skill to find its own rule, and the case
 fails only if it files an ADR nobody decided.
 
+### Matrix runs with Promptfoo
+
+Repetition, a model × arm matrix and cost reporting are commodity work, so they
+can be delegated — without moving the verdict out of this repo:
+
+```sh
+node scripts/emit-promptfoo.mjs --tag matrix --models default,opencode-go/gpt-6-luna
+npx promptfoo eval -c scripts/promptfoo/promptfoo.yaml --repeat 3
+```
+
+`scripts/promptfoo/provider.mjs` imports the same library, stages the same
+fixture, pins the same skill and classifies with the same rules; the only
+assertion on the Promptfoo side reads `metadata.status`, so the two front ends
+cannot disagree about what passed. The generated YAML is a build artifact and is
+not committed; `evals.md` remains the source. Enable the judge there with
+`judge: { model: default, threshold: 0.8 }` in a provider's config — one judge
+per execution, same rule as the CLI.
+
 ### Artifacts and regressions
 
 Every case writes `<skill>/<n>.md` (transcript) and `<skill>/<n>.json` (status,

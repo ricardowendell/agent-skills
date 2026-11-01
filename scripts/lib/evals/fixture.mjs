@@ -11,7 +11,7 @@
 // (verified: the `skill` tool reports `directory` inside the scratch dir). That
 // is what makes the run test the checkout rather than whatever is installed.
 
-import { readFileSync, readdirSync, existsSync, mkdtempSync, cpSync, writeFileSync, unlinkSync, rmSync } from "node:fs"
+import { readFileSync, readdirSync, existsSync, mkdtempSync, cpSync, writeFileSync, unlinkSync, rmSync, mkdirSync } from "node:fs"
 import { spawnSync } from "node:child_process"
 import { createHash } from "node:crypto"
 import { join, resolve } from "node:path"
@@ -71,6 +71,20 @@ export function stageSkill(skill, scratch) {
     if (!cur.includes(".opencode/")) writeFileSync(exclude, cur + "\n.opencode/\n")
   }
   return { id: skill.id, dest, hash: treeHash(dest) }
+}
+
+// Deny the skill tool while leaving the fixture's own config intact: the
+// --no-skill arm must still stage the case, only without the artefact under test.
+export function denySkillTool(scratch) {
+  const dir = join(scratch, ".opencode")
+  mkdirSync(dir, { recursive: true })
+  const file = join(dir, "opencode.json")
+  let config = {}
+  try {
+    config = JSON.parse(readFileSync(file, "utf8"))
+  } catch {}
+  config.tools = { ...(config.tools ?? {}), skill: false }
+  writeFileSync(file, JSON.stringify(config, null, 2))
 }
 
 export function stageFixture(skill, c, scratch) {

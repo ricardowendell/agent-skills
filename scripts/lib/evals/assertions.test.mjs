@@ -76,6 +76,12 @@ test("filematch requires both the path glob and the content regex", () => {
   assert.equal(one({ kind: "filematch", arg: "docs/decisions/ADR-0009-*.md SQLite" }, scratch).pass, false)
 })
 
+test("reply matching ignores capitalisation", () => {
+  const out = transcript({ text: "Verdict: approve" })
+  assert.equal(one({ kind: "reply", arg: "VERDICT: APPROVE" }, "/tmp", out).pass, true)
+  assert.equal(one({ kind: "noreply", arg: "VERDICT: APPROVE" }, "/tmp", out).pass, false)
+})
+
 test("reply reads the assistant text, not tool output", () => {
   const out = transcript({
     text: "VERDICT: APPROVE",

@@ -56,13 +56,14 @@
 // Output: transcripts under ~/.local/share/opencode/evals/<skill>/<n>.md
 
 import { readdirSync, lstatSync, realpathSync, existsSync, mkdirSync, writeFileSync, appendFileSync, readFileSync } from "node:fs"
-import { spawn, spawnSync } from "node:child_process"
+import { spawnSync } from "node:child_process"
 import { join, basename, dirname } from "node:path"
 import { fileURLToPath } from "node:url"
 import { homedir } from "node:os"
 import { readEvals } from "./lib/evals/parse.mjs"
 import { evaluateAssertions, replyText, skillGate, skillLoads, toolCalls, usageStats } from "./lib/evals/assertions.mjs"
-import { stageFixture, stageSkill, snapshotTree, makeScratch } from "./lib/evals/fixture.mjs"
+import { agentArgs, runAgent, scrubEnv } from "./lib/evals/agent.mjs"
+import { stageFixture, stageSkill, snapshotTree, makeScratch, denySkillTool } from "./lib/evals/fixture.mjs"
 import { classify, summarize, aggregateReps, PASSED, UNSCORED } from "./lib/evals/result.mjs"
 import { judgePrompt, runJudge, judgeOutcome } from "./lib/evals/judge.mjs"
 import { summarizeRun, compareRuns, formatComparison, readRun } from "./lib/evals/report.mjs"
@@ -175,10 +176,7 @@ function resolveModel() {
 }
 const EFFECTIVE_MODEL = resolveModel()
 
-const CHILD_ENV = { ...process.env }
-for (const k of Object.keys(CHILD_ENV)) {
-  if (/^OPENCODE/i.test(k) || k === "AI_AGENT") delete CHILD_ENV[k]
-}
+const CHILD_ENV = scrubEnv()
 
 function* skillDirs(dir, seen = new Set()) {
   let entries
@@ -347,110 +345,62 @@ async function runCase(skill, c, rep = null) {
     }
   }
 
-  const args = ["run", "--format", "json", "--auto", "--agent", opt.agent]
-  if (opt.standalone) args.push("--standalone")
-  if (opt.model) args.push("--model", opt.model)
-  args.push(c.prompt)
+  const args = agentArgs({ prompt: c.prompt, model: opt.model, agent: opt.agent, standalone: opt.standalone })
+  const { out, err, code } = await runAgent({ args, cwd: scratch, env: CHILD_ENV, timeoutMs: opt.timeout * 1000 })
+  const durationMs = Date.now() - started
 
-  const agentRun = new Promise((resolve) => {
-    // detached => the child leads its own process group, so we can kill the
-    // whole tree. A lingering grandchild holding the stdout pipe can otherwise
-    // keep 'close' from ever firing, so a hard timer guarantees resolution.
-    const child = spawn("opencode", args, {
-      cwd: scratch,
-      // spawn's cwd does NOT update the inherited PWD, and opencode resolves its
-      // project from PWD — so point it at the scratch dir explicitly.
-      env: { ...CHILD_ENV, PWD: scratch, OLDPWD: scratch },
-      detached: true,
-      stdio: ["ignore", "pipe", "pipe"],
-    })
-    let out = ""
-    let err = ""
-    let finished = false
-
-    const killTree = () => {
-      try {
-        process.kill(-child.pid, "SIGKILL")
-      } catch {
-        try {
-          child.kill("SIGKILL")
-        } catch {}
-      }
-    }
-
-    const finish = (code) => {
-      if (finished) return
-      finished = true
-      clearTimeout(hardTimer)
-      killTree()
-      try {
-        child.stdout?.removeAllListeners()
-        child.stderr?.removeAllListeners()
-        child.stdout?.destroy()
-        child.stderr?.destroy()
-        child.unref()
-      } catch {}
-      const durationMs = Date.now() - started
-      const asserts = evaluateAssertions(c, scratch, out, replyText(out), snapshot)
-      const gate = c.gate === "off"
-        ? { ok: true, reason: "case does not gate on the skill (trigger/routing case)" }
-        : opt.noSkill
-        ? { ok: skillLoads(out).length === 0, reason: skillLoads(out).length ? `loaded ${skillLoads(out).map((l) => l.id).join(", ")} although --no-skill` : "no skill loaded (control arm)" }
+  const asserts = evaluateAssertions(c, scratch, out, replyText(out), snapshot)
+  const gate =
+    c.gate === "off"
+      ? { ok: true, reason: "case does not gate on the skill (trigger/routing case)" }
+      : opt.noSkill
+        ? {
+            ok: skillLoads(out).length === 0,
+            reason: skillLoads(out).length ? `loaded ${skillLoads(out).map((l) => l.id).join(", ")} although --no-skill` : "no skill loaded (control arm)",
+          }
         : skillGate(out, scratch, skill.id)
-      const verdict = classify({ exit: code, asserts, skillGate: gate })
-      const usage = usageStats(out)
-      const skillLabel = opt.noSkill
-        ? `**Skill:** ${gate.ok ? "not loaded (control arm)" : "LOADED — the control arm is broken"} (${gate.reason})`
-        : `**Skill:** ${gate.ok ? "loaded" : "MISSING"} (${gate.reason})`
-      const result = {
-        skill: skill.id,
-        case: c.n,
-        status: verdict.status,
-        reason: verdict.reason,
-        title: c.title,
-        prompt: c.prompt,
-        skillHash: pinned.hash,
-        skillGate: { ok: gate.ok, reason: gate.reason, loaded: skillLoads(out).map((l) => l.id) },
-        assertions: asserts.map(({ kind, arg, pass, detail }) => ({ kind, arg, pass, detail })),
-        execution: { exit: code, durationMs, tokens: usage.tokens, cost: usage.cost, steps: usage.steps, toolCalls: toolCalls(out).length },
-        arm: opt.noSkill ? "without-skill" : "with-skill",
-        ...(rep ? { rep: rep.index } : {}),
-        meta: { repoSha: meta.repoSha, agent: meta.agent, model: meta.model, level: meta.level },
-        transcript: file,
-      }
-      writeFileSync(join(dir, `${c.n}.json`), JSON.stringify(result, null, 2))
-      const assertBlock = asserts.length
-        ? `## Assertions (auto-checked)\n\n${asserts
-            .map((a) => `- [${a.pass ? "x" : " "}] ${a.kind} ${a.arg}${a.detail ? ` (${a.detail})` : ""}`)
-            .join("\n")}\n\n`
-        : "## Assertions (auto-checked)\n\nnone — case is unscored\n\n"
-      writeFileSync(
-        file,
-        `# Eval: ${skill.id} case ${c.n}\n\n**Prompt:** ${c.prompt}\n\n` +
-          `**Scratch:** ${scratch}\n**Exit:** ${code}\n**Status:** ${verdict.status}${verdict.reason ? ` — ${verdict.reason}` : ""}\n` +
-          `${skillLabel}\n**Skill hash:** ${pinned.hash}\n` +
-          `**Repo:** ${meta.repoSha}  **Agent:** ${meta.agent}  **Model:** ${meta.model}  **Level:** ${meta.level}  **Duration:** ${durationMs}ms\n\n` +
-          `## Expectations (human-checked)\n\n${c.expect.map((e) => `- [ ] ${e}`).join("\n")}\n\n` +
-          assertBlock +
-          `## Transcript\n\n\`\`\`\n${out}\n\`\`\`\n\n${err ? `## stderr\n\n\`\`\`\n${err}\n\`\`\`\n` : ""}`,
-      )
-      resolve({ result, out, gate })
-    }
+  const verdict = classify({ exit: code, asserts, skillGate: gate })
+  const usage = usageStats(out)
+  const skillLabel = opt.noSkill
+    ? `**Skill:** ${gate.ok ? "not loaded (control arm)" : "LOADED — the control arm is broken"} (${gate.reason})`
+    : `**Skill:** ${gate.ok ? "loaded" : "MISSING"} (${gate.reason})`
 
-    const hardTimer = setTimeout(() => finish("timeout"), opt.timeout * 1000)
-    child.stdout.on("data", (d) => (out += d))
-    child.stderr.on("data", (d) => (err += d))
-    child.on("close", (code) => finish(code ?? "closed"))
-    child.on("error", (e) => {
-      err += `spawn error: ${e.message}\n`
-      finish("error")
-    })
-  })
+  let result = {
+    skill: skill.id,
+    case: c.n,
+    status: verdict.status,
+    reason: verdict.reason,
+    title: c.title,
+    prompt: c.prompt,
+    skillHash: pinned.hash,
+    skillGate: { ok: gate.ok, reason: gate.reason, loaded: skillLoads(out).map((l) => l.id) },
+    assertions: asserts.map(({ kind, arg, pass, detail }) => ({ kind, arg, pass, detail })),
+    execution: { exit: code, durationMs, tokens: usage.tokens, cost: usage.cost, steps: usage.steps, toolCalls: toolCalls(out).length },
+    arm: opt.noSkill ? "without-skill" : "with-skill",
+    ...(rep ? { rep: rep.index } : {}),
+    meta: { repoSha: meta.repoSha, agent: meta.agent, model: meta.model, level: meta.level },
+    transcript: file,
+  }
+  if (!rep) writeFileSync(join(dir, `${c.n}.json`), JSON.stringify(result, null, 2))
 
-  const outcome = await agentRun
-  let result = outcome.result
+  const assertBlock = asserts.length
+    ? `## Assertions (auto-checked)\n\n${asserts
+        .map((a) => `- [${a.pass ? "x" : " "}] ${a.kind} ${a.arg}${a.detail ? ` (${a.detail})` : ""}`)
+        .join("\n")}\n\n`
+    : "## Assertions (auto-checked)\n\nnone — case is unscored\n\n"
+  writeFileSync(
+    file,
+    `# Eval: ${skill.id} case ${c.n}\n\n**Prompt:** ${c.prompt}\n\n` +
+      `**Scratch:** ${scratch}\n**Exit:** ${code}\n**Status:** ${verdict.status}${verdict.reason ? ` — ${verdict.reason}` : ""}\n` +
+      `${skillLabel}\n**Skill hash:** ${pinned.hash}\n` +
+      `**Repo:** ${meta.repoSha}  **Agent:** ${meta.agent}  **Model:** ${meta.model}  **Level:** ${meta.level}  **Duration:** ${durationMs}ms\n\n` +
+      `## Expectations (human-checked)\n\n${c.expect.map((e) => `- [ ] ${e}`).join("\n")}\n\n` +
+      assertBlock +
+      `## Transcript\n\n\`\`\`\n${out}\n\`\`\`\n\n${err ? `## stderr\n\n\`\`\`\n${err}\n\`\`\`\n` : ""}`,
+  )
+
   if (opt.judge && result.status !== "staged" && result.status !== "failed") {
-    const graded = await gradeCase(c, outcome.out, result)
+    const graded = await gradeCase(c, out, result)
     result = graded.result
     if (!rep) writeFileSync(join(dir, `${c.n}.json`), JSON.stringify(result, null, 2))
     appendFileSync(file, graded.section)
@@ -498,19 +448,6 @@ async function gradeCase(c, out, result) {
 function patchHeader(file, { status, reason }) {
   const md = readFileSync(file, "utf8").replace(/^\*\*Status:\*\*.*$/m, `**Status:** ${status}${reason ? ` — ${reason}` : ""}`)
   writeFileSync(file, md)
-}
-
-// Deny the skill tool and let the fixture's own config survive: a --no-skill run
-// must still stage the case, only without the artefact under test.
-function denySkillTool(scratch) {
-  const file = join(scratch, ".opencode/opencode.json")
-  mkdirSync(dirname(file), { recursive: true })
-  let config = {}
-  try {
-    config = JSON.parse(readFileSync(file, "utf8"))
-  } catch {}
-  config.tools = { ...(config.tools ?? {}), skill: false }
-  writeFileSync(file, JSON.stringify(config, null, 2))
 }
 
 // Repetitions exist because one verdict from a non-deterministic agent is one
