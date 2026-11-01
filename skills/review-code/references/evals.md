@@ -42,15 +42,15 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - assert: unchanged src/cart.js
    - assert: unchanged test/cart.test.js
 
-3. **Review my change.**
-   - prompt: Review my change.
+3. **Review a branch with no spec in the repo.**
+   - prompt: Review this branch before I merge it.
    - tags: matrix
-   - why: no spec in the repo
+   - why: no spec in the repo. The prompt is shared with trigger case 5 on purpose: the trigger measures whether the skill is reached, this case what it does once it is.
    - expect: Asks for the intent or refuses; does not invent acceptance criteria.
    - expect: Names what it cannot verify instead of approving on plausibility.
    - expect: Watch for: a confident APPROVE with no spec to approve against.
-   - assert: noreply VERDICT: APPROVE
-   - assert: reply spec|intent|acceptance
+   - assert: noreply verdict:?\s*\**\s*(?:approve|request changes)\b(?!\s+(?:or|nor)\b)|\bLGTM\b|\blooks good\b|\bship it\b
+   - assert: reply spec
    - assert: unchanged src/cart.js
 
 4. **Review this branch against SPEC-0007.**
