@@ -1,7 +1,7 @@
 ---
 id: SPEC-0001
 title: Re-measure the skill matrix after the answer-key fix
-status: draft
+status: ready
 priority: P0
 created_at: 2026-11-01
 updated_at: 2026-11-01
@@ -98,9 +98,10 @@ Not applicable: this spec has no user-facing surface.
 
 ## Acceptance Criteria
 
-- AC-1 — Four run artifacts exist (one per model × arm), each covering the four
-  matrix cases with three repetitions: `results` holds 4 entries, each with
-  `passed`, `total: 3` and a `passRate`. Verified by reading the artifacts.
+- AC-1 — The per-case results for all four cells exist under
+  `~/.local/share/opencode/evals/<skill>[--<model>][--without-skill]/<n>.json`
+  — 16 files — each with `reps: 3`, `passed`, `passRate` and the resolved model
+  id. Verified by reading them.
 - AC-2 — A table in the README reports, per case and model, the with-skill and
   without-skill pass counts, and the aggregate for each arm. Verified by
   inspection.
@@ -112,9 +113,9 @@ Not applicable: this spec has no user-facing surface.
   two artifacts.
 - AC-5 — Zero transcripts from this run contain a read of `references/evals.md`.
   Verified by searching the transcripts directory.
-- AC-6 — The superseded numbers in the README and the plan artifact are marked
-  as measured before `c876d88` rather than silently replaced. Verified by
-  inspection.
+- AC-6 — The README keeps the superseded table, with the "measured before
+  `c876d88`; the agent could read the eval corpus; do not cite" marker in the
+  table's caption so it travels with a copy. Verified by inspection.
 
 **Security.** No user data, no persistence, no rendering of generated content.
 The transcripts contain agent output written to a local directory that already
@@ -122,15 +123,18 @@ holds every earlier run.
 
 ## Open Questions
 
-- Which comparison model? `opencode-go/gpt-6-luna` was used before; the
-  available set may have changed, and a model that is no longer reachable would
-  make AC-3 unverifiable. Needs a decision before `ready`.
-- Are the plan artifacts under `~/.opencode/plan/` in scope for AC-6, or only
-  the README? They live outside the repo, so a reader of the repo cannot see
-  them; if they stay out of scope, AC-6 covers the README only.
-- Should the superseded table be kept verbatim with a marker, or moved into a
-  short "history" note? The first preserves the audit trail, the second is
-  easier to read.
+None blocking. Three questions were open at grooming and were answered on
+2026-11-01:
+
+- **Comparison model** — `opencode-go/gpt-6-luna`, confirmed available. It is
+  the only model that appears in the retracted numbers, so holding it fixed
+  isolates the answer-key fix as the variable under test.
+- **AC-6 scope** — README only. The plan artifacts under `~/.opencode/plan/` sit
+  outside the repository and are not versioned; a criterion about them could not
+  be verified by anyone reading the repo.
+- **Superseded table** — kept verbatim with the marker in the caption. The delta
+  against the new table is the evidence that the leak distorted the measurement,
+  and a caption travels with a copied table.
 
 ## Prompt Notes
 
