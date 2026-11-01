@@ -152,6 +152,9 @@ const ROOTS = (
     : [join(HOME, ".agents/skills"), join(HOME, ".claude/skills"), join(HOME, ".codex/skills"), join(HOME, ".config/opencode/skills")]
 ).filter(existsSync)
 const OUT_ROOT = join(HOME, ".local/share/opencode/evals")
+// The control arm writes beside the real one: overwriting the same files would
+// destroy the comparison the arm exists to make.
+const outDirFor = (skill) => join(OUT_ROOT, opt.noSkill ? `${skill.id}--without-skill` : skill.id)
 
 const CHILD_ENV = { ...process.env }
 for (const k of Object.keys(CHILD_ENV)) {
@@ -264,7 +267,7 @@ console.log(
 
 async function runCase(skill, c, rep = null) {
   const scratch = makeScratch(skill.id, c.n)
-  const dir = join(OUT_ROOT, skill.id)
+  const dir = outDirFor(skill)
   mkdirSync(dir, { recursive: true })
   const file = join(dir, `${c.n}${rep ? `.r${rep.index}` : ""}.md`)
   const started = Date.now()
@@ -506,7 +509,7 @@ async function runCaseReps(skill, c) {
   if (times === 1) return reps[0]
 
   const agg = aggregateReps(reps, opt.minPass)
-  const dir = join(OUT_ROOT, skill.id)
+  const dir = outDirFor(skill)
   const artifact = {
     skill: skill.id,
     case: c.n,

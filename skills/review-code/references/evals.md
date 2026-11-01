@@ -14,6 +14,7 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
 
 1. **Review this branch against SPEC-0007.**
    - prompt: Review this branch against SPEC-0007.
+   - tags: matrix
    - why: the diff satisfies every AC
    - expect: Fixes the range and head sha before reading code.
    - expect: Walks AC-1 through AC-3, recording the code and the test per criterion.
@@ -29,6 +30,7 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
 
 2. **Review this branch.**
    - prompt: Review this branch.
+   - tags: matrix
    - why: the diff misses AC-2 and deletes a test
    - expect: Returns `VERDICT: REJECT`.
    - expect: The AC-2 gap is `blocking`, with `file:line`; so is the deleted test.
@@ -41,6 +43,7 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
 
 3. **Review my change.**
    - prompt: Review my change.
+   - tags: matrix
    - why: no spec in the repo
    - expect: Asks for the intent or refuses; does not invent acceptance criteria.
    - expect: Names what it cannot verify instead of approving on plausibility.
@@ -50,6 +53,7 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
 
 4. **Review this branch against SPEC-0007.**
    - prompt: Review this branch against SPEC-0007.
+   - tags: matrix
    - why: the spec moved after the prompt was stamped
    - expect: Computes the spec hash and finds it no longer matches the prompt's `spec_sha`.
    - expect: Rejects as a stale spec instead of reviewing code against a contract that changed underneath it.
