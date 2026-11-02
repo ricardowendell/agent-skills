@@ -1,10 +1,10 @@
 ---
 id: TASK-11
 title: 'eval: isolar os runs das skills globais do usuário'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-02T18:20:00Z'
-updated_date: '2026-11-02T18:20:00Z'
+updated_date: '2026-11-02T18:40:00Z'
 labels: []
 dependencies: []
 ordinal: 11000
@@ -32,10 +32,10 @@ Ordem: medir a taxa de carregamento com n≥12 por caso no ambiente atual (basel
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 ambiente isolado que ainda autentica no provider e mantém os plugins que afetam o comportamento medido, ou registro explícito do que foi perdido
-- [ ] #2 taxa de carregamento remedida com n≥12 por caso, antes/depois, no mesmo modelo e nível
-- [ ] #3 nenhum caso passa a aceitar run sem skill, e o gate continua exigindo a cópia staged
-- [ ] #4 se a isolação não melhorar a taxa, registra-se o resultado negativo e a TASK-10 fica como está
+- [x] #1 ambiente isolado que ainda autentica no provider e mantém os plugins que afetam o comportamento medido, ou registro explícito do que foi perdido
+- [x] #2 taxa de carregamento remedida com n≥12 por caso, antes/depois, no mesmo modelo e nível
+- [x] #3 nenhum caso passa a aceitar run sem skill, e o gate continua exigindo a cópia staged
+- [x] #4 se a isolação não melhorar a taxa, registra-se o resultado negativo e a TASK-10 fica como está
 <!-- AC:END -->
 
 ## Comments
@@ -46,4 +46,24 @@ created: 2026-11-02T18:20:00Z
 ---
 
 Aberta no lugar de um conserto apressado. Trocar o ambiente de execução é trocar o instrumento, e a medição da TASK-9 depende dele — então a mudança precisa provar que melhora a taxa antes de virar padrão.
+---
+
+Fechada em 2026-11-02, com a isolação adotada como padrão.
+
+**Ambiente** (AC-1). O filho recebe um HOME descartável: entradas de config são symlinkadas (plugins, vendor, node_modules, json), diretórios de estado compartilhado são symlinkados para fora (`.local`, `.secrets`, `.bun`, `.gitconfig`, `.npm`), e `skills` é a única entrada deixada de fora. Nada é copiado, então não há custo por run, e o cleanup remove links — nunca os alvos. Provider autentica, plugins carregam. Verificado: o agente passa a ver 1 skill da corpus + 2 built-ins do OpenCode, contra 23 antes.
+
+**Efeito** (AC-2). Mesmo modelo, mesmo nível, mesmo instrumento, 12 repetições por caso:
+
+| caso | antes (home real) | depois (home isolado) |
+| --- | --- | --- |
+| #8 | 10/12 | **12/12** |
+| #7 | 8/12 | **12/12** |
+
+Os 6 misses em 24 viraram 0 em 24. A taxa de 23% da TASK-10 não era do modelo nem da descrição da skill: era do ambiente com 22 skills concorrendo.
+
+**Gate** (AC-3). `--no-skill` continua negando a ferramenta e o gate continua exigindo a cópia staged. A isolação só remove concorrentes; não afrouxa nada.
+
+**Custo** (AC-1, o que foi perdido). O `~/.agents` deixa de existir no HOME do agente, então um caso que peça para rodar um script do harness falharia. Nenhum caso faz isso hoje. `--no-isolate` reproduz o ambiente antigo quando a comparação histórica exigir.
+
+Implementação em `scripts/lib/evals/isolation.mjs`, ligada por padrão no CLI e no provider do Promptfoo, com 3 testes próprios.
 <!-- COMMENTS:END -->

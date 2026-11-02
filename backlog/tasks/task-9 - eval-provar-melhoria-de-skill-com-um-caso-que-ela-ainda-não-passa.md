@@ -106,5 +106,7 @@ Medição final, mesmo instrumento, n=12 nos dois braços:
 
 As duas falhas restantes são execuções que não carregaram a skill — o near-miss da TASK-10, não o comportamento medido. #1 ficou 3/4 e #7 1/4 nas mesmas rodadas, com todas as falhas sendo near-miss também, o que mostra que o piso de ruído do instrumento é ~23%, não 10%.
 
+Remedido depois da TASK-11, com o home isolado: **12/12** no #8 (e 12/12 no #7). As duas falhas acima eram misses de gatilho, não comportamento — com o ambiente controlado, o caso fecha limpo.
+
 Lição de método, registrada porque é reutilizável: 5/5 e 3/3 pareciam prova e não eram. A conclusão só ficou estável quando a n passou de 5 para 12 e o instrumento foi corrigido antes de comparar os braços.
 <!-- COMMENTS:END -->

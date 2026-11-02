@@ -171,6 +171,11 @@ One footnote on provenance: the first cell recorded repo sha `baf9a32` because
 the layout commit landed while it ran; the code that executed was the same
 working tree, and the other three cells recorded `d9b97a8`.
 
+These runs also predate home isolation (`lib/evals/isolation.mjs`): the child saw
+every skill installed on the machine, not just the one under test. All thirty
+loaded `review-code`, so no miss landed here, but the environment was the one
+that later produced a 23% miss rate on other cases.
+
 ## Commands
 
 ```sh
