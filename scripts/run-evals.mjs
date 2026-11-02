@@ -193,9 +193,6 @@ const ROOTS = (
     : [join(HOME, ".agents/skills"), join(HOME, ".claude/skills"), join(HOME, ".codex/skills"), join(HOME, ".config/opencode/skills")]
 ).filter(existsSync)
 const OUT_ROOT = join(HOME, ".local/share/opencode/evals")
-// Each configuration writes beside the others: overwriting the same files would
-// destroy the comparison the arm exists to make.
-const slug = (s) => s.replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").toLowerCase()
 // One directory per invocation, named after the selection it covers. Created
 // lazily so --list and dry runs never leave an empty run behind.
 const LABEL = opt.skill ?? (opt.tags.length ? opt.tags.join("+") : "all")
@@ -363,7 +360,13 @@ async function runCase(skill, c, rep = null) {
       else pinned = stageSkill(skill, scratch)
     } catch (e) {
       writeFailure("fixture failed to stage", `${e.message}\n${e.stderr ?? ""}`)
-      return { skill: skill.id, case: c.n, status: "failed", reason: "fixture failed to stage", title: c.title, prompt: c.prompt, skillHash: null, assertions: [], transcript: file }
+      return caseResult(skill, c, {
+        status: "failed",
+        reason: "fixture failed to stage",
+        skillHash: null,
+        assertions: [],
+        transcript: file,
+      })
     }
     writeFileSync(
       file,

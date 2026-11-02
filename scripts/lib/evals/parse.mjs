@@ -15,8 +15,8 @@
 // the only text the agent sees; `why`, `expect`, `status`, `needs` and `tags`
 // exist to record intent without contaminating the run.
 //
-// Legacy syntax (pre-v2) is still read so the 39 existing cases keep working
-// while they migrate: `1. **"prompt"** (note)` with bare bullets. The quoted
+// Legacy syntax (pre-v2) is still read so unmigrated cases keep working:
+// `1. **"prompt"** (note)` with bare bullets. The quoted
 // bold text becomes the prompt, the parenthetical becomes `why`. That split is
 // the fix — before, the parenthetical was concatenated onto the prompt.
 

@@ -94,15 +94,17 @@ export function denySkillTool(scratch) {
   writeFileSync(file, JSON.stringify(config, null, 2))
 }
 
+// Stage the case's starting state. A case with no fixture tree stages nothing:
+// its prompt carries the whole situation, and the assertions decide the rest.
 export function stageFixture(skill, c, scratch) {
   const caseDir = join(skill.dir, "references/evals", String(c.n))
   const manifest = join(caseDir, "git.json")
   const isGit = existsSync(manifest)
   const spec = isGit ? JSON.parse(readFileSync(manifest, "utf8")) : {}
   const baseDir = isGit ? resolve(caseDir, spec.base ?? ".") : caseDir
-  if (!existsSync(baseDir)) return { staged: false }
+  if (!existsSync(baseDir)) return
   copyTree(baseDir, scratch, (src) => !/(^|\/)(git\.json|change\.patch)$/.test(src))
-  if (!isGit) return { staged: true, git: false }
+  if (!isGit) return
 
   // `remove` prunes paths from the base before the first commit — for a case
   // where the artefact under review (a spec, a prompt) must not exist yet.
@@ -140,5 +142,4 @@ export function stageFixture(skill, c, scratch) {
     }
   }
   commit(spec.message ?? "change under review")
-  return { staged: true, git: true }
 }

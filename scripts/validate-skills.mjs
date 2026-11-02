@@ -67,7 +67,7 @@ function* skillFiles(dir) {
       } catch {
         continue
       }
-      const target = entry.isSymbolicLink() ? join(p, "SKILL.md") : join(p, "SKILL.md")
+      const target = join(p, "SKILL.md")
       if (existsSync(target)) {
         yield target
         continue

@@ -4,8 +4,8 @@
 // Every assertion that reads the transcript (`reply`, `noreply`, `verdict`,
 // `tool`, `notool`, `ran`, `ranpass`, `skill`, `notskill`, `noskill`) can be
 // re-evaluated from a stored run. That is what makes changing an assertion
-// cheap: the alternative is one agent run per case per change, and 54 cases at
-// a minute each is not a loop anyone closes.
+// cheap: the alternative is one agent run per case per change, and minutes per
+// case is not a loop anyone closes.
 //
 // Filesystem assertions (`file`, `nofile`, `filematch`, `unchanged`, `changed`)
 // are reported as skipped: they need the scratch tree, and `unchanged` needs the

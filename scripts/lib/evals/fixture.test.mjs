@@ -45,8 +45,7 @@ test("a plain fixture is copied whole", () => {
     "references/evals/1/docs/specs/SPEC-0001.md": "# spec\n",
   })
   const scratch = makeScratch("demo", 1)
-  const r = stageFixture({ id: "demo", dir: skillDir }, { n: 1 }, scratch)
-  assert.deepEqual(r, { staged: true, git: false })
+  stageFixture({ id: "demo", dir: skillDir }, { n: 1 }, scratch)
   assert.equal(readFileSync(join(scratch, "docs/specs/SPEC-0001.md"), "utf8"), "# spec\n")
 })
 
@@ -60,8 +59,7 @@ test("a git fixture stages main, prunes, then applies the patch on a branch", ()
     "references/evals/1/change.patch": "diff --git a/a.txt b/a.txt\n--- a/a.txt\n+++ b/a.txt\n@@ -1 +1 @@\n-one\n+two\n",
   })
   const scratch = makeScratch("demo", 1)
-  const r = stageFixture({ id: "demo", dir: skillDir }, { n: 1 }, scratch)
-  assert.deepEqual(r, { staged: true, git: true })
+  stageFixture({ id: "demo", dir: skillDir }, { n: 1 }, scratch)
 
   assert.equal(git(scratch, "rev-parse", "--abbrev-ref", "HEAD"), "feature/x")
   assert.equal(git(scratch, "rev-list", "--count", "HEAD"), "2")

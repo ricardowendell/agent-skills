@@ -103,13 +103,7 @@ export const OPTIONAL = {
 const PYTHON_PACKAGE_MANAGERS = ["poetry.lock", "pdm.lock", "Pipfile", "requirements.in"]
 const PYTHON_OWNERS = ["black", "flake8", "isort", "mypy", "pre-commit"]
 
-const has = (dir, p) => {
-  try {
-    return existsSync(join(dir, p))
-  } catch {
-    return false
-  }
-}
+const has = (dir, p) => existsSync(join(dir, p))
 
 // The stack rules, in the order the skill states them. Returns `{ id }` or
 // `{ ambiguous: [...] }` — never a guess, because guessing here is how a

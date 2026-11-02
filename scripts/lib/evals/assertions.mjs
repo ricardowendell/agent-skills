@@ -75,7 +75,7 @@ function md5(file) {
 export function evaluateAssertions(c, scratch, out, text = replyText(out), snapshot = new Map()) {
   const results = []
   for (const { kind, arg } of c.assert || []) {
-    results.push(check(kind, arg, { c, scratch, out, text, snapshot }))
+    results.push(check(kind, arg, { scratch, out, text, snapshot }))
   }
   return results
 }
