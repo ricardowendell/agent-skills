@@ -83,6 +83,13 @@ grep -rn "references/evals.md" ~/.local/share/opencode/evals/runs/<run>/cases | 
 # 0
 ```
 
+## Reproducibility
+
+The default with-skill cell was run again (`2026-11-01T22-25-20--matrix`, repo
+sha `882807b`): 20/20 again, identical case by case — 5/5 on each of the four.
+The observed spread is zero, well inside the one-repetition margin the spec
+allows; had it moved, the new number would be here instead of this sentence.
+
 ## Not comparable with earlier figures
 
 Anything measured before `c876d88` was produced with the eval corpus readable
