@@ -84,7 +84,7 @@ out.push("  assert:")
 out.push("    - type: javascript")
 out.push(
   `      value: ${q(
-    "context.providerResponse?.metadata?.status === 'passed' || (context.providerResponse?.metadata?.status ?? 'no metadata') + ': ' + (context.providerResponse?.metadata?.reason ?? '')",
+    "(() => { const m = context.providerResponse?.metadata; const pass = m?.status === 'passed'; return { pass, score: pass ? 1 : 0, reason: pass ? 'passed' : ((m?.status ?? 'no metadata') + ': ' + (m?.reason ?? '')) }; })()",
   )}`,
 )
 out.push("")

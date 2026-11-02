@@ -162,6 +162,18 @@ export function judgeOutcome(parsed, threshold) {
       unmet,
     }
   }
+  // "Absence of evidence is a finding, not a pass": a required expectation the
+  // judge could not verify leaves the case unproven, however many others passed.
+  const unverified = parsed.verdicts.filter((v) => v.verdict === "unverifiable")
+  if (unverified.length) {
+    return {
+      ok: false,
+      score: parsed.score,
+      reason: `judge: expectation(s) ${unverified.map((v) => v.i).join(", ")} could not be verified`,
+      unmet: [],
+      unverified,
+    }
+  }
   if (parsed.score + 1e-9 < threshold) {
     return { ok: false, score: parsed.score, reason: `judge score ${parsed.score.toFixed(2)} < ${threshold}`, unmet: [] }
   }

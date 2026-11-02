@@ -98,3 +98,18 @@ test("compound evidence counts when most of its segments are real", () => {
   assert.equal(out.verdicts[0].verdict, "met")
   assert.equal(out.verdicts[1].verdict, "unverifiable")
 })
+
+test("an expectation the evidence cannot settle does not pass the case", () => {
+  const parsed = {
+    verdicts: [
+      { i: 1, verdict: "met", evidence: "AC-1 verified in test/cart.test.js" },
+      { i: 2, verdict: "unverifiable", evidence: "" },
+    ],
+    met: 1,
+    unmet: 0,
+    score: 1,
+  }
+  const outcome = judgeOutcome(parsed, 0.8)
+  assert.equal(outcome.ok, false)
+  assert.match(outcome.reason, /could not be verified/)
+})
