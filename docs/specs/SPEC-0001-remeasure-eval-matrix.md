@@ -1,7 +1,7 @@
 ---
 id: SPEC-0001
 title: Re-measure the skill matrix after the answer-key fix
-status: ready
+status: implemented
 priority: P0
 created_at: 2026-11-01
 updated_at: 2026-11-01
@@ -12,9 +12,12 @@ related_decisions: []
 depends_on: []
 blocks: []
 tests:
-  - node scripts/run-evals.mjs --tag matrix --repeat 5 --run
-  - node scripts/run-evals.mjs --tag matrix --repeat 5 --no-skill --run
-  - node scripts/replay-evals.mjs --quiet
+  - node scripts/run-evals.mjs --root skills --tag matrix --repeat 5 --run
+  - node scripts/run-evals.mjs --root skills --tag matrix --repeat 5 --no-skill --run
+  - node scripts/run-evals.mjs --root skills --tag matrix --repeat 5 --model opencode-go/gpt-6-luna --run
+  - node scripts/run-evals.mjs --root skills --tag matrix --repeat 5 --model opencode-go/gpt-6-luna --no-skill --run
+  - node scripts/emit-promptfoo.mjs --skill review-code --case 3 --arms with-skill,without-skill --models default --out /tmp/parity.yaml
+  - npx promptfoo eval -c /tmp/parity.yaml --repeat 3
 ---
 
 # SPEC-0001: Re-measure the skill matrix after the answer-key fix

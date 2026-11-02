@@ -366,6 +366,10 @@ node scripts/emit-promptfoo.mjs --tag matrix --models default,opencode-go/gpt-6-
 npx promptfoo eval -c scripts/promptfoo/promptfoo.yaml --repeat 3
 ```
 
+The published result — four cases, two models, both arms, five repetitions each
+— is in [`docs/evals/review-code-matrix.md`](docs/evals/review-code-matrix.md),
+including which assertion failed in every cell without the skill.
+
 `scripts/promptfoo/provider.mjs` imports the same library, stages the same
 fixture, pins the same skill and classifies with the same rules; the only
 assertion on the Promptfoo side reads `metadata.status`, so the two front ends
