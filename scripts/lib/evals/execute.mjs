@@ -7,7 +7,8 @@
 // front ends could disagree about what passed, which defeats the point of
 // measuring.
 
-import { evaluateAssertions, replyText, skillGate, skillLoads, toolCalls, usageStats } from "./assertions.mjs"
+import { evaluateAssertions, skillGate } from "./assertions.mjs"
+import { replyText, skillLoads, toolCalls, usageStats } from "./events.mjs"
 import { stageFixture, stageSkill, denySkillTool, snapshotTree } from "./fixture.mjs"
 import { agentArgs, runAgent } from "./agent.mjs"
 import { classify } from "./result.mjs"

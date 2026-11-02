@@ -13,10 +13,11 @@
 //   - it runs in an empty scratch dir with the skill tool denied, so it cannot
 //     wander into the fixture and grade the code instead of the behaviour.
 
-import { spawn } from "node:child_process"
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { tmpdir } from "node:os"
+import { agentArgs, runAgent, scrubEnv } from "./agent.mjs"
+import { replyText } from "./events.mjs"
 
 const SYSTEM = `You grade one agent run against a case's expectations.
 
@@ -181,58 +182,20 @@ export function judgeOutcome(parsed, threshold) {
 }
 
 // A judge run needs no repo and no skill: a bare scratch dir with the skill tool
-// denied keeps it from reading the fixture and grading the wrong artefact.
-export function runJudge({ model, prompt, source, timeout = 300, env = process.env }) {
+// denied keeps it from reading the fixture and grading the wrong artefact. It
+// goes through the same runner as the case it grades, so the isolation cannot
+// drift between the two.
+export async function runJudge({ model, prompt, source, timeout = 300, env = process.env, spawnAgent = runAgent }) {
   const scratch = mkdtempSync(join(tmpdir(), "eval-judge-"))
   mkdirSync(join(scratch, ".opencode"), { recursive: true })
   writeFileSync(join(scratch, ".opencode/opencode.json"), JSON.stringify({ tools: { skill: false } }))
 
-  const args = ["run", "--format", "json", "--standalone", "--auto", "--agent", "build"]
-  if (model && model !== "default") args.push("--model", model)
-  args.push(prompt)
-
-  return new Promise((resolve) => {
-    const child = spawn("opencode", args, {
-      cwd: scratch,
-      env: { ...env, PWD: scratch, OLDPWD: scratch },
-      detached: true,
-      stdio: ["ignore", "pipe", "pipe"],
-    })
-    let out = ""
-    let done = false
-    const finish = (code) => {
-      if (done) return
-      done = true
-      clearTimeout(timer)
-      try {
-        process.kill(-child.pid, "SIGKILL")
-      } catch {}
-      try {
-        child.stdout?.destroy()
-        child.stderr?.destroy()
-        child.unref()
-      } catch {}
-      const reply = out
-        .split("\n")
-        .map((l) => l.trim())
-        .filter((l) => l.startsWith("{"))
-        .map((l) => {
-          try {
-            return JSON.parse(l)
-          } catch {
-            return null
-          }
-        })
-        .filter((ev) => ev?.type === "text" && ev.part?.text)
-        .map((ev) => ev.part.text)
-        .join("\n")
-      resolve({ code, reply, parsed: verifyEvidence(parseJudge(reply), source ?? reply) })
-    }
-    const timer = setTimeout(() => finish("timeout"), timeout * 1000)
-    child.stdout.on("data", (d) => (out += d))
-    // Drained and discarded: an unread stderr pipe fills and blocks the child.
-    child.stderr.on("data", () => {})
-    child.on("close", (code) => finish(code ?? "closed"))
-    child.on("error", () => finish("error"))
+  const { code, out } = await spawnAgent({
+    args: agentArgs({ prompt, model: model && model !== "default" ? model : null, agent: "build" }),
+    cwd: scratch,
+    env: scrubEnv(env),
+    timeoutMs: timeout * 1000,
   })
+  const reply = replyText(out)
+  return { code, reply, parsed: verifyEvidence(parseJudge(reply), source ?? reply) }
 }

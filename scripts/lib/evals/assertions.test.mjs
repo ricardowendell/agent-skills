@@ -3,7 +3,8 @@ import assert from "node:assert/strict"
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, dirname } from "node:path"
-import { evaluateAssertions, replyText, skillGate, toolCalls, usageStats } from "./assertions.mjs"
+import { evaluateAssertions, skillGate } from "./assertions.mjs"
+import { replyText, toolCalls, usageStats } from "./events.mjs"
 import { snapshotTree } from "./fixture.mjs"
 
 function tree(files) {

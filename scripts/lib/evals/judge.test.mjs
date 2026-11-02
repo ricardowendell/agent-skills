@@ -1,6 +1,6 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { judgePrompt, parseJudge, judgeOutcome, verifyEvidence } from "./judge.mjs"
+import { judgePrompt, parseJudge, judgeOutcome, verifyEvidence, runJudge } from "./judge.mjs"
 
 const c = {
   title: "Review against SPEC-0007.",
@@ -112,4 +112,27 @@ test("an expectation the evidence cannot settle does not pass the case", () => {
   const outcome = judgeOutcome(parsed, 0.8)
   assert.equal(outcome.ok, false)
   assert.match(outcome.reason, /could not be verified/)
+})
+
+test("runJudge goes through the shared runner with a scrubbed env", async () => {
+  let seen = null
+  const out = JSON.stringify({
+    type: "text",
+    part: { text: '{"expectations":[{"i":1,"verdict":"met","evidence":"halved the ceiling"}],"score":1}' },
+  })
+  const result = await runJudge({
+    prompt: "grade this",
+    source: "halved the ceiling",
+    env: { PATH: "/bin", OPENCODE_SESSION: "leak", AI_AGENT: "1" },
+    spawnAgent: async ({ args, env }) => {
+      seen = { args, env }
+      return { code: 0, out, err: "", durationMs: 1 }
+    },
+  })
+
+  assert.equal(result.code, 0)
+  assert.equal(result.parsed.verdicts[0].verdict, "met")
+  assert.equal(seen.env.OPENCODE_SESSION, undefined, "the judge kept the caller's session")
+  assert.equal(seen.env.AI_AGENT, undefined)
+  assert.match(seen.args.join(" "), /--standalone/)
 })
