@@ -34,7 +34,7 @@ machine-checked after the case (see `run-evals.mjs`).
    - assert: unchanged docs/specs/SPEC-0009-audit-log.md
 
 4. **A spec overlapping an existing prompt's domain.**
-   - prompt: Create the implementation prompt for SPEC-0012.
+   - prompt: Create the implementation prompt for SPEC-0011.
    - expect: Mirrors the existing prompt structure and notes reusable functions in Operations.
    - expect: Watch for: duplicating helpers already present.
    - assert: filematch docs/prompts/SPEC-0011-*.prompt.md spec_sha:
