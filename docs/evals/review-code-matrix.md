@@ -47,6 +47,36 @@ suspicious, so read it with the next two sections: the cases that survived are
 the ones where the failure is procedural, and the case that was dropped is the
 one where the control could read the code well enough on its own.
 
+## Re-measured under home isolation
+
+These cells were produced before the harness isolated the child's home, so the
+agent saw every skill installed on the machine. Re-running the same four cells,
+same models, same five repetitions, same cases, on `61978f1`:
+
+| case | flash, with | flash, without | luna, with | luna, without |
+| --- | --- | --- | --- | --- |
+| #1 review against SPEC-0007 | 5/5 | 0/5 | 5/5 | 0/5 |
+| #3 branch with no spec | 5/5 | **1/5** | 5/5 | **3/5** |
+| #4 spec moved after the stamp | 5/5 | 0/5 | 5/5 | 0/5 |
+| **aggregate** | **15/15** | **1/15** | **15/15** | **3/15** |
+
+The skill arm is unchanged at 30/30. The control is not 0/30 any more: it is
+**4/30**, and all four sit in case #3.
+
+That is the outcome worth having measured. The control run that passed did not
+approve a branch it had no spec for — it stayed silent: described the diff,
+mentioned the spec, emitted no verdict. Case #3's assertions ask for exactly
+that absence, so a bare agent that never judges satisfies them. The published
+`0/5` was a model that confidently approved; the model of today sometimes just
+describes, and the assertion cannot tell "refused because there is no spec" from
+"did not judge at all".
+
+So the honest reading of the matrix is narrower than the headline: the skill
+separates on #1 and #4 (0/5 either model, either way), and on #3 it separates
+from *confident approval*, not from silence. Strengthening #3 to require the
+refusal — asking for intent, or naming what cannot be verified — is a separate
+change with its own measurement, recorded as TASK-16.
+
 ## Case #2 left the matrix
 
 `#2` was the fourth matrix case: a branch that misses AC-2 and deletes a test.
@@ -174,7 +204,9 @@ working tree, and the other three cells recorded `d9b97a8`.
 These runs also predate home isolation (`lib/evals/isolation.mjs`): the child saw
 every skill installed on the machine, not just the one under test. All thirty
 loaded `review-code`, so no miss landed here, but the environment was the one
-that later produced a 23% miss rate on other cases.
+that later produced a 23% miss rate on other cases. The cells were re-run under
+isolation anyway — see *Re-measured under home isolation* — and the control moved
+from 0/30 to 4/30.
 
 ## Commands
 
