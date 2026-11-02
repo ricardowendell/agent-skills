@@ -105,6 +105,20 @@ test("verdict tolerates markdown decoration but not a missing line", () => {
   assert.match(r.detail, /no VERDICT/)
 })
 
+test("verdict reads the stance, not the language", () => {
+  // Portuguese is the language the failures came in; the words are a closed list.
+  const pt = transcript({ text: "### Veredicto: **Request changes**\n\nNão verifiquei os ACs." })
+  assert.equal(one({ kind: "verdict", arg: "REJECT" }, "/tmp", pt).pass, true)
+  assert.equal(one({ kind: "verdict", arg: "APPROVE" }, "/tmp", pt).pass, false)
+  const ok = transcript({ text: "Veredicto: Aprovação sem ressalvas" })
+  assert.equal(one({ kind: "verdict", arg: "APPROVE" }, "/tmp", ok).pass, true)
+  const hold = transcript({ text: "VEREDICTO: **Retido** — falta a spec." })
+  assert.equal(one({ kind: "verdict", arg: "WITHHELD" }, "/tmp", hold).pass, true)
+  // A word below the line is not the verdict.
+  const late = transcript({ text: "VERDICT:\n\nI cannot approve this." })
+  assert.equal(one({ kind: "verdict", arg: "APPROVE" }, "/tmp", late).pass, false)
+})
+
 test("an invalid regex fails with a reason instead of throwing", () => {
   const r = one({ kind: "reply", arg: "(" }, "/tmp", transcript({ text: "x" }))
   assert.equal(r.pass, false)

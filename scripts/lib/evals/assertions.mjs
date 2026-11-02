@@ -11,7 +11,7 @@
 //   filematch <glob> <re>  at least one matching file's content matches re
 //   reply <re>             the assistant's own text matches re
 //   noreply <re>           ...does not match
-//   verdict APPROVE|REJECT the reply's `VERDICT:` line names this
+//   verdict APPROVE|REJECT|WITHHELD  the reply's verdict line names this stance
 //   unchanged <glob>       every match exists and is byte-identical to staging
 //   changed <glob>         at least one match, all differ from staging
 //   ran <re>               a shell command matching re was executed
@@ -26,6 +26,46 @@ import { readFileSync, realpathSync } from "node:fs"
 import { createHash } from "node:crypto"
 import { join } from "node:path"
 import { expand } from "./glob.mjs"
+
+// The stance vocabulary a `verdict` line is read with. Closed on purpose: a case
+// gates a stance, not a language, and the harness only knows the words the cases
+// have actually seen. Anything else still compares literally, so a new token is
+// a case change, not a harness change.
+const STANCES = [
+  ["request changes", "REJECT"],
+  ["request change", "REJECT"],
+  ["approve", "APPROVE"],
+  ["approved", "APPROVE"],
+  ["aprovar", "APPROVE"],
+  ["aprovado", "APPROVE"],
+  ["aprovacao", "APPROVE"],
+  ["reject", "REJECT"],
+  ["rejected", "REJECT"],
+  ["rejeitar", "REJECT"],
+  ["rejeitado", "REJECT"],
+  ["recusar", "REJECT"],
+  ["recusado", "REJECT"],
+  ["withheld", "WITHHELD"],
+  ["withhold", "WITHHELD"],
+  ["retido", "WITHHELD"],
+  ["retida", "WITHHELD"],
+  ["reter", "WITHHELD"],
+]
+
+// Accents and case are decoration too: `Aprovação` and `aprovacao` are one word.
+function stance(line) {
+  const words = line
+    .replace(/[*_`]/g, "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+  for (const [phrase, name] of STANCES) {
+    if (new RegExp(`^${phrase}\\b`).test(words)) return name
+  }
+  const first = /^[a-z]+/.exec(words)
+  return first ? first[0].toUpperCase() : ""
+}
 
 // The assistant's own words, without tool output or the skill's text — so
 // `reply`/`verdict` cannot be satisfied by the skill's own template.
@@ -146,10 +186,14 @@ function check(kind, arg, { scratch, out, text, snapshot }) {
   }
 
   if (kind === "verdict") {
-    // Tolerate markdown decoration: the contract is the token, not the styling.
-    const m = /^\s*(?:[#>*_`-]+\s*)*VERDICT:\s*[*_`]*\s*([A-Za-z]+)/m.exec(text)
-    if (!m) return push(false, "no VERDICT: line in the reply")
-    return push(m[1].toUpperCase() === arg.trim().toUpperCase(), `got ${m[1].toUpperCase()}`)
+    // Tolerate markdown decoration: the contract is the stance, not the styling.
+    const label = /^\s*(?:[#>*_`-]+\s*)*(?:verdict|veredicto|parecer)\s*:\s*/im.exec(text)
+    if (!label) return push(false, "no VERDICT: line in the reply")
+    // Only the rest of that line counts: a word further down is not the verdict.
+    const rest = text.slice(label.index + label[0].length).split("\n")[0]
+    const got = stance(rest)
+    if (!got) return push(false, "VERDICT: line names no stance")
+    return push(got === stance(arg), `got ${got}`)
   }
 
   if (kind === "ran" || kind === "ranpass") {

@@ -231,7 +231,7 @@ a pass.
 | `filematch` | a matching file's content matches the regex |
 | `unchanged` / `changed` | every match is identical / different from staging |
 | `reply` / `noreply` | the assistant's own text matches / does not match |
-| `verdict` | the reply's `VERDICT:` line names the expected token |
+| `verdict` | the reply's verdict line names the expected stance |
 | `ran` / `ranpass` | a shell command matching the regex executed / exited 0 |
 | `tool` / `notool` | the named tool was used / was not |
 | `skill` / `notskill` | the id was loaded / was not (other skills may load) |
@@ -241,6 +241,21 @@ Pick the kind that matches what the skill may do. `unchanged` is for a file the
 skill must never touch — code under review, prose being audited. For a file it
 may annotate (a backlog item, an index row), assert that the original text
 survives; byte-identity fails the first time the skill adds a useful pointer.
+
+`verdict` reads a stance, not a token: `VERDICT: APPROVE`, `Veredicto: Aprovar`
+and `Parecer: aprovado` all name APPROVE, because a case gates what the agent
+decided and the agent answers in whatever language the conversation was in. The
+vocabulary is a closed list in `assertions.mjs` — a word it does not know still
+compares literally, so extending it is a case-and-harness change, made on
+evidence, never a guess.
+
+A free-form `reply`/`noreply` regex carries only the words its author wrote. A
+reply in another language that the pattern does not list is invisible to it,
+which is why the approval guard in `review-code` #3 spells out the stance in
+both languages it has seen. That is a limitation, not a pass: a green case means
+the listed words were absent, and `--judge` is the only reading that gets the
+meaning. Nothing appends an instruction to make the agent answer in English,
+since a run made cheaper or more convenient is a different test.
 
 ### What a run proves
 
@@ -294,8 +309,9 @@ command log, with the system prompt in `scripts/lib/evals/judge.mjs`. It is
 opt-in because it costs a model call per case, it never sees the `why:` line,
 and its verdict can fail a case that passed deterministically but never rescue
 one that failed. The threshold is `--judge-threshold` (default 0.8); an
-expectation the judge cannot decide is `unverifiable` and does not dilute the
-score. Treat the first runs as calibration: a case where both arms fail the same
+expectation the judge cannot decide is `unverifiable`, and an unverifiable
+expectation fails the case — a check that could not be performed is not evidence
+that it passed. Treat the first runs as calibration: a case where both arms fail the same
 expectation is usually a badly written expectation, not a regression. The first
 review-code run did exactly that — both arms omitted the case's `Not verified`
 line, which the deterministic assertions could not see.

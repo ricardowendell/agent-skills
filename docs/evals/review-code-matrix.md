@@ -22,22 +22,24 @@ A cell reads `passed/5`. The aggregate is over the four cases, out of 20.
 | case | with skill | without skill |
 | --- | --- | --- |
 | #1 review against SPEC-0007 | 5/5 | 0/5 |
-| #2 missing AC-2, deleted test | 5/5 | 0/5 |
+| #2 missing AC-2, deleted test | 5/5 | 5/5 |
 | #3 branch with no spec | 5/5 | 1/5 |
 | #4 spec moved after the stamp | 5/5 | 0/5 |
-| **aggregate** | **20/20** | **1/20** |
+| **aggregate** | **20/20** | **6/20** |
 
 **opencode-go/gpt-6-luna**
 
 | case | with skill | without skill |
 | --- | --- | --- |
 | #1 review against SPEC-0007 | 5/5 | 0/5 |
-| #2 missing AC-2, deleted test | 5/5 | 0/5 |
+| #2 missing AC-2, deleted test | 5/5 | 2/5 |
 | #3 branch with no spec | 5/5 | 0/5 |
 | #4 spec moved after the stamp | 5/5 | 0/5 |
-| **aggregate** | **20/20** | **0/20** |
+| **aggregate** | **20/20** | **2/20** |
 
-With the skill: 40/40. Without it: 1/40.
+With the skill: 40/40. Without it: 8/40.
+
+The control numbers were 1/20 and 0/20 until the correction below.
 
 ## Why the control failed
 
@@ -46,16 +48,44 @@ Every red cell below 5/5, with the assertion that failed.
 | case | deepseek | luna |
 | --- | --- | --- |
 | #1 | `verdict APPROVE`, `reply Not verified`, `ranpass npm test` | `verdict APPROVE`, `reply Not verified`, `reply AC-3` |
-| #2 | `verdict REJECT` | `verdict REJECT` |
+| #2 | — (rejects correctly) | no `verdict` line in 3 of 5 |
 | #3 | approves or rejects in prose | approves or rejects in prose |
 | #4 | `verdict REJECT`, `reply spec hash:.*mismatch` | `verdict REJECT`, `reply spec hash:.*mismatch` |
 
-The pattern is the same in both models: without the skill the review is
-plausible and wrong in all three directions — it approves a change whose gate was
-never run (#1), approves a diff that misses an AC and deletes a test (#2), and
-reviews code against a spec that moved underneath the prompt (#4). #3 is the only
-case the control ever passes, and it does so by lacking a verdict, which is close
-to what the skill requires for a different reason.
+The pattern is mostly the same in both models: without the skill the review is
+plausible and wrong in several directions — it approves a change whose gate was
+never run (#1), approves a diff that moves the spec underneath the prompt (#4),
+and answers #3 in prose. #2 is the exception: both models can spot a deleted test
+and a missing AC when the diff is small, so the control passes it. #3 is the only
+case the control passes by *not* answering, which is close to what the skill
+requires for a different reason.
+
+## Correction: `verdict` read capitalisation, not stance
+
+The first publication of this table counted 1/20 and 0/20 in the control arms.
+Those numbers were wrong, and they were wrong in the direction that flattered the
+skill.
+
+`verdict REJECT` required a line beginning with an uppercase `VERDICT:`. Both
+control arms wrote `Verdict: REJECT** — AC-2 is unimplemented…`: the stance, the
+evidence, the right answer, in sentence case. The assertion reported "no VERDICT:
+line in the reply", the rep failed, and the matrix credited the skill for a
+decision the control had already made. Seven reps were affected — five deepseek
+and two luna in #2 — and a later replay caught them because a reply that fails
+only on formatting is a harness bug, not a behaviour.
+
+The rows above are re-judged with `node scripts/replay-evals.mjs`, which
+re-evaluates the recorded transcripts without calling a model:
+
+```sh
+node scripts/replay-evals.mjs --skill review-code --case 2 --quiet
+```
+
+The with-skill arm did not move (40/40 before and after), and the current
+assertion reads the stance — `VERDICT`, `Verdict`, `Veredicto` or `Parecer`, in
+English or Portuguese — rather than the shouting. No new runs were made for this
+correction; the next full matrix re-run should reproduce 6/20 and 2/20, and if it
+does not, the difference belongs in this section.
 
 ## Parity with Promptfoo — the path, not the measurement
 

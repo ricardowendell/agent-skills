@@ -1,7 +1,7 @@
 ---
 id: SPEC-0002
 title: Text assertions when the reply is not in English
-status: draft
+status: implemented
 priority: P1
 created_at: 2026-11-02
 updated_at: 2026-11-02
@@ -11,7 +11,10 @@ source_docs:
 related_decisions: []
 depends_on: []
 blocks: []
-tests: []
+tests:
+  - node --test scripts/lib/evals/assertions.test.mjs
+  - node scripts/replay-evals.mjs --skill review-code --case 2 --quiet
+  - node scripts/run-evals.mjs --root skills --list --check
 ---
 
 # SPEC-0002: Text assertions when the reply is not in English
@@ -62,17 +65,18 @@ and no change to what any case expects of the agent.
 
 ## Flow
 
-1. Pick one of the two options below and record why in this spec.
-2. Apply it to `verdict` and to the stance patterns in the cases that have them.
-3. Add a case whose reply is deliberately non-English and whose expected outcome
-   follows from the decision.
-4. Document the limitation in the README's assertion section, whichever way it
-   goes.
+1. Split the question by what the assertion can know: a `verdict` line names one
+   of three stances, so it can be read in any language; a free-form regex cannot.
+2. Make `verdict` stance-aware, with a closed vocabulary the cases have evidence
+   for.
+3. Extend the one stance guard that has seen another language (`review-code` #3)
+   to name the words it has seen.
+4. Document the limit of `reply`/`noreply` in the README's assertion section.
 
 ## Data
 
-No new persistence. The decision is visible in the case that demonstrates it and
-in the README line.
+No new persistence. The vocabulary lives in `scripts/lib/evals/assertions.mjs`,
+the limit is stated in the README, and the evaluator's unit test is the proof.
 
 ## UI Notes
 
@@ -80,35 +84,49 @@ Not applicable.
 
 ## Acceptance Criteria
 
-- AC-1 — The spec records the decision (language-agnostic assertions, or record
-  the limitation and leave the assertions English) with the reason.
-- AC-2 — If language-agnostic: `verdict` accepts the stance in the languages
-  observed, and a case proves it by passing with a non-English reply that carries
-  the right stance and failing with one that carries the wrong stance.
-- AC-2' — If recorded as a limitation: the README says that a reply in another
-  language is outside what the text assertions check, and the judge is the only
-  semantic reading; a case marks that state.
+- AC-1 — The decision is recorded: stance-bearing assertions are language-
+  agnostic; free-form `reply`/`noreply` regexes remain the case author's
+  vocabulary, with the limit stated in the README.
+- AC-2 — `verdict` reads the stance rather than the spelling: `VERDICT`,
+  `Verdict`, `Veredicto` and `Parecer` are the same line, accents and markdown
+  decoration are ignored, and a token outside the closed vocabulary still
+  compares literally. Proven by a unit test in `assertions.test.mjs` that passes
+  a Portuguese reply carrying the right stance and fails one carrying the wrong
+  stance.
+- AC-2' — The README says a reply in a language a `reply`/`noreply` pattern does
+  not list is invisible to it, and that `--judge` is the only semantic reading.
 - AC-3 — No case gains an instruction appended to its prompt. Verified by
-  diffing the `prompt:` lines.
+  diffing the `prompt:` lines (none changed).
 - AC-4 — `node scripts/run-evals.mjs --root skills --list --check` passes.
 
-## Open Questions
+**Why the proof is a unit test and not an eval case.** A case cannot make the
+agent answer in Portuguese without appending an instruction, which AC-3 forbids
+and the README forbids in principle. The evaluator is therefore tested where the
+language can be set deliberately.
 
-**Blocking — which option.** Two are defensible and they cost differently:
+## Decision
 
-- **Language-agnostic assertions.** A small map of the stance vocabulary
-  (`verdict`/`veredicto`, `withheld`/`retido`, …) inside the assertion evaluator.
-  Cost: the map must be maintained, and a loose token can pass a reply the case
-  meant to fail. It also puts translation knowledge in the harness, which is the
-  layer that is supposed to know nothing about wording.
-- **Record the limitation.** Keep assertions English, say in the README that a
-  non-English reply is judged only by the optional `--judge`, and accept that a
-  case can be green without the token. Cost: a green case can mean less than it
-  looks, which is the exact failure this task was opened for.
+**Stance-bearing assertions are language-agnostic; free-form regexes are not, and
+the README says so.**
 
-Evidence favours the second on frequency (one reply in 392) and the first on
-severity (it happened in a control arm, where a false pass is the whole point of
-the measurement). The decision needs to be made before this leaves `draft`.
+`verdict` gates a decision from a closed set — APPROVE, REJECT, WITHHELD — so it
+can read the word rather than the spelling. The vocabulary is a short list in
+`assertions.mjs`, seeded with the English and Portuguese words the corpus has
+actually produced, and an unknown word still compares literally, so nothing is
+guessed and the list grows only on evidence.
+
+`reply`/`noreply` stay as written by the case author. There is no closed set to
+read them against, and a synonym map covering a free-form pattern would be a
+language model in the harness — the opposite of what this layer is for. The cost
+is stated rather than hidden: a green case means the listed words were absent,
+not that the stance was absent. `review-code` #3, the guard this task was
+opened for, therefore names the stance in both languages it has seen.
+
+The reason to split instead of choosing one side: frequency favoured recording
+the limitation (one real reply in 392 transcripts), severity favoured fixing it
+(the false pass happened in a control arm, where it costs the measurement). The
+split buys the severity fix where it is cheap and keeps the harness free of
+translation knowledge where it is not.
 
 ## Prompt Notes
 
