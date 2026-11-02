@@ -1,0 +1,5 @@
+check: lint
+
+lint:
+  node --check src/big.js
+  node --check src/small.js

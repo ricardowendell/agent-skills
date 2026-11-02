@@ -1,13 +1,14 @@
 # Evals
 
 A fixture in `references/evals/<n>/` is copied into the scratch repo before the
-prompt runs. Cases 1, 2 and 5 are a small JavaScript project with a linter config
-and a task runner; case 3 has no harness at all.
+prompt runs. Cases 1, 2, 5 and 6 are a small JavaScript project with a linter
+config and a task runner; case 3 has no harness at all.
 
 The runner is non-interactive: nothing can answer the approval step, and the
 skill treats an unanswered approval as "not approved". Case 1 therefore asserts
-the proposal-and-stop path; the apply-after-approval path stays manual until the
-runner can stage a reply.
+the proposal-and-stop path. Case 6 stages the yes in the prompt — the user's own
+message — and asserts the other half: measured 3/3, each run halved `max-lines`
+(400 → 200) and left the source and the rest of the harness untouched.
 
 Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `- expect:` (human-checked), `- assert: <kind> <arg>` (machine-checked; the full kind list is in the README), `- status: manual` (recorded, not run), `- needs: gates` (skipped at `--level behavior`).
 
@@ -59,3 +60,17 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - assert: unchanged justfile
    - assert: unchanged AGENTS.md
    - assert: reply (?:split|refactor|module)
+
+6. **Apply the ratchet when the prompt grants approval.**
+   - prompt: Tighten the harness and apply the change — I approve it.
+   - why: the other half of case 1; here the user says yes in the same message. Measured 3/3: each run measured the headroom, halved `max-lines` (400 → 200), left `src/` untouched and named the revert. No skill-text change was needed.
+   - expect: Measures the headroom before changing anything.
+   - expect: Applies exactly one tightening to `eslint.config.js`, not to the source.
+   - expect: Reports the sensor, the old and new value, and the gates it ran.
+   - expect: Watch for: stopping as if approval were missing, or refactoring source.
+   - assert: changed eslint.config.js
+   - assert: unchanged src/big.js
+   - assert: unchanged src/small.js
+   - assert: unchanged justfile
+   - assert: unchanged package.json
+   - assert: unchanged AGENTS.md

@@ -1,10 +1,10 @@
 ---
 id: TASK-6
 title: 'bootstrap-project-harness: medir o caminho harness completo -> parar'
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-11-01T22:53:00Z'
-updated_date: '2026-11-02T15:23:00Z'
+updated_date: '2026-11-02T16:05:00Z'
 labels: []
 dependencies: []
 ordinal: 6000
@@ -19,7 +19,7 @@ O caso 7 de bootstrap-project-harness registra o bloqueio no topo de references/
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [x] #1 um caso usa git.json com commit base e chega ao ramo 'harness completo, parar'
-- [ ] #2 o passo de aprovação tem uma resposta estagiada, explícita no caso
+- [x] #2 o passo de aprovação tem uma resposta estagiada, explícita no caso
 - [x] #3 os casos manuais que viraram executáveis saem de status: manual
 <!-- AC:END -->
 
@@ -63,6 +63,22 @@ created: 2026-11-02T15:23:00Z
 ---
 
 Implementado em 2026-11-02 (SPEC-0003). Resultado medido: caso 14 passou de 5/12 para 12/12 paradas sem tocar arquivo; caso 15 (quase completo, sem lefthook.yml) 3/3 — nomeia o arquivo, cria, não mexe no resto. Ambos saíram de status: manual. A primeira pontuação do caso 14 leu 9/12 porque a regex da resposta não aceitava 'state: complete', a linha que o próprio script imprime; corrigida a asserção, os mesmos transcritos re-julgam 12/12. AC #2 (resposta estagiada para o passo de aprovação) fica aberto: o caminho 'completo' agora termina antes de qualquer pergunta, então ele só vale para o bootstrap de repo vazio, que é outro caso.
+
+---
+
+created: 2026-11-02T15:50:00Z
+
+---
+
+Groomed em 2026-11-02: docs/specs/SPEC-0005-approval-given-apply.md (ready). A AC #2 fala do 'passo de aprovação', que não existe no bootstrap — o único passo assim é o do tighten-harness (propõe, espera, e aprovação ausente não é aprovação). O bootstrap só tem a entrevista de produto, interativa por definição. Decisão registrada: a aprovação vai no próprio prompt ('I approve'), sem segundo turno no runner e sem mudança de formato. O caso novo #6 mede a metade que falta: com aprovação explícita, aplica o ratchet e não mexe no source; o caso 1 continua medindo a metade sem resposta. A TASK-6 só fecha quando o caso existir e a taxa estiver medida.
+
+---
+
+created: 2026-11-02T16:05:00Z
+
+---
+
+Implementado em 2026-11-02 (SPEC-0005). Caso 6 do tighten-harness, com fixture copiado do caso 1 e justfile sem dependências. Medido 3/3: cada run mediu o headroom, aplicou um único ratchet (max-lines 400 -> 200), deixou src/ intocado e nomeou o revert. O agente leu a aprovação explícita do prompt como aprovação mesmo em run não interativo, então a frase condicional do SKILL.md não foi necessária e o texto não mudou. Caso runnable; totais 64 casos, 59 executáveis, 5 manuais. O preâmbulo do evals.md que dizia que o caminho de aplicar era manual foi corrigido. AC #2 fechada: a resposta estagiada é o próprio prompt.
 
 ---
 <!-- COMMENTS:END -->
