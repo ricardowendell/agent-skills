@@ -65,6 +65,7 @@ import { scrubEnv } from "./lib/evals/agent.mjs"
 import { stageFixture, stageSkill, makeScratch, denySkillTool } from "./lib/evals/fixture.mjs"
 import { summarize, aggregateReps, PASSED, UNSCORED } from "./lib/evals/result.mjs"
 import { executeCase } from "./lib/evals/execute.mjs"
+import { createRun } from "./lib/evals/runs.mjs"
 import { summarizeRun, compareRuns, formatComparison, readRun } from "./lib/evals/report.mjs"
 
 const argv = process.argv.slice(2)
@@ -155,12 +156,20 @@ const OUT_ROOT = join(HOME, ".local/share/opencode/evals")
 // Each configuration writes beside the others: overwriting the same files would
 // destroy the comparison the arm exists to make.
 const slug = (s) => s.replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "").toLowerCase()
-const outDirFor = (skill) => {
-  const parts = [skill.id]
-  if (opt.model) parts.push(slug(opt.model))
-  if (opt.noSkill) parts.push("without-skill")
-  return join(OUT_ROOT, parts.join("--"))
-}
+// One directory per invocation, named after the selection it covers. Created
+// lazily so --list and dry runs never leave an empty run behind.
+const LABEL = opt.skill ?? (opt.tags.length ? opt.tags.join("+") : "all")
+let RUN = null
+const run = () =>
+  (RUN ??= createRun({
+    root: OUT_ROOT,
+    label: LABEL,
+    arm: opt.noSkill ? "without-skill" : "with-skill",
+    model: opt.model,
+    agent: opt.agent,
+    level: opt.level,
+    repoSha: repoSha(),
+  }))
 
 // Without --model the child inherits the config's `model`, so the artifact would
 // say "default" and a matrix row would be unattributable. Resolve it by hand.
@@ -291,9 +300,8 @@ console.log(
 
 async function runCase(skill, c, rep = null) {
   const scratch = makeScratch(skill.id, c.n)
-  const dir = outDirFor(skill)
-  mkdirSync(dir, { recursive: true })
-  const file = join(dir, `${c.n}${rep ? `.r${rep.index}` : ""}.md`)
+  const file = run().transcriptPath(skill.id, c.n, rep)
+  mkdirSync(dirname(file), { recursive: true })
   const started = Date.now()
   const meta = { skill: skill.id, case: c.n, repoSha: repoSha(), agent: opt.agent, model: EFFECTIVE_MODEL, level: opt.level }
 
@@ -324,7 +332,7 @@ async function runCase(skill, c, rep = null) {
         `## Expectations (human-checked)\n\n${c.expect.map((e) => `- [ ] ${e}`).join("\n")}\n\n` +
         `## Assertions (auto-checked)\n\nnot run at --level smoke\n`,
     )
-    return {
+    const staged = {
       skill: skill.id,
       case: c.n,
       status: "staged",
@@ -337,6 +345,8 @@ async function runCase(skill, c, rep = null) {
       meta: { repoSha: meta.repoSha, agent: meta.agent, model: meta.model, level: meta.level },
       transcript: file,
     }
+    run().writeResult(skill.id, c.n, staged)
+    return staged
   }
 
   let exec
@@ -355,7 +365,7 @@ async function runCase(skill, c, rep = null) {
     })
   } catch (e) {
     writeFailure("fixture failed to stage", `${e.message}\n${e.stderr ?? ""}`)
-    return {
+    const failed = {
       skill: skill.id,
       case: c.n,
       status: "failed",
@@ -366,6 +376,10 @@ async function runCase(skill, c, rep = null) {
       assertions: [],
       transcript: file,
     }
+    // Recorded, not skipped: the previous layout left the old JSON in place and
+    // a failed staging could be read as the last run's green.
+    run().writeResult(skill.id, c.n, failed)
+    return failed
   }
 
   const { result: core, out, err, code, pinned: staged, gate, asserts, verdict, judged, durationMs } = exec
@@ -379,7 +393,7 @@ async function runCase(skill, c, rep = null) {
     meta: { repoSha: meta.repoSha, agent: meta.agent, model: meta.model, level: meta.level },
     transcript: file,
   }
-  if (!rep) writeFileSync(join(dir, `${c.n}.json`), JSON.stringify(result, null, 2))
+  if (!rep) run().writeResult(skill.id, c.n, result)
 
   const assertBlock = asserts.length
     ? `## Assertions (auto-checked)\n\n${asserts
@@ -406,7 +420,7 @@ async function runCase(skill, c, rep = null) {
       "\n"
     appendFileSync(file, section)
     patchHeader(file, result)
-    if (!rep) writeFileSync(join(dir, `${c.n}.json`), JSON.stringify(result, null, 2))
+    if (!rep) run().writeResult(skill.id, c.n, result)
   }
   return result
 }
@@ -433,7 +447,6 @@ async function runCaseReps(skill, c) {
   if (times === 1) return reps[0]
 
   const agg = aggregateReps(reps, opt.minPass)
-  const dir = outDirFor(skill)
   const artifact = {
     skill: skill.id,
     case: c.n,
@@ -449,7 +462,7 @@ async function runCaseReps(skill, c) {
     meta: reps[0]?.meta ?? {},
     repetitions: reps,
   }
-  writeFileSync(join(dir, `${c.n}.json`), JSON.stringify(artifact, null, 2))
+  run().writeResult(skill.id, c.n, artifact)
   return {
     skill: skill.id,
     case: c.n,
@@ -463,7 +476,7 @@ async function runCaseReps(skill, c) {
     skillHash: artifact.skillHash,
     arm: artifact.arm,
     meta: artifact.meta,
-    transcript: join(dir, `${c.n}.r1.md`),
+    transcript: run().transcriptPath(skill.id, c.n, { index: 1 }),
     repLine,
   }
 }
@@ -496,6 +509,12 @@ console.log(
 if (skipped.length) console.log(`${skipped.length} case(s) skipped at --level ${opt.level} (needs: gates).`)
 
 const runFile = join(OUT_ROOT, "last-run.json")
+if (RUN) {
+  RUN.finish({
+    counts: { passed: totals.passed, failed: totals.failed, unscored: totals.unscored, staged: totals.staged ?? 0 },
+  })
+  console.error(`Run directory: ${RUN.dir}`)
+}
 const summary = summarizeRun({ results, repoSha: repoSha(), agent: opt.agent, model: EFFECTIVE_MODEL, level: opt.level, startedAt: new Date(startedAt).toISOString() })
 writeFileSync(runFile, JSON.stringify(summary, null, 2))
 console.log(`Run artifact: ${runFile}`)

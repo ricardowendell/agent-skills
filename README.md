@@ -376,14 +376,22 @@ per execution, same rule as the CLI.
 
 ### Artifacts and regressions
 
-Every case writes `<skill>/<n>.md` (transcript) and `<skill>/<n>.json` (status,
-per-assertion results, loaded skill, token and cost totals, duration, tool-call
-count, repo sha and model) under `~/.local/share/opencode/evals/`. The run writes
-`last-run.json`; `--save-baseline` keeps the current run as `baseline.json`, and
-the next full run compares against it automatically. A case that moves from
-`passed` to `failed` (or to `unscored`) is a regression and fails the run; a case
-that disappears from an explicit `--baseline` comparison is reported as missing
-rather than assumed fine.
+Every invocation writes its own directory,
+`~/.local/share/opencode/evals/runs/<timestamp>--<label>[--<model>][--without-skill]/`:
+
+- `manifest.json` — repo sha, agent, model, arm, level, start and finish, the
+  skill hash pinned for each case, and the run's counts.
+- `cases/<skill>--<n>/result.json` — status, per-assertion results, token and
+  cost totals, duration and tool-call count.
+- `cases/<skill>--<n>/transcript.md` (or `transcript.r<i>.md` per repetition).
+
+No two runs share a directory, so a staging failure cannot be read as the
+previous run's green, and a filtered run cannot leave stale cases beside fresh
+ones. `last-run.json` holds the most recent summary; `--save-baseline` keeps one
+as `baseline.json`, and the next full run compares against it automatically. A
+case that moves from `passed` to `failed` (or to `unscored`) is a regression and
+fails the run; a case that disappears from an explicit `--baseline` comparison is
+reported as missing rather than assumed fine.
 
 ## Optional companion skills
 

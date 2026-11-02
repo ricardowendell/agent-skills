@@ -48,9 +48,9 @@ document records. The README links to it instead of carrying the numbers.
   reading is an aggregate per arm, not a verdict per case — the same arm has
   already produced 2/3 and 3/3 on the same case, so three repetitions cannot
   separate a flake from a difference.
-- Delete each cell's directory before running it. A failed staging writes only
-  the transcript, not the per-case JSON, so a stale file from an earlier run
-  satisfies `reps` and `passed` while describing a different execution.
+- Each invocation writes its own run directory (`runs/<id>/manifest.json` plus
+  `cases/<skill>--<n>/result.json`), so no cell can read an earlier execution's
+  green. A failed staging records a failed result instead of leaving the old one.
 - Publish the table in `docs/evals/review-code-matrix.md`; the README gains a
   pointer and the command, not the numbers.
 - Path parity, not measurement parity: `review-code` #3 in both arms, three
@@ -82,10 +82,11 @@ and the eval plan artifact that repeat that claim. No other spec depends on it.
 ## Flow
 
 1. Confirm both models resolve and record their exact ids before running.
-2. Delete the four cell directories so every artifact belongs to this run.
+2. Start four separate invocations, one per cell, so each gets its own run
+   directory and its manifest says which model and arm it covered.
 3. Run the four cells, five repetitions each.
-4. Collect the 16 per-case JSONs and check `reps: 5`, `meta.model` and the file's
-   modification time against this run.
+4. Collect the 16 per-case results across the four run directories and check
+   `reps: 5` and that `meta.model` matches the run's manifest.
 5. Read each red cell's `reason` and attribute it to the assertion that failed.
 6. Run the parity smoke: `review-code` #3, two arms, three repetitions, through
    Promptfoo, and compare its classification with the runner's.
@@ -98,10 +99,12 @@ and the eval plan artifact that repeat that claim. No other spec depends on it.
 
 No persistence beyond existing artifacts:
 
-- `~/.local/share/opencode/evals/<skill>[--<model>][--without-skill]/<n>.json` —
-  per-case result with `reps`, `passed`, `passRate`, `reason`, `meta.model`.
-- The same directories' `<n>.r<i>.md` — one transcript per repetition, carrying
-  the pinned skill hash.
+- `~/.local/share/opencode/evals/runs/<id>/manifest.json` — model, arm, level,
+  repo sha, the pinned skill hash per case, and the run's counts.
+- `…/runs/<id>/cases/<skill>--<n>/result.json` — per-case result with `reps`,
+  `passed`, `passRate`, `reason`, `meta.model`.
+- `…/runs/<id>/cases/<skill>--<n>/transcript.r<i>.md` — one transcript per
+  repetition, carrying the pinned skill hash.
 - `docs/evals/review-code-matrix.md` — the published table and its commands.
 
 ## UI Notes
@@ -110,14 +113,17 @@ Not applicable: this spec has no user-facing surface.
 
 ## Acceptance Criteria
 
-- AC-1 — After the run, the four cell directories hold 16 per-case JSONs (4 cases
-  × 4 cells), each with `reps: 5`, `passed`, `passRate` and a `meta.model` that
-  matches its cell, and each modified during this run. Verified by reading them.
+- AC-1 — Four run directories exist for this matrix, each with a `manifest.json`
+  naming its model and arm, and 16 `result.json` files in total (4 cases × 4
+  runs), each with `reps: 5`, `passed`, `passRate` and a `meta.model` that matches
+  its manifest. Verified by reading them.
 - AC-2 — `docs/evals/review-code-matrix.md` reports, per model, the four cases
   per arm with `passed/5`, plus an aggregate per arm, plus which assertion failed
   in every red cell. Verified by inspection.
-- AC-3 — Re-running one cell reproduces its `passed` counts. If a cell moves, the
-  new number is written; it is not explained away. Verified by running it.
+- AC-3 — Re-running one cell lands within one repetition of the document's
+  count (a `4/5` cell may re-run as `3/5`). Both numbers are written and the
+  document states the observed spread; a difference larger than one repetition
+  is investigated rather than averaged away. Verified by running it.
 - AC-4 — The parity smoke (`review-code` #3, two arms, three repetitions through
   Promptfoo) classifies every run the same way the runner does. A difference is a
   defect in the path, not noise to tolerate. Verified by comparing both outputs.

@@ -30,6 +30,7 @@ import { homedir } from "node:os"
 import { parseCases } from "./lib/evals/parse.mjs"
 import { evaluateAssertions, replyText, skillGate, skillLoads } from "./lib/evals/assertions.mjs"
 import { classify } from "./lib/evals/result.mjs"
+import { listRuns } from "./lib/evals/runs.mjs"
 import { parseTranscript } from "./lib/evals/transcript.mjs"
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..")
@@ -82,12 +83,37 @@ const verdicts = []
 let scanned = 0
 let missing = 0
 
-for (const dir of readdirSync(opt.dir, { withFileTypes: true })) {
-  if (!dir.isDirectory()) continue
-  if (opt.skill && !dir.name.startsWith(opt.skill)) continue
-  for (const file of readdirSync(join(opt.dir, dir.name))) {
-    if (!file.endsWith(".md")) continue
-    const parsed = parseTranscript(readFileSync(join(opt.dir, dir.name, file), "utf8"))
+// Two layouts coexist: the flat `<skill>[--model][--arm]/<n>.md` written before
+// runs got their own directory, and `runs/<id>/cases/<n>/transcript*.md`.
+function transcriptPaths() {
+  const found = []
+  for (const dir of readdirSync(opt.dir, { withFileTypes: true })) {
+    if (!dir.isDirectory()) continue
+    if (dir.name === "runs") {
+      for (const run of listRuns(opt.dir)) {
+        const cases = join(run, "cases")
+        if (!existsSync(cases)) continue
+        for (const c of readdirSync(cases)) {
+          const cdir = join(cases, c)
+          if (!existsSync(cdir)) continue
+          for (const file of readdirSync(cdir)) {
+            if (file.startsWith("transcript") && file.endsWith(".md")) found.push({ label: `${run.split("/").pop()}/${c}/${file}`, path: join(cdir, file) })
+          }
+        }
+      }
+      continue
+    }
+    for (const file of readdirSync(join(opt.dir, dir.name))) {
+      if (file.endsWith(".md")) found.push({ label: `${dir.name}/${file}`, path: join(opt.dir, dir.name, file) })
+    }
+  }
+  return found
+}
+
+for (const { label, path } of transcriptPaths()) {
+  if (opt.skill && !label.includes(opt.skill)) continue
+  {
+    const parsed = parseTranscript(readFileSync(path, "utf8"))
     if (!parsed) continue
     if (opt.case && parsed.n !== opt.case) continue
     scanned++
@@ -101,7 +127,7 @@ for (const dir of readdirSync(opt.dir, { withFileTypes: true })) {
     if (!replayed.length || parsed.recorded === "staged") {
       // Nothing in the transcript decides this case; a verdict here would be
       // an artefact of the tool, not a difference in the run.
-      verdicts.push({ id: `${parsed.skill}#${parsed.n}`, file: `${dir.name}/${file}`, recorded: parsed.recorded, now: null, skipped: skipped.length, why: parsed.recorded === "staged" ? "smoke run" : "filesystem only" })
+      verdicts.push({ id: `${parsed.skill}#${parsed.n}`, file: label, recorded: parsed.recorded, now: null, skipped: skipped.length, why: parsed.recorded === "staged" ? "smoke run" : "filesystem only" })
       continue
     }
     const asserts = evaluateAssertions({ ...c, assert: replayed }, parsed.scratch, parsed.text, replyText(parsed.text), null)
@@ -114,7 +140,7 @@ for (const dir of readdirSync(opt.dir, { withFileTypes: true })) {
     const verdict = classify({ exit: parsed.exit, asserts, skillGate: gate })
     verdicts.push({
       id: `${parsed.skill}#${parsed.n}`,
-      file: `${dir.name}/${file}`,
+      file: label,
       recorded: parsed.recorded,
       now: verdict.status,
       reason: verdict.reason,
