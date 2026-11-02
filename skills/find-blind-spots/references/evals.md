@@ -1,7 +1,8 @@
 # Evals
 
-Representative prompts and the trajectory this skill should produce. No fixture:
-this skill interviews, it writes nothing.
+Representative prompts and the trajectory this skill should produce. A fixture in
+`references/evals/<n>/` is copied into the scratch repo before the prompt runs;
+case 4 is the plan to decompose, the rest interview the user directly.
 
 Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `- expect:` (human-checked), `- assert: <kind> <arg>` (machine-checked; the full kind list is in the README), `- status: manual` (recorded, not run), `- needs: gates` (skipped at `--level behavior`).
 
@@ -34,8 +35,11 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
 4. **Near-miss: the same plan, but to be decomposed, not challenged.**
    - prompt: Turn the plan in plan.md into tasks I can drop on the board.
    - tags: trigger
-   - status: manual
-   - why: same artefact and a planning verb; the deliverable is a task list, not an adversarial interview. Measured 2/3 then 1/3 loads at `--repeat 3`: the agent sometimes loads the skill to check, then says the request is a breakdown job. The reply was correct every time, so the routing assertion measures noise, not behaviour.
+   - why: same artefact and a planning verb; the deliverable is a task list, not an adversarial interview. The old `notskill` assertion tracked a load, and the load is noise: measured 3/3 with the skill loaded in 3/3 runs, every reply named the request a breakdown job, left `plan.md` untouched and wrote no spec or prompt. A load is recorded in the transcript and never asserted.
    - gate: off
    - expect: Does not start an interrogation of a plan the user only wants broken into tasks.
-   - assert: notskill find-blind-spots
+   - expect: Leaves the plan and the repo alone; the task list goes in the reply.
+   - assert: unchanged plan.md
+   - assert: nofile docs/specs/*
+   - assert: nofile docs/prompts/*
+   - assert: reply task

@@ -1,0 +1,6 @@
+{
+  "base": ".",
+  "branch": "docs/architecture-rewrite",
+  "message": "docs(architecture): describe the cache and the queue consumer",
+  "patch": "change.patch"
+}

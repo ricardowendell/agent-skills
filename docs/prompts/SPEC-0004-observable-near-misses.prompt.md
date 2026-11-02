@@ -1,6 +1,6 @@
 ---
 spec: SPEC-0004
-spec_sha: e45f9264ae0275b6397312f8d62ab84117875d99dbd23c6c8196d644ffe8574e
+spec_sha: edd3df2e494a675c8be2a2f8456db2a30b0181fc00443e69971642d2a15fe57f
 ---
 
 # Implementation Prompt: SPEC-0004 Observable outcomes for the near-misses

@@ -354,11 +354,12 @@ consulting a skill is the correct guardrail: `record-decision` answering
 "Postgres or SQLite?" may load the skill to find its own rule, and the case
 fails only if it files an ADR nobody decided.
 
-Where no other skill owns the prompt, even that is not stable: `find-blind-spots`
-#4 and `tighten-harness` #5 load the skill in one or two of three runs and then
-name the request as someone else's job. Both are `status: manual` with the
-measured load rate recorded, because the assertion would track the model's
-curiosity rather than its routing.
+Where no other skill owns the prompt, route on the outcome rather than the load:
+`find-blind-spots` #4, `tighten-harness` #5 and `audit-docs` #3 may each load the
+skill to check whether it applies, then decline the job. The load is recorded in
+`skillGate.loaded` and never asserted; the cases pass or fail on whether the plan,
+the lint threshold and the doc set were left alone. Measured 3/3 each, with the
+skill loaded in 3/3, 0/3 and 3/3 runs respectively.
 
 ### Replay
 

@@ -1,7 +1,7 @@
 # Evals
 
 A fixture in `references/evals/<n>/` is copied into the scratch repo before the
-prompt runs. Cases 1 and 2 are a small JavaScript project with a linter config
+prompt runs. Cases 1, 2 and 5 are a small JavaScript project with a linter config
 and a task runner; case 3 has no harness at all.
 
 The runner is non-interactive: nothing can answer the approval step, and the
@@ -51,8 +51,11 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
 5. **Near-miss: fixing the offending file, not the threshold.**
    - prompt: The linter says src/huge.js is too long — split it into smaller modules.
    - tags: trigger
-   - status: manual
-   - why: the same ceiling the skill reasons about, but the ask is source work, which this skill never does. Measured 1/3 then 1/3 loads at `--repeat 3`: every reply refused the config change and named the request as a refactor, so only the routing is unstable.
+   - why: the same ceiling the skill reasons about, but the ask is source work, which this skill never does. Measured 3/3 with no load: the reply splits the module and leaves the config, the task runner and `AGENTS.md` alone. The old `notskill` assertion tracked a load that does not change the outcome.
    - gate: off
    - expect: Does not turn a refactor request into a harness change.
-   - assert: notskill tighten-harness
+   - expect: Leaves the threshold and the task runner alone; splitting `src/huge.js` is the job.
+   - assert: unchanged eslint.config.js
+   - assert: unchanged justfile
+   - assert: unchanged AGENTS.md
+   - assert: reply (?:split|refactor|module)

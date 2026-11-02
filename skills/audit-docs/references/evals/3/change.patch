@@ -1,0 +1,30 @@
+diff --git a/docs/architecture.md b/docs/architecture.md
+index b448a28..fb5be92 100644
+--- a/docs/architecture.md
++++ b/docs/architecture.md
+@@ -2,16 +2,18 @@
+ 
+ ## Request lifecycle
+ 
+-HTTP requests enter through the edge proxy, are authenticated by the session
+-service, and are handed to the API server. The API reads and writes Postgres
+-directly. There is no cache: every read goes to the database.
++HTTP requests enter through the edge proxy and are authenticated by the session
++service. The API server reads through a Redis cache in front of Postgres; a miss
++loads from the database and fills the cache for five minutes.
+ 
+ ## Background work
+ 
+-A scheduled worker polls the outbox table every minute and delivers queued email.
+-Failures are retried three times with a fixed delay.
++The API writes email jobs to Postgres. A queue consumer picks them up with
++`SELECT ... FOR UPDATE SKIP LOCKED`, delivers them, and marks the row done.
++Redelivery after a crash is expected, so handlers must be idempotent.
+ 
+ ## Deployments
+ 
+-The API and the worker deploy from the same image. A deploy runs migrations
+-first, then replaces instances one at a time behind the proxy.
++The API and the consumer deploy from the same image. A deploy runs migrations
++first, then replaces instances one at a time behind the proxy. The cache is not
++flushed: entries expire on their own.

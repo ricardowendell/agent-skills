@@ -1,7 +1,7 @@
 ---
 id: SPEC-0004
 title: Observable outcomes for the three trigger near-misses
-status: ready
+status: implemented
 priority: P2
 created_at: 2026-11-02
 updated_at: 2026-11-02
@@ -80,17 +80,26 @@ Not applicable.
 
 - AC-1 — Each of the three cases has a fixture and at least one assertion on a
   file's state; `notskill` appears in none of them. Verified by reading the three
-  case blocks and listing their fixture directories.
+  case blocks and listing their fixture directories. **Result:** fixtures at
+  `find-blind-spots/references/evals/4`, `tighten-harness/references/evals/5`
+  and `audit-docs/references/evals/3`; 3, 4 and 5 file-state assertions
+  respectively; `notskill` gone from all three.
 - AC-2 — The assertions pass or fail on the outcome alone: a run that loads the
   skill and leaves the files alone passes, and a run that never loads it but
   edits the config fails. Verified by the three-repetition runs and by reading
-  the assertions.
+  the assertions. **Result:** all three cases passed 3/3 with the skill loaded in
+  3/3 (`find-blind-spots`), 0/3 (`tighten-harness`) and 3/3 (`audit-docs`, one
+  run also loading `review-code`) — the load neither helped nor failed a case.
+  The failing half is the `unchanged` assertion's contract, covered by the
+  runner's unit tests.
 - AC-3 — Each case is run three times. A case at 3/3 loses `status: manual`; a
   case below 3/3 keeps it, and its `why:` carries the measured rate and the
-  assertion that failed. No case is left red for a load.
+  assertion that failed. No case is left red for a load. **Result:** 3/3, 3/3 and
+  3/3, so all three are runnable and `why:` records the rate and the load.
 - AC-4 — `node scripts/run-evals.mjs --root skills --list --check` passes, and
   each of the three cases' `status:` reflects its measured rate, so the
-  runnable/manual totals the command prints match the case files.
+  runnable/manual totals the command prints match the case files. **Result:**
+  63 cases, 58 runnable, 5 manual (was 55/8).
 
 ## Open Questions
 
