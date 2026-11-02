@@ -1,6 +1,6 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { parseTranscript } from "./transcript.mjs"
+import { parseTranscript, renderHeader, patchStatus } from "./transcript.mjs"
 
 // A reply that itself contains a fenced block: splitting the file on the fence
 // marker used to cut the transcript short, and every later event disappeared.
@@ -51,4 +51,45 @@ test("a control-arm run is recognised, and a non-numeric exit is kept", () => {
 
 test("a file without the eval header is not a transcript", () => {
   assert.equal(parseTranscript("# something else\n"), null)
+})
+
+test("the header the runner writes parses back with the same identity", () => {
+  const md =
+    renderHeader({
+      skill: "demo",
+      n: 7,
+      prompt: "do it",
+      scratch: "/tmp/x",
+      exit: 0,
+      status: "failed",
+      reason: "1/2 assertions failed",
+      skillLine: "**Skill:** loaded (from the scratch)",
+      skillHash: "abc",
+      meta: { repoSha: "r", agent: "build", model: "m", level: "behavior" },
+      durationMs: 12,
+    }) + '\n\n## Transcript\n\n```\n{"type":"text","part":{"text":"hi"}}\n```\n'
+
+  const t = parseTranscript(md)
+  assert.equal(t.skill, "demo")
+  assert.equal(t.n, 7)
+  assert.equal(t.scratch, "/tmp/x")
+  assert.equal(t.exit, 0)
+  assert.equal(t.recorded, "failed")
+  assert.equal(t.arm, "with-skill")
+  assert.match(t.text, /"text":"hi"/)
+})
+
+test("patchStatus rewrites only the status line", () => {
+  const before = renderHeader({ skill: "demo", n: 1, prompt: "p", scratch: "/tmp", status: "passed" })
+  const after = patchStatus(before, "failed", "judge: expectation 2 not met")
+  assert.match(after, /\*\*Status:\*\* failed — judge: expectation 2 not met/)
+  assert.equal(parseTranscript(after).recorded, "failed")
+  assert.equal(after.replace(/^\*\*Status:\*\*.*$/m, ""), before.replace(/^\*\*Status:\*\*.*$/m, ""))
+})
+
+test("a staged header parses without a transcript body", () => {
+  const md = renderHeader({ skill: "demo", n: 2, prompt: "p", scratch: "/tmp", status: "staged", reason: "staged only (smoke)" })
+  const t = parseTranscript(md)
+  assert.equal(t.recorded, "staged")
+  assert.equal(t.text, "")
 })

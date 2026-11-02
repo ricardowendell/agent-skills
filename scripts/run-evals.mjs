@@ -67,6 +67,7 @@ import { summarize, aggregateReps, caseResult, PASSED, UNSCORED } from "./lib/ev
 import { executeCase } from "./lib/evals/execute.mjs"
 import { createRun } from "./lib/evals/runs.mjs"
 import { summarizeRun, compareRuns, formatComparison, readRun } from "./lib/evals/report.mjs"
+import { renderHeader, patchStatus } from "./lib/evals/transcript.mjs"
 
 const argv = process.argv.slice(2)
 const opt = {
@@ -347,8 +348,8 @@ async function runCase(skill, c, rep = null) {
   const writeFailure = (reason, err = "") => {
     writeFileSync(
       file,
-      `# Eval: ${skill.id} case ${c.n}\n\n**Prompt:** ${c.prompt}\n\n**Scratch:** ${scratch}\n` +
-        `**Status:** failed\n**Reason:** ${reason}\n\n\`\`\`\n${err}\n\`\`\`\n`,
+      renderHeader({ skill: skill.id, n: c.n, prompt: c.prompt, scratch, status: "failed", reason }) +
+        `\n\n\`\`\`\n${err}\n\`\`\`\n`,
     )
   }
 
@@ -366,9 +367,17 @@ async function runCase(skill, c, rep = null) {
     }
     writeFileSync(
       file,
-      `# Eval: ${skill.id} case ${c.n}\n\n**Prompt:** ${c.prompt}\n\n**Scratch:** ${scratch}\n**Status:** staged\n` +
-        `**Skill hash:** ${pinned.hash}\n**Repo:** ${meta.repoSha}  **Agent:** ${meta.agent}  **Level:** smoke\n\n` +
-        `## Expectations (human-checked)\n\n${c.expect.map((e) => `- [ ] ${e}`).join("\n")}\n\n` +
+      renderHeader({
+        skill: skill.id,
+        n: c.n,
+        prompt: c.prompt,
+        scratch,
+        status: "staged",
+        reason: "staged only (smoke)",
+        skillHash: pinned.hash,
+        meta: { repoSha: meta.repoSha, agent: meta.agent, level: "smoke" },
+      }) +
+        `\n\n## Expectations (human-checked)\n\n${c.expect.map((e) => `- [ ] ${e}`).join("\n")}\n\n` +
         `## Assertions (auto-checked)\n\nnot run at --level smoke\n`,
     )
     const staged = caseResult(skill, c, {
@@ -433,11 +442,20 @@ async function runCase(skill, c, rep = null) {
     : "## Assertions (auto-checked)\n\nnone — case is unscored\n\n"
   writeFileSync(
     file,
-    `# Eval: ${skill.id} case ${c.n}\n\n**Prompt:** ${c.prompt}\n\n` +
-      `**Scratch:** ${scratch}\n**Exit:** ${code}\n**Status:** ${verdict.status}${verdict.reason ? ` — ${verdict.reason}` : ""}\n` +
-      `${skillLabel}\n**Skill hash:** ${staged.hash}\n` +
-      `**Repo:** ${meta.repoSha}  **Agent:** ${meta.agent}  **Model:** ${meta.model}  **Level:** ${meta.level}  **Duration:** ${durationMs}ms\n\n` +
-      `## Expectations (human-checked)\n\n${c.expect.map((e) => `- [ ] ${e}`).join("\n")}\n\n` +
+    renderHeader({
+      skill: skill.id,
+      n: c.n,
+      prompt: c.prompt,
+      scratch,
+      exit: code,
+      status: verdict.status,
+      reason: verdict.reason,
+      skillLine: skillLabel,
+      skillHash: staged.hash,
+      meta: { repoSha: meta.repoSha, agent: meta.agent, model: meta.model, level: meta.level },
+      durationMs,
+    }) +
+      `\n\n## Expectations (human-checked)\n\n${c.expect.map((e) => `- [ ] ${e}`).join("\n")}\n\n` +
       assertBlock +
       `## Transcript\n\n\`\`\`\n${out}\n\`\`\`\n\n${err ? `## stderr\n\n\`\`\`\n${err}\n\`\`\`\n` : ""}`,
   )
@@ -459,8 +477,7 @@ async function runCase(skill, c, rep = null) {
 // The header is written before the judge runs, so the status line has to be
 // rewritten once the semantic verdict lands.
 function patchHeader(file, { status, reason }) {
-  const md = readFileSync(file, "utf8").replace(/^\*\*Status:\*\*.*$/m, `**Status:** ${status}${reason ? ` — ${reason}` : ""}`)
-  writeFileSync(file, md)
+  writeFileSync(file, patchStatus(readFileSync(file, "utf8"), status, reason))
 }
 
 // Repetitions exist because one verdict from a non-deterministic agent is one
