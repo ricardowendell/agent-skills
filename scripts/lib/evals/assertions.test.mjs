@@ -114,9 +114,13 @@ test("verdict reads the stance, not the language", () => {
   assert.equal(one({ kind: "verdict", arg: "APPROVE" }, "/tmp", ok).pass, true)
   const hold = transcript({ text: "VEREDICTO: **Retido** — falta a spec." })
   assert.equal(one({ kind: "verdict", arg: "WITHHELD" }, "/tmp", hold).pass, true)
-  // A word below the line is not the verdict.
+  // A word below the line is not the verdict, unless the label is a heading.
   const late = transcript({ text: "VERDICT:\n\nI cannot approve this." })
   assert.equal(one({ kind: "verdict", arg: "APPROVE" }, "/tmp", late).pass, false)
+  const heading = transcript({ text: "### Verdict\n\n**Request changes — do not merge yet.**" })
+  assert.equal(one({ kind: "verdict", arg: "REJECT" }, "/tmp", heading).pass, true)
+  const headingOk = transcript({ text: "## Review\n\n**APPROVED**" })
+  assert.equal(one({ kind: "verdict", arg: "APPROVE" }, "/tmp", headingOk).pass, false)
 })
 
 test("an invalid regex fails with a reason instead of throwing", () => {

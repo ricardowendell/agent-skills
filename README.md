@@ -252,7 +252,8 @@ evidence, never a guess.
 A free-form `reply`/`noreply` regex carries only the words its author wrote. A
 reply in another language that the pattern does not list is invisible to it,
 which is why the approval guard in `review-code` #3 spells out the stance in
-both languages it has seen. That is a limitation, not a pass: a green case means
+both languages it has seen and reads it as a heading or in bold, not only after
+a `Verdict:` label. That is a limitation, not a pass: a green case means
 the listed words were absent, and `--judge` is the only reading that gets the
 meaning. Nothing appends an instruction to make the agent answer in English,
 since a run made cheaper or more convenient is a different test.

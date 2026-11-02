@@ -187,10 +187,12 @@ function check(kind, arg, { scratch, out, text, snapshot }) {
 
   if (kind === "verdict") {
     // Tolerate markdown decoration: the contract is the stance, not the styling.
-    const label = /^\s*(?:[#>*_`-]+\s*)*(?:verdict|veredicto|parecer)\s*:\s*/im.exec(text)
+    const label = /^\s*(?:[#>*_`-]+\s*)*(?:verdict|veredicto|parecer)\s*:?\s*/im.exec(text)
     if (!label) return push(false, "no VERDICT: line in the reply")
-    // Only the rest of that line counts: a word further down is not the verdict.
-    const rest = text.slice(label.index + label[0].length).split("\n")[0]
+    // Only the rest of that line counts, or the next one when the label is a
+    // heading — a word further down the reply is prose, not the verdict.
+    const after = text.slice(label.index + label[0].length).split("\n")
+    const rest = (after[0].trim() || after.slice(1).find((l) => l.trim()) || "").trim()
     const got = stance(rest)
     if (!got) return push(false, "VERDICT: line names no stance")
     return push(got === stance(arg), `got ${got}`)

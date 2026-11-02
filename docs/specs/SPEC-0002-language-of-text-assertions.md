@@ -119,8 +119,11 @@ guessed and the list grows only on evidence.
 read them against, and a synonym map covering a free-form pattern would be a
 language model in the harness — the opposite of what this layer is for. The cost
 is stated rather than hidden: a green case means the listed words were absent,
-not that the stance was absent. `review-code` #3, the guard this task was
-opened for, therefore names the stance in both languages it has seen.
+not that the stance was absent. `review-code` #3, the guard this task was opened
+for, therefore names the stance in both languages it has seen, and matches it as
+a heading or in emphasis as well as after a label — the control wrote
+`## Review: **Request changes**` and `**Request changes** — one issue found`,
+and both slipped through the label-only version.
 
 The reason to split instead of choosing one side: frequency favoured recording
 the limitation (one real reply in 392 transcripts), severity favoured fixing it
