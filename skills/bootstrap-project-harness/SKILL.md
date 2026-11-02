@@ -70,11 +70,30 @@ Check the current directory, then pick one of four states:
 | Empty               | no `.git`, no source            | `git init`, full bootstrap      |
 | Project, no harness | code exists, no `AGENTS.md`     | add sensors + docs skeleton     |
 | Partial harness     | some sensors exist, audit fails | complete only the missing items |
-| Complete harness    | audit passes                    | stop                            |
+| Complete harness    | files present, smoke gate passes | stop                           |
 
-Partial vs complete is read straight off the audit (does `lefthook.yml`, `.prettierrc`, etc. exist) — there is no stored state or version marker.
+"Complete" has two halves, and neither needs an install:
+
+1. **Files present** — the sensors the stack calls for (`lefthook.yml`,
+   `.prettierrc`, `eslint.config.js` or the Python equivalents), the task runner,
+   `AGENTS.md`, and the `docs/` skeleton.
+2. **Smoke gate** — `just smoke` (or the repo's equivalent) exits 0. It parses the
+   configs, checks the docs tree and syntax-checks the files that need no build.
+   It is deliberately not the full suite.
+
+A full toolchain install is not part of the test: a fresh clone never has one, and
+completeness must be decidable before it. A missing `node_modules`, lockfile, or
+installed hook binary does not make a harness partial — those are what `install`
+produces. A repo without a smoke command is partial until one exists — add it as
+the first fixing step, then re-run it.
 
 ## Step by Step
+
+**Before step 1:** decide the state from the table above, and stop there if it is
+complete — files present and the smoke gate passing. Do not run the steps below
+to "verify" what the table already told you, and do not count installed hooks,
+`node_modules` or a lockfile as a gap: they are install output, and the smoke gate
+is written to run without them.
 
 **Before starting:** Create a TodoWrite with each step as a separate item. Mark `in_progress` only when actively working on that step, and `completed` only after that step's audit check passes.
 

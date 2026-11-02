@@ -28,6 +28,11 @@ format-check:
 docs-check:
     bun run docs:check
 
+smoke:
+    node docs-check.mjs
+    node --check docs-check.mjs
+    node --check spec-sha.mjs
+
 clean:
     rm -rf .next node_modules
 

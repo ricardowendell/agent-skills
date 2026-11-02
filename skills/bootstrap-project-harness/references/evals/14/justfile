@@ -1,0 +1,40 @@
+dev:
+    node src/index.js
+
+check:
+    node --check src/index.js && node --check test/index.test.mjs
+    node docs-check.mjs
+
+ci: check test
+
+typecheck:
+    node --check src/index.js && node --check test/index.test.mjs
+
+lint:
+    node --check src/index.js && node --check test/index.test.mjs
+
+test:
+    node --test
+
+test-watch:
+    node --test --watch
+
+format:
+    true
+
+format-check:
+    true:check
+
+docs-check:
+    node docs-check.mjs
+
+smoke:
+    node docs-check.mjs
+    node --check docs-check.mjs
+    node --check spec-sha.mjs
+
+clean:
+    rm -rf .next node_modules
+
+fresh: clean
+    true

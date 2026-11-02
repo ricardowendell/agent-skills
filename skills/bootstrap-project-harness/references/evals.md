@@ -150,3 +150,21 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - gate: off
    - expect: Does not re-bootstrap a harness that is already in place.
    - assert: notskill bootstrap-project-harness
+
+14. **Complete harness: stop instead of rebuilding it.**
+   - prompt: Set up the harness here.
+   - tags: harness-state
+   - status: manual
+   - why: a git repo whose files are all present, whose smoke gate and full `just check` both exit 0 without an install, with source and tests. The state table says a complete harness gets a stop. Measured across four rounds of three repetitions: the stop happened in 5 of 12 runs. The other runs audited against the canonical templates and called trimmed files "stubs", then rewrote them — so the remaining gap is the model's overreach, not the fixture or the definition.
+   - expect: Decides completeness from the files plus `just smoke`, not from a missing toolchain.
+   - expect: Changes nothing: no new config, no duplicated hooks, no rewritten `AGENTS.md`.
+   - expect: Points at `tighten-harness` if the user wants to raise the bar.
+   - expect: Watch for: installing the toolchain to decide, or re-writing files that already pass the smoke.
+   - assert: unchanged lefthook.yml
+   - assert: unchanged justfile
+   - assert: unchanged eslint.config.js
+   - assert: unchanged .github/workflows/ci.yml
+   - assert: unchanged AGENTS.md
+   - assert: unchanged docs/pipeline.md
+   - assert: nofile .husky
+   - assert: reply complete harness|already complete|already (?:has|is)|nothing to (?:add|change|do)|no changes

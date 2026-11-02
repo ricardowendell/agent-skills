@@ -1,0 +1,33 @@
+pre-commit:
+  commands:
+    sensitive-files:
+      run: |
+        staged=$(git diff --cached --name-only)
+        for f in $staged; do
+          case "$f" in
+            *.env|*.env.*|*.db|data/*)
+              echo "ERROR: $f looks sensitive — remove it from the stage."
+              exit 1
+              ;;
+          esac
+        done
+    typecheck:
+      run: node --check src/index.js
+    lint:
+      run: node --check src/index.js && node --check test/index.test.mjs
+    security:
+      run: true
+
+pre-push:
+  commands:
+    test:
+      run: node --test
+    build:
+      run: true
+    docs-check:
+      run: node docs-check.mjs
+
+commit-msg:
+  commands:
+    commitlint:
+      run: true
