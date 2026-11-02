@@ -1,10 +1,10 @@
 ---
 id: TASK-9
 title: 'eval: provar melhoria de skill com um caso que ela ainda não passa'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-02T18:30:00Z'
-updated_date: '2026-11-02T19:40:00Z'
+updated_date: '2026-11-02T20:05:00Z'
 labels: []
 dependencies: []
 ordinal: 9000
@@ -32,11 +32,11 @@ Custo: um caso de comportamento custa 20 a 60 s de agente. Três casos com três
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [x] #1 baseline congelado e registrado: sha da skill, modelo, fixtures, assertions, executor
-- [ ] #2 um caso reprovado de forma reproduzível pela skill atual, com falha observável em arquivo/estado e prova de que o fixture não é a causa
-- [ ] #3 uma edição única no SKILL.md ou numa referência, em commit separado do caso
-- [ ] #4 re-medição com o mesmo modelo, nível e repetições, com antes/depois por caso no comentário
+- [x] #2 um caso reprovado de forma reproduzível pela skill atual, com falha observável em arquivo/estado e prova de que o fixture não é a causa
+- [x] #3 uma edição única no SKILL.md ou numa referência, em commit separado do caso
+- [x] #4 re-medição com o mesmo modelo, nível e repetições, com antes/depois por caso no comentário
 - [x] #5 melhoria descartada se a edição só fizer o artefato satisfazer o template: a skill tem de pedir o comportamento
-- [ ] #6 limitação de comparação não-cega declarada no resultado
+- [x] #6 limitação de comparação não-cega declarada no resultado
 <!-- AC:END -->
 
 ## Comments
@@ -72,4 +72,17 @@ Hipótese refutada. Duas razões medidas: a skill de base já copia os ACs liter
 ---
 
 Troca de alvo em 2026-11-02, para `implement-from-prompt`. Motivo medido: dos seis casos dela, três são manuais, dois medem triggering e um exercita implementação. A skill anterior está bem coberta; esta não está. AC-1 e AC-5 continuam válidos do ciclo anterior; AC-2 segue aberto e é o trabalho real.
+---
+
+Primeira melhoria medida, em 2026-11-02.
+
+Caso novo `implement-from-prompt` #8: o prompt manda estender `src/format.js` e reusar `formatAmount`, e nenhum dos dois existe. Baseline congelado em sha256 e31b9252. Medido: **0/3** — as três repetições carregaram a skill, listaram a árvore, viram que o módulo não existia e o criaram mesmo assim, escrevendo testes para comportamento inventado e marcando a spec `implemented`. A Safeguards do próprio prompt dizia "do not invent a new module".
+
+Edição única no passo 3: todo módulo, arquivo ou helper que o prompt manda estender, reusar ou construir precisa existir antes de começar; se não existir, é lacuna bloqueante e o trabalho para. A distinção que preserva o caminho normal: arquivo que o prompt manda **adicionar** não é pré-requisito.
+
+Depois da edição: **5/5 corretas** entre as execuções que carregaram a skill. Sem regressão em #1 (caminho comum) 2/2 e #7 (gate vermelho) 2/2.
+
+Limite da amostra: as repetições não são idênticas (3 antes, 5 depois), então o número é 0/3 contra 5/5-entre-carregadas, não uma taxa. Limitação de cegueira: eu escolhi o caso e escrevi a edição; o que sustenta o resultado não é a minha leitura, e sim asserção automática de estado — `nofile src/format.js`, spec intocada — mais o transcript, que mostra a ausência de qualquer `write`.
+
+Achado separado, não corrigido aqui: 2 de 8 execuções depois da mudança não carregaram a skill, apesar de o prompt dizer literalmente "Implement docs/prompts/...". O caso #8 fica vermelho por isso, e a taxa de near-miss pede task própria. Os casos #5 e #6 já medem triggering, então o dado deveria aparecer lá também.
 <!-- COMMENTS:END -->
