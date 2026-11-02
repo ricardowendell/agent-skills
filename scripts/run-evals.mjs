@@ -92,23 +92,35 @@ const opt = {
   minPass: 1,
   tags: [],
 }
+const unknown = []
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i]
-  if (a === "--skill") opt.skill = argv[++i]
-  else if (a === "--case") opt.case = Number(argv[++i])
+  // A flag's value is the next token; a token that starts with `--` is the next
+  // flag. Swallowing it is how `--skill --list` selected every skill instead of
+  // failing.
+  const value = (flag) => {
+    const v = argv[i + 1]
+    if (v === undefined || v.startsWith("--")) {
+      console.error(`${flag} needs a value`)
+      process.exit(1)
+    }
+    return argv[++i]
+  }
+  if (a === "--skill") opt.skill = value("--skill")
+  else if (a === "--case") opt.case = Number(value("--case"))
   else if (a === "--run") opt.run = true
   else if (a === "--list") opt.list = true
   else if (a === "--check") opt.check = true
-  else if (a === "--agent") opt.agent = argv[++i]
-  else if (a === "--model") opt.model = argv[++i]
-  else if (a === "--timeout") opt.timeout = Number(argv[++i])
+  else if (a === "--agent") opt.agent = value("--agent")
+  else if (a === "--model") opt.model = value("--model")
+  else if (a === "--timeout") opt.timeout = Number(value("--timeout"))
   else if (a === "--standalone") opt.standalone = true
   else if (a === "--shared") opt.standalone = false
   else if (a === "--i-know") opt.iKnow = true
-  else if (a === "--concurrency") opt.concurrency = Number(argv[++i])
-  else if (a === "--level") opt.level = argv[++i]
-  else if (a === "--root") opt.root = argv[++i]
-  else if (a === "--baseline") opt.baseline = argv[++i]
+  else if (a === "--concurrency") opt.concurrency = Number(value("--concurrency"))
+  else if (a === "--level") opt.level = value("--level")
+  else if (a === "--root") opt.root = value("--root")
+  else if (a === "--baseline") opt.baseline = value("--baseline")
   else if (a === "--save-baseline") opt.saveBaseline = true
   else if (a === "--no-skill") opt.noSkill = true
   else if (a === "--judge") {
@@ -118,14 +130,41 @@ for (let i = 0; i < argv.length; i++) {
       i++
     } else opt.judge = "default"
   }
-  else if (a === "--judge-threshold") opt.judgeThreshold = Number(argv[++i])
-  else if (a === "--repeat") opt.repeat = Number(argv[++i])
-  else if (a === "--tag") opt.tags.push(...argv[++i].split(",").map((t) => t.trim()).filter(Boolean))
-  else if (a === "--min-pass") opt.minPass = Number(argv[++i])
+  else if (a === "--judge-threshold") opt.judgeThreshold = Number(value("--judge-threshold"))
+  else if (a === "--repeat") opt.repeat = Number(value("--repeat"))
+  else if (a === "--tag") opt.tags.push(...value("--tag").split(",").map((t) => t.trim()).filter(Boolean))
+  else if (a === "--min-pass") opt.minPass = Number(value("--min-pass"))
   else if (a === "--quick") {
     console.error("--quick is gone: it appended \"skip installs/builds/audit\" to the prompt, which tested a different policy. Use --level behavior or --level smoke.")
     process.exit(1)
   } else if (a === "--full") opt.level = "full"
+  else unknown.push(a)
+}
+
+if (unknown.length) {
+  console.error(`unknown flag ${unknown.join(", ")}`)
+  process.exit(1)
+}
+
+function positiveInteger(flag, value) {
+  if (!Number.isInteger(value) || value < 1) {
+    console.error(`${flag} expects a positive integer (got ${value})`)
+    process.exit(1)
+  }
+}
+
+// `NaN` is falsy, so an unvalidated `--case abc` skipped its own filter and
+// selected the whole corpus; a `NaN` lane count started zero lanes, ran nothing
+// and still exited 0. Both are silent, so both are rejected here.
+if (opt.case !== null) positiveInteger("--case", opt.case)
+if (opt.concurrency !== null) positiveInteger("--concurrency", opt.concurrency)
+if (!(Number.isFinite(opt.timeout) && opt.timeout > 0)) {
+  console.error(`--timeout expects a positive number of seconds (got ${opt.timeout})`)
+  process.exit(1)
+}
+if (!(Number.isFinite(opt.judgeThreshold) && opt.judgeThreshold > 0 && opt.judgeThreshold <= 1)) {
+  console.error(`--judge-threshold expects a ratio in (0, 1] (got ${opt.judgeThreshold})`)
+  process.exit(1)
 }
 
 if (!["smoke", "behavior", "full"].includes(opt.level)) {
@@ -253,7 +292,7 @@ for (const s of skills) {
   errors.push(...parsed.errors.map((e) => `${s.id}: ${e}`))
   warnings.push(...parsed.warnings.map((w) => `${s.id}: ${w}`))
   for (const c of parsed.cases) {
-    if (opt.case && c.n !== opt.case) continue
+    if (opt.case !== null && c.n !== opt.case) continue
     plan.push({ skill: s, c })
   }
 }

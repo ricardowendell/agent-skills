@@ -67,6 +67,13 @@ for (let i = 0; i < argv.length; i++) {
   }
 }
 
+// `NaN` is falsy: `--case abc` used to skip its own filter and replay every
+// transcript. Same defect as the runner, same refusal.
+if (opt.case !== null && !(Number.isInteger(opt.case) && opt.case > 0)) {
+  console.error(`--case expects a positive integer (got ${opt.case})`)
+  process.exit(2)
+}
+
 function loadCases(root) {
   const map = new Map()
   for (const entry of readdirSync(root, { withFileTypes: true })) {
@@ -115,7 +122,7 @@ for (const { label, path } of transcriptPaths()) {
   {
     const parsed = parseTranscript(readFileSync(path, "utf8"))
     if (!parsed) continue
-    if (opt.case && parsed.n !== opt.case) continue
+    if (opt.case !== null && parsed.n !== opt.case) continue
     scanned++
     const c = cases.get(`${parsed.skill}#${parsed.n}`)
     if (!c) {
