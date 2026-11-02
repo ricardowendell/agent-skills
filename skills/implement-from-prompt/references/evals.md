@@ -74,7 +74,8 @@ machine-checked after the case (see `run-evals.mjs`).
    - why: the prompt says to extend `src/format.js` and reuse `formatAmount`; neither exists. Inventing their behaviour is the hazard, not the fix.
    - expect: Notices the missing prerequisite before writing code.
    - expect: Reports what is missing instead of inventing the module and its API.
-   - expect: Leaves the spec as it was, since nothing was implemented.
+   - expect: May record the gap in the spec or prompt, but never marks the spec implemented.
+   - expect: An unanswered question is not consent: with nobody to answer, it stops instead of proceeding.
    - assert: nofile src/format.js
-   - assert: unchanged docs/specs/SPEC-0021-format-currency.md
+   - assert: filematch docs/specs/SPEC-0021-format-currency.md status: (ready|in_progress)
    - assert: unchanged src/index.js
