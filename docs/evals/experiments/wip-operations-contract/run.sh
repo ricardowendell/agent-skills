@@ -2,7 +2,8 @@
 # Builds the two run roots for one arm of the `wip-operations-contract`
 # experiment and runs a pair: generate the prompt, then implement it.
 #
-#   ./run.sh pair A 1 s1     # arm A, one repetition, scenario s1 (easy oracle)
+#   ./run.sh pair A 1 s1                  # arm A, one repetition, scenario s1
+#   ./run.sh pair A 3 s2 plain            # bare implementer, no skill loaded
 #   ./run.sh pair A 3 s2     # arm A, three repetitions, scenario s2 (partial)
 #   ./run.sh stage1 A 1 s1   # generation only
 #   ./run.sh probe B          # AC-2 probe on the last stage-2 run of arm B
@@ -20,6 +21,7 @@ cmd=${1:-pair}
 arm=${2:-A}
 rep=${3:-1}
 scenario=${4:-s1}
+mode=${5:-impl}
 
 case "$scenario" in
   s1) fixture="$here/fixture";    spec=SPEC-0014; case_n=1 ;;
@@ -37,13 +39,24 @@ build_stage1() {
   cp -R "$fixture" "$work/stage1/write-implementation-prompt/references/evals/$case_n"
 }
 
+# Two stage-2 implementers:
+#   impl  — the real pipeline, with implement-from-prompt loaded
+#   plain — a bare build agent with the skill tool denied
+# `plain` exists because `implement-from-prompt` supplies its own verification
+# discipline, which masks the prompt's: if the prompt is silent about checking a
+# step, the skill still checks it. Measuring the prompt needs the prompt alone.
 build_stage2() {
-  mkdir -p "$work/stage2/implement-from-prompt/references/evals"
-  cp "$repo/skills/implement-from-prompt/SKILL.md" "$work/stage2/implement-from-prompt/SKILL.md"
-  cp "$here/cases/stage2-implement.md" "$work/stage2/implement-from-prompt/references/evals.md"
+  local skill=$1
+  mkdir -p "$work/stage2/$skill/references/evals"
+  if [ "$skill" = implement-from-prompt ]; then
+    cp "$repo/skills/implement-from-prompt/SKILL.md" "$work/stage2/$skill/SKILL.md"
+  else
+    printf -- "---\nname: %s\ndescription: Placeholder so the runner can discover this root. The skill tool is denied.\n---\n" "$skill" > "$work/stage2/$skill/SKILL.md"
+  fi
+  cp "$here/cases/stage2-implement.md" "$work/stage2/$skill/references/evals.md"
   # Rebuilt from the pristine tree every time: nothing from a prior run survives.
-  rm -rf "$work/stage2/implement-from-prompt/references/evals/$case_n"
-  cp -R "$fixture" "$work/stage2/implement-from-prompt/references/evals/$case_n"
+  rm -rf "$work/stage2/$skill/references/evals/$case_n"
+  cp -R "$fixture" "$work/stage2/$skill/references/evals/$case_n"
 }
 
 run_stage1() {
@@ -51,14 +64,20 @@ run_stage1() {
     --case "$case_n" --repeat "${1:-1}" --run
 }
 
+stage2_skill() { [ "$mode" = plain ] && echo "plain-implementer" || echo "implement-from-prompt"; }
+stage2_root()  { echo "$work/stage2"; }
+stage2_dir()   { echo "$work/stage2/$(stage2_skill)"; }
+
 run_stage2() {
-  node "$runner" --root "$work/stage2" --skill implement-from-prompt \
-    --case "$case_n" --repeat 1 --run
+  local extra=()
+  [ "$mode" = plain ] && extra=(--no-skill)
+  node "$runner" --root "$(stage2_root)" --skill "$(stage2_skill)" \
+    --case "$case_n" --repeat 1 --run "${extra[@]}"
 }
 
 # Newest run of a skill, as a directory.
 newest_run() {
-  ls -td "$HOME/.local/share/opencode/evals/runs"/*"$1" | head -1
+  ls -td "$HOME/.local/share/opencode/evals/runs"/*"$1"* | head -1
 }
 
 # Scratch path the runner recorded in the transcript header.
@@ -73,7 +92,7 @@ harvest() {
   scratch=$(scratch_of "$out" "write-implementation-prompt--$(printf '%02d' "$case_n")")
   file=$(ls "$scratch"/docs/prompts/"$spec"-*.prompt.md 2>/dev/null | head -1)
   [ -n "$file" ] || { echo "harvest: no $spec prompt in $scratch" >&2; return 1; }
-  cp "$file" "$work/stage2/implement-from-prompt/references/evals/$case_n/docs/prompts/"
+  cp "$file" "$(stage2_dir)/references/evals/$case_n/docs/prompts/"
   echo "harvested $(basename "$file")"
 }
 
@@ -84,8 +103,8 @@ harvest() {
 # the number and a location word are required.
 probe() {
   local out dir code
-  out=$(newest_run implement-from-prompt)
-  dir=$(scratch_of "$out" "implement-from-prompt--$(printf '%02d' "$case_n")")
+  out=$(newest_run "$(stage2_skill)")
+  dir=$(scratch_of "$out" "$(stage2_skill)--$(printf '%02d' "$case_n")")
   [ -f "$dir/src/import.js" ] || { echo "probe: no src/import.js in $dir"; return 1; }
   code=$(cd "$dir" && node --input-type=module -e '
     const m = await import("./src/import.js")
@@ -105,7 +124,7 @@ case "$cmd" in
     for i in $(seq 1 "$rep"); do
       echo "=== arm $arm / $scenario, pair $i/$rep ==="
       run_stage1 1 | tail -2
-      build_stage2
+      build_stage2 "$(stage2_skill)"
       harvest
       run_stage2 | tail -2
       probe
@@ -116,7 +135,7 @@ case "$cmd" in
     run_stage1 "$rep"
     ;;
   stage2)
-    build_stage2
+    build_stage2 "$(stage2_skill)"
     run_stage2
     ;;
   probe)

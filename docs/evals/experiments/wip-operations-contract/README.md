@@ -82,6 +82,20 @@ three runs each, so the only cost signal worth trusting is the artifact itself:
 the candidate's prompt is a third larger and its implementation a few lines
 longer.
 
+## Second lever: a bare implementer
+
+`implement-from-prompt` brings its own verification discipline, which could have
+been masking the prompt's. So the same s2 pair was re-run with `--no-skill`: a
+plain build agent, skill tool denied, prompt and tree as the only input.
+
+| implementer | arm A | arm B | AC-2 probe |
+| --- | --- | --- | --- |
+| `implement-from-prompt` | 3/3 | 3/3 | 3/3 |
+| bare agent | 1/1 | 1/1 | 1/1 |
+
+Same result. The confound was not the confound: the baseline prompt already
+carries the acceptance criteria and their checks, so a bare agent gets them too.
+
 ## Verdict
 
 The hypothesis is **not supported**. On a scenario built specifically so that
@@ -89,11 +103,12 @@ the prompt is the only carrier of an acceptance criterion, both arms delivered
 it three times out of three. The candidate adds prompt length without a
 measurable outcome gain.
 
-Two things follow, and neither is a reason to ship the change:
+Three things follow, and none is a reason to ship the change:
 
 - The baseline skill already does more than this experiment assumed. Its
   Requirements copy ACs verbatim and its Verification maps each AC to a check,
   so "add AC→check mapping" was partly already there.
+- Removing the downstream skill did not separate the arms either.
 - A prompt is not the only carrier of intent in this pipeline. The implementer
   reads the spec, the oracle and the architecture doc for itself, which is why
   omitting a fact from the prompt did not lose it. A prompt-quality experiment
