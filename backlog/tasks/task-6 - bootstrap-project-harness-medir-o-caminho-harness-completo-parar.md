@@ -4,7 +4,7 @@ title: 'bootstrap-project-harness: medir o caminho harness completo -> parar'
 status: To Do
 assignee: []
 created_date: '2026-11-01T22:53:00Z'
-updated_date: '2026-11-02T13:27:00Z'
+updated_date: '2026-11-02T14:49:00Z'
 labels: []
 dependencies: []
 ordinal: 6000
@@ -39,6 +39,14 @@ created: 2026-11-02T13:27:00Z
 ---
 
 Estado em 2026-11-02: a definição de completo está decidida e implementada (arquivos presentes + just smoke; template traz a receita), e o caso 14 existe com fixture auto-suficiente. O que falta não é fixture nem redação: 5 de 12 execuções ainda seguem adiante comparando com os templates canônicos. O próximo passo é mecanismo, não texto — um script de estado no template que imprima complete|partial e um exit code, para o agente não precisar julgar. A task fica aberta aguardando essa decisão de design, não uma nova tentativa de wording.
+
+---
+
+created: 2026-11-02T14:49:00Z
+
+---
+
+Groomed em 2026-11-02: docs/specs/SPEC-0003-deterministic-harness-state.md (ready) e docs/prompts/SPEC-0003-deterministic-harness-state.prompt.md. A decisão de design está registrada: o estado passa a ser a saída de skills/bootstrap-project-harness/scripts/harness-state.mjs, rodado da própria skill e nunca instalado no repo alvo (senão um repo sem o script viraria 'partial'). AC-4 mede o efeito: caso 14 sai de manual com >=10/12 paradas.
 
 ---
 <!-- COMMENTS:END -->
