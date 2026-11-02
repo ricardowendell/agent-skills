@@ -41,11 +41,17 @@
 //   --save-baseline     store this run as baseline.json
 //   --shared            run against the shared server: NOT isolated, the child
 //                       inherits the launch directory. Needs --i-know.
+//   --no-isolate        let the child see the real home, and with it every
+//                       installed skill (only to reproduce runs made before
+//                       isolation existed)
 //
 // Isolation: cases run with `--standalone` and a scrubbed child env (no
 // OPENCODE*/AI_AGENT) so the agent honours the scratch cwd. The skill under
 // review is copied to <scratch>/.opencode/skills/<id>/, which shadows any global
-// install of the same id; each run records that copy's hash.
+// install of the same id; each run records that copy's hash. The child also gets
+// a throwaway home (see lib/evals/isolation.mjs): without it, every skill
+// installed on the machine stays on the menu — 22 of them here, the one under
+// review included — and a case can pass because *another* skill was chosen.
 //
 // Fixtures: `references/evals/<n>/` is copied into the scratch dir. A case that
 // brings a `git.json` manifest is staged instead: `{ "base": "../base",
@@ -62,6 +68,7 @@ import { fileURLToPath } from "node:url"
 import { homedir } from "node:os"
 import { readEvals } from "./lib/evals/parse.mjs"
 import { scrubEnv } from "./lib/evals/agent.mjs"
+import { isolateHome } from "./lib/evals/isolation.mjs"
 import { stageFixture, stageSkill, makeScratch, denySkillTool } from "./lib/evals/fixture.mjs"
 import { summarize, aggregateReps, caseResult, PASSED, UNSCORED } from "./lib/evals/result.mjs"
 import { executeCase } from "./lib/evals/execute.mjs"
@@ -87,6 +94,7 @@ const opt = {
   baseline: null,
   saveBaseline: false,
   noSkill: false,
+  isolate: true,
   judge: null,
   judgeThreshold: 0.8,
   repeat: 1,
@@ -124,6 +132,7 @@ for (let i = 0; i < argv.length; i++) {
   else if (a === "--baseline") opt.baseline = value("--baseline")
   else if (a === "--save-baseline") opt.saveBaseline = true
   else if (a === "--no-skill") opt.noSkill = true
+  else if (a === "--no-isolate") opt.isolate = false
   else if (a === "--judge") {
     const v = argv[i + 1]
     if (v && !v.startsWith("--")) {
@@ -228,7 +237,11 @@ const TARGET = EFFECTIVE_MODEL.replace(/ \(config default\)$/, "")
 const JUDGE_MODEL = opt.judge ? (opt.judge === "default" ? TARGET : opt.judge) : null
 const SELF_JUDGED = JUDGE_MODEL !== null && JUDGE_MODEL === TARGET
 
-const CHILD_ENV = scrubEnv()
+// The child gets a home with the case in it, not the machine's skills. The
+// parent keeps the real one for run output and skill discovery.
+const ISOLATION = opt.isolate ? isolateHome(scrubEnv()) : null
+const CHILD_ENV = ISOLATION?.env ?? scrubEnv()
+if (ISOLATION) process.once("exit", ISOLATION.cleanup)
 
 function* skillDirs(dir, seen = new Set()) {
   let entries
@@ -327,7 +340,8 @@ let fail = 0
 let unscored = 0
 if (SELF_JUDGED) console.error(`judge: ${JUDGE_MODEL} is also the model under test (self-judged)`)
 console.log(
-  `Isolation: standalone=${opt.standalone}` + (opt.standalone ? ", child env scrubbed (OPENCODE*, AI_AGENT), skill pinned in scratch\n" : " (--shared: NOT isolated)\n"),
+  `Isolation: standalone=${opt.standalone}` +
+    (opt.standalone ? `, child env scrubbed (OPENCODE*, AI_AGENT), home ${opt.isolate ? "isolated" : "inherited"}, skill pinned in scratch\n` : " (--shared: NOT isolated)\n"),
 )
 console.log(
   `Level: ${opt.level} (concurrency=${opt.concurrency}, agent=${opt.agent}, model=${opt.model ?? "default"}, arm=${opt.noSkill ? "without-skill" : "with-skill"}` +

@@ -16,10 +16,14 @@ import { parseCases } from "../lib/evals/parse.mjs"
 import { replyText } from "../lib/evals/events.mjs"
 import { makeScratch } from "../lib/evals/fixture.mjs"
 import { scrubEnv } from "../lib/evals/agent.mjs"
+import { isolateHome } from "../lib/evals/isolation.mjs"
 import { executeCase } from "../lib/evals/execute.mjs"
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "../..")
-const CHILD_ENV = scrubEnv()
+// Same isolation as the CLI: the front ends must measure the same environment.
+const ISOLATION = isolateHome(scrubEnv())
+const CHILD_ENV = ISOLATION.env
+process.once("exit", ISOLATION.cleanup)
 
 function findCase(skill, n) {
   const dir = join(REPO, "skills", skill)
