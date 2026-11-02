@@ -21,29 +21,7 @@
 // the fix — before, the parenthetical was concatenated onto the prompt.
 
 import { readFileSync } from "node:fs"
-
-// `grep`/`nogrep` are deliberately absent: they matched the skill's own text
-// (a transcript contains the skill body), and no case uses them. Use reply,
-// noreply, verdict or a filesystem check instead.
-export const ASSERT_KINDS = new Set([
-  "file",
-  "nofile",
-  "dir",
-  "nodir",
-  "filematch",
-  "reply",
-  "noreply",
-  "verdict",
-  "unchanged",
-  "changed",
-  "ran",
-  "ranpass",
-  "tool",
-  "notool",
-  "skill",
-  "notskill",
-  "noskill",
-])
+import { ASSERT_KINDS } from "./kinds.mjs"
 
 const STATUSES = new Set(["run", "manual"])
 const FIELD = /^(prompt|expect|why|status|needs|tags|gate|assert):\s*(.*)$/

@@ -28,6 +28,7 @@ import { join, dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { homedir } from "node:os"
 import { parseCases } from "./lib/evals/parse.mjs"
+import { REPLAYABLE } from "./lib/evals/kinds.mjs"
 import { evaluateAssertions, skillGate } from "./lib/evals/assertions.mjs"
 import { replyText, skillLoads } from "./lib/evals/events.mjs"
 import { classify } from "./lib/evals/result.mjs"
@@ -36,21 +37,6 @@ import { parseTranscript } from "./lib/evals/transcript.mjs"
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const OUT_ROOT = join(homedir(), ".local/share/opencode/evals")
-
-// Assertions whose evidence lives in the transcript. Everything else needs the
-// scratch tree and is skipped, loudly.
-export const REPLAYABLE = new Set([
-  "reply",
-  "noreply",
-  "verdict",
-  "tool",
-  "notool",
-  "ran",
-  "ranpass",
-  "skill",
-  "notskill",
-  "noskill",
-])
 
 const opt = { dir: OUT_ROOT, root: join(REPO, "skills"), skill: null, case: null, changed: false, quiet: false }
 const argv = process.argv.slice(2)

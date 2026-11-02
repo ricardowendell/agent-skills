@@ -1,26 +1,9 @@
 // assertions.mjs — the machine-checked half of a case.
 //
-// Every filesystem kind takes a glob (see glob.mjs) and every kind that compares
-// against the staged tree fails when the pattern matches nothing: a wildcard with
-// no effect must never read as a pass.
-//
-//   file <glob>            at least one match
-//   nofile <glob>          no match
-//   dir <glob>             at least one directory
-//   nodir <glob>           no directory
-//   filematch <glob> <re>  at least one matching file's content matches re
-//   reply <re>             the assistant's own text matches re
-//   noreply <re>           ...does not match
-//   verdict APPROVE|REJECT|WITHHELD  the reply's verdict line names this stance
-//   unchanged <glob>       every match exists and is byte-identical to staging
-//   changed <glob>         at least one match, all differ from staging
-//   ran <re>               a shell command matching re was executed
-//   ranpass <re>           ...and at least one of those executions exited 0
-//   tool <name>            the named tool was used
-//   notool <name>          it was not
-//   skill <id>             the id's skill was loaded
-//   notskill <id>          it was not (other skills may load: routing, not silence)
-//   noskill                no skill was loaded at all
+// The vocabulary (every kind, its scope and its contract) lives in kinds.mjs;
+// this file implements the checks. Every filesystem kind takes a glob (see
+// glob.mjs) and every kind that compares against the staged tree fails when the
+// pattern matches nothing: a wildcard with no effect must never read as a pass.
 
 import { readFileSync, realpathSync } from "node:fs"
 import { createHash } from "node:crypto"
