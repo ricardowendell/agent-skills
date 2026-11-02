@@ -4,7 +4,7 @@ title: 'bootstrap-project-harness: medir o caminho harness completo -> parar'
 status: To Do
 assignee: []
 created_date: '2026-11-01T22:53:00Z'
-updated_date: '2026-11-02T09:44:00Z'
+updated_date: '2026-11-02T13:27:00Z'
 labels: []
 dependencies: []
 ordinal: 6000
@@ -30,3 +30,15 @@ Medição em 2026-11-02, três repetições: o agente leu o fixture como 'partia
 
 Rodada extra em 2026-11-02 com fixture auto-suficiente (configs reais, src + testes, just check e just smoke verdes sem instalar nada): parou em 1/3. Total medido: 5 de 12 execuções pararam. Os runs que não pararam compararam com os templates canônicos, chamaram arquivos enxutos de 'stubs' e regravaram — ou seja, o que resta é excesso do modelo, não fixture nem definição. Decisão: definição de completo agora é explícita (arquivos presentes + smoke), o template passa a trazer a receita smoke, e o caso 14 fica manual com a taxa medida.
 <!-- SECTION:NOTES:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-11-02T13:27:00Z
+
+---
+
+Estado em 2026-11-02: a definição de completo está decidida e implementada (arquivos presentes + just smoke; template traz a receita), e o caso 14 existe com fixture auto-suficiente. O que falta não é fixture nem redação: 5 de 12 execuções ainda seguem adiante comparando com os templates canônicos. O próximo passo é mecanismo, não texto — um script de estado no template que imprima complete|partial e um exit code, para o agente não precisar julgar. A task fica aberta aguardando essa decisão de design, não uma nova tentativa de wording.
+
+---
+<!-- COMMENTS:END -->
