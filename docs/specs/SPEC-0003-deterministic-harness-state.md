@@ -39,14 +39,15 @@ judgement about whether trimmed files count as present.
 ## Scope
 
 - A new `skills/bootstrap-project-harness/scripts/harness-state.mjs`, zero
-  dependencies, run with the repo's own `node`.
-- `SKILL.md` runs it before any step and treats its answer as the state, instead
-  of re-deriving the state by inspection.
-- The Python template gains the `smoke` recipe the definition already names; the
-  TypeScript template ships one already.
-- `references/evals.md` case 14 (`bootstrap-project-harness`) stops being
-  `manual` if it reaches the stop path in at least 10 of 12 runs.
-- Unit tests for the script, in CI.
+  dependencies, run with `node`.
+- `SKILL.md` runs it before any step and takes its answer as the state; if the
+  script cannot run, the table is the declared fallback.
+- The Python template gains the `smoke` recipe the definition names; TypeScript
+  ships one already.
+- Two eval cases: #14 (complete → stop, already exists as `manual`) and #15
+  (one file missing → fix only that, never stop).
+- Unit tests for the script, a parity test against the templates, and both
+  wired into CI and the pre-commit hook.
 
 **Blast radius.** One skill and its eval corpus. The script reads; it never
 writes, installs or fixes. No other skill depends on the state table. The eval
@@ -55,26 +56,31 @@ runner and the matrix are untouched.
 ## Non-Goals
 
 - **Shipping the script into the target repo.** It runs from the skill against a
-  path. A repo that lacks it must not read as partial, and the skill's
-  "additive only" rule forbids writing a file into a repo just to decide what to
-  do with it.
+  path. A repo that lacks it must not read as partial, and "additive only"
+  forbids writing a file into a repo just to decide what to do with it.
 - **Installing the toolchain to decide.** `node_modules`, a lockfile and
   installed hook binaries are install output; a fresh clone never has them.
 - **New stacks.** The script understands exactly the two the skill supports.
 - **Changing what the harness installs.** The templates stay the source of what
   a complete harness contains.
-- **A CI job that runs the bootstrap.** Only the script's unit tests join CI.
+- **A Python port of the script.** A repo whose machine has no `node` falls back
+  to the table; that limit is stated, not solved.
+- **A CI job that runs the bootstrap.** Only the unit and parity tests join CI.
 
 ## Flow
 
 1. The agent runs `node <skill>/scripts/harness-state.mjs <repo>` (default `.`).
-2. The script prints one line per finding and a final state, and exits `0` for
-   complete, `1` for partial, `2` for empty, `3` for project-without-harness.
+2. The script prints one line per finding and a final state. Exit codes: `0`
+   complete, `1` partial, `2` empty, `3` project-no-harness; `4` ambiguous
+   stack; `64` unreadable directory.
 3. `complete` → the skill reports what it found and stops. No interview, no
    writes, no "verification" pass over the steps.
-4. `partial` → the skill fixes only the items the script listed as missing, then
-   re-runs it.
-5. `empty` / project-without-harness → the existing bootstrap flow runs.
+4. `partial` → the skill fixes only the items listed as missing, then re-runs.
+   A `competing: <tool>` line means report and stop instead — never install the
+   harness's tool over an existing one.
+5. `empty` / project-no-harness → the existing bootstrap flow runs.
+6. `ambiguous` → ask which directory, as the stack rules already say.
+7. If `node` is unavailable, the skill says so and uses the table.
 
 ## Data
 
@@ -88,60 +94,73 @@ Not applicable.
 ## Acceptance Criteria
 
 - AC-1 — The script prints exactly one of `empty`, `project-no-harness`,
-  `partial`, `complete`, with the same exit-code mapping as the flow, and is
-  tested on four synthetic trees — one per state — plus a repo where the smoke
-  check fails. It exits non-zero and names the failing file when it cannot read
-  the directory.
+  `partial`, `complete`, with the flow's exit-code mapping, plus two refusals
+  that are not states: `ambiguous` (exit 4, naming the manifests that fired) and
+  an unreadable directory (exit 64, naming the path). Tested on four synthetic
+  trees, a failing-smoke tree, an ambiguous tree and a missing directory.
 - AC-2 — `complete` requires the files the stack's template installs (excluding
-  install artefacts) and a built-in check that parses the manifests and the docs
-  sensor without installing anything. No `just`, `npm` or `uv` is required for
-  the verdict.
-- AC-3 — `SKILL.md` runs the script before step 1 and stops on `complete`, and
-  the state table no longer describes the state as something read by inspection.
-  A reader of the table and the script's output can see they are the same four
-  states.
+  install artefacts) and a smoke that exits 0. The smoke is `just smoke` when
+  `just` is on PATH and the recipe exists; otherwise the built-in check parses
+  the manifests and syntax-checks the docs sensor. Nothing is installed either
+  way, and a repo whose own `just smoke` fails is not complete.
+- AC-3 — `SKILL.md` runs the script before step 1, stops on `complete`, treats
+  any `competing:` line as report-and-stop, asks on `ambiguous`, and names the
+  table as the fallback when the script cannot run. The state table no longer
+  describes the state as something read by inspection.
 - AC-4 — Case 14 loses `status: manual` after at least 10 of 12 runs stop, and
-  its `why:` carries the measured rate. If it stays below 10, it keeps `manual`
-  with the rate recorded; the spec then says the mechanism did not reach the
-  behaviour and the case is the evidence.
+  its `why:` carries the measured rate. Below 10 of 12 the script still ships,
+  the case keeps `manual` with the rate recorded, and this AC is reported as
+  failed — the spec stays honest about a mechanism that did not reach the
+  behaviour.
 - AC-5 — The Python template gains a `smoke` recipe that runs without an
-  install, matching the TypeScript one, so both stacks can satisfy AC-2.
+  install, matching the TypeScript one.
 - AC-6 — `validate-skills`, `run-evals --list --check` and the test suite pass,
-  and the new script's tests are added to the CI step and to the pre-commit
-  command, since CI's existing glob only covers `scripts/lib/evals/`.
+  and the new script's tests plus the parity test are added to the CI step and
+  to the pre-commit command, since CI's existing glob only covers
+  `scripts/lib/evals/`.
+- AC-7 — Case 15 stages a fixture that is complete except for one required file
+  (`lefthook.yml`). The skill creates it and does not declare the repo complete
+  on the first pass; asserted by `file lefthook.yml`. It leaves `status: manual`
+  only at 3/3.
+- AC-8 — A parity test reads `templates/ts` and `templates/python`, applies the
+  name mapping (`x.template` → `x`), and fails when the script's required list
+  and the template directories disagree in either direction. A missing file in
+  the test message names the list to update.
 
 ## Open Questions
 
-**Blocking — none.** The design is decided; the only unknown is behavioural and
-AC-4 measures it. One point worth recording rather than deciding now: if the
-agent still ignores the script, the next lever is not wording but making the
-first step impossible to skip (for example, the skill's opening lines *are* the
-command and its output shape). That is a follow-up, not part of this slice.
+No blocking question. Two decisions are recorded rather than asked:
+
+- The script only inspects the directory it is given. In a monorepo the agent
+  passes the package directory, and `ambiguous` covers the case where it cannot
+  tell which.
+- The `docs/` skeleton is required exactly as the templates install it. A repo
+  that keeps its docs elsewhere is `partial` and the skill adds the missing
+  directories, which is the same additive behaviour it has today.
 
 ## Prompt Notes
 
-- Requirements: one script, one source of truth, one measured case.
-- Entities: state (`empty`, `project-no-harness`, `partial`, `complete`), stack
-  (`ts`, `python`), missing item, smoke result.
-- Approach: resolve the skill directory from the script's own location
-  (`import.meta.url`), so the agent needs no path arithmetic; read-only checks
-  only; no subprocess that installs.
-- Structure: `skills/bootstrap-project-harness/scripts/harness-state.mjs`, its
-  test beside it, `SKILL.md` step 0, `templates/python/justfile.template`,
-  `skills/bootstrap-project-harness/references/evals.md` case 14, and the CI and
-  pre-commit commands that run the unit tests.
-- Operations: write the script and tests; wire it into the skill; add the Python
-  smoke; run case 14 three times, then nine more if the first three stop; update
-  the case's status and `why:` with the measured rate.
-- Norms: zero new dependencies; Node 20; the skill stays stack-agnostic in prose
-  and stack-specific only in the template lists; comments explain why a check
-  exists, not what the line does.
-- Safeguards: never write to the target repo; never treat a missing install
-  artefact as a gap; do not weaken the existing "additive only" and "report
-  competing toolchains" rules; a wrong `complete` is worse than a wrong
-  `partial` — when a required file is unreadable, fail toward partial.
-- Tests: four state fixtures, a failing smoke, a missing directory, and the
-  existing eval suite.
+- Requirements: one script, one source of truth, two measured cases.
+- Entities: state (`empty`, `project-no-harness`, `partial`, `complete`),
+  refusal (`ambiguous`, unreadable), stack (`ts`, `python`), missing item,
+  competing tool, smoke result.
+- Approach: resolve the skill directory from `import.meta.url`; read-only
+  checks; no subprocess that installs; `just smoke` only when both `just` and
+  the recipe exist.
+- Structure: `skills/bootstrap-project-harness/scripts/harness-state.mjs` and
+  its two tests, `SKILL.md` step 0 and table, `templates/python/justfile.template`,
+  `references/evals.md` cases 14 and 15, `.github/workflows/skills.yml`,
+  `lefthook.yml`.
+- Operations: script, tests, parity test, skill wiring, python smoke, both
+  cases, measurement, statuses.
+- Norms: zero new dependencies; Node 20; comments explain why a check exists;
+  the skill stays stack-agnostic in prose.
+- Safeguards: never write to the target repo; never treat an install artefact
+  as a gap; never override a competing tool; fail toward `partial` when a
+  required file is unreadable — a wrong `complete` is worse than a wrong
+  `partial`.
+- Tests: four states, failing smoke, ambiguous, missing directory, template
+  parity, plus the two eval cases.
 
 ## Notes
 

@@ -4,7 +4,7 @@ title: 'bootstrap-project-harness: medir o caminho harness completo -> parar'
 status: To Do
 assignee: []
 created_date: '2026-11-01T22:53:00Z'
-updated_date: '2026-11-02T14:49:00Z'
+updated_date: '2026-11-02T15:05:00Z'
 labels: []
 dependencies: []
 ordinal: 6000
@@ -47,6 +47,14 @@ created: 2026-11-02T14:49:00Z
 ---
 
 Groomed em 2026-11-02: docs/specs/SPEC-0003-deterministic-harness-state.md (ready) e docs/prompts/SPEC-0003-deterministic-harness-state.prompt.md. A decisão de design está registrada: o estado passa a ser a saída de skills/bootstrap-project-harness/scripts/harness-state.mjs, rodado da própria skill e nunca instalado no repo alvo (senão um repo sem o script viraria 'partial'). AC-4 mede o efeito: caso 14 sai de manual com >=10/12 paradas.
+
+---
+
+created: 2026-11-02T15:05:00Z
+
+---
+
+Blind-spot review em 2026-11-02, sete decisões registradas na SPEC-0003: (1) caso 15 mede o erro oposto — quase completo não pode parar; (2) sem node no repo, fallback declarado para a tabela; (3) toolchain concorrente vira linha competing: e a skill reporta e para; (4) lista explícita com teste de paridade contra os templates; (5) 9/12 entrega o script com o caso manual e a AC-4 registrada como falha; (6) stack ambíguo é recusa com exit próprio, não um quinto estado; (7) smoke é just smoke quando existe, senão o check embutido — repo com just smoke quebrado nunca é completo.
 
 ---
 <!-- COMMENTS:END -->
