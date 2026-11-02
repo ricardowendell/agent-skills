@@ -19,3 +19,13 @@ produce a correct implementation, so a trigger miss must not be scored as one.
    - assert: unchanged test/import.test.js
    - assert: unchanged src/csv.js
    - assert: ranpass node --test
+
+2. **Implement the generated prompt (partial oracle).**
+   - prompt: Implement docs/prompts/SPEC-0015-import-validation.prompt.md.
+   - why: the staged oracle covers AC-1 and AC-3 only; AC-2 is probed after the run.
+   - gate: off
+   - expect: Adds `src/import.js` without touching the oracle or the shared helper.
+   - assert: file src/import.js
+   - assert: unchanged test/import.test.js
+   - assert: unchanged src/csv.js
+   - assert: ranpass node --test

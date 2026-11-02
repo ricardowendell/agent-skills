@@ -1,6 +1,6 @@
 # Experiment: per-step observability in implementation prompts
 
-Status: mechanic validated, hypothesis not yet measured. This directory is the
+Status: hypothesis refuted on the built scenarios; no failing case found. This directory is the
 working area for TASK-9.
 
 ## Hypothesis
@@ -54,34 +54,68 @@ Deliberately not asserted: the spec status flip to `implemented`. It is the
 implementer's own step, it varied between two runs of the same arm, and it is
 not a property of the prompt — measured by hand instead.
 
-## Pilot, 2026-11-02
+## Results, 2026-11-02
 
-One pair, one repetition, arm A and arm B.
+Two scenarios, both arms, three repetitions on the hard one.
 
-| arm | stage 1 | stage 2 |
+**s1 — full oracle, spec names the shared helper.** Both arms 1/1 at both stages.
+The task is easy enough that either prompt suffices.
+
+**s2 — partial oracle, spec does not name the helper.** The staged tests cover
+AC-1 and AC-3; AC-2 (a rejection naming the *physical* line, so two blank lines
+push the bad row to line 4) exists only in the spec, so the prompt is the only
+thing that can carry it to the implementer.
+
+| measure | A (baseline) | B (candidate) |
 | --- | --- | --- |
-| A | 1/1 | 1/1 (4/4 assertions) |
-| B | 1/1 | 1/1 (4/4 assertions) after the status assertion was dropped |
+| stage 1 | 3/3 | 3/3 |
+| stage 2 (oracle + scope) | 3/3 | 3/3 |
+| AC-2 probe | 3/3 | 3/3 |
+| reuses `src/csv.js` | 4/4 | 4/4 |
+| prompt size | 7,954 B | 10,450 B (+31%) |
+| `src/import.js` lines | 21–26 | 23–29 |
+| stage 1 duration | 39.2 s mean | 52.9 s mean |
+| stage 2 input tokens | 26.0k mean | 21.1k mean |
 
-Both arms pass. That validates the mechanic and says nothing about the
-hypothesis: with a visible acceptance oracle, the task is easy enough that both
-prompts are sufficient. The next scenario has to put the difficulty where the
-prompt is the only thing that can carry it — see "Next" below.
+The two durations and token counts disagree in direction and the samples are
+three runs each, so the only cost signal worth trusting is the artifact itself:
+the candidate's prompt is a third larger and its implementation a few lines
+longer.
+
+## Verdict
+
+The hypothesis is **not supported**. On a scenario built specifically so that
+the prompt is the only carrier of an acceptance criterion, both arms delivered
+it three times out of three. The candidate adds prompt length without a
+measurable outcome gain.
+
+Two things follow, and neither is a reason to ship the change:
+
+- The baseline skill already does more than this experiment assumed. Its
+  Requirements copy ACs verbatim and its Verification maps each AC to a check,
+  so "add AC→check mapping" was partly already there.
+- A prompt is not the only carrier of intent in this pipeline. The implementer
+  reads the spec, the oracle and the architecture doc for itself, which is why
+  omitting a fact from the prompt did not lose it. A prompt-quality experiment
+  has to remove the implementer's ability to recover the missing fact, and that
+  is a fixture design problem this experiment did not solve.
 
 ## Next
 
-Build scenarios where the baseline plausibly fails, and keep one holdout that is
-never used to develop the change:
+A decisive scenario has to stop the implementer from recovering the missing fact
+on its own. Candidates, in order of how much they would prove:
 
-1. **Partial oracle** — the staged tests cover AC-1 and AC-3 only; AC-2 (the
-   rejection that names a line) is checked by a source assertion. The prompt has
-   to convey AC-2 for the implementer to satisfy it.
-2. **DRY trap** — the helper that must be reused is not mentioned in the spec,
-   only in the architecture doc, and the stage-2 assertion checks that
-   `src/csv.js` stays untouched while the new module still passes.
-3. **Sequencing** — a spec whose steps only work in one order, so a prompt that
-   lists them as unordered bullets produces a red gate.
-4. **Holdout** — a spec with a manual-only AC, never used while writing B.
+1. **Strip the source of truth.** Stage 2 runs against a tree where the spec's
+   flow section is absent and the acceptance oracle covers only what the prompt
+   states. If the prompt omits it, nothing else can supply it.
+2. **Conflicting sources.** The spec says one thing and the architecture doc
+   says another; a prompt that silently picks one loses the conflict, and the
+   probe checks which one the implementation followed.
+3. **Holdout.** A spec with a manual-only AC, never used while writing a
+   candidate.
+
+Until one of these separates the arms, no candidate should be shipped, and the
+skill should not be edited to satisfy this experiment.
 
 ## Cost
 

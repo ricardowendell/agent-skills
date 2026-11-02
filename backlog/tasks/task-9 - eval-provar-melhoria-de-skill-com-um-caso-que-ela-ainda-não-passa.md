@@ -4,7 +4,7 @@ title: 'eval: provar melhoria de skill com um caso que ela ainda não passa'
 status: To Do
 assignee: []
 created_date: '2026-11-02T18:30:00Z'
-updated_date: '2026-11-02T19:05:00Z'
+updated_date: '2026-11-02T19:20:00Z'
 labels: []
 dependencies: []
 ordinal: 9000
@@ -33,12 +33,12 @@ Limite declarado: eu escrevo a mudança, então minha comparação não é cega.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 baseline congelado e registrado: sha da skill, modelo, fixtures, assertions, executor
+- [x] #1 baseline congelado e registrado: sha da skill, modelo, fixtures, assertions, executor
 - [ ] #2 casos de autoria e de holdout escritos, com a etapa de implementação medindo resultado, não o Markdown
-- [ ] #3 uma edição única no SKILL.md, em commit separado dos casos
-- [ ] #4 medição A/B com mesmo modelo e mesmas repetições, antes/depois por caso no comentário
-- [ ] #5 melhoria descartada se a edição só fizer o artefato satisfazer o template: a skill tem de pedir o comportamento
-- [ ] #6 limitação de comparação não-cega declarada no resultado
+- [x] #3 uma edição única no SKILL.md, em commit separado dos casos
+- [x] #4 medição A/B com mesmo modelo e mesmas repetições, antes/depois por caso no comentário
+- [x] #5 melhoria descartada se a edição só fizer o artefato satisfazer o template: a skill tem de pedir o comportamento
+- [x] #6 limitação de comparação não-cega declarada no resultado
 <!-- AC:END -->
 
 ## Comments
@@ -61,4 +61,17 @@ Também entraram duas proteções, porque o defeito passou por três gates verde
 - `scripts/lib/evals/corpus.test.mjs`: caso com fixture só pode citar identificador que a fixture contém, seguindo `git.json.base`; caso que cita spec deliberadamente ausente se marca com a tag `absent-spec`.
 
 O corpus medido no braço with-skill está verde depois de `3098a5e`, então esta task não parte de uma falha existente: ela constrói o caso que expõe a falha, e o AC-2 exige que o resultado seja medido na implementação, não no texto do prompt.
+---
+
+Primeira medição em 2026-11-02, em `docs/evals/experiments/wip-operations-contract`. Baseline `A/SKILL.md` (sha256 5eb1ab0c…) contra a candidata `B/SKILL.md`, que acrescenta ao parágrafo de Operations a exigência de resultado observável, o comando que prova e o AC de cada passo.
+
+Dois cenários. s1, com oráculo completo e spec citando o helper compartilhado: A e B 1/1 nos dois estágios. s2, com oráculo parcial — AC-2 existe só na spec, e a sonda confere na implementação que a rejeição nomeia a linha física, com duas linhas em branco empurrando a linha ruim para 4: A 3/3, B 3/3, reuso do helper 4/4 nos dois.
+
+Custo: o prompt de B é 31% maior (10.450 contra 7.954 bytes) e a implementação sai com 23–29 linhas contra 21–26. Durações e tokens não concordam em direção entre os braços com n=3, então o único sinal de custo confiável é o artefato.
+
+Hipótese refutada nos cenários construídos. Duas razões, ambas registradas no README do experimento: a skill de base já copia os ACs literalmente e já mapeia AC→verificação, então parte da mudança proposta já existia; e o prompt não é o único portador de intenção — o implementador lê a spec, o oráculo e o architecture doc por conta própria, então omitir um fato do prompt não o perde.
+
+AC-2 não foi cumprido e o é por mérito: nenhum caso reprovado apareceu. Sem isso a task não fecha como concluída. O próximo passo é um cenário em que o implementador não consiga recuperar o fato sozinho — sem a seção de fluxo da spec, ou com spec e architecture em conflito — e, até que um deles separe os braços, a skill não deve ser editada.
+
+Limitação de cegueira: mantida. Eu escrevi a candidata; a comparação de artefato foi feita por leitura direta, não cega.
 <!-- COMMENTS:END -->
