@@ -1,6 +1,6 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { classify, aggregateReps, PASSED, FAILED, UNSCORED } from "./result.mjs"
+import { classify, aggregateReps, caseResult, PASSED, FAILED, UNSCORED } from "./result.mjs"
 
 const pass = { kind: "file", arg: "AGENTS.md", pass: true }
 const fail = { kind: "verdict", arg: "APPROVE", pass: false }
@@ -59,4 +59,9 @@ test("a mix of unscored and passed follows the pass rate", () => {
   const agg = aggregateReps([{ status: "passed" }, { status: "unscored" }])
   assert.equal(agg.status, "failed")
   assert.equal(agg.passRate, 0.5)
+})
+
+test("caseResult fills the case identity once and lets the caller override", () => {
+  const r = caseResult({ id: "review-code" }, { n: 3, title: "Review", prompt: "Do it" }, { status: "failed" })
+  assert.deepEqual(r, { skill: "review-code", case: 3, title: "Review", prompt: "Do it", status: "failed" })
 })

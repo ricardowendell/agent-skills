@@ -29,6 +29,18 @@ export function summarize(results) {
   return { ...count, total: results.length }
 }
 
+// The per-case artifact the console, the JSON file and the replay tool read.
+// Built here once: three hand-built copies in the runner had already drifted.
+export function caseResult(skill, c, fields = {}) {
+  return {
+    skill: skill.id,
+    case: c.n,
+    title: c.title,
+    prompt: c.prompt,
+    ...fields,
+  }
+}
+
 // A single run of a non-deterministic agent is one draw, not a measurement.
 // Repetitions turn it into a pass rate; the case still passes by default only
 // when every repetition passed, so a flake is visible instead of averaged away.

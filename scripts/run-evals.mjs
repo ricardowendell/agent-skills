@@ -63,7 +63,7 @@ import { homedir } from "node:os"
 import { readEvals } from "./lib/evals/parse.mjs"
 import { scrubEnv } from "./lib/evals/agent.mjs"
 import { stageFixture, stageSkill, makeScratch, denySkillTool } from "./lib/evals/fixture.mjs"
-import { summarize, aggregateReps, PASSED, UNSCORED } from "./lib/evals/result.mjs"
+import { summarize, aggregateReps, caseResult, PASSED, UNSCORED } from "./lib/evals/result.mjs"
 import { executeCase } from "./lib/evals/execute.mjs"
 import { createRun } from "./lib/evals/runs.mjs"
 import { summarizeRun, compareRuns, formatComparison, readRun } from "./lib/evals/report.mjs"
@@ -371,19 +371,15 @@ async function runCase(skill, c, rep = null) {
         `## Expectations (human-checked)\n\n${c.expect.map((e) => `- [ ] ${e}`).join("\n")}\n\n` +
         `## Assertions (auto-checked)\n\nnot run at --level smoke\n`,
     )
-    const staged = {
-      skill: skill.id,
-      case: c.n,
+    const staged = caseResult(skill, c, {
       status: "staged",
       reason: "staged only (smoke)",
-      title: c.title,
-      prompt: c.prompt,
       skillHash: pinned.hash,
       assertions: [],
       execution: { durationMs: Date.now() - started },
       meta: { repoSha: meta.repoSha, agent: meta.agent, model: meta.model, level: meta.level },
       transcript: file,
-    }
+    })
     run().writeResult(skill.id, c.n, staged)
     return staged
   }
@@ -404,17 +400,13 @@ async function runCase(skill, c, rep = null) {
     })
   } catch (e) {
     writeFailure("fixture failed to stage", `${e.message}\n${e.stderr ?? ""}`)
-    const failed = {
-      skill: skill.id,
-      case: c.n,
+    const failed = caseResult(skill, c, {
       status: "failed",
       reason: "fixture failed to stage",
-      title: c.title,
-      prompt: c.prompt,
       skillHash: null,
       assertions: [],
       transcript: file,
-    }
+    })
     // Recorded, not skipped: the previous layout left the old JSON in place and
     // a failed staging could be read as the last run's green.
     run().writeResult(skill.id, c.n, failed)
@@ -426,12 +418,12 @@ async function runCase(skill, c, rep = null) {
     ? `**Skill:** ${gate.ok ? "not loaded (control arm)" : "LOADED — the control arm is broken"} (${gate.reason})`
     : `**Skill:** ${gate.ok ? "loaded" : "MISSING"} (${gate.reason})`
 
-  let result = {
+  const result = caseResult(skill, c, {
     ...core,
     ...(rep ? { rep: rep.index } : {}),
     meta: { repoSha: meta.repoSha, agent: meta.agent, model: meta.model, level: meta.level },
     transcript: file,
-  }
+  })
   if (!rep) run().writeResult(skill.id, c.n, result)
 
   const assertBlock = asserts.length
@@ -486,11 +478,7 @@ async function runCaseReps(skill, c) {
   if (times === 1) return reps[0]
 
   const agg = aggregateReps(reps, opt.minPass)
-  const artifact = {
-    skill: skill.id,
-    case: c.n,
-    title: c.title,
-    prompt: c.prompt,
+  const artifact = caseResult(skill, c, {
     status: agg.status,
     reason: agg.reason,
     passRate: agg.passRate,
@@ -500,21 +488,12 @@ async function runCaseReps(skill, c) {
     arm: reps[0]?.arm,
     meta: reps[0]?.meta ?? {},
     repetitions: reps,
-  }
+  })
   run().writeResult(skill.id, c.n, artifact)
+  // The console summary drops the per-repetition array; the artifact keeps it.
+  const { repetitions: _reps, ...summary } = artifact
   return {
-    skill: skill.id,
-    case: c.n,
-    title: c.title,
-    prompt: c.prompt,
-    status: agg.status,
-    reason: agg.reason,
-    passRate: agg.passRate,
-    passed: agg.passed,
-    reps: agg.total,
-    skillHash: artifact.skillHash,
-    arm: artifact.arm,
-    meta: artifact.meta,
+    ...summary,
     transcript: run().transcriptPath(skill.id, c.n, { index: 1 }),
     repLine,
   }
