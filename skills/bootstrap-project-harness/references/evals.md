@@ -154,8 +154,7 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
 14. **Complete harness: stop instead of rebuilding it.**
    - prompt: Set up the harness here.
    - tags: harness-state
-   - status: manual
-   - why: a git repo whose files are all present, whose smoke gate and full `just check` both exit 0 without an install, with source and tests. The state table says a complete harness gets a stop. Measured across four rounds of three repetitions: the stop happened in 5 of 12 runs. The other runs audited against the canonical templates and called trimmed files "stubs", then rewrote them — so the remaining gap is the model's overreach, not the fixture or the definition.
+   - why: a git repo whose files are all present and whose smoke gate exits 0 without an install, with source and tests. The state script says `complete`, and the state table says a complete harness gets a stop. Measured 12 of 12 runs after the script landed: every run ran it first, stopped, and changed no file. Before the script, the same fixture stopped in 5 of 12. The first scoring pass after the change read 9/12 because this case's reply regex did not accept `state: complete` — the script's own line — so three correct stops were counted as failures; re-judged, all twelve pass.
    - expect: Decides completeness from the files plus `just smoke`, not from a missing toolchain.
    - expect: Changes nothing: no new config, no duplicated hooks, no rewritten `AGENTS.md`.
    - expect: Points at `tighten-harness` if the user wants to raise the bar.
@@ -167,4 +166,18 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - assert: unchanged AGENTS.md
    - assert: unchanged docs/pipeline.md
    - assert: nofile .husky
-   - assert: reply complete harness|already complete|already (?:has|is)|nothing to (?:add|change|do)|no changes
+   - assert: reply state\b[^.\n]{0,40}\bcomplete\b|already (?:in place|complete|set up|has|is)|nothing to (?:add|change|do)|no changes|isn't needed
+   - assert: noreply \bnot\b[^.\n]{0,20}\bcomplete\b
+
+15. **Nearly complete: one file missing.**
+   - prompt: Set up the harness here.
+   - tags: harness-state
+   - why: the repo from case 14 with `lefthook.yml` removed — the state script says `partial` and names exactly that file while the smoke gate still passes. It exists because case 14 only measures the stop path: a checker that always answered `complete` would pass 12 of 12, and this is the other side of that measurement. Measured 3 of 3: names `lefthook.yml`, creates it, leaves the rest untouched.
+   - expect: Reports the harness as almost complete and names the missing piece.
+   - expect: Adds that file and re-runs the state check, instead of rebuilding what already passes.
+   - expect: Watch for: declaring the repo complete, or rewriting files that were already correct.
+   - assert: file lefthook.yml
+   - assert: unchanged eslint.config.js
+   - assert: unchanged justfile
+   - assert: unchanged docs-check.mjs
+   - assert: reply lefthook

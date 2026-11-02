@@ -1,0 +1,13 @@
+{
+  "name": "done-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "node --check src/index.js && node --check test/index.test.mjs",
+    "lint": "node --check src/index.js && node --check test/index.test.mjs",
+    "test": "node --test",
+    "docs:check": "node docs-check.mjs",
+    "format": "true",
+    "format:check": "true"
+  }
+}

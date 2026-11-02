@@ -1,7 +1,7 @@
 ---
 id: SPEC-0003
 title: Deterministic harness state for bootstrap-project-harness
-status: ready
+status: implemented
 priority: P1
 created_at: 2026-11-02
 updated_at: 2026-11-02
@@ -111,21 +111,26 @@ Not applicable.
   its `why:` carries the measured rate. Below 10 of 12 the script still ships,
   the case keeps `manual` with the rate recorded, and this AC is reported as
   failed — the spec stays honest about a mechanism that did not reach the
-  behaviour.
+  behaviour. **Result: 12 of 12 stopped and changed nothing**, up from 5 of 12
+  before the script. The first scoring pass read 9/12 because the case's reply
+  regex did not accept `state: complete`, the line the script prints; after the
+  assertion was widened, the same transcripts re-judge as 12/12.
 - AC-5 — The Python template gains a `smoke` recipe that runs without an
   install, matching the TypeScript one.
 - AC-6 — `validate-skills`, `run-evals --list --check` and the test suite pass,
   and the new script's tests plus the parity test are added to the CI step and
-  to the pre-commit command, since CI's existing glob only covers
-  `scripts/lib/evals/`.
+  to `.githooks/pre-commit` (this repo has no `lefthook.yml` of its own), since
+  CI's existing glob only covers `scripts/lib/evals/`.
 - AC-7 — Case 15 stages a fixture that is complete except for one required file
   (`lefthook.yml`). The skill creates it and does not declare the repo complete
   on the first pass; asserted by `file lefthook.yml`. It leaves `status: manual`
-  only at 3/3.
-- AC-8 — A parity test reads `templates/ts` and `templates/python`, applies the
-  name mapping (`x.template` → `x`), and fails when the script's required list
-  and the template directories disagree in either direction. A missing file in
-  the test message names the list to update.
+  only at 3/3. **Result: 3 of 3**, so it is runnable.
+- AC-8 — A parity test maps every file under `templates/` to the path it
+  installs (`x.template` → `x`, the docs files by name) and enforces three
+  things: every required path is installed, every installed path is either
+  required or declared optional, and no optional path is stale or also required.
+  A new template file therefore fails until it is classified, and the message
+  names the list to edit.
 
 ## Open Questions
 
@@ -150,7 +155,7 @@ No blocking question. Two decisions are recorded rather than asked:
 - Structure: `skills/bootstrap-project-harness/scripts/harness-state.mjs` and
   its two tests, `SKILL.md` step 0 and table, `templates/python/justfile.template`,
   `references/evals.md` cases 14 and 15, `.github/workflows/skills.yml`,
-  `lefthook.yml`.
+  `.githooks/pre-commit`.
 - Operations: script, tests, parity test, skill wiring, python smoke, both
   cases, measurement, statuses.
 - Norms: zero new dependencies; Node 20; comments explain why a check exists;

@@ -33,6 +33,12 @@ test-watch:
 docs-check:
     uv run python docs_check.py
 
+# Runs without `uv sync`: the sensor is standard library only, and completeness
+# has to be decidable before the toolchain exists.
+smoke:
+    python3 -m py_compile docs_check.py
+    python3 docs_check.py
+
 clean:
     rm -rf .venv .pytest_cache .ruff_cache .mypy_cache
 

@@ -63,37 +63,46 @@ is ambiguous, **ask which directory**.
 
 ### Harness state
 
-Check the current directory, then pick one of four states:
+The state is the script's answer, not a judgement:
 
-| State               | Signal                          | Action                          |
-| ------------------- | ------------------------------- | ------------------------------- |
-| Empty               | no `.git`, no source            | `git init`, full bootstrap      |
-| Project, no harness | code exists, no `AGENTS.md`     | add sensors + docs skeleton     |
-| Partial harness     | some sensors exist, audit fails | complete only the missing items |
-| Complete harness    | files present, smoke gate passes | stop                           |
+```sh
+node scripts/harness-state.mjs .     # scripts/ sits next to this file
+```
 
-"Complete" has two halves, and neither needs an install:
+It prints `state:` last, one `missing:` line per absent file and one
+`competing:` line per tool that already owns a slot, and exits `0` complete,
+`1` partial, `2` empty, `3` project without harness, `4` ambiguous stack, `64`
+unreadable directory. It only reads: it never writes, installs or fixes.
 
-1. **Files present** — the sensors the stack calls for (`lefthook.yml`,
-   `.prettierrc`, `eslint.config.js` or the Python equivalents), the task runner,
-   `AGENTS.md`, and the `docs/` skeleton.
-2. **Smoke gate** — `just smoke` (or the repo's equivalent) exits 0. It parses the
-   configs, checks the docs tree and syntax-checks the files that need no build.
-   It is deliberately not the full suite.
+| State | Signal | Action |
+| --- | --- | --- |
+| Empty | `state: empty` | `git init`, full bootstrap |
+| Project, no harness | `state: project-no-harness` | add sensors + docs skeleton |
+| Partial harness | `state: partial` | fix only the `missing:` lines, then re-run |
+| Complete harness | `state: complete` | stop |
 
-A full toolchain install is not part of the test: a fresh clone never has one, and
-completeness must be decidable before it. A missing `node_modules`, lockfile, or
-installed hook binary does not make a harness partial — those are what `install`
-produces. A repo without a smoke command is partial until one exists — add it as
-the first fixing step, then re-run it.
+- **`complete`** — report what the script found and stop. No interview, no
+  writes, no pass over the steps below to "verify" it.
+- **`competing: <tool>`** — report and stop. Do not install the harness's tool
+  beside one that already owns that slot.
+- **`ambiguous`** — ask which directory to harness, as the stack rules say. The
+  script refuses instead of guessing.
+- **The script cannot run** (no `node`, no permission) — say so, then read the
+  state from the table by hand.
+
+"Complete" is two halves, neither of which needs an install: the files the
+stack's template installs, and a smoke that exits 0 — `just smoke` when the repo
+has the recipe, otherwise the script's built-in check, which parses the manifests
+and syntax-checks the docs sensor. Install output (`node_modules`, lockfiles,
+installed hook binaries) is never part of the test: a fresh clone has none, and
+completeness must be decidable before it exists.
 
 ## Step by Step
 
-**Before step 1:** decide the state from the table above, and stop there if it is
-complete — files present and the smoke gate passing. Do not run the steps below
-to "verify" what the table already told you, and do not count installed hooks,
-`node_modules` or a lockfile as a gap: they are install output, and the smoke gate
-is written to run without them.
+**Step 0 is the state script.** Run it before anything else and obey it. Do not
+run the steps below to verify what it already told you, and do not count installed
+hooks, `node_modules` or a lockfile as a gap: they are install output, and the
+script is written to run without them.
 
 **Before starting:** Create a TodoWrite with each step as a separate item. Mark `in_progress` only when actively working on that step, and `completed` only after that step's audit check passes.
 

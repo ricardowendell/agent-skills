@@ -1,10 +1,10 @@
 ---
 id: TASK-6
 title: 'bootstrap-project-harness: medir o caminho harness completo -> parar'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-11-01T22:53:00Z'
-updated_date: '2026-11-02T15:05:00Z'
+updated_date: '2026-11-02T15:23:00Z'
 labels: []
 dependencies: []
 ordinal: 6000
@@ -18,9 +18,9 @@ O caso 7 de bootstrap-project-harness registra o bloqueio no topo de references/
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 um caso usa git.json com commit base e chega ao ramo 'harness completo, parar'
+- [x] #1 um caso usa git.json com commit base e chega ao ramo 'harness completo, parar'
 - [ ] #2 o passo de aprovação tem uma resposta estagiada, explícita no caso
-- [ ] #3 os casos manuais que viraram executáveis saem de status: manual
+- [x] #3 os casos manuais que viraram executáveis saem de status: manual
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -55,6 +55,14 @@ created: 2026-11-02T15:05:00Z
 ---
 
 Blind-spot review em 2026-11-02, sete decisões registradas na SPEC-0003: (1) caso 15 mede o erro oposto — quase completo não pode parar; (2) sem node no repo, fallback declarado para a tabela; (3) toolchain concorrente vira linha competing: e a skill reporta e para; (4) lista explícita com teste de paridade contra os templates; (5) 9/12 entrega o script com o caso manual e a AC-4 registrada como falha; (6) stack ambíguo é recusa com exit próprio, não um quinto estado; (7) smoke é just smoke quando existe, senão o check embutido — repo com just smoke quebrado nunca é completo.
+
+---
+
+created: 2026-11-02T15:23:00Z
+
+---
+
+Implementado em 2026-11-02 (SPEC-0003). Resultado medido: caso 14 passou de 5/12 para 12/12 paradas sem tocar arquivo; caso 15 (quase completo, sem lefthook.yml) 3/3 — nomeia o arquivo, cria, não mexe no resto. Ambos saíram de status: manual. A primeira pontuação do caso 14 leu 9/12 porque a regex da resposta não aceitava 'state: complete', a linha que o próprio script imprime; corrigida a asserção, os mesmos transcritos re-julgam 12/12. AC #2 (resposta estagiada para o passo de aprovação) fica aberto: o caminho 'completo' agora termina antes de qualquer pergunta, então ele só vale para o bootstrap de repo vazio, que é outro caso.
 
 ---
 <!-- COMMENTS:END -->

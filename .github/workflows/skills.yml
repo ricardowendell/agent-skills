@@ -21,6 +21,9 @@ jobs:
       - run: node scripts/run-evals.mjs --root skills --list --check
       # The runner's own tests: parser, globs, assertions, fixture staging.
       - run: node --test scripts/lib/evals/*.test.mjs
+      # The state script decides "complete" for every repo the bootstrap touches,
+      # so its list and the templates must agree.
+      - run: node --test skills/bootstrap-project-harness/scripts/*.test.mjs
       # The JS and Python docs-check sensors must agree (references/docs-check.md).
       - run: node scripts/check-sensor-parity.mjs
       # This repo ships authored skills only. Third-party skills stay installed

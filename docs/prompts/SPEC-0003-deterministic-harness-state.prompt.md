@@ -1,6 +1,6 @@
 ---
 spec: SPEC-0003
-spec_sha: 970e625ca288765874ac238688d38a3e4f1933f7882765a7fb9e2b3b267274c5
+spec_sha: 3be313b73c62f8bb00740d97716db1f0ab7aafb65bb3511c55900830a5a1aa3b
 ---
 
 # Implementation Prompt: SPEC-0003 Deterministic harness state
@@ -42,10 +42,10 @@ as failed; AC-5 the Python template gains a smoke recipe that runs without an
 install; AC-6 `validate-skills`, `--list --check` and the suite pass, with the
 new tests added to the CI step and pre-commit command; AC-7 case 15's fixture is
 complete except `lefthook.yml`, the skill creates it and does not stop, asserted
-by `file lefthook.yml`, and it is un-manualed only at 3/3; AC-8 a parity test
-compares the script's required list with `templates/ts` and
-`templates/python` and fails on any disagreement in either direction, naming the
-list to update.
+by `file lefthook.yml`, and it is un-manualed only at 3/3; AC-8 a parity test maps every
+`templates/` file to the path it installs and enforces that every required path
+is installed, every installed path is required or optional, and no optional path
+is stale, naming the list to edit.
 
 **Non-goals.** Do not ship the script into the target repo. Do not install the
 toolchain to decide. Do not add stacks. Do not change what the harness installs.
@@ -96,7 +96,8 @@ not block.
   `smoke`.
 - `skills/bootstrap-project-harness/references/evals.md` and
   `references/evals/15/` — case 15.
-- `.github/workflows/skills.yml` and `lefthook.yml` — the new test commands.
+- `.github/workflows/skills.yml` and `.githooks/pre-commit` — the new test
+  commands.
 
 ## Operations
 
@@ -142,8 +143,8 @@ not block.
    ```
 8. **CI and hooks.** Add
    `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` to the test
-   step in `.github/workflows/skills.yml` and to the equivalent command in
-   `lefthook.yml`.
+   step in `.github/workflows/skills.yml` and to `.githooks/pre-commit`, which
+   is the hook this repo actually uses.
 9. **Case 14 measurement.** Run
    `node scripts/run-evals.mjs --root skills --skill bootstrap-project-harness --case 14 --repeat 3 --run`.
    If all three stop, run `--repeat 12` into a fresh run and use the combined
@@ -191,6 +192,6 @@ not block.
 | AC-5 | `just smoke` in a Python fixture exits 0 without `uv sync` |
 | AC-6 | `validate-skills`, `--list --check`, and both new test files pass |
 | AC-7 | Case 15 at 3 runs: `file lefthook.yml` passes, no first-pass "complete" |
-| AC-8 | `node --test skills/bootstrap-project-harness/scripts/template-parity.test.mjs` fails when a template file is added without the list |
+| AC-8 | `node --test skills/bootstrap-project-harness/scripts/template-parity.test.mjs` fails when a template file is added without being classified |
 
 Done when every AC passes and the spec status is updated.
