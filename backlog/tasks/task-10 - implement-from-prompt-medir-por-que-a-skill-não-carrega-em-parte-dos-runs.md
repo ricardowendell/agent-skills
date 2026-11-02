@@ -1,10 +1,10 @@
 ---
 id: TASK-10
 title: 'implement-from-prompt: medir por que a skill não carrega em parte dos runs'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-02T20:10:00Z'
-updated_date: '2026-11-02T20:10:00Z'
+updated_date: '2026-11-02T18:20:00Z'
 labels: []
 dependencies: []
 ordinal: 10000
@@ -13,25 +13,30 @@ ordinal: 10000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Fechando a TASK-9, o caso #8 de `implement-from-prompt` ficou vermelho por um motivo que não é o comportamento medido: em parte das execuções a skill simplesmente não carrega.
+A skill não carrega em parte das execuções de `implement-from-prompt`, e um run sem skill é indistinguível de "a skill não ajudou" no agregado. Se a taxa for grande, todo número de melhoria fica contaminado por ela.
 
-Dados de 2026-11-02, todos os runs de `implement-from-prompt` com gate registrado: 30 repetições, 3 sem carregar. As três estão no caso #8, cujo prompt é `Implement docs/prompts/SPEC-0021-format-currency.prompt.md.` — a mesma forma dos casos #1 e #7, que carregaram em 22 de 22.
+Medição de 2026-11-02, 64 repetições em casos que deveriam carregar a skill:
 
-Taxa: 3/8 no #8, 0/22 nos outros. Amostra pequena, então a hipótese de ser específico do caso #8 não está estabelecida; pode ser variância do modelo. O transcript de uma execução perdida mostra 10 chamadas de ferramenta — ler AGENTS.md, listar a árvore, rodar `node --test`, reportar — e nenhuma chamada ao `skill`. Não é falha do gate: é decisão de não carregar.
+| caso | repetições | sem carregar |
+| --- | --- | --- |
+| #1 | 12 | 4 |
+| #5 (trigger) | 4 | 2 |
+| #7 | 12 | 4 |
+| #8 | 36 | 5 |
+| **total** | **64** | **15 (23%)** |
 
-Por que isso importa mais do que parece: um run sem skill é indistinguível de "a skill não ajudou" no agregado. Se a taxa for real, todo número de melhoria fica contaminado por ela.
+O caso #6, que deveria **não** carregar, carregou em 1 de 4.
 
-Fix provável, em ordem: (a) nada, se for variância — então o caso precisa de mais repetições e o número fica documentado; (b) descrição, se o agente não reconhece o gatilho; (c) caso, se o fixture sugerir que a tarefa é pequena demais para valer a skill.
+A hipótese inicial de que o problema era específico do #8 não se sustentou: era 3/8 contra 0/22, mas com amostra maior os misses aparecem em todos os casos (Fisher, #8 contra o resto, p = 0,11). O `0/22` era ruído de n pequeno.
 
-Não vale afrouxar o gate. O `skill`/`notskill` media roteamento e é o que impede um run anônimo de passar por run da skill.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 taxa de carregamento medida por caso (#1, #5, #6, #7, #8) com repetições suficientes para não ser ruído
-- [ ] #2 causa identificada com evidência de transcript, ou registrada como variância se a taxa não se reproduzir
-- [ ] #3 uma mudança só (descrição, caso, ou nenhuma), medida antes/depois nos mesmos casos
-- [ ] #4 gate de skill preservado: nenhum caso passa a aceitar run sem skill
+- [x] #1 taxa de carregamento medida por caso (#1, #5, #6, #7, #8) com repetições suficientes para não ser ruído
+- [x] #2 causa identificada com evidência de transcript, ou registrada como variância se a taxa não se reproduzir
+- [x] #3 uma mudança só (descrição, caso, ou nenhuma), medida antes/depois nos mesmos casos
+- [x] #4 gate de skill preservado: nenhum caso passa a aceitar run sem skill
 <!-- AC:END -->
 
 ## Comments
@@ -41,5 +46,20 @@ created: 2026-11-02T20:10:00Z
 
 ---
 
-Aberto ao fechar a TASK-9, que entregou a primeira melhoria medida e encontrou isto no caminho. O caso #8 fica vermelho por near-miss, não por comportamento — e deixá-lo assim esconde a diferença entre "a skill falhou" e "a skill não foi chamada", que é justamente o que o harness existe para distinguir.
+Aberto ao fechar a TASK-9, que entregou a primeira melhoria medida e encontrou isto no caminho.
+
+---
+
+Resultado, 2026-11-02. A taxa é **~23%** e não é do caso #8: aparece em #1 (4/12), #5 (2/4), #7 (4/12) e #8 (5/36). A leitura anterior, "3 de 8 no #8 contra 0 de 22 nos outros", era coincidência de amostra.
+
+Causa, com evidência: em **nenhum** dos misses houve chamada ao `skill`. Não é falha de carregamento nem do gate — é o run inteiro seguindo sem chamar. Dois testes descartam que a ferramenta esteja indisponível:
+
+- pedido explícito para carregar a skill, com ela staged: **6/6** carregaram;
+- perguntar quais skills existem: **10/10** listaram a skill.
+
+Então: decisão do modelo, não disponibilidade. AC-3 fecha em **nenhuma mudança de descrição ou de caso** — o gatilho léxico é exato (`Implement docs/prompts/...`) e mesmo assim falha, o que descrição nenhuma conserta.
+
+AC-4 mantido: o gate segue estrito. Nenhum caso passou a aceitar run sem skill.
+
+O que fica aberto, e virou **TASK-11**: os runs de eval não são isolados das skills globais. Num scratch vazio, sem nada staged, o agente lista **22 skills** (3/3 execuções), incluindo `implement-from-prompt`. Isso é candidato a causa da diluição de atenção, e é a próxima medição — não foi consertado aqui porque mudar o ambiente muda o que se mede.
 <!-- COMMENTS:END -->

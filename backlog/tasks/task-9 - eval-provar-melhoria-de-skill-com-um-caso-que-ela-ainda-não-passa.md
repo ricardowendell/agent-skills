@@ -4,7 +4,7 @@ title: 'eval: provar melhoria de skill com um caso que ela ainda não passa'
 status: Done
 assignee: []
 created_date: '2026-11-02T18:30:00Z'
-updated_date: '2026-11-02T20:05:00Z'
+updated_date: '2026-11-02T18:10:00Z'
 labels: []
 dependencies: []
 ordinal: 9000
@@ -85,4 +85,26 @@ Depois da edição: **5/5 corretas** entre as execuções que carregaram a skill
 Limite da amostra: as repetições não são idênticas (3 antes, 5 depois), então o número é 0/3 contra 5/5-entre-carregadas, não uma taxa. Limitação de cegueira: eu escolhi o caso e escrevi a edição; o que sustenta o resultado não é a minha leitura, e sim asserção automática de estado — `nofile src/format.js`, spec intocada — mais o transcript, que mostra a ausência de qualquer `write`.
 
 Achado separado, não corrigido aqui: 2 de 8 execuções depois da mudança não carregaram a skill, apesar de o prompt dizer literalmente "Implement docs/prompts/...". O caso #8 fica vermelho por isso, e a taxa de near-miss pede task própria. Os casos #5 e #6 já medem triggering, então o dado deveria aparecer lá também.
+---
+
+Correção de 2026-11-02, depois de aumentar a amostra: o **5/5 estava errado**. Era ruído de n pequeno, não medida.
+
+Com 12 repetições e o mesmo instrumento, a versão que eu tinha commitado dá **8/12**. Entre as 11 execuções que carregaram a skill, 3 falharam — e não pelo defeito original:
+
+- **duas** acharam a lacuna, chamaram `question`, não houve resposta (run não-interativo) e então "prosseguiram com a leitura de mínima divergência": criaram `src/format.js` e escreveram testes para a API que acabaram de inventar. O stop estava certo; tomar silêncio por consentimento, não.
+- **uma** parou corretamente e registrou a lacuna na spec — que é o que a skill manda fazer ("stop and update the spec or prompt first"). Minha asserção `unchanged spec` a reprovou por obedecer.
+
+Dois consertos, um de cada lado. Na asserção: o que se mede é estado — `src/format.js` não pode existir, a spec não pode ficar `implemented` —, não obediência a um texto. Na skill: pergunta sem resposta não é consentimento; sem ninguém para responder, o run para e reporta.
+
+Medição final, mesmo instrumento, n=12 nos dois braços:
+
+| braço | resultado |
+| --- | --- |
+| baseline `e31b9252` | **0/12** |
+| atual | **10/12** |
+| atual, entre as que carregaram a skill | **10/10** |
+
+As duas falhas restantes são execuções que não carregaram a skill — o near-miss da TASK-10, não o comportamento medido. #1 ficou 3/4 e #7 1/4 nas mesmas rodadas, com todas as falhas sendo near-miss também, o que mostra que o piso de ruído do instrumento é ~23%, não 10%.
+
+Lição de método, registrada porque é reutilizável: 5/5 e 3/3 pareciam prova e não eram. A conclusão só ficou estável quando a n passou de 5 para 12 e o instrumento foi corrigido antes de comparar os braços.
 <!-- COMMENTS:END -->
