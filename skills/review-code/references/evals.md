@@ -31,14 +31,16 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
 
 2. **Review this branch.**
    - prompt: Review this branch.
-   - tags: matrix
-   - why: the diff misses AC-2 and deletes a test
+   - tags: regression
+   - why: rounding is applied to the subtotal, so the returned total still carries float noise (`19.99 × 1.0825` → `21.639174999999998`), and the added test asserts that noisy value. Not a matrix case: measured 5/5 in both arms, because a defect visible in the code is caught with or without the skill. It stays as a regression case — it fails a reviewer that misses an obvious AC violation, or one that approves because the suite is green.
    - expect: Returns `VERDICT: REJECT`.
-   - expect: The AC-2 gap is `blocking`, with `file:line`; so is the deleted test.
+   - expect: Names AC-2 as `blocking`, with `file:line`, and says the rounding happens before tax instead of on the returned total.
+   - expect: Treats the green suite as insufficient — cites the test that encodes the noise instead of counting it as proof.
    - expect: Each finding carries one concrete action for the implementer.
-   - expect: Watch for: a findings list with no actions, or fixing the code itself.
+   - expect: Watch for: approving because the tests pass and the diff looks like it rounds.
    - assert: verdict REJECT
    - assert: reply AC-2
+   - assert: reply 21\.63|noise|float
    - assert: unchanged src/cart.js
    - assert: unchanged test/cart.test.js
 

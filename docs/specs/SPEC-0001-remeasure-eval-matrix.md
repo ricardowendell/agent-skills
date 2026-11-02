@@ -160,6 +160,20 @@ None blocking. Decisions taken before implementation, on 2026-11-01:
   date, the models and the repetition count, which is what lets a reader date a
   figure without trusting a file they cannot see.
 
+## Amendment — 2026-11-02: case #2 left the matrix
+
+The contract above was executed as written: four cases, 80 runs, published. Two
+assertion defects then invalidated the control numbers (see the matrix document),
+and the control cells were re-measured. While replacing #2's fixture with a
+harder one, the control passed it 5/5 and the transcripts showed it finding the
+spec and probing the edge case on its own. A diff-reading case cannot separate
+the arms, because the control reads code as well as the skill does.
+
+#2 therefore dropped the `matrix` tag and stays as a regression case. The matrix
+is now #1, #3 and #4 × 2 models × 2 arms × 5 = 60 runs, aggregated over 15 per
+cell. Repetitions, per-run directories, aggregate reading and parity-as-a-path-
+test are unchanged.
+
 ## Prompt Notes
 
 - Requirements: the measurement must not change the instrument. If a case looks
