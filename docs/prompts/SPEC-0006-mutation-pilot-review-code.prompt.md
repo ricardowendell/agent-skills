@@ -1,6 +1,6 @@
 ---
 spec: SPEC-0006
-spec_sha: e1ef43410b9727f7680781293e440706f8ca63a4687de96a578817933bd6e141
+spec_sha: 1d7340dd37906d94f68bfd66c3db018791b24a42c4081b931297104f428a2a92
 ---
 
 # Implementation Prompt: SPEC-0006 Mutation Pilot for review-code
@@ -11,182 +11,165 @@ spec_sha: e1ef43410b9727f7680781293e440706f8ca63a4687de96a578817933bd6e141
 
 ## Requirements
 
-**User outcome.** A reader of `docs/evals/experiments/mutation/review-code/README.md`
-learns which `review-code` rules the corpus actually defends, which mutations
-survived, and — for each survivor — whether the agent failed to show the defect
-or the assertions failed to catch it.
+**User outcome.** Two answers, in this order: which rules of `review-code` have no
+assertion that would fail if the rule were disobeyed, and — for the two worst of
+those — whether the corpus notices when the rule is removed.
 
 **Scope.**
 
-- Three rule-removal mutations of `review-code`, each with its discriminating case:
-  `no-gates` → case #1, `ignore-spec-sha` → case #4,
-  `decide-without-declaration` → case #3.
-- Four roots: one untouched baseline, three mutants, each a full copy of
-  `skills/review-code` under
-  `docs/evals/experiments/mutation/review-code/<variant>/skills/review-code/`.
-- Reproduce the baseline first, then run each mutation three times.
-- Record protocol, hashes, commands, results and cost in the experiment `README.md`.
+- A **coverage map** first, with no model runs: every numbered rule of
+  `skills/review-code/SKILL.md` mapped to the case and assertion that would fail,
+  or marked `no assertion`.
+- **One control mutation**, `no-gates`, on case #1, known to be covered by
+  `ranpass npm test`. It proves the method can detect a mutation at all.
+- **Two probe mutations** on rules the map marks `no assertion`, chosen by blast
+  radius — a violation that could let a bad change merge outranks one that only
+  affects prose.
+- Baseline reproduced first (#1, #3, #4 at five repetitions), then each mutation
+  three times against its case.
+- Four roots under `docs/evals/experiments/mutation/review-code/`.
 
 **Acceptance criteria** (copied from the spec):
 
-- AC-1 — The baseline for #1, #3 and #4 is reproduced on the current harness
-  before any mutation runs, and the run artifacts show the same case status as
-  the matrix records (5/5 each with the skill). Verified by the result JSON, not
-  by the console summary.
-- AC-2 — Three mutant roots exist, each byte-identical to the baseline except for
-  the removed rule in `SKILL.md`, and
-  `node scripts/run-evals.mjs --root <mutant>/skills --list --check` exits 0 for
-  all of them. Verified by diffing the roots and by the command's exit status.
-- AC-3 — Every mutation run shows `loaded review-code` from inside the scratch
-  dir; a run that loaded nothing is **invalid**, not detection. Verified by
-  `skillGate` in the result JSON.
-- AC-4 — Each mutation runs three times against its case and is classified:
-  detected (a named assertion failed in at least one repetition), survivor (three
-  of three passed and the trace shows the defect was manifested), or invalid.
-  Verified by per-repetition results plus one transcript per mutation.
-- AC-5 — For every survivor the README states which kind it is — manifested and
-  not caught, or not manifested — quoting the trace line that settles it.
-- AC-6 — The README records repo sha, the `SKILL.md` hash of each root, the
-  model, the exact commands, the per-mutation result and the cost in runs.
-- AC-7 — If and only if a survivor is a real gap, one new case is added to both
-  roots and that mutation is re-run; the corpus grows by at most one case.
+- AC-1 — `rule-coverage.md` lists every numbered rule, each mapped to a case and
+  assertion or marked `no assertion`, with the two probe rules justified by blast
+  radius.
+- AC-2 — Baseline #1, #3, #4 reproduced at 5/5 each before any mutation, verified
+  in the result JSON.
+- AC-3 — The control `no-gates` is detected on case #1 by the gate assertion; if
+  not, the pilot stops and records a method failure.
+- AC-4 — The two probes target rules marked `no assertion`; only the control
+  targets a covered rule.
+- AC-5 — Three mutant roots are byte-identical to the baseline except `SKILL.md`,
+  and each passes `--list --check`.
+- AC-6 — Every mutation run reports `loaded review-code` from inside the scratch;
+  a run that loaded nothing is `invalid`.
+- AC-7 — Each mutation runs three times and is classified, with one transcript
+  per mutation; survivors are split into *manifested and not caught* versus *not
+  manifested*, quoting the trace line.
+- AC-8 — At most one new case, only for a *manifested and not caught* survivor,
+  added to both roots and re-run.
+- AC-9 — The README records repo sha, each root's `SKILL.md` hash, the model, the
+  commands, the per-mutation result and the cost in runs.
 
-**Non-goals.** Do not add a `--variant` flag, scheduler or mutation library. Do
-not edit `skills/review-code/SKILL.md` — mutants are copies. Do not fix what a
-survivor exposes. Do not mutate semantically (rewrite a rule to be subtly wrong);
-removal only. Do not run other skills or other cases. Do not count an invalid
-mutant as detection.
+**Non-goals.** Do not mutate a rule that already has an assertion, except the
+single control. Do not add a `--variant` flag or a mutation library. Do not edit
+`skills/review-code/SKILL.md`. Do not fix what a survivor exposes. Do not mutate
+semantically. Do not add a case for a redundancy.
 
 ## Entities
 
-- **Mutation** — one removed rule plus every sentence that restates it, so the
-  rest of the skill cannot compensate.
-- **Root** — a directory containing `skills/review-code/`, discoverable by
-  `--root`.
-- **Discriminating case** — the case whose assertions can fail only if the
-  removed rule mattered: #1 for gates, #4 for the spec hash, #3 for the
-  undeclared review basis.
+- **Rule** — one numbered instruction in the workflow, the rules list or the
+  verifier section.
+- **Coverage map** — rule → case + assertion, or `no assertion`.
+- **Control** — a mutation of a rule the corpus is known to assert; its job is to
+  fail if the method is broken.
+- **Probe** — a mutation of a rule the map marks uncovered.
+- **Root** — a directory containing `skills/review-code/`, discovered by `--root`.
 - **Classification** — `detected`, `survivor`, `invalid`; survivors split into
-  *manifested and not caught* versus *not manifested*.
-- **Baseline** — the untouched copy, run on the current harness.
+  *manifested and not caught* and *not manifested*.
 
 ## Approach
 
-Copy first, then mutate, then validate, then measure. The order matters: a mutant
-that fails to load produces a red run that looks like detection, so loading is
-verified before any repetition is paid for. The baseline is reproduced before the
-mutants so a red result can be attributed to the mutation rather than to a
-harness that moved since the matrix.
-
-The three rules already exist in `skills/review-code/SKILL.md`; do not invent
-replacements. For each mutation, remove the rule and its restatements, and leave
-the surrounding prose coherent — a `SKILL.md` that contradicts itself measures an
-ambiguous skill instead of a broken one.
+Map before mutating, and mutate before measuring. The map costs no runs and
+decides which two mutations are worth paying for; choosing them in advance is how
+the first draft ended up testing three rules that already had assertions. The
+control runs before the probes so a broken method is discovered at three runs
+instead of nine.
 
 ## Structure
 
-- `docs/evals/experiments/mutation/review-code/README.md` — protocol and results.
+- `docs/evals/experiments/mutation/review-code/rule-coverage.md`
+- `docs/evals/experiments/mutation/review-code/README.md`
 - `docs/evals/experiments/mutation/review-code/baseline/skills/review-code/`
 - `docs/evals/experiments/mutation/review-code/no-gates/skills/review-code/`
-- `docs/evals/experiments/mutation/review-code/ignore-spec-sha/skills/review-code/`
-- `docs/evals/experiments/mutation/review-code/decide-without-declaration/skills/review-code/`
+- `docs/evals/experiments/mutation/review-code/<probe-1>/skills/review-code/`
+- `docs/evals/experiments/mutation/review-code/<probe-2>/skills/review-code/`
 
-Each root carries the same `references/evals.md` and `references/evals/**` as the
-real skill. Only `SKILL.md` differs, and only in the mutant roots.
+Only `SKILL.md` differs between roots.
 
 ## Operations
 
-1. Create the four roots and copy `skills/review-code` into each. Verify with
-   `diff -r` that every mutant root is identical to the baseline at this point.
-2. Mutate **`no-gates`**. In `SKILL.md`, remove the requirement to run the
-   project's gates and to hold a verdict on a red or unrun gate. Today that rule
-   lives in the workflow step that runs the gates, in the decision step that makes
-   APPROVE contingent on them, and in the rules list ("Never approve with a
-   failing or unrun gate"). Remove all three; do not replace them with a weaker
-   instruction, and do not touch unrelated steps.
-3. Mutate **`ignore-spec-sha`**. Remove the stale-spec rule: the workflow step
-   that stops when the recorded spec hash no longer matches, and the rule that the
-   verdict line carries `(spec hash: mismatch)` and sends the change back. Leave
-   the rest of the evidence walk intact, so the mutant still reviews — it just
-   reviews against a contract that moved.
-4. Mutate **`decide-without-declaration`**. Remove the rule that a missing spec
-   must be declared by the user before the review adopts a fallback basis, and the
-   rules-list statement that an unanswered question is not a declaration. The
-   mutant should be able to decide on its own initiative when no basis is given.
-5. Validate every root before measuring:
-   - `node scripts/run-evals.mjs --root <root>/skills --list --check` exits 0.
-   - `diff -r baseline/skills/review-code <mutant>/skills/review-code` shows only
-     `SKILL.md`, and only the lines the mutation intended.
-   - One throwaway run per mutant root reports `loaded review-code` from inside
-     the scratch dir; otherwise fix the root before spending repetitions.
-6. Reproduce the baseline, five repetitions per case:
+1. Read `skills/review-code/SKILL.md` end to end and
+   `skills/review-code/references/evals.md` end to end. Build
+   `rule-coverage.md`: one row per rule, with the case and assertion that would
+   fail, or `no assertion`. Do not trust memory — several assertions changed on
+   2026-11-03 and case #3 was rewritten.
+2. Rank the `no assertion` rules by blast radius and take the top two as probes.
+   Record the ranking and the reason in the map. If fewer than two rules are
+   uncovered, the pilot shrinks to what the map found and says so.
+3. Create the four roots and copy `skills/review-code` into each. Verify with
+   `diff -r` that they are identical before editing.
+4. Mutate the control `no-gates`: remove the requirement to run the project's
+   gates and the rule that APPROVE depends on them. That rule lives in the
+   workflow step that runs the gates, in the decision step, and in the rules list
+   ("Never approve with a failing or unrun gate"). Remove all three.
+5. Mutate probe 1: remove the rule and every sentence that restates it, so the
+   rest of the skill cannot compensate.
+6. Mutate probe 2 the same way.
+7. Validate every root: `--list --check` exits 0; `diff -r` against the baseline
+   shows only `SKILL.md`; one throwaway run reports `loaded review-code` from the
+   scratch dir.
+8. Reproduce the baseline for #1, #3 and #4, five repetitions each:
    ```
    node scripts/run-evals.mjs --root docs/evals/experiments/mutation/review-code/baseline/skills \
      --skill review-code --case 1 --repeat 5 --timeout 240 --run
    ```
-   and the same for `--case 3` and `--case 4`. All three must land at 5/5. If one
-   does not, stop: the harness moved and the pilot would measure that instead.
-7. Run the mutations, three repetitions each, in this order:
+   All three must be 5/5. Any other result stops the pilot.
+9. Run the control three times on case #1:
    ```
    .../no-gates/skills --skill review-code --case 1 --repeat 3 --timeout 240 --run
-   .../ignore-spec-sha/skills --skill review-code --case 4 --repeat 3 --timeout 240 --run
-   .../decide-without-declaration/skills --skill review-code --case 3 --repeat 3 --timeout 240 --run
    ```
-   Inspect one trace per mutation before paying for the other two repetitions. If
-   the mutant still obeys the rule, the result is inconclusive about the corpus;
-   do not force a failure to produce a rate.
-8. Classify each mutation from the per-repetition result JSON and the traces:
-   - `detected` when a named assertion failed; record the assertion.
-   - `survivor` when 3/3 passed and the transcript shows the defect happened.
-   - `invalid` when the run loaded nothing, the root did not parse, or the trace
-     shows the agent never reached the mutated behaviour.
-   For a survivor, state which kind it is and quote the line that settles it.
-9. Write `README.md` with: repo sha, the `SKILL.md` sha256 of each root, the
-   model, the exact commands, the per-mutation table, the traces or run
-   directories used as evidence, and the cost in runs.
-10. If a survivor is a real gap, add at most one case to `references/evals.md` in
-    **both** roots, re-run that mutation, and record the new case and the re-run
-    in the README.
-11. Set the spec `status: implemented`, fill `tests:`, and report the results.
+   It must be detected by `ranpass npm test` (or another named assertion). If it
+   is not, stop and record a method failure — do not run the probes.
+10. Run each probe three times against its discriminating case, inspecting one
+    trace before paying for the other two repetitions.
+11. Classify from the per-repetition JSON and the traces. For a survivor, state
+    which kind it is and quote the line that settles it. If the trace shows
+    neither the defect nor a detection, record the mutation as inconclusive.
+12. Write `README.md`: repo sha, `SKILL.md` sha256 per root, model, exact
+    commands, per-mutation table, evidence run directories, cost in runs.
+13. If a survivor is *manifested and not caught*, add at most one case to
+    `references/evals.md` in both roots, re-run that mutation, and record it.
+14. Set the spec `status: implemented`, fill `tests:`, and report.
 
 ## Norms
 
-- Commands and results in the README; experiment prose in Portuguese, code and
-  commit messages in English.
-- Conventional Commits, imperative, at most 72 characters in the subject.
-- Keep the runner's defaults: isolated home, `--timeout 240` to bound a stalled
-  run, `--repeat` as stated.
-- Match the surrounding experiment conventions: one directory per experiment,
-  README at its root, evidence linked by run directory, not by prose.
+- Experiment prose in Portuguese; code, commands and commit messages in English.
+- Conventional Commits, imperative subject at most 72 characters.
+- Keep the runner's defaults: isolated home, `--timeout 240`, `--repeat` as stated.
+- One directory per experiment, README at its root, evidence linked by run
+  directory rather than by prose.
 - No new dependencies, no new script, no new flag.
 
 ## Safeguards
 
-- Do not edit `skills/review-code/SKILL.md` or its evaluations. Mutants are
-  copies under the experiment directory.
-- Do not stage `references/evals.md` or `references/evals/` inside a root that the
-  agent can read: the runner already excludes them from the scratch copy, and a
-  root that leaks the answer key measures nothing.
-- Do not add more than one new case, and only after a survivor is shown to be a
-  real gap.
-- Do not treat an invalid mutant, a failed load or a missing skill load as
+- Do not edit `skills/review-code/SKILL.md` or its evaluations. Mutants are copies.
+- Only the control may remove a rule the corpus already asserts; a probe on a
+  covered rule would restate what is known.
+- Do not stage `references/evals.md` or `references/evals/` where the agent can
+  read them; the runner excludes them, and a root that leaks the answer key
+  measures nothing.
+- Do not count an invalid mutant, a failed load or a missing skill load as
   detection.
-- Do not compare against the pre-isolation matrix numbers; the baseline for this
-  pilot is the isolated one.
-- Do not change the real skill in this task, even if a survivor looks obviously
-  fixable.
+- Do not add a case for a rule the model follows without being told: that is
+  redundancy, and the fix would be in the skill, not the corpus.
+- Do not compare against the pre-isolation matrix numbers.
+- Do not change the real skill in this task, even if a survivor looks fixable.
 
 ## Verification
 
 | AC | Check |
 | --- | --- |
-| AC-1 | Baseline result JSON for #1, #3, #4 shows `passed`, 5/5 each |
-| AC-2 | `diff -r` between roots prints only `SKILL.md`; `--list --check` exits 0 for each root |
-| AC-3 | `skillGate.ok` is true and `loaded` names `review-code` in every mutation repetition |
-| AC-4 | Per-repetition results and one transcript per mutation, classified |
-| AC-5 | README quotes the trace line for every survivor |
-| AC-6 | README has sha, hashes, model, commands, table and run count |
-| AC-7 | `--list --check` totals show at most one added case, and the re-run is recorded |
+| AC-1 | Map read against `SKILL.md`; every rule accounted for; probes justified |
+| AC-2 | Baseline result JSON: `passed`, 5/5 on #1, #3, #4 |
+| AC-3 | Control result JSON shows the gate assertion failing |
+| AC-4 | Map marks both probes `no assertion`; `diff -r` shows only the intended rule removed |
+| AC-5 | `diff -r` between roots; `--list --check` exit 0 per root |
+| AC-6 | `skillGate.ok` true and `loaded` names `review-code` in every repetition |
+| AC-7 | Per-repetition results plus one transcript per mutation; survivor lines quoted |
+| AC-8 | `--list --check` totals and the re-run recorded |
+| AC-9 | README has sha, hashes, model, commands, table and run count |
 
-The work is done when every AC above holds, the README reads as a standalone
-record, and the spec is `implemented` with `tests:` filled.
+The work is done when every AC above holds, the map stands on its own as a
+coverage record, and the spec is `implemented` with `tests:` filled.

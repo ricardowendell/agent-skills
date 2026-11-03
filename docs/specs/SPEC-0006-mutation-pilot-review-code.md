@@ -28,92 +28,95 @@ not about the corpus.
 
 The open question is the inverse: if a rule that matters were removed from
 `SKILL.md`, would any case fail? A corpus that cannot answer this cannot protect
-the skill from a future edit, and every green number it produces is weaker than
-it looks.
+the skill from a future edit.
+
+The first draft of this spec chose three rules whose coverage was already known:
+the gate (`ranpass npm test` on case #1), the spec hash (case #4) and the
+unspoken review basis (case #3, tightened the same day). All three would be
+detected by construction. That measures the method, not the corpus. The design
+below separates the two.
 
 ## User Outcome
 
-A reader of `docs/evals/experiments/mutation/review-code/README.md` learns which
-`review-code` rules the corpus actually defends, which mutations survived, and —
-for each survivor — whether the agent failed to show the defect or the assertions
-failed to catch it. Those are different problems with different fixes.
+A reader learns two things. First, which rules of `review-code` have no
+assertion that would fail if the rule were disobeyed — a coverage map that costs
+no model runs. Second, for the two rules that map to nothing, whether the corpus
+notices when the rule is removed, and if not, whether the defect happened and was
+missed or never happened at all.
 
 ## Scope
 
-- Three mutations of `review-code`, one rule each:
-  - **M1 `no-gates`** — allow approval without running the verification commands.
-    Discriminating case: #1 (review against SPEC-0007).
-  - **M2 `ignore-spec-sha`** — review as if the contract were current when the
-    spec moved after the stamp. Discriminating case: #4 (spec moved after the
-    stamp).
-  - **M3 `decide-without-declaration`** — issue a verdict on a branch with no
-    spec and no fallback authorized by the user. Discriminating case: #3.
-- Each mutation is staged as its own root, next to an untouched baseline root:
+- **A coverage map, first and without model runs.** Every numbered rule in
+  `skills/review-code/SKILL.md` mapped to the assertion that would fail if it were
+  violated, or explicitly marked `no assertion`. Deliverable:
+  `docs/evals/experiments/mutation/review-code/rule-coverage.md`.
+- **One control mutation**, chosen because it is known to be asserted:
+  `no-gates` on case #1 (`ranpass npm test`). Its purpose is to prove the method
+  can detect a mutation at all. If it is not detected, the pilot stops.
+- **Two probe mutations** on rules the map marks `no assertion`, chosen by blast
+  radius: the ones whose violation could reach a merge unnoticed. The map decides
+  which; the spec does not name them in advance.
+- Four roots under
+  `docs/evals/experiments/mutation/review-code/`: an untouched baseline, the
+  control, and the two probes.
+- Reproduce the baseline first (cases #1, #3, #4 at five repetitions), then run
+  each mutation three times against its discriminating case.
+- Record protocol, map, hashes, commands, results and cost in the experiment
+  directory.
 
-  ```
-  docs/evals/experiments/mutation/review-code/baseline/skills/review-code/
-  docs/evals/experiments/mutation/review-code/no-gates/skills/review-code/
-  docs/evals/experiments/mutation/review-code/ignore-spec-sha/skills/review-code/
-  docs/evals/experiments/mutation/review-code/decide-without-declaration/skills/review-code/
-  ```
-
-  Every root carries the same `references/evals.md` and the same fixtures. The
-  only difference is the mutant `SKILL.md`.
-- Reproduce the baseline first, on the current harness, for the three cases.
-- Run each mutation three times against its case, then classify.
-- Record the result, the commands, the hashes and the cost in the experiment
-  `README.md`.
-
-**Blast radius.** One skill's corpus (`review-code`), one experiment directory,
-and at most one new case if a survivor turns out to be a real gap. No runner
-code, no new flag, no change to the case format, no other skill, no matrix
-re-run.
+**Blast radius.** One skill's rule map, one experiment directory, at most one new
+case. No runner code, no new flag, no case-format change, no other skill, no
+matrix re-run.
 
 ## Non-Goals
 
-- **A mutation framework.** Three hand-made roots and `--root` are enough for the
-  pilot. A `--variant` flag, a scheduler or a library is out of scope until a
-  second skill needs the same thing.
-- **Changing `SKILL.md`.** A mutation is a temporary copy under the experiment
-  directory. The real skill is not edited in this spec.
-- **Fixing what a survivor exposes.** A real gap becomes a task; the fix and its
-  measurement are separate, so the corpus change and the skill change are not
-  judged in the same run.
-- **Semantic mutation.** Only rule removal. Rewriting instructions to be subtly
-  wrong is a different experiment with a different failure mode.
-- **Every skill and every case.** One skill, three rules, one case each.
-- **A passing verdict for an invalid mutant.** If the mutant fails to load
-  (bad YAML, provenance failure), that is an experiment failure, not detection.
+- **Mutating rules that already have an assertion.** Only the single control may
+  do that; it exists to validate the method. A probe on a covered rule restates
+  what the corpus already claims.
+- **A mutation framework.** Four hand-made roots and `--root` are enough.
+- **Changing `SKILL.md`.** Mutants are copies; the real skill is not edited.
+- **Fixing what a survivor exposes.** A gap becomes a task, measured separately.
+- **Semantic mutation.** Removal only.
+- **Treating redundancy as a gap.** A rule the model follows without being told is
+  not a corpus hole; it is a candidate for removal from the skill, and that is a
+  different decision with its own evidence.
+- **Every skill and every case.** One skill, three mutations, one case each.
 
 ## Flow
 
-1. Copy `skills/review-code` into the baseline root and into the three mutant
-   roots.
-2. In each mutant root, remove one rule from `SKILL.md` **and** every sentence
-   that restates it, so the rest of the skill cannot compensate. Leave headers
-   coherent.
-3. Confirm the mutant loads: `--list --check` parses, and a single run reports
-   `loaded review-code` from the scratch dir. A provenance failure means the run
-   tested something else.
-4. Reproduce the baseline for cases #1, #3 and #4 at the configured repetitions.
-   If the baseline does not pass, stop: the mutation would be measured against a
-   corpus that was already red.
-5. Run each mutation against its own case, inspect one trace before paying for
-   the repetitions, then run the repetitions.
-6. Classify each mutation as **detected**, **survivor** or **invalid**, with the
-   failing assertion named for a detection, or the trace evidence for a survivor.
-7. For a survivor, decide which of the two kinds it is: the defect was manifested
-   and the assertions missed it, or the agent did not manifest the defect at all.
-8. If a survivor is a real gap, write at most one new case, add it to both roots,
-   and re-run that mutation.
+1. Build the coverage map from the workflow steps, the rules list and the
+   verifier section of `review-code/SKILL.md`. For each rule, name the case and
+   assertion that would fail. Mark the rest `no assertion`. Re-read the case
+   files for this; do not trust memory of what the corpus checks.
+2. Rank the `no assertion` rules by blast radius: a violation that could let a
+   bad change merge ranks above one that only affects the report's prose.
+3. Take the top two as probes. Record the ranking and why these two won.
+4. Copy `skills/review-code` into the baseline and into three mutant roots.
+5. Mutate the control (`no-gates`) and the two probes, each by removing the rule
+   **and** every sentence that restates it.
+6. Validate every root: `--list --check` exits 0, `diff -r` against the baseline
+   shows only `SKILL.md`, and one throwaway run reports `loaded review-code` from
+   inside the scratch dir.
+7. Reproduce the baseline for #1, #3 and #4 at five repetitions. If one is not
+   5/5, stop: the harness moved and the pilot would measure that instead.
+8. Run the control three times. If it is not detected, stop and report the method
+   as broken; the probes would mean nothing.
+9. Run each probe three times, inspecting one trace before paying for the other
+   repetitions.
+10. Classify each mutation: `detected` (a named assertion failed), `survivor`
+    (3/3 passed and the trace shows the defect happened) or `invalid` (did not
+    load, or the agent never reached the mutated behaviour).
+11. For each survivor, state the kind and quote the line that settles it. Only
+    *manifested and not caught* produces a new case (at most one), added to both
+    roots and re-run. *Not manifested* is recorded as redundancy, with no corpus
+    change.
 
 ## Data
 
 No persistence. The experiment lives in
-`docs/evals/experiments/mutation/review-code/`, with one `README.md` holding the
-protocol, the baseline, the per-mutation result and the cost. Mutant roots are
-scratch artefacts of the experiment and stay untracked unless a result needs them
-reproduced later — the README must say how to rebuild them either way.
+`docs/evals/experiments/mutation/review-code/`, with `rule-coverage.md` and
+`README.md` at its root. Mutant roots are scratch artefacts; the README must say
+how to rebuild them.
 
 ## UI Notes
 
@@ -121,79 +124,69 @@ Not applicable.
 
 ## Acceptance Criteria
 
-- AC-1 — The baseline for `review-code` #1, #3 and #4 is reproduced on the
-  current harness before any mutation runs, and the run artifacts show the same
-  case status as the matrix records (5/5 each with the skill). Verified by the
-  result JSON of each case, not by the console summary.
-- AC-2 — Three mutant roots exist, each byte-identical to the baseline except for
-  the removed rule in `SKILL.md`, and `node scripts/run-evals.mjs --root
-  <mutant>/skills --list --check` exits 0 for all of them. Verified by listing
-  the diff between roots and by the command's exit status.
-- AC-3 — Every mutation run shows `loaded review-code` from inside the scratch
-  dir; a run that loaded nothing is recorded as **invalid**, not as detection.
-  Verified by `skillGate` in the result JSON.
-- AC-4 — Each mutation is run three times against its case and classified:
-  detected (a named assertion failed in at least one repetition), survivor (three
-  of three passed and the trace shows the defect was manifested), or invalid.
-  Verified by the per-repetition results plus the transcript of at least one run
-  per mutation.
-- AC-5 — For every survivor, the README states which of the two kinds it is —
-  manifested and not caught, or not manifested — quoting the trace line that
-  settles it. Verified by reading the README.
-- AC-6 — `docs/evals/experiments/mutation/review-code/README.md` records repo
-  sha, the `SKILL.md` hash of each root, the model, the exact commands, the
-  per-mutation result and the cost in runs. Verified by reading it against the
-  run artifacts.
-- AC-7 — If and only if a survivor is a real gap, one new case is added to both
-  roots and that mutation is re-run; the corpus grows by at most one case.
-  Verified by `--list --check` totals and by the re-run result.
+- AC-1 — `rule-coverage.md` lists every numbered rule of `review-code/SKILL.md`,
+  each mapped to a case and assertion or marked `no assertion`, and the two probe
+  rules are justified by blast radius. Verified by reading the map against the
+  skill file.
+- AC-2 — The baseline for #1, #3 and #4 is reproduced on the current harness at
+  5/5 each before any mutation runs, verified in the result JSON.
+- AC-3 — The control mutation `no-gates` is detected on case #1 by the gate
+  assertion; if it is not, the pilot stops and the failure is recorded as a
+  method failure. Verified by the result JSON and the failing assertion name.
+- AC-4 — The two probes target rules the map marks `no assertion`, and only the
+  control targets a rule that already has one. Verified by cross-reading the map,
+  the roots and `diff -r`.
+- AC-5 — Three mutant roots exist, byte-identical to the baseline except for the
+  removed rule in `SKILL.md`, and each passes `--list --check`. Verified by
+  `diff -r` and the command's exit status.
+- AC-6 — Every mutation run reports `loaded review-code` from inside the scratch
+  dir; a run that loaded nothing is `invalid`, never detection. Verified by
+  `skillGate` in the result JSON.
+- AC-7 — Each mutation is run three times and classified, with one transcript per
+  mutation as evidence; survivors are split into *manifested and not caught*
+  versus *not manifested*, quoting the trace line. Verified by the results and
+  the README.
+- AC-8 — At most one new case is added, and only for a *manifested and not
+  caught* survivor; it is added to both roots and the mutation is re-run.
+- AC-9 — The README records repo sha, the `SKILL.md` hash of each root, the model,
+  the exact commands, the per-mutation result and the cost in runs.
 
 ## Open Questions
 
-**Blocking — none.** Three judgements are recorded rather than asked.
+**Blocking — none.** Four judgements are recorded rather than asked.
 
-**Three repetitions is a small sample.** A survivor at 3/3 is weak evidence that
-the assertions are blind, and a detection at 1/3 is weak evidence that they are
-not. The decision rule uses the trace: a detection needs the named assertion, a
-survivor needs the defect visible in the transcript. If the two disagree, the
-mutation is inconclusive and is recorded as such rather than forced into a
-verdict. The alternative — enough repetitions to make a rate — costs more than
-the pilot is worth.
+**Which two probes.** The map decides, the spec does not. Naming them now would
+repeat the original mistake: guessing coverage instead of reading it.
 
-**One model.** The pilot runs the default model only. The matrix already shows
-both models agreeing on the baseline; a mutation surviving on one and not the
-other is a finding worth recording, not worth a second matrix.
+**Three repetitions is a small sample.** A survivor at 3/3 is weak evidence, so
+the trace decides: a detection needs the named assertion, a survivor needs the
+defect visible. A mutation whose trace shows neither is recorded as inconclusive.
+
+**One model.** The default only. The matrix already shows both models agreeing on
+the baseline.
 
 **This repo has no `docs/product`, `docs/principles` or `AGENTS.md`.** The design
-principles check and the UI-state check in the grooming procedure have no source
-to read here, so they are recorded as not applicable rather than invented. The
-product boundary comes from the README and from the specs that exist.
-
-**Scratch roots and the corpus filter.** The runner stages a skill without
-`references/evals.md` and `references/evals/`, so a mutant root's corpus is only
-used by the runner, never shown to the agent. The experiment must keep that
-property; a root that leaks the answer key measures nothing.
+and copy checks in the grooming procedure have no source to read here, and are
+recorded as not applicable rather than invented.
 
 ## Prompt Notes
 
-- Requirements: three rule-removal mutants of `review-code`, a reproduced
-  baseline, three repetitions per mutation, a classification with trace evidence,
-  and a README that a later reader can reproduce.
-- Entities: mutation (a removed rule plus its restatements), root (a directory
-  with `skills/review-code/` that `--root` discovers), discriminating case (#1,
-  #3, #4), classification (detected, survivor, invalid).
-- Approach: copy the skill once per root; edit only `SKILL.md`; verify load and
-  parsing before spending repetitions; run the existing runner; read the traces
-  instead of trusting the aggregate.
+- Requirements: a coverage map with no model runs, one control mutation that must
+  be detected, two probes on rules the map marks uncovered, a reproduced baseline,
+  three repetitions each, a classification with trace evidence, and a README.
+- Entities: rule (a numbered instruction in `SKILL.md`), coverage map (rule →
+  assertion), control (known-covered mutation), probe (uncovered mutation),
+  root, classification (detected, survivor, invalid).
+- Approach: map first, then choose; copy once per root; edit only `SKILL.md`;
+  verify load before spending repetitions; run the existing runner.
 - Structure: `docs/evals/experiments/mutation/review-code/<variant>/skills/review-code/`
-  and one `README.md` at the experiment root.
-- Operations: baseline first, then M1, M2, M3 in that order — the cases they use
-  are already covered by the matrix, so a baseline failure means the harness
-  moved, not the skill.
-- Norms: no new runner flag, no dependency, isolated home on (the default),
+  with `rule-coverage.md` and `README.md` at the experiment root.
+- Operations: map, rank, control, probes, baseline, control run, probe runs,
+  classify, record.
+- Norms: no new runner flag, no dependency, isolated home on, `--timeout 240`,
   commands and hashes in the README, Portuguese in the experiment prose.
-- Safeguards: do not edit the real `skills/review-code/SKILL.md`; do not add
-  cases beyond one; do not count an invalid mutant as detection; do not compare
-  against the pre-isolation matrix numbers.
-- Tests: none automated beyond the existing corpus checks. The experiment is the
-  test; its evidence is the run artifacts and the traces.
+- Safeguards: don't edit the real `SKILL.md`; only the control may mutate a
+  covered rule; don't count an invalid mutant as detection; don't compare against
+  pre-isolation numbers; don't add cases for redundancy.
+- Tests: the experiment is the test; evidence is the run artifacts and the
+  traces.
