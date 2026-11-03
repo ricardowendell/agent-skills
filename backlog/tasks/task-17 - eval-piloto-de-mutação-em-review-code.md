@@ -4,7 +4,7 @@ title: 'eval: piloto de mutação em review-code para medir se o corpus detecta 
 status: To Do
 assignee: []
 created_date: '2026-11-03T10:38:00Z'
-updated_date: '2026-11-03T10:38:00Z'
+updated_date: '2026-11-03T10:52:00Z'
 labels: []
 dependencies: []
 ordinal: 17000
@@ -59,4 +59,14 @@ created: 2026-11-03T10:38:00Z
 Aberto a partir do processamento do inbox. Prioridade P0 do documento de origem, e a única das quatro que protege os números que já temos em vez de propor trabalho novo.
 
 Pergunta aberta do documento que não foi resolvida: o piloto pede 6–10 casos e 3 repetições por braço; aqui a proposta é 3 mutações em 1–2 casos, que é o suficiente para decidir se vale continuar.
+---
+
+Groomed em 2026-11-03 para `docs/specs/SPEC-0006-mutation-pilot-review-code.md` (`status: ready`).
+
+Duas decisões tomadas no grooming, registradas na spec em vez de virarem pergunta:
+
+- cada mutação tem um caso discriminante próprio (#1 para gate, #4 para `spec_sha`, #3 para decisão sem declaração), em vez de "1–2 casos" genéricos — a matriz já cobre os três com skill;
+- o caminho segue a convenção do repo (`docs/evals/experiments/mutation/review-code/<variante>/skills/`), não `experiments/` da raiz.
+
+O que ficou como Incógnita na spec: três repetições é amostra pequena, então a classificação usa o trace, e uma mutação que não manifesta o defeito não conta como detectada.
 <!-- COMMENTS:END -->
