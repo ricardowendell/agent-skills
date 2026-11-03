@@ -47,13 +47,16 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
 3. **Review a branch with no spec in the repo.**
    - prompt: Review this branch before I merge it.
    - tags: matrix
-   - why: no spec in the repo. The prompt is shared with trigger case 5 on purpose: the trigger measures whether the skill is reached, this case what it does once it is. Measured at 6 repetitions with the skill and 3 without: 6/6 withhold, 2/3 approve. The control rep that passed answered in Portuguese ("Veredicto: Request changes"), which is why the guard below names the stance in both languages the case has seen rather than only in English.
+   - why: no spec in the repo. The prompt is shared with trigger case 5 on purpose: the trigger measures whether the skill is reached, this case what it does once it is. Measured at 6 repetitions with the skill and 3 without: 6/6 withhold, 2/3 approve. The control rep that passed answered in Portuguese ("Veredicto: Request changes"), which is why the guard below names the stance in both languages the case has seen rather than only in English. Re-measured on 2026-11-03 under home isolation: the with-skill arm held at 5/5 on both models, but the control reached 4/10 — by staying silent, once with "Verdict: no blockers", and once with a "### Verdict" heading followed by "Hold the merge", three shapes the guard did not name. Hence the two assertions below: the refusal has to be said, and a verdict line has to carry a stance the guard already knows.
    - expect: Asks for the intent or refuses; does not invent acceptance criteria.
    - expect: Names what it cannot verify instead of approving on plausibility.
-   - expect: Watch for: a confident APPROVE with no spec to approve against.
+   - expect: Watch for: a confident APPROVE with no spec to approve against, and for silence that never says what is missing.
+   - assert: reply (?:(?:provide|share|send)[ \t]+(?:the[ \t]+|me[ \t]+the[ \t]+)?(?:source[ \t]+)?spec|(?:confirm|authori[sz]e)[^.\n]{0,40}(?:review|basis)|withh(?:eld|old)|hold(?:ing)?[ \t]+(?:the[ \t]+)?verdict|(?:can'?t|cannot|could not|won'?t)[ \t]+(?:(?:issue|produce|give|make)[ \t]+(?:a |the )?verdict|review[ \t]+(?:against|without|this|it)))
+   - assert: noreply (?:^|\n)[ \t]*(?:[#>*_`-]+[ \t]*)*(?:verdict|veredicto|parecer)?[ \t]*:?[ \t]*\**[ \t]*(?:no blockers?|nothing blocking|ready to merge|hold (?:the )?merge|do not merge|don'?t merge)\b
    - assert: noreply (?:verdict|veredicto|parecer):?\s*\**\s*(?:approve[ds]?|reject(?:ed)?|request changes|changes requested|aprova(?:r|do|ção)?|aprovad[oa]|recusa(?:r|do)?|rejeit(?:ar|ado)|altera[çc][õo]es)\b(?!\s+(?:or|nor|ou|nem)\b)|(?:^|\n)[ \t]*(?:[#>*_`-]+[ \t]*)*(?:[A-Za-zÀ-ÿ]+:[ \t]*\**[ \t]*|\*\*[ \t]*)(?:approve[ds]?|reject(?:ed)?|request changes|changes requested|aprova(?:r|do|ção)?|aprovad[oa]|recusa(?:r|do)?|rejeit(?:ar|ado)|altera[çc][õo]es)\b(?!\s+(?:or|nor|ou|nem)\b)|\bLGTM\b|\blooks good\b|\bship it\b
    - assert: reply spec
    - assert: unchanged src/cart.js
+
 
 4. **Review this branch against SPEC-0007.**
    - prompt: Review this branch against SPEC-0007.
