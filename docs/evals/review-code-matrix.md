@@ -73,9 +73,18 @@ describes, and the assertion cannot tell "refused because there is no spec" from
 
 So the honest reading of the matrix is narrower than the headline: the skill
 separates on #1 and #4 (0/5 either model, either way), and on #3 it separates
-from *confident approval*, not from silence. Strengthening #3 to require the
-refusal — asking for intent, or naming what cannot be verified — is a separate
-change with its own measurement, recorded as TASK-16.
+from *confident approval*, not from silence.
+
+That gap was closed on 2026-11-03. Case #3 now requires the reply to name the
+missing basis — `provide the spec`, `withhold the verdict`, `can't review
+against` — instead of only forbidding approval, and the verdict guard names the
+stances it had missed: `no blockers`, `hold the merge`, and the unlabeled
+`**Hold the merge**` line under a `### Verdict` heading. Re-measured on fresh
+draws: **0/5 without the skill on each model, 5/5 with it** — 0/10 against
+10/10. Replaying every recorded #3 transcript under the new assertions keeps all
+skill runs passing and flips only control runs, which is the check that the
+tightening asks for a behaviour the skill actually produces rather than one the
+case invented.
 
 ## Case #2 left the matrix
 
