@@ -1,0 +1,62 @@
+---
+id: TASK-17
+title: 'eval: piloto de mutação em review-code para medir se o corpus detecta skill quebrada'
+status: To Do
+assignee: []
+created_date: '2026-11-03T10:38:00Z'
+updated_date: '2026-11-03T10:38:00Z'
+labels: []
+dependencies: []
+ordinal: 17000
+---
+
+## Description
+
+<!-- SECTION:DESCRIPTION:BEGIN -->
+Origem: `docs/inbox/2026-11-03-guia-pratico-tecnicas-agent-skills.md`, §3 (P0). Registro exploratório — a técnica tem evidência externa, não neste repo.
+
+A pergunta que nenhuma medição atual responde: se uma regra importante de uma skill for removida, algum caso do corpus falha? A matriz prova que a skill separa do controle, não que o corpus protege contra regressão na skill.
+
+Baseline válido já existe: `docs/evals/review-code-matrix.md` remedido com home isolado em 2026-11-03, e o caso #3 corrigido (TASK-16). Antes disso o piloto mediria o defeito que acabamos de consertar.
+
+Mutações propostas, uma por candidata:
+
+| mutação | fixture discriminante | defeito esperado |
+| --- | --- | --- |
+| permitir aprovação sem rodar os gates | diff correto com teste executável | aprovar sem evidência de execução |
+| ignorar divergência de `spec_sha` | prompt carimbado antes de a spec mudar | revisar como se o contrato fosse atual |
+| decidir sem declaração do usuário | branch sem spec e sem fallback autorizado | emitir veredito em vez de reter |
+
+Variantes sem flag nova no runner: dois roots com o mesmo corpus e a mesma fixture, `--root` apontando para cada um. Convenção de caminho do repo, não a do documento de origem:
+
+```
+docs/evals/experiments/mutation/review-code/baseline/skills/
+docs/evals/experiments/mutation/review-code/no-gate/skills/
+```
+
+Remover a regra **e** as instruções que a repetem em outro ponto, senão o resto da skill compensa a mutação. Confirmar que a candidata carrega (YAML válido, proveniência ok): falha de carregamento é falha do experimento, não detecção.
+
+Classificar cada mutação como **detectada**, **sobrevivente** ou **inválida**. Para sobrevivente, registrar se o defeito apareceu e não foi pego, ou se o agente não manifestou o defeito — as duas coisas pedem ações diferentes.
+<!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 baseline reproduzido antes de qualquer mutação (com skill, 5/5 no caso escolhido)
+- [ ] #2 três mutações executadas em roots separados, sem flag nova no runner
+- [ ] #3 cada mutação classificada como detectada, sobrevivente ou inválida, com o trace inspecionado
+- [ ] #4 sobreviventes distinguem "defeito não detectado" de "defeito não manifestado", com a evidência de cada um
+- [ ] #5 se um sobrevivente revelar lacuna real, o caso novo entra primeiro e a mutação é remedida
+- [ ] #6 resultado registrado com sha do repo, hash da skill e custo em execuções
+<!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-11-03T10:38:00Z
+
+---
+
+Aberto a partir do processamento do inbox. Prioridade P0 do documento de origem, e a única das quatro que protege os números que já temos em vez de propor trabalho novo.
+
+Pergunta aberta do documento que não foi resolvida: o piloto pede 6–10 casos e 3 repetições por braço; aqui a proposta é 3 mutações em 1–2 casos, que é o suficiente para decidir se vale continuar.
+<!-- COMMENTS:END -->

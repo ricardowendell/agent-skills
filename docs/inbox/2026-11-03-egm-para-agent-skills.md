@@ -1,6 +1,6 @@
 ---
-status: unprocessed
-processed_at:
+status: processed
+processed_at: 2026-11-03 10:38
 ---
 
 # EGM: recomendações para agent-skills
