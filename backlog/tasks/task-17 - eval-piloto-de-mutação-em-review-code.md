@@ -1,10 +1,10 @@
 ---
 id: TASK-17
 title: 'eval: piloto de mutação em review-code para medir se o corpus detecta skill quebrada'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-03T10:38:00Z'
-updated_date: '2026-11-03T10:52:00Z'
+updated_date: '2026-11-03T12:35:00Z'
 labels: []
 dependencies: []
 ordinal: 17000
@@ -80,4 +80,17 @@ Resultado da SPEC-0006 em 2026-11-03, sha `a248f6c`, 8 execuções:
 O trace mostra `npm test` executado nas três repetições. A regra do gate nunca saiu do texto: continua no passo 1 ("resolve … the gate commands"), no bloco de saída (`GATES: …`), no `AGENTS.md` do fixture ("Gates: `npm test`") e no prompt de implementação ("`npm test` must pass"). Uma mutação só da skill não alcança os dois últimos, então `ranpass` não pode ser atribuído à regra removida. O método não falhou; o controle não isola o que diz medir.
 
 O escopo de três mutações foi reduzido pela spec depois que o mapa mostrou que nenhuma regra sem asserção é manifestável com os fixtures atuais. A pergunta original segue aberta: um controle limpo precisa de uma regra que o fixture não repita — `ignore-spec-sha` no caso #4 é o candidato. A lacuna de fixture do gate vermelho ficou na TASK-21, com a condição de não repetir o comando no fixture.
+
+---
+
+Segundo resultado, em 2026-11-03, sha `6054b49`, 16 execuções adicionais (baseline #4 a 240 s e 600 s, controle a 240 s e 600 s):
+
+- baseline #4: 2/5 a 240 s por timeout ambiente (r1/r4 sem transcript, r3 parado no primeiro passo), **5/5** a 600 s;
+- controle `ignore-spec-sha`: **0/3**, `loaded review-code` nas três, e a ordem corrigida — a rodada final veio depois do baseline 5/5;
+- classificação: **inválida**, não detectada.
+
+Os três traces calcularam os dois hashes, compararam com o pin e rejeitaram nomeando a spec defasada (`feb763b1…` vs `fa0d1363…`; r3 rodou `spec-sha.mjs`). A única asserção que falhou, `reply spec hash:.*mismatch`, exige a frase do template que o mutante removeu; os agentes escreveram `SPEC: SPEC-0007` e o mismatch na prosa. É falso positivo de wording, não detecção do defeito. O caso também não isola a regra pelo veredito, porque o diff tem um segundo defeito (AC-3 non-finite).
+
+Consequência: o método segue sem controle positivo limpo. O defeito espelhado do primeiro controle (fixture repete a regra) virou o segundo (asserção repete o template). A correção do caso #4 ficou na TASK-22; a lacuna do gate vermelho continua na TASK-21. O piloto terminou com resultado negativo e dois follow-ups, não com um "detectado".
+
 <!-- COMMENTS:END -->

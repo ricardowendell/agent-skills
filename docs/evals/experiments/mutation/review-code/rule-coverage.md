@@ -15,13 +15,18 @@ observável, e a mutação mede nada.
 | --- | --- | --- | --- |
 | 1 | ler `AGENTS.md` e resolver os caminhos | — `sem asserção` | não: todos os fixtures têm `AGENTS.md` e o caminho é óbvio |
 | 2 | fixar e registrar o objeto da revisão (base, head, range) | — `sem asserção` | não: os quatro fixtures têm um único branch e um range limpo |
-| 3 | spec defasada (`spec_sha` divergente) → rejeitar | `#4 verdict REJECT`, `#4 reply spec hash:.*mismatch` | sim |
+| 3 | spec defasada (`spec_sha` divergente) → rejeitar | `#4 verdict REJECT`, `#4 reply spec hash:.*mismatch`¹ | sim |
 | 4 | percorrer ACs com código **e** teste | `#1 reply AC-3`, `#2 reply AC-2` | sim |
 | 5 | rodar os gates; não rodado não é passe | `#1 ranpass npm test` | sim |
 | 6 | proteções: sem segredo, dependência nova, migração fora da spec, refactor alheio, teste enfraquecido/apagado | — `sem asserção` | **não**: nenhum patch enfraquece ou apaga teste; o #2 acrescenta um teste com valor errado, o que é outro defeito |
 | 7 | finding cita a regra escrita; gosto não é finding | — `sem asserção` | não: nenhum fixture pede opinião de estilo |
 | 8 | decidir: APPROVE exige todo AC evidenciado, gate verde, zero bloqueio | `#1 verdict APPROVE`, `#2/#4 verdict REJECT` | sim |
 | 9 | entregar ao gate; não registrar, mergear ou push | — `sem asserção` | não: o scratch não tem remote e o prompt não pede merge |
+
+¹ A asserção de hash do #4 é a única específica da regra, mas ela exige a frase do
+template (`SPEC: <id> (spec hash: mismatch)`). O agente que calcula os hashes e
+escreve `MISMATCH` na prosa falha a asserção sem ter cometido o defeito. Ver o
+segundo controle, abaixo.
 
 ## Condições de recusa
 
@@ -86,13 +91,14 @@ As duas sondas previstas na spec não são executáveis com proveito: sem fixtur
 que tente a violação, o resultado esperado é "defeito não manifestado", que o
 mapa já prevê e que não distingue corpus cego de regra redundante.
 
-O que sobra, e vale as execuções, é o **controle** (`no-gates`, caso #1), que
-valida o método, e a lacuna acima, que não é de asserção e sim de fixture. O
-resultado do piloto é portanto menor e mais útil: o corpus cobre por asserção
-quase tudo o que é manifestável, e o que falta é **fixture para o caminho
-vermelho do gate**.
+O que sobra, e vale as execuções, é o **controle**, que deveria validar o
+método, e a lacuna acima, que não é de asserção e sim de fixture. O primeiro
+controle (`no-gates`, caso #1) não isolou a regra; a spec trocou-o por
+`ignore-spec-sha` no caso #4. Nenhum dos dois validou o método: os dois
+revelaram defeitos do corpus. O resultado útil do piloto é a lista desses
+defeitos, não um "detectado".
 
-## Resultado do controle (2026-11-03)
+## Primeiro controle: `no-gates` (2026-11-03)
 
 O controle `no-gates` rodou 3× no caso #1 e **não foi detectado**: 3/3 passes,
 `ranpass npm test` com `exit 0` nas três. O trace mostra `npm test` executado em
@@ -124,5 +130,30 @@ vermelho precisa ser o único defeito, para que o REJECT venha da regra e não d
 outro problema no diff.
 
 E um controle limpo do método precisa de uma regra que o fixture não repita —
-`ignore-spec-sha` no caso #4 é o candidato, porque o fixture carimba o hash mas
-não manda compará-lo.
+`ignore-spec-sha` no caso #4 foi o candidato, porque o fixture carimba o hash
+mas não manda compará-lo. O resultado abaixo mostra que também não isolou.
+
+## Segundo controle: `ignore-spec-sha` (2026-11-03)
+
+O baseline do caso #4 reproduziu **5/5** (600 s) antes do controle. O controle
+rodou **0/3**, mas os três traces fizeram a checagem: calcularam os dois hashes,
+compararam com o pin e rejeitaram nomeando a spec defasada. A única asserção que
+falhou foi `reply spec hash:.*mismatch`, e ela falhou porque o mutante removeu a
+linha do template que a asserção cita. O agente escreveu `SPEC: SPEC-0007` e
+`MISMATCH` na prosa.
+
+Classificação: **inválida**, não detectada. O defeito que o mutante deveria
+produzir — revisar como se o contrato fosse atual — não apareceu; o mutante
+nunca chegou ao comportamento mutado. A falha da asserção é falso positivo de
+wording.
+
+O caso também não isola a regra pelo veredito: o diff tem um segundo defeito
+(AC-3 exige rejeição de `non-finite`, o código só rejeita negativo), então
+`verdict REJECT` passa sem a checagem do hash. Resta a asserção de texto, que
+mede o template. A correção — fixture com a spec defasada como único defeito e
+asserção semântica — ficou na TASK-22; a SPEC-0006 não conserta o que o
+sobrevivente expõe.
+
+Consequência para o mapa: a linha 3 da tabela de workflow tem asserção, mas ela
+não mede o comportamento que a regra protege. É o espelho do caso #1: lá o
+fixture repetia a regra; aqui a asserção repete o template.

@@ -1,7 +1,7 @@
 ---
 id: SPEC-0006
 title: Measure whether the eval corpus catches a broken skill
-status: in_progress
+status: implemented
 priority: P0
 created_at: 2026-11-03
 updated_at: 2026-11-03
@@ -40,8 +40,8 @@ The map was built first, and it changed the pilot again: see *Scope change*.
 
 A reader learns which rules of `review-code` have no assertion, which of those
 could even manifest a defect with the current fixtures, and whether the one
-mutation that is both uncovered and manifestable is caught. The map is the
-durable artefact; the run validates that the method works.
+control that is both covered and manifestable is caught. The map is the durable
+artefact; the run tests whether the corpus can act on it.
 
 ## Scope
 
@@ -50,18 +50,23 @@ durable artefact; the run validates that the method works.
   `review-code/SKILL.md` mapped to the assertion that would fail, or `no
   assertion`, plus a **manifestable** column — does any fixture create the
   temptation to violate it?
-- **One control mutation**, `no-gates` on case #1, known to be covered by
-  `ranpass npm test`. It proves the method can detect a mutation at all.
+- **One control mutation**, `ignore-spec-sha` on case #4, expected to be covered
+  by `reply spec hash:.*mismatch`. It tests whether the method can detect a
+  mutation at all; the result was `invalid` (see Result), which is the finding,
+  not a reason to rerun. The first control attempt, `no-gates` on case #1, is
+  kept in the record as `invalid`: the fixture restates the gate rule, so the
+  mutant could not isolate it.
 - **No probe runs.** The map shows every uncovered rule is also not manifestable
   with the current fixtures (details in the map). A mutation there can only
   produce "defect not manifested", which the map already predicts and which does
   not distinguish a blind corpus from a redundant rule.
-- Two roots under `docs/evals/experiments/mutation/review-code/`: an untouched
-  baseline and the control.
-- Reproduce the baseline for case #1 (five repetitions), then run the control
+- The active roots are the untouched baseline and the control, under
+  `docs/evals/experiments/mutation/review-code/`; the invalid `no-gates` root
+  stays as evidence.
+- Reproduce the baseline for case #4 (five repetitions), then run the control
   three times.
 - Record protocol, map, hashes, commands, result and cost in the experiment
-  directory, and open a task for the gap the map did find.
+  directory, and open a task for each gap the map and the control found.
 
 **Blast radius.** One skill's rule map, one experiment directory, one control
 root, one follow-up task. No runner code, no new flag, no case-format change, no
@@ -106,19 +111,26 @@ After the map was written, three things were true that the spec assumed otherwis
 2. If an uncovered rule is manifestable, take up to two as probes and run them.
    If none is, record that in the map and run only the control.
 3. Copy `skills/review-code` into the baseline and the control root.
-4. Mutate the control (`no-gates`): remove the requirement to run the project's
-   gates and the rule that APPROVE depends on them, including the guardrail "never
-   approve with a failing or unrun gate".
-5. Validate both roots: `--list --check` exits 0, `diff -r` shows only
+4. Mutate the control (`ignore-spec-sha`): remove the spec-hash clause from
+   step 3, the `(spec hash: match|mismatch|n/a)` status from the output template,
+   and the guardrail that a stale spec is a grooming problem. The fixture records
+   `spec_sha` but never tells the reviewer to compare it.
+5. Validate every root: `--list --check` exits 0, `diff -r` shows only
    `SKILL.md`, and one throwaway run reports `loaded review-code` from inside the
    scratch dir.
-6. Reproduce the baseline for case #1 at five repetitions. If it is not 5/5,
-   stop: the harness moved and the pilot would measure that instead.
-7. Run the control three times on case #1, inspecting one trace first.
-8. Classify: `detected` (a named assertion failed), `survivor` (3/3 passed and
-   the trace shows the defect happened) or `invalid` (did not load, or never
-   reached the mutated behaviour).
-9. Write the README, and open a task for the red-gate fixture gap.
+6. Reproduce the baseline for case #4 at five repetitions. If it is not 5/5,
+   stop: the harness moved and the pilot would measure that instead. A repetition
+   that times out with an empty transcript is environmental, not a baseline miss:
+   rerun at `--timeout 600` and record both attempts.
+7. Run the control three times on case #4, inspecting one trace first.
+8. Classify: `detected` (a named assertion failed **and** the trace shows the
+   defect happened), `survivor` (3/3 passed and the trace shows the defect
+   happened) or `invalid` (did not load, or never reached the mutated behaviour).
+   A failing assertion is necessary but not sufficient: if it fails only because
+   the mutant removed the output template the assertion quotes, the mutant never
+   reached the behaviour and the run is `invalid`, not `detected`.
+9. Write the README, and open a task for each gap the map and the control
+   found.
 
 ## Data
 
@@ -139,13 +151,17 @@ Not applicable.
 - AC-2 — The map's conclusion is checkable: for each uncovered rule, the fixture
   that would tempt it is named and shown absent, or the rule is marked
   manifestable and a probe is run. Verified by the map's evidence column.
-- AC-3 — The baseline for case #1 is reproduced at 5/5 on the current harness
-  before the control runs, verified in the result JSON.
-- AC-4 — The control `no-gates` is detected on case #1 by the gate assertion; if
-  it is not, the pilot stops and records a method failure. Verified by the result
-  JSON and the failing assertion name.
-- AC-5 — Two roots exist, byte-identical except for `SKILL.md`, and both pass
-  `--list --check`. Verified by `diff -r` and the exit status.
+- AC-3 — The baseline for the control's case (#4) is reproduced at 5/5 on the
+  current harness before the control runs; the #1 baseline from the invalid first
+  attempt is also recorded at 5/5. Verified in the result JSON.
+- AC-4 — The control `ignore-spec-sha` is detected on case #4 by the
+  `reply spec hash:.*mismatch` assertion; if it is not, the pilot stops and
+  records a method failure. Verified by the result JSON and the failing assertion
+  name.
+- AC-5 — The active roots (baseline and `ignore-spec-sha`) are byte-identical
+  except for `SKILL.md`, and both pass `--list --check`; the invalid `no-gates`
+  root is kept as evidence with the same property. Verified by `diff -r` and the
+  exit status.
 - AC-6 — Every control run reports `loaded review-code` from inside the scratch
   dir; a run that loaded nothing is `invalid`, never detection. Verified by
   `skillGate` in the result JSON.
@@ -153,61 +169,98 @@ Not applicable.
   evidence. Verified by the per-repetition results.
 - AC-8 — The red-gate gap the map found is recorded as a task with the fixture it
   would need; no case is added in this spec. Verified by the backlog file.
-- AC-9 — The README records repo sha, both roots' `SKILL.md` hashes, the model,
-  the exact commands, the result and the cost in runs.
+- AC-9 — The README records repo sha, each root's `SKILL.md` hash, the model,
+  the exact commands, the result and the cost in runs, for both control attempts.
 
 ## Result (2026-11-03)
 
-Ran at `a248f6c`, flash default, isolated home, `--timeout 240`, 8 model runs.
+Two control attempts, both **invalid**. The baseline is green; the corpus does
+not catch the mutations for the reason the controls claim to test.
 
-- Baseline #1: **5/5** (`2026-11-03T11-18-06--review-code`), `ranpass npm test`
-  passing with `exit 0` in every repetition.
-- Control `no-gates` #1: **3/3 passed** (`2026-11-03T11-22-05--review-code`).
-  No assertion failed. `skillGate.ok` and `loaded: ["review-code"]` in 3/3.
-- Classification: **invalid** — not detected, and not a survivor either.
+Environment: first attempt at `a248f6c` (`--timeout 240`), second at `6054b49`;
+flash default, `build`, isolated home. Case #4 was re-measured at
+`--timeout 600` after three 240 s timeouts with empty transcripts (environment,
+not behaviour); the 240 s run is recorded in the README as evidence.
 
-The trace settles it: in all three control runs the agent executed `npm test`
-and saw 6 tests pass. The defect the mutant should have produced — approving
-without running the gate — never happened. The rule was not removed: it is still
-written in two other places in the same file (step 1, "resolve … the gate
-commands"; the output template, `GATES: … — exact commands and results`) and in
-two fixture files (the base `AGENTS.md`, "Gates: `npm test`"; the implementation
-prompt, "`npm test` must pass"). A skill-only mutation cannot remove the fixture's
-statement, so `ranpass` cannot be attributed to the removed step.
+| step | runs | result | run |
+| --- | --- | --- | --- |
+| baseline #1 | 5 | 5/5 | `2026-11-03T11-18-06--review-code` |
+| control `no-gates` #1 | 3 | 3/3, not detected | `2026-11-03T11-22-05--review-code` |
+| baseline #4, 240 s | 5 | 2/5, three timeouts | `2026-11-03T11-52-15--review-code` |
+| baseline #4, 600 s | 5 | 5/5 | `2026-11-03T12-12-41--review-code` |
+| control `ignore-spec-sha` #4, before the 5/5 baseline | 3 | 0/3 | `2026-11-03T12-05-36--review-code` |
+| control `ignore-spec-sha` #4, after the 5/5 baseline | 3 | 0/3 | `2026-11-03T12-21-41--review-code` |
 
-AC-4 is therefore **not met on its positive branch**. The fallback the AC
+**First control (`no-gates`, #1) — invalid.** The trace settles it: in all three
+runs the agent executed `npm test` and saw 6 tests pass. The defect the mutant
+should have produced — approving without running the gate — never happened. The
+rule was not removed: it is still written in two other places in the same file
+(step 1, "resolve … the gate commands"; the output template, `GATES: … — exact
+commands and results`) and in two fixture files (the base `AGENTS.md`; the
+implementation prompt, "`npm test` must pass"). A skill-only mutation cannot
+remove the fixture's statement, so `ranpass` cannot be attributed to the removed
+step.
+
+**Second control (`ignore-spec-sha`, #4) — invalid.** The baseline reproduced
+5/5 before the control, and the control ran 0/3 with `loaded: ["review-code"]` in
+all three. But the trace again contradicts the assertion: in r1, r2 and r3 the
+agent computed both hashes, compared them to the prompt pin and rejected naming
+the stale spec. r3 ran `node spec-sha.mjs` and reported
+`feb763b1…` vs `fa0d1363…`. The only failing assertion,
+`reply spec hash:.*mismatch`, expects the template phrase the mutant removed; the
+agents wrote `SPEC: SPEC-0007` and put the mismatch in prose. The defect —
+reviewing as if the contract were current — did not happen.
+
+The case also does not isolate the rule by verdict: the diff carries a second
+defect (AC-3 now requires rejecting non-finite rates; the code only rejects
+negatives), so `verdict REJECT` passes without the hash check. The only
+rule-specific assertion left is the wording one.
+
+**AC status.** AC-1, AC-2, AC-3, AC-5, AC-6, AC-7, AC-8 and AC-9 are met. AC-4
+is **met only literally**: the named assertion failed, but the trace does not show
+the mutated behaviour, which Flow 8 requires for `detected`. In substance the AC
+is not met — the control is `invalid`, not `detected`. The fallback the AC
 prescribes was followed: the pilot stopped before any probe and recorded the
-failure. The record attributes it to the control's design rather than to the
-method — the same session has the baseline at 5/5 and the skill loaded in 8/8
-executions.
+failure. Under the spec's own categories both controls are `invalid`, not
+`detected` and not `survivor`: a survivor requires the defect to have happened.
+
+**What the failure is.** Two corpus defects, mirrored:
+
+- `no-gates` failed because the fixture restates the rule, so the mutant could
+  not isolate it.
+- `ignore-spec-sha` failed because the assertion restates the output template, so
+  a correct review that words the mismatch differently is scored as a miss.
+
+The method remains unvalidated: neither control is a clean positive. The
+follow-ups are TASK-21 (red-gate fixture, with the discrimination condition) and
+TASK-22 (hash-only fixture plus a behaviour assertion for case #4).
 
 The full record is in
-`docs/evals/experiments/mutation/review-code/README.md`; the map gained a section
-on what the control showed.
+`docs/evals/experiments/mutation/review-code/README.md`; the map gained sections
+on both controls.
 
 ## Open Questions
 
-**Blocking — the control choice.** The control named in Scope does not isolate the
-rule it mutates. Two ways forward, with the evidence above:
-
-1. **Swap the control** to `ignore-spec-sha` on case #4, where the fixture records
-   the hash but never tells the reviewer to compare it. Cost: a #4 baseline at
-   5× plus the control at 3×, about 8 runs. This is the only option that answers
-   the original question with the current fixtures.
-2. **Close the pilot with the invalid result**, record the gate rule as not
-   testable by a skill-only mutation on case #1, and leave the clean control to a
-   follow-up task.
-
-The spec does not decide this alone because it changes the control named in
-Scope. Everything else in the spec is done.
+**Control swapped.** The first control (`no-gates` on #1) was invalid because the
+fixture restates the gate rule. The active control became `ignore-spec-sha` on
+#4, where the fixture records the hash but never tells the reviewer to compare it
+(decision taken 2026-11-03). It was also invalid: the assertion is coupled to the
+output template the mutant removed. Both attempts stay in the record; Result
+records both classifications.
 
 **Probes dropped.** The spec's second draft promised two; the map showed none
 would be manifestable. Running them would produce two "not manifested" results
 that cannot be told apart from redundancy. The evidence is in the map, which is
 checkable without a model.
 
-**Three repetitions.** Only the control runs, and its detection is near-certain
-by construction; the trace settles anything ambiguous.
+**Three repetitions.** Only the control runs. Three is enough to read the trace,
+not to estimate a rate: both controls were unanimous (3/3 pass, 3/3 fail) and the
+classification came from the trace, not the count.
+
+**No clean positive control yet.** The pilot did not validate the method; it
+found two corpus defects instead. A next attempt needs a rule the fixture does
+not restate and a defect that changes the verdict, not the wording (TASK-22 is
+the concrete case).
 
 **One model.** The default only.
 
