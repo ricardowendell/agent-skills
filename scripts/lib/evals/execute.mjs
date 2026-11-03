@@ -41,6 +41,9 @@ export async function executeCase({
   timeoutMs = 600000,
   env = process.env,
   judge = null,
+  // Injected so the contract can be tested without spawning a model. Same
+  // seam `judge.mjs` uses; the default keeps every caller unchanged.
+  spawnAgent = runAgent,
 }) {
   let pinned = { hash: null }
   stageFixture(skill, c, scratch)
@@ -50,7 +53,7 @@ export async function executeCase({
 
   const started = Date.now()
   const args = agentArgs({ prompt: c.prompt, model, agent, standalone })
-  const { out, err, code } = await runAgent({ args, cwd: scratch, env, timeoutMs })
+  const { out, err, code } = await spawnAgent({ args, cwd: scratch, env, timeoutMs })
   const durationMs = Date.now() - started
 
   const asserts = evaluateAssertions(c, scratch, out, replyText(out), snapshot)
