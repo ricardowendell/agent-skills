@@ -1,7 +1,7 @@
 ---
 id: SPEC-0006
 title: Measure whether the eval corpus catches a broken skill
-status: ready
+status: in_progress
 priority: P0
 created_at: 2026-11-03
 updated_at: 2026-11-03
@@ -14,109 +14,118 @@ source_docs:
 related_decisions: []
 depends_on: []
 blocks: []
-tests: []
+tests:
+  - docs/evals/experiments/mutation/review-code/rule-coverage.md
+  - docs/evals/experiments/mutation/review-code/README.md
 ---
 
 # SPEC-0006: Measure whether the eval corpus catches a broken skill
 
 ## Purpose
 
-The matrix proves that `review-code` separates from a run without it: 30/30
-against 0/30, re-measured under home isolation, with case 3 tightened after four
-control runs satisfied it by saying nothing. That is a statement about the skill,
-not about the corpus.
+The matrix proves that `review-code` separates from a run without it. That is a
+statement about the skill, not about the corpus.
 
 The open question is the inverse: if a rule that matters were removed from
 `SKILL.md`, would any case fail? A corpus that cannot answer this cannot protect
 the skill from a future edit.
 
-The first draft of this spec chose three rules whose coverage was already known:
-the gate (`ranpass npm test` on case #1), the spec hash (case #4) and the
-unspoken review basis (case #3, tightened the same day). All three would be
-detected by construction. That measures the method, not the corpus. The design
-below separates the two.
+The first draft named three rules whose coverage was already known — the gate
+(`ranpass npm test`), the spec hash (case #4) and the unspoken review basis
+(case #3, tightened the same day). All three would be detected by construction.
+The second draft added a coverage map and picked probes from the uncovered rules.
+The map was built first, and it changed the pilot again: see *Scope change*.
 
 ## User Outcome
 
-A reader learns two things. First, which rules of `review-code` have no
-assertion that would fail if the rule were disobeyed — a coverage map that costs
-no model runs. Second, for the two rules that map to nothing, whether the corpus
-notices when the rule is removed, and if not, whether the defect happened and was
-missed or never happened at all.
+A reader learns which rules of `review-code` have no assertion, which of those
+could even manifest a defect with the current fixtures, and whether the one
+mutation that is both uncovered and manifestable is caught. The map is the
+durable artefact; the run validates that the method works.
 
 ## Scope
 
-- **A coverage map, first and without model runs.** Every numbered rule in
-  `skills/review-code/SKILL.md` mapped to the assertion that would fail if it were
-  violated, or explicitly marked `no assertion`. Deliverable:
-  `docs/evals/experiments/mutation/review-code/rule-coverage.md`.
-- **One control mutation**, chosen because it is known to be asserted:
-  `no-gates` on case #1 (`ranpass npm test`). Its purpose is to prove the method
-  can detect a mutation at all. If it is not detected, the pilot stops.
-- **Two probe mutations** on rules the map marks `no assertion`, chosen by blast
-  radius: the ones whose violation could reach a merge unnoticed. The map decides
-  which; the spec does not name them in advance.
-- Four roots under
-  `docs/evals/experiments/mutation/review-code/`: an untouched baseline, the
-  control, and the two probes.
-- Reproduce the baseline first (cases #1, #3, #4 at five repetitions), then run
-  each mutation three times against its discriminating case.
-- Record protocol, map, hashes, commands, results and cost in the experiment
-  directory.
+- **A coverage map, with no model runs.**
+  `docs/evals/experiments/mutation/review-code/rule-coverage.md`: every rule of
+  `review-code/SKILL.md` mapped to the assertion that would fail, or `no
+  assertion`, plus a **manifestable** column — does any fixture create the
+  temptation to violate it?
+- **One control mutation**, `no-gates` on case #1, known to be covered by
+  `ranpass npm test`. It proves the method can detect a mutation at all.
+- **No probe runs.** The map shows every uncovered rule is also not manifestable
+  with the current fixtures (details in the map). A mutation there can only
+  produce "defect not manifested", which the map already predicts and which does
+  not distinguish a blind corpus from a redundant rule.
+- Two roots under `docs/evals/experiments/mutation/review-code/`: an untouched
+  baseline and the control.
+- Reproduce the baseline for case #1 (five repetitions), then run the control
+  three times.
+- Record protocol, map, hashes, commands, result and cost in the experiment
+  directory, and open a task for the gap the map did find.
 
-**Blast radius.** One skill's rule map, one experiment directory, at most one new
-case. No runner code, no new flag, no case-format change, no other skill, no
-matrix re-run.
+**Blast radius.** One skill's rule map, one experiment directory, one control
+root, one follow-up task. No runner code, no new flag, no case-format change, no
+other skill, no matrix re-run.
+
+## Scope change
+
+After the map was written, three things were true that the spec assumed otherwise:
+
+1. Every rule without an assertion is also without a fixture that could tempt it.
+   Step 6 (protections) needs a patch that weakens or deletes a test; step 2
+   (range) needs an ambiguous base; step 9 (no merge/push) needs a remote; the
+   two refusal conditions need prompts that do not exist. Running those mutations
+   costs nine runs and answers nothing the map does not already say.
+2. The map found a gap the original design missed: **"never approve with a
+   failing gate" is half-asserted**. Case #1 proves the green path
+   (`ranpass npm test`); no case presents a red gate and expects REJECT. That
+   rule is not in the "no assertion" list because half of it is covered, which is
+   exactly why a rule-level map is worth writing.
+3. That gap is a **fixture** gap, not an assertion gap. A new assertion has
+   nothing to fail against until a case stages a red gate.
 
 ## Non-Goals
 
-- **Mutating rules that already have an assertion.** Only the single control may
-  do that; it exists to validate the method. A probe on a covered rule restates
-  what the corpus already claims.
-- **A mutation framework.** Four hand-made roots and `--root` are enough.
+- **Mutating rules that already have an assertion.** Only the control may do
+  that; it exists to validate the method.
+- **Probe runs on rules no fixture can tempt.** Recorded as a finding instead.
+- **A mutation framework.** Two hand-made roots and `--root` are enough.
 - **Changing `SKILL.md`.** Mutants are copies; the real skill is not edited.
-- **Fixing what a survivor exposes.** A gap becomes a task, measured separately.
+- **Fixing the red-gate gap.** It becomes a task; the fixture and its measurement
+  are separate work.
 - **Semantic mutation.** Removal only.
 - **Treating redundancy as a gap.** A rule the model follows without being told is
-  not a corpus hole; it is a candidate for removal from the skill, and that is a
-  different decision with its own evidence.
-- **Every skill and every case.** One skill, three mutations, one case each.
+  a candidate for removal from the skill, not a corpus hole.
 
 ## Flow
 
-1. Build the coverage map from the workflow steps, the rules list and the
-   verifier section of `review-code/SKILL.md`. For each rule, name the case and
-   assertion that would fail. Mark the rest `no assertion`. Re-read the case
-   files for this; do not trust memory of what the corpus checks.
-2. Rank the `no assertion` rules by blast radius: a violation that could let a
-   bad change merge ranks above one that only affects the report's prose.
-3. Take the top two as probes. Record the ranking and why these two won.
-4. Copy `skills/review-code` into the baseline and into three mutant roots.
-5. Mutate the control (`no-gates`) and the two probes, each by removing the rule
-   **and** every sentence that restates it.
-6. Validate every root: `--list --check` exits 0, `diff -r` against the baseline
-   shows only `SKILL.md`, and one throwaway run reports `loaded review-code` from
-   inside the scratch dir.
-7. Reproduce the baseline for #1, #3 and #4 at five repetitions. If one is not
-   5/5, stop: the harness moved and the pilot would measure that instead.
-8. Run the control three times. If it is not detected, stop and report the method
-   as broken; the probes would mean nothing.
-9. Run each probe three times, inspecting one trace before paying for the other
-   repetitions.
-10. Classify each mutation: `detected` (a named assertion failed), `survivor`
-    (3/3 passed and the trace shows the defect happened) or `invalid` (did not
-    load, or the agent never reached the mutated behaviour).
-11. For each survivor, state the kind and quote the line that settles it. Only
-    *manifested and not caught* produces a new case (at most one), added to both
-    roots and re-run. *Not manifested* is recorded as redundancy, with no corpus
-    change.
+1. Build the coverage map from the workflow steps, the refusal conditions, the
+   review standards, the output shape and the guardrails of
+   `review-code/SKILL.md`. For each rule, name the case and assertion that would
+   fail, mark `no assertion`, and state whether a fixture could tempt the defect.
+2. If an uncovered rule is manifestable, take up to two as probes and run them.
+   If none is, record that in the map and run only the control.
+3. Copy `skills/review-code` into the baseline and the control root.
+4. Mutate the control (`no-gates`): remove the requirement to run the project's
+   gates and the rule that APPROVE depends on them, including the guardrail "never
+   approve with a failing or unrun gate".
+5. Validate both roots: `--list --check` exits 0, `diff -r` shows only
+   `SKILL.md`, and one throwaway run reports `loaded review-code` from inside the
+   scratch dir.
+6. Reproduce the baseline for case #1 at five repetitions. If it is not 5/5,
+   stop: the harness moved and the pilot would measure that instead.
+7. Run the control three times on case #1, inspecting one trace first.
+8. Classify: `detected` (a named assertion failed), `survivor` (3/3 passed and
+   the trace shows the defect happened) or `invalid` (did not load, or never
+   reached the mutated behaviour).
+9. Write the README, and open a task for the red-gate fixture gap.
 
 ## Data
 
 No persistence. The experiment lives in
 `docs/evals/experiments/mutation/review-code/`, with `rule-coverage.md` and
-`README.md` at its root. Mutant roots are scratch artefacts; the README must say
-how to rebuild them.
+`README.md` at its root. The control root is a scratch artefact; the README says
+how to rebuild it.
 
 ## UI Notes
 
@@ -124,46 +133,83 @@ Not applicable.
 
 ## Acceptance Criteria
 
-- AC-1 — `rule-coverage.md` lists every numbered rule of `review-code/SKILL.md`,
-  each mapped to a case and assertion or marked `no assertion`, and the two probe
-  rules are justified by blast radius. Verified by reading the map against the
-  skill file.
-- AC-2 — The baseline for #1, #3 and #4 is reproduced on the current harness at
-  5/5 each before any mutation runs, verified in the result JSON.
-- AC-3 — The control mutation `no-gates` is detected on case #1 by the gate
-  assertion; if it is not, the pilot stops and the failure is recorded as a
-  method failure. Verified by the result JSON and the failing assertion name.
-- AC-4 — The two probes target rules the map marks `no assertion`, and only the
-  control targets a rule that already has one. Verified by cross-reading the map,
-  the roots and `diff -r`.
-- AC-5 — Three mutant roots exist, byte-identical to the baseline except for the
-  removed rule in `SKILL.md`, and each passes `--list --check`. Verified by
-  `diff -r` and the command's exit status.
-- AC-6 — Every mutation run reports `loaded review-code` from inside the scratch
+- AC-1 — `rule-coverage.md` lists every rule of `review-code/SKILL.md`, each mapped
+  to a case and assertion or marked `no assertion`, with a manifestability column
+  and the reason. Verified by reading it against the skill file.
+- AC-2 — The map's conclusion is checkable: for each uncovered rule, the fixture
+  that would tempt it is named and shown absent, or the rule is marked
+  manifestable and a probe is run. Verified by the map's evidence column.
+- AC-3 — The baseline for case #1 is reproduced at 5/5 on the current harness
+  before the control runs, verified in the result JSON.
+- AC-4 — The control `no-gates` is detected on case #1 by the gate assertion; if
+  it is not, the pilot stops and records a method failure. Verified by the result
+  JSON and the failing assertion name.
+- AC-5 — Two roots exist, byte-identical except for `SKILL.md`, and both pass
+  `--list --check`. Verified by `diff -r` and the exit status.
+- AC-6 — Every control run reports `loaded review-code` from inside the scratch
   dir; a run that loaded nothing is `invalid`, never detection. Verified by
   `skillGate` in the result JSON.
-- AC-7 — Each mutation is run three times and classified, with one transcript per
-  mutation as evidence; survivors are split into *manifested and not caught*
-  versus *not manifested*, quoting the trace line. Verified by the results and
-  the README.
-- AC-8 — At most one new case is added, and only for a *manifested and not
-  caught* survivor; it is added to both roots and the mutation is re-run.
-- AC-9 — The README records repo sha, the `SKILL.md` hash of each root, the model,
-  the exact commands, the per-mutation result and the cost in runs.
+- AC-7 — The control is run three times and classified, with one transcript as
+  evidence. Verified by the per-repetition results.
+- AC-8 — The red-gate gap the map found is recorded as a task with the fixture it
+  would need; no case is added in this spec. Verified by the backlog file.
+- AC-9 — The README records repo sha, both roots' `SKILL.md` hashes, the model,
+  the exact commands, the result and the cost in runs.
+
+## Result (2026-11-03)
+
+Ran at `a248f6c`, flash default, isolated home, `--timeout 240`, 8 model runs.
+
+- Baseline #1: **5/5** (`2026-11-03T11-18-06--review-code`), `ranpass npm test`
+  passing with `exit 0` in every repetition.
+- Control `no-gates` #1: **3/3 passed** (`2026-11-03T11-22-05--review-code`).
+  No assertion failed. `skillGate.ok` and `loaded: ["review-code"]` in 3/3.
+- Classification: **invalid** — not detected, and not a survivor either.
+
+The trace settles it: in all three control runs the agent executed `npm test`
+and saw 6 tests pass. The defect the mutant should have produced — approving
+without running the gate — never happened. The rule was not removed: it is still
+written in two other places in the same file (step 1, "resolve … the gate
+commands"; the output template, `GATES: … — exact commands and results`) and in
+two fixture files (the base `AGENTS.md`, "Gates: `npm test`"; the implementation
+prompt, "`npm test` must pass"). A skill-only mutation cannot remove the fixture's
+statement, so `ranpass` cannot be attributed to the removed step.
+
+AC-4 is therefore **not met on its positive branch**. The fallback the AC
+prescribes was followed: the pilot stopped before any probe and recorded the
+failure. The record attributes it to the control's design rather than to the
+method — the same session has the baseline at 5/5 and the skill loaded in 8/8
+executions.
+
+The full record is in
+`docs/evals/experiments/mutation/review-code/README.md`; the map gained a section
+on what the control showed.
 
 ## Open Questions
 
-**Blocking — none.** Four judgements are recorded rather than asked.
+**Blocking — the control choice.** The control named in Scope does not isolate the
+rule it mutates. Two ways forward, with the evidence above:
 
-**Which two probes.** The map decides, the spec does not. Naming them now would
-repeat the original mistake: guessing coverage instead of reading it.
+1. **Swap the control** to `ignore-spec-sha` on case #4, where the fixture records
+   the hash but never tells the reviewer to compare it. Cost: a #4 baseline at
+   5× plus the control at 3×, about 8 runs. This is the only option that answers
+   the original question with the current fixtures.
+2. **Close the pilot with the invalid result**, record the gate rule as not
+   testable by a skill-only mutation on case #1, and leave the clean control to a
+   follow-up task.
 
-**Three repetitions is a small sample.** A survivor at 3/3 is weak evidence, so
-the trace decides: a detection needs the named assertion, a survivor needs the
-defect visible. A mutation whose trace shows neither is recorded as inconclusive.
+The spec does not decide this alone because it changes the control named in
+Scope. Everything else in the spec is done.
 
-**One model.** The default only. The matrix already shows both models agreeing on
-the baseline.
+**Probes dropped.** The spec's second draft promised two; the map showed none
+would be manifestable. Running them would produce two "not manifested" results
+that cannot be told apart from redundancy. The evidence is in the map, which is
+checkable without a model.
+
+**Three repetitions.** Only the control runs, and its detection is near-certain
+by construction; the trace settles anything ambiguous.
+
+**One model.** The default only.
 
 **This repo has no `docs/product`, `docs/principles` or `AGENTS.md`.** The design
 and copy checks in the grooming procedure have no source to read here, and are
@@ -171,22 +217,22 @@ recorded as not applicable rather than invented.
 
 ## Prompt Notes
 
-- Requirements: a coverage map with no model runs, one control mutation that must
-  be detected, two probes on rules the map marks uncovered, a reproduced baseline,
-  three repetitions each, a classification with trace evidence, and a README.
-- Entities: rule (a numbered instruction in `SKILL.md`), coverage map (rule →
-  assertion), control (known-covered mutation), probe (uncovered mutation),
+- Requirements: a coverage map with no model runs, a manifestability column, one
+  control mutation that must be detected, a reproduced baseline, three
+  repetitions, and a README. Probes only if the map finds an uncovered rule that
+  a fixture can tempt.
+- Entities: rule, coverage map (rule → assertion → manifestable), control,
   root, classification (detected, survivor, invalid).
-- Approach: map first, then choose; copy once per root; edit only `SKILL.md`;
-  verify load before spending repetitions; run the existing runner.
+- Approach: map first; it decides the rest. If it closes the probe branch, say so
+  and spend the runs on the control only.
 - Structure: `docs/evals/experiments/mutation/review-code/<variant>/skills/review-code/`
   with `rule-coverage.md` and `README.md` at the experiment root.
-- Operations: map, rank, control, probes, baseline, control run, probe runs,
-  classify, record.
+- Operations: map, decide probes, copy roots, mutate control, validate, baseline,
+  control runs, classify, record, open the gap task.
 - Norms: no new runner flag, no dependency, isolated home on, `--timeout 240`,
   commands and hashes in the README, Portuguese in the experiment prose.
 - Safeguards: don't edit the real `SKILL.md`; only the control may mutate a
   covered rule; don't count an invalid mutant as detection; don't compare against
   pre-isolation numbers; don't add cases for redundancy.
-- Tests: the experiment is the test; evidence is the run artifacts and the
-  traces.
+- Tests: the experiment is the test; evidence is the map, the run artifacts and
+  the trace.

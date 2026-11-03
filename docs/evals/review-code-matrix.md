@@ -123,6 +123,13 @@ moved underneath the prompt and approves the result (#4), and it answers a
 request with no spec at all by returning a verdict — mostly "request changes" —
 instead of asking for the intent or withholding (#3).
 
+One caveat on the #1 row, from the mutation pilot: `ranpass npm test` proves the
+gate was executed, not that the skill's gate step caused it. The fixture's own
+`AGENTS.md` and implementation prompt name `npm test`, so a mutant that removes
+the skill's gate step still produces a green run. The assertion separates the
+arms but does not attribute the behaviour to that rule. See
+`docs/evals/experiments/mutation/review-code/`.
+
 ## Correction: two assertion bugs, both flattering the skill
 
 The four-case publication counted 1/20 and 0/20 in the control arms. Both numbers

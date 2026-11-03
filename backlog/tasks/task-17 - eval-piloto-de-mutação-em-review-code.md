@@ -69,4 +69,15 @@ Duas decisões tomadas no grooming, registradas na spec em vez de virarem pergun
 - o caminho segue a convenção do repo (`docs/evals/experiments/mutation/review-code/<variante>/skills/`), não `experiments/` da raiz.
 
 O que ficou como Incógnita na spec: três repetições é amostra pequena, então a classificação usa o trace, e uma mutação que não manifesta o defeito não conta como detectada.
+---
+
+Resultado da SPEC-0006 em 2026-11-03, sha `a248f6c`, 8 execuções:
+
+- baseline do caso #1: 5/5;
+- controle `no-gates`: 3/3, **não detectado**;
+- classificação: **inválido**, não sobrevivente.
+
+O trace mostra `npm test` executado nas três repetições. A regra do gate nunca saiu do texto: continua no passo 1 ("resolve … the gate commands"), no bloco de saída (`GATES: …`), no `AGENTS.md` do fixture ("Gates: `npm test`") e no prompt de implementação ("`npm test` must pass"). Uma mutação só da skill não alcança os dois últimos, então `ranpass` não pode ser atribuído à regra removida. O método não falhou; o controle não isola o que diz medir.
+
+O escopo de três mutações foi reduzido pela spec depois que o mapa mostrou que nenhuma regra sem asserção é manifestável com os fixtures atuais. A pergunta original segue aberta: um controle limpo precisa de uma regra que o fixture não repita — `ignore-spec-sha` no caso #4 é o candidato. A lacuna de fixture do gate vermelho ficou na TASK-21, com a condição de não repetir o comando no fixture.
 <!-- COMMENTS:END -->

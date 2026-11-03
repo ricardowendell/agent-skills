@@ -1,0 +1,3 @@
+# Mutant roots are scratch artefacts. Rebuild them with the commands in README.md.
+baseline/
+no-gates/
