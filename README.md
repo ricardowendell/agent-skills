@@ -29,15 +29,18 @@ Install with symlinks, so `git pull` updates the skills in place:
 
 ```sh
 git clone https://github.com/ricardowendell/agent-skills.git ~/src/agent-skills
+SRC=~/src/agent-skills          # the path you cloned to
 
 mkdir -p ~/.claude/skills
-for s in ~/src/agent-skills/skills/*/; do
+for s in "$SRC"/skills/*/; do
   ln -sfn "$s" ~/.claude/skills/"$(basename "$s")"
 done
 ```
 
 Other agents use the same pattern with a different directory — see
-[Compatibility](#compatibility).
+[Compatibility](#compatibility). If you cloned straight to `~/.agents`, the
+`~/.agents/skills` tree is already the Copilot CLI path: no symlink is needed
+for that agent.
 
 **New project**
 
@@ -127,6 +130,9 @@ kind is allowed but not required.
 
 </details>
 
+This repo's own `docs/` is not that tree: it records changes to these skills and
+the harness, not a product. See [`docs/README.md`](docs/README.md).
+
 ## Compatibility
 
 | Agent | Skills | Commands | Subagent |
@@ -142,21 +148,23 @@ IDE-facing and not shipped here, and a skill cannot delegate to them; the skills
 need no adapter.
 
 Commands are optional: the skills work when named in a request. To install the
-stubs and the read-only `spec-reviewer` subagent:
+stubs and the read-only `spec-reviewer` subagent (with `$SRC` from the
+Quickstart):
 
 ```sh
-# OpenCode
-cp ~/src/agent-skills/commands/*.md ~/.config/opencode/commands/
-cp ~/src/agent-skills/agents/*.md   ~/.config/opencode/agents/
+# OpenCode (`commands/` and `agents/` at the repo root)
+cp "$SRC"/commands/*.md ~/.config/opencode/commands/
+cp "$SRC"/agents/*.md   ~/.config/opencode/agents/
 
-# Claude Code
-cp ~/src/agent-skills/claude/commands/*.md ~/.claude/commands/
-cp ~/src/agent-skills/claude/agents/*.md   ~/.claude/agents/
+# Claude Code (`claude/` is the same set, Claude frontmatter)
+cp "$SRC"/claude/commands/*.md ~/.claude/commands/
+cp "$SRC"/claude/agents/*.md   ~/.claude/agents/
 ```
 
 `claude/commands/` is the same set without the OpenCode-only frontmatter
 (`agent:`, `subagent:`), and `claude/agents/spec-reviewer.md` uses Claude Code's
-`tools:` field instead.
+`tools:` field instead. Codex ships no command files: name the skill in the
+request.
 
 You can also ask in domain terms — "turn this into a spec" — and let the agent
 match a skill's description. That works, but it is the least deterministic way

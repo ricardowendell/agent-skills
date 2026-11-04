@@ -59,7 +59,9 @@
 // "change.patch" }` commits the base tree as `main`, prunes `remove`, applies
 // the patch on `branch`, and leaves that branch checked out.
 //
-// Output: transcripts under ~/.local/share/opencode/evals/<skill>/<n>.md
+// Output: one directory per invocation under
+// ~/.local/share/opencode/evals/runs/<timestamp>--<label>/; each case writes
+// cases/<skill>--<n>/transcript.md (or transcript.r<i>.md) and result.json.
 
 import { readdirSync, lstatSync, realpathSync, existsSync, mkdirSync, writeFileSync, appendFileSync, readFileSync } from "node:fs"
 import { spawnSync } from "node:child_process"

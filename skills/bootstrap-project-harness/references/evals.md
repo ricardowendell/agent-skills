@@ -2,13 +2,16 @@
 
 Representative prompts and the trajectory this skill should produce. Fixtures for
 cases 1, 2, 3, 5, 7, 9, 10, and 11 live in `references/evals/<n>/` and are copied
-into the scratch repo before the prompt runs.
+into the scratch repo before the prompt runs. Cases 14 and 15 also ship a
+`git.json` manifest, so their trees are staged as a committed repo.
 
 The runner copies a plain tree: no `.git`, no history. That limits what a case can
 assert. Case 7's fixture is a harness from before the current templates, but with
 no `.git` and no source the skill reads it as an empty repo, so the case asserts
-additive completion rather than the "complete harness → stop" path. That stop
-path stays manual until the runner can stage a committed repository.
+additive completion rather than the "complete harness → stop" path. Cases 14 and
+15 cover that path instead: `git.json` stages the tree as a committed repository,
+so case 14 can assert that a complete harness is left untouched and case 15 that
+the missing file is added while the checked files stay as they were.
 
 Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `- expect:` (human-checked), `- assert: <kind> <arg>` (machine-checked; the full kind list is in the README), `- status: manual` (recorded, not run), `- needs: gates` (skipped at `--level behavior`).
 
