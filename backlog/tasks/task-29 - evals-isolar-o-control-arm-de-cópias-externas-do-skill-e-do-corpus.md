@@ -4,6 +4,7 @@ title: 'evals: isolar o control arm de cópias externas do skill e do corpus'
 status: To Do
 assignee: []
 created_date: '2026-11-05T16:51:00Z'
+updated_date: '2026-11-05T21:37:00Z'
 labels: []
 dependencies: []
 priority: high
@@ -18,7 +19,7 @@ Os controles da SPEC-0015 leram uma cópia stale de references/evals.md em /priv
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Transcripts de controle têm zero leituras de SKILL.md/evals.md externos.
-- [ ] #2 O controle do #1 no gpt-6-luna é remedido.
+- [ ] #1 Controles ou não conseguem ler skill/corpus externos, ou o run registra leak e fica marcado contaminado e excluído; nenhuma leitura externa conta como passe.
+- [ ] #2 O controle do #1 no gpt-6-luna é remedido e o número publicado reflete a leitura nova.
 - [ ] #3 O gate continua detectando uso da tool skill.
 <!-- AC:END -->
