@@ -233,5 +233,5 @@ path and `scripts/lib/evals/fixture.test.mjs:109` pins it. The out-of-scope
 `docs/README.md` direction note and the first-baseline bullet left this change.
 Gates: `validate-skills`; `run-evals --list --check` (74 parsed, 69 runnable, 5
 manual); `node --test scripts/lib/evals/*.test.mjs` (125/125); the bootstrap
-suite (17/17); `check-sensor-parity` (2/2). Commits: `c6ca22b` (SPEC-0007),
-`f90f374` (TASK-23), `1435f37` (milestone 0.2).
+suite (17/17); `check-sensor-parity` (2/2). Commits: `c6ca22b` (SPEC-0007) and
+`f90f374` (TASK-23).
