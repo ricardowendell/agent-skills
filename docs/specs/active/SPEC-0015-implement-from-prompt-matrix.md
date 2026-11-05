@@ -1,7 +1,7 @@
 ---
 id: SPEC-0015
 title: Measure whether implement-from-prompt separates with and without the skill
-status: ready
+status: implemented
 priority: P0
 task: TASK-24
 created_at: 2026-11-05
@@ -23,8 +23,10 @@ files:
   - docs/README.md
   - docs/specs/active/SPEC-0015-implement-from-prompt-matrix.md
 tests:
-  - node scripts/run-evals.mjs --root skills --skill implement-from-prompt --list --check
   - node scripts/validate-skills.mjs --root skills
+  - node scripts/run-evals.mjs --root skills --list --check
+  - node --test scripts/lib/evals/*.test.mjs
+  - node --test skills/bootstrap-project-harness/scripts/*.test.mjs
   - node scripts/check-sensor-parity.mjs
 ---
 
