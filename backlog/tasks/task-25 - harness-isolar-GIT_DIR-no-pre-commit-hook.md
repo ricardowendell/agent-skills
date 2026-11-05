@@ -1,9 +1,10 @@
 ---
 id: TASK-25
 title: 'harness: isolar GIT_DIR no pre-commit hook'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-05T14:45:00Z'
+updated_date: '2026-11-05T16:56:00Z'
 labels: []
 dependencies: []
 priority: high
@@ -18,7 +19,15 @@ O hook pre-commit roda testes que encenam fixtures com git. Como o git exporta G
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 O hook limpa GIT_DIR/GIT_INDEX_FILE/GIT_WORK_TREE depois de resolver ROOT.
-- [ ] #2 Rodar o hook com GIT_DIR/GIT_INDEX_FILE setados nao muda a branch atual nem core.bare.
-- [ ] #3 Os cinco comandos do hook continuam verdes.
+- [x] #1 O hook limpa GIT_DIR/GIT_INDEX_FILE/GIT_WORK_TREE depois de resolver ROOT.
+- [x] #2 Rodar o hook com GIT_DIR/GIT_INDEX_FILE setados nao muda a branch atual nem core.bare.
+- [x] #3 Os cinco comandos do hook continuam verdes.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+2026-11-05 — Fix em `.githooks/pre-commit`: `unset GIT_DIR GIT_INDEX_FILE GIT_WORK_TREE GIT_PREFIX GIT_COMMON_DIR` depois de resolver `ROOT` e entrar nele.
+
+Prova: `GIT_DIR=.git GIT_INDEX_FILE=.git/index GIT_WORK_TREE=$PWD sh .githooks/pre-commit` rodou os cinco comandos (`All clear`, `--list --check`, 125 testes do harness, 17 do bootstrap, parity 2/2) e deixou `branch=main`, `HEAD=1f8372c`, `core.bare=false`; `git status` só mostrou o próprio hook modificado.
+<!-- COMMENTS:END -->
