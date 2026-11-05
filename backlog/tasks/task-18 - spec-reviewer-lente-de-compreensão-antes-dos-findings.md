@@ -1,10 +1,10 @@
 ---
 id: TASK-18
 title: 'spec-reviewer: lente de compreensão antes dos findings'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-03T10:38:00Z'
-updated_date: '2026-11-03T10:38:00Z'
+updated_date: '2026-11-05T12:49:00Z'
 labels: []
 dependencies: []
 ordinal: 18000
@@ -36,11 +36,11 @@ Risco declarado no próprio documento: uma lente que parafraseia pode gerar fals
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 a lente escrita em termos de comportamento, não de formato de relatório
-- [ ] #2 piloto com specs de defeito conhecido e specs corretas, para medir falso positivo
-- [ ] #3 comparação com o `spec-reviewer` atual no mesmo corpus; sem ganho, registrar e não integrar
-- [ ] #4 a paráfrase não substitui os findings existentes, só os antecede
-- [ ] #5 nada muda no `spec-reviewer` sem o resultado do piloto
+- [x] #1 a lente escrita em termos de comportamento, não de formato de relatório
+- [x] #2 piloto com specs de defeito conhecido e specs corretas, para medir falso positivo
+- [x] #3 comparação com o `spec-reviewer` atual no mesmo corpus; sem ganho, registrar e não integrar
+- [x] #4 a paráfrase não substitui os findings existentes, só os antecede
+- [x] #5 nada muda no `spec-reviewer` sem o resultado do piloto
 <!-- AC:END -->
 
 ## Comments
@@ -53,4 +53,6 @@ created: 2026-11-03T10:38:00Z
 Aberto a partir do processamento do inbox. É a recomendação principal do EGM e a mais distante do que já existe: o repo mede revisão de código, não compreensão de spec.
 
 Pergunta aberta: o documento propõe três braços (atual, rubrica na sessão do autor, rubrica em sessão nova). O braço B existe para isolar o valor do histórico — mas sem um jeito barato de rodar "mesma sessão", pode ficar só A contra C, declarando a limitação.
+Groomed into `docs/specs/SPEC-0012-paraphrase-lens-spec-reviewer.md` (draft). O piloto usa 6 specs (3 com lacuna plantada, 3 limpas), dois braços e 12 execuções; a lente só entra nos dois arquivos de agente se nomear uma lacuna que o baseline perdeu sem aumentar falso positivo nas specs limpas.
+
 <!-- COMMENTS:END -->

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Groom Backlog To Specs"
+  short_description: "Turn backlog items into scoped implementation specs."
+  default_prompt: "Create or update implementation specs from the backlog, preserving Suficiente Solo scope and open questions."

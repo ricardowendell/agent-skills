@@ -1,10 +1,10 @@
 ---
 id: TASK-19
 title: 'groom-backlog: ablação de contexto para medir leitura seletiva'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-03T10:38:00Z'
-updated_date: '2026-11-03T10:38:00Z'
+updated_date: '2026-11-05T12:49:00Z'
 labels: []
 dependencies: []
 ordinal: 19000
@@ -37,11 +37,11 @@ Medição: variantes por `--root`, como no piloto de mutação (TASK-17). Regist
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 quatro casos mínimos existentes ou criados, e a variante roda nos mesmos dois roots
-- [ ] #2 leituras observadas no trace, não disponibilidade do arquivo
-- [ ] #3 nenhuma regressão crítica nos quatro casos
-- [ ] #4 redução de custo ou de ações em mais de um caso, com repetição antes de promover
-- [ ] #5 se a economia depender de deixar um conflito passar, a candidata é rejeitada
+- [x] #1 quatro casos mínimos existentes ou criados, e a variante roda nos mesmos dois roots
+- [x] #2 leituras observadas no trace, não disponibilidade do arquivo
+- [x] #3 nenhuma regressão crítica nos quatro casos
+- [x] #4 redução de custo ou de ações em mais de um caso, com repetição antes de promover
+- [x] #5 se a economia depender de deixar um conflito passar, a candidata é rejeitada
 <!-- AC:END -->
 
 ## Comments
@@ -54,4 +54,6 @@ created: 2026-11-03T10:38:00Z
 Aberto a partir do processamento do inbox. É a única das quatro que mexe em custo (tokens e ações), e não em cobertura — por isso depende de a TASK-17 provar que o corpus detecta regressão antes de reduzir contexto.
 
 Pergunta aberta: este repo não tem índice de specs. A candidata começa com "consulte o índice" — sem esse artefato, o passo 2 vira busca textual, e o teste mede outra coisa. Decidir antes de começar.
+Groomed into `docs/specs/SPEC-0013-context-ablation-groom-backlog.md` (draft). Dois roots congelados, 4 casos e leituras medidas no JSONL do trace; o caso 3 (conflito numa spec cujo título não tem as palavras do item) é o adversarial. A skill só muda se a economia não vier de um conflito perdido.
+
 <!-- COMMENTS:END -->

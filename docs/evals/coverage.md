@@ -7,20 +7,20 @@ directories; they are not estimates.
 
 | Skill | Cases | Trigger | Manual | Fixture | Evidence recorded |
 | --- | --- | --- | --- | --- | --- |
-| `audit-docs` | 3 | 2 | 0 | tree 1; tree 3 staged via `git.json` | case 3: 3/3, skill loaded 3/3 (`why:`, no run dir) |
+| `audit-docs` | 4 | 2 | 0 | tree 1; tree 3 staged via `git.json`; tree 4 drift fixture | case 3: 3/3, skill loaded 3/3 (`why:`, no run dir); case 4: 3/3, defect + intentional evolution + future filtered, no writes (`2026-11-05T08-46-00--audit-docs`) |
 | `bootstrap-project-harness` | 15 | 2 | 1 | trees 1, 2, 3, 5, 7, 9, 10, 11, 14, 15; 14 and 15 via `git.json` | case 14: 12/12 re-judged (first pass 9/12 on a reply regex); case 15: 3/3 (`why:`, no run dir) |
 | `capture-idea` | 3 | 2 | 0 | trees 1–3 | none |
 | `find-blind-spots` | 4 | 2 | 0 | tree 4 | case 4: 3/3, skill loaded 3/3 (`why:`, no run dir) |
-| `groom-backlog` | 7 | 2 | 0 | trees 1, 3, 4, 5 | none |
+| `groom-backlog` | 7 | 2 | 0 | trees 1, 3, 4, 5 | ablation on 4 fixture cases, 2026-11-05: both arms 4/4; index-first not promoted (tokens +65% on the adversarial case) (`09-32-51`, `09-34-43`, `09-39-15`, `09-43-45`) |
 | `implement-from-prompt` | 8 | 2 | 3 | trees 1, 3, 4, 7, 8 | none |
 | `process-inbox` | 3 | 2 | 0 | tree 1 | none |
 | `record-decision` | 5 | 2 | 0 | trees 1–5 | none |
-| `review-code` | 6 | 2 | 0 | trees 1–6 plus `base/`; 1–4 via `git.json` | published matrix (`review-code-matrix.md`) |
+| `review-code` | 7 | 2 | 0 | trees 1–7 plus `base/` and `base-red/`; 1–4 and 7 via `git.json` | published matrix; #4 fixture revised 2026-11-05: 5/5 with, 3/5 without (`2026-11-05T07-34-32--review-code`, `…07-47-21--review-code--without-skill`); #7 red gate: 3/3 with, 0/3 without (`…09-05-36`, `…09-32-10--without-skill`) |
 | `survey-inflight-work` | 4 | 2 | 0 | tree 1 via `git.json` with a local bare `origin`; tree 2 without a remote | iteration 1, 1 draw/case: with-skill 4/4 (`2026-11-04T21-49-16`); control case 1 0/1, only the `unknown` PR state separated (`…21-45-26`); control case 2 0/1, only the no-remote line separated (`…21-57-53`) |
 | `audit-code-quality` | 4 | 2 | 0 | trees 1 and 4 via `git.json` | iteration 1: with-skill 4/4 (`2026-11-04T21-55-53`); control case 1 0/1, only coverage `unknown` separated (`…21-47-51`); control case 4 passed once (`…21-57-53`) and failed once (`…21-59-17`, `SCOPE:`/`rule`/`CAPTURE OPTIONS`), so it does not separate reliably |
 | `tighten-harness` | 6 | 2 | 0 | trees 1, 2, 3, 5, 6 | case 5: 3/3 passed, skill loaded 0/3 (`why:`, no run dir) |
 | `write-implementation-prompt` | 6 | 2 | 1 | trees 1–4 | none |
-| **total** | **74** | **26** | **5** | | |
+| **total** | **76** | **26** | **5** | | |
 
 ## Evidence rules
 
@@ -41,12 +41,15 @@ directories; they are not estimates.
   `groom-backlog`, `implement-from-prompt`, `process-inbox`, `record-decision`
   and `write-implementation-prompt`. Their cases parse and gate the shape of the
   output; nobody has published whether they separate from a run without the
-  skill. The `wip-operations-contract` experiment did measure
+  skill. `groom-backlog` now has a four-case ablation (SPEC-0013), but that
+  measured a candidate skill text, not the seven cases in this inventory. The `wip-operations-contract` experiment did measure
   `write-implementation-prompt` and `implement-from-prompt` with frozen copies,
   but it scores no case in this inventory.
 - **The mutation pilot is inconclusive by design**: both controls in
   `experiments/mutation/review-code/` came back `invalid` (SPEC-0006). The
-  durable artefact is the rule-coverage map, not a pass rate.
+  durable artefact is the rule-coverage map, not a pass rate. Re-run against the
+  revised #4 fixture (SPEC-0009), `ignore-spec-sha` is a **survivor**: the rule
+  is redundant there because the prompt's `spec_sha` supplies the cue.
 - **`review-code` #2 left the matrix**: it measured 5/5 in both arms, so it is
   kept as a regression case rather than a discriminator.
 - **`audit-code-quality` #4 does not separate reliably**: its control arm passed
