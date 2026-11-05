@@ -21,6 +21,18 @@ call or in command output rather than in the reply it could read, the judge
 marked the expectation `unverifiable` and the case failed. That is a defect of
 the judge, not of the run; the deterministic cell is the decision.
 
+## Load canary
+
+Before Gate A, case #1 ran 12 draws with the skill to check the load gate:
+
+```sh
+node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 1 --repeat 12 --run
+```
+
+`2026-11-05T11-36-10--implement-from-prompt`: 12/12 passed, 0 skill-gate
+misses. The canary is a precondition, not a case rate; Gate A later showed the
+load defect in #2 and #8.
+
 ## Gate A — default model, five repetitions, judge `opencode-go/gpt-6-luna`
 
 ```sh
@@ -130,11 +142,12 @@ read in its 12 draws.
 - **#7 — non-discriminator.** 5/5 in both arms on the deterministic reading. The
   judge failed four control runs as `unverifiable`, but the assertions that
   decide the case pass in both arms. Keep as a regression case.
-- **#2 — contaminated.** The with-skill arm lost its gate in 3 of 5 runs, so the
-  cell cannot be read as skill behaviour. The control scored 2/5, but one of
-  those passes read a stale `references/evals.md` outside the scratch and
-  another run read the real `SKILL.md`; neither is a clean control. Not
-  measured; re-run after the load and isolation defects are fixed.
+- **#2 — broken with the skill (skill-load).** The with-skill arm lost its gate
+  in 3 of 5 runs, so the cell cannot be read as skill behaviour; the control
+  scored 2/5, but one of those passes read a stale `references/evals.md` outside
+  the scratch and another run read the real `SKILL.md`; neither is a clean
+  control. The cell is contaminated, not a reading of the case. Re-run after the
+  load and isolation defects are fixed.
 - **#4 — broken with the skill.** The skill reads "add `src/echo.js`" as a
   blocking gap and stops (1/5 with the skill, 1/5 without). The case is not a
   separator; the skill's rule is the defect.
@@ -186,8 +199,9 @@ recorded as follow-ups; the default-model Gate B control runs that carry the
   skill.
 - **#3** — the fixture must force `src/text.js` instead of suggesting it before
   the case can leave `manual`.
-- **#2** — the load defect (the skill not loading in 3 of 5 runs) must be
-  diagnosed before the case is re-measured.
+- **#2** — re-diagnose the load defect in light of the canary: #1 loaded 12/12
+  while #2 lost 3/5 and #8 lost 1/5, so TASK-10's aggregate ~23% is case-specific
+  here, not a universal miss.
 - **Judge calibration** — the judge calls an expectation `unverifiable` when the
   evidence sits in a tool call; #1 with and #7 control are the clearest cases.
   Either give the judge the evidence or stop it from failing those runs.
