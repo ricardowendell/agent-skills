@@ -232,17 +232,21 @@ does not hide `/Users/wendell/.agents` or `/private/var/folders`. Both are
 recorded as follow-ups; the default-model Gate B control runs that carry the
 #1/#8 separation contain zero of either read.
 
-The six run directories of the SPEC-0016 re-measurement contain zero reads of a
-`references/evals.md` and zero reads of `/Users/wendell/.agents/skills`; the only
-`/private/var/folders` hits are each scratch's own `.opencode/opencode.json`:
+The five run directories of the SPEC-0016 re-measurement contain zero reads of a
+`references/evals.md` and zero reads of `/Users/wendell/.agents/skills`, and no
+transcript reads anything outside its own scratch directory:
 
 ```sh
-for d in <the six runs above>; do
+for d in <the five runs above>; do
   grep -rl "references/evals.md" "$d/cases"
   grep -rl "/Users/wendell/.agents/skills" "$d/cases"
 done
 # no output
 ```
+
+The one-draw sanity run that preceded them (`2026-11-05T14-58-06--implement-from-prompt`)
+ran against the same uncommitted skill (`repoSha: e37c0e4`, post-fix `skillHash`)
+and is also clean; it is a precondition, not a measurement.
 
 ## Follow-ups
 

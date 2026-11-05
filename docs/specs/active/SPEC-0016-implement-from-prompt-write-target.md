@@ -80,8 +80,9 @@ file is absent, so the gap rule keeps protecting against invented dependencies.
 
 **Blast radius.** One skill's step 3, one fixture file, one eval `why:`, two
 evidence documents. The case it can regress is #8 ("the existing `src/format.js`,
-extend `formatAmount`", currently 12/12 vs 0/12) and #2's refusal path. Both are
-re-measured below.
+extend `formatAmount`", currently 12/12 vs 0/12), re-measured below at 5/5. #2
+also depends on the refusal path, but it stays out of this measurement because
+its skill-load defect (gate 2/5) predates this change and is tracked in TASK-30.
 
 ## Non-Goals
 
