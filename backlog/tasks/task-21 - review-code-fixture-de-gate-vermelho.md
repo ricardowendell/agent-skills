@@ -1,10 +1,10 @@
 ---
 id: TASK-21
 title: 'review-code: fixture de gate vermelho para cobrir o caminho de REJECT'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-03T11:05:00Z'
-updated_date: '2026-11-03T11:05:00Z'
+updated_date: '2026-11-05T12:49:00Z'
 labels: []
 dependencies: []
 ordinal: 21000
@@ -34,11 +34,11 @@ A spec #1 (matriz) e o #2 mostram que o corpus prefere fixtures com defeito de A
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 caso novo com gate que falha por motivo reproduzível e local, sem install
-- [ ] #2 asserção exige `verdict REJECT` e prova de que o gate foi executado (`ranpass`), não apenas citado
-- [ ] #3 rodado 3 vezes; se o agente aprovar mesmo assim, o defeito é da skill e vira task própria
-- [ ] #4 `--list --check` continua verde e o caso entra como runnable
-- [ ] #5 a matriz é atualizada com o caso e a taxa
+- [x] #1 caso novo com gate que falha por motivo reproduzível e local, sem install
+- [x] #2 asserção exige `verdict REJECT` e prova de que o gate foi executado (`ranpass`), não apenas citado
+- [x] #3 rodado 3 vezes; se o agente aprovar mesmo assim, o defeito é da skill e vira task própria
+- [x] #4 `--list --check` continua verde e o caso entra como runnable
+- [x] #5 a matriz é atualizada com o caso e a taxa
 <!-- AC:END -->
 
 ## Comments
@@ -49,4 +49,6 @@ created: 2026-11-03T11:05:00Z
 ---
 
 Aberta a partir do mapa de cobertura da SPEC-0006. É a lacuna que o piloto de mutação encontrou sem precisar rodar mutação: a regra existe, a asserção existe, o fixture não.
+Groomed into `docs/specs/SPEC-0008-red-gate-review-verdict.md` (draft). Decisão: caso #7 com `base-red/` e um teste vermelho já no `main`, para o diff da branch não ter defeito próprio; `ranpass` só passa com exit 0 e não expressa gate vermelho, então a asserção é `ran npm test` + `verdict REJECT`. A separação contra o braço de controle é medida, não presumida.
+
 <!-- COMMENTS:END -->
