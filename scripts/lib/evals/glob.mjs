@@ -3,7 +3,7 @@
 // Patterns are POSIX-style and relative to the scratch dir: `*` and `?` stay
 // inside a segment, `**` crosses segments. Everything else is literal, so a
 // fixture path with `(`, `[` or `.` needs no escaping. `fs.glob` is not used
-// because CI pins Node 20.
+// because the runner's own tests must pass on every Node the project supports.
 
 import { readdirSync } from "node:fs"
 import { join } from "node:path"
@@ -48,7 +48,7 @@ export function toRegExp(pattern) {
 
 // Every file and directory under `root`, as POSIX relative paths. Skips the
 // trees that fixtures never assert on and that can explode in size.
-export function listTree(root, skip = new Set([".git", "node_modules"])) {
+function listTree(root, skip = new Set([".git", "node_modules"])) {
   const found = []
   const walk = (dir, rel) => {
     let entries

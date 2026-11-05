@@ -1,7 +1,8 @@
 # Experiment: per-step observability in implementation prompts
 
-Status: hypothesis refuted on the built scenarios; no failing case found. This directory is the
-working area for TASK-9.
+Status: closed record — hypothesis refuted on the built scenarios, no failing
+case found, and the `run.sh` driver removed (SPEC-0011). The directory is kept
+as evidence for TASK-9; no further runs are planned.
 
 ## Hypothesis
 
@@ -25,9 +26,9 @@ prompt is judged by what an implementer produces from it.
 - **Stage 2** runs `implement-from-prompt` over the same fixture, with the
   produced prompt copied in. Assertions are outcome-only.
 
-Both stages use the existing runner. `run.sh` copies the frozen skills and the
-fixture into `.work/<arm>/`, which is what `--root` already understands. Nothing
-here is part of the harness.
+Both stages use the existing runner. The commands under *Reproducing an arm*
+copy the frozen skills and the fixture into `.work/<arm>/`, which is what
+`--root` already understands. Nothing here is part of the harness.
 
 ## Frozen baseline
 
@@ -131,6 +132,92 @@ on its own. Candidates, in order of how much they would prove:
 
 Until one of these separates the arms, no candidate should be shipped, and the
 skill should not be edited to satisfy this experiment.
+
+## Reproducing an arm
+
+The driver is gone; these are the commands it ran. They rebuild the stage-1 and
+stage-2 roots under `.work/`, which is scratch and may be deleted at any time.
+
+| scenario | `fixture` | `spec` | `case_n` |
+| --- | --- | --- | --- |
+| `s1` | `$here/fixture` | `SPEC-0014` | `1` |
+| `s2` | `$here/fixture-s2` | `SPEC-0015` | `2` |
+
+Set `arm` (`A` or `B`), `scenario` (`s1` or `s2`), and:
+
+```sh
+here=docs/evals/experiments/wip-operations-contract
+work=$here/.work/$arm/$scenario
+# s1: fixture=$here/fixture    spec=SPEC-0014 case_n=1
+# s2: fixture=$here/fixture-s2 spec=SPEC-0015 case_n=2
+```
+
+**Stage 1 — generate the prompt.**
+
+```sh
+mkdir -p "$work/stage1/write-implementation-prompt/references/evals"
+cp "$here/$arm/SKILL.md" "$work/stage1/write-implementation-prompt/SKILL.md"
+cp "$here/cases/stage1-write-prompt.md" "$work/stage1/write-implementation-prompt/references/evals.md"
+rm -rf "$work/stage1/write-implementation-prompt/references/evals/$case_n"
+cp -R "$fixture" "$work/stage1/write-implementation-prompt/references/evals/$case_n"
+
+node scripts/run-evals.mjs --root "$work/stage1" --skill write-implementation-prompt \
+  --case "$case_n" --repeat 1 --run
+```
+
+**Stage 2 — implement it.**
+
+```sh
+mkdir -p "$work/stage2/implement-from-prompt/references/evals"
+cp skills/implement-from-prompt/SKILL.md "$work/stage2/implement-from-prompt/SKILL.md"
+cp "$here/cases/stage2-implement.md" "$work/stage2/implement-from-prompt/references/evals.md"
+rm -rf "$work/stage2/implement-from-prompt/references/evals/$case_n"
+cp -R "$fixture" "$work/stage2/implement-from-prompt/references/evals/$case_n"
+```
+
+**Harvest** the prompt stage 1 produced into the stage-2 case, then run it:
+
+```sh
+out=$(ls -td "$HOME/.local/share/opencode/evals/runs"/*write-implementation-prompt* | head -1)
+scratch=$(grep -m1 '^\*\*Scratch:\*\*' "$out/cases/write-implementation-prompt--0$case_n/transcript.md" \
+  | sed 's/^\*\*Scratch:\*\* //')
+cp "$scratch"/docs/prompts/"$spec"-*.prompt.md \
+  "$work/stage2/implement-from-prompt/references/evals/$case_n/docs/prompts/"
+
+node scripts/run-evals.mjs --root "$work/stage2" --skill implement-from-prompt \
+  --case "$case_n" --repeat 1 --run
+```
+
+**Bare implementer (second lever).** Build a placeholder skill in the stage-2
+root so the runner can discover it, and deny the skill tool:
+
+```sh
+printf -- "---\nname: plain-implementer\ndescription: Placeholder so the runner can discover this root. The skill tool is denied.\n---\n" \
+  > "$work/stage2/plain-implementer/SKILL.md"
+node scripts/run-evals.mjs --root "$work/stage2" --skill plain-implementer \
+  --case "$case_n" --repeat 1 --run --no-skill
+```
+
+**AC-2 probe.** Not in the oracle: the rejection must name the physical line, so
+two blank lines push the bad row to line 4.
+
+```sh
+dir=$(grep -m1 '^\*\*Scratch:\*\*' \
+  "$(ls -td "$HOME/.local/share/opencode/evals/runs"/*implement-from-prompt* | head -1)"/cases/implement-from-prompt--0$case_n/transcript.md \
+  | sed 's/^\*\*Scratch:\*\* //')
+cd "$dir" && node --input-type=module -e '
+  const m = await import("./src/import.js")
+  try {
+    m.importRows("a,b,c\n\n\n1,2\n")
+    console.log("AC2-NOTHROW")
+  } catch (e) {
+    console.log(/(?:line|row)\s*#?4\b/i.test(e.message) ? "AC2-PASS" : `AC2-FAIL: ${e.message}`)
+  }
+'
+```
+
+`AC2-PASS` means the rejection names line 4; `AC2-FAIL` prints the message it
+used instead.
 
 ## Cost
 

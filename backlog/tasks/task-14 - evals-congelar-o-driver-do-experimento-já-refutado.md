@@ -1,10 +1,10 @@
 ---
 id: TASK-14
 title: 'evals: congelar o driver do experimento já refutado'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-02T18:55:00Z'
-updated_date: '2026-11-02T18:55:00Z'
+updated_date: '2026-11-05T12:49:00Z'
 labels: []
 dependencies: []
 ordinal: 14000
@@ -24,10 +24,10 @@ Duas saídas aceitáveis: apagar o `run.sh` e embutir no README os comandos exat
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 o README continua reproduzível sem o script, ou o script continua com um estado declarado
-- [ ] #2 nenhum staging duplicado permanece como caminho "vivo"
-- [ ] #3 nenhuma referência em doc quebra (SPEC, README, matriz)
-- [ ] #4 o resultado negativo do experimento continua legível para quem chegar depois
+- [x] #1 o README continua reproduzível sem o script, ou o script continua com um estado declarado
+- [x] #2 nenhum staging duplicado permanece como caminho "vivo"
+- [x] #3 nenhuma referência em doc quebra (SPEC, README, matriz)
+- [x] #4 o resultado negativo do experimento continua legível para quem chegar depois
 <!-- AC:END -->
 
 ## Comments
@@ -38,4 +38,6 @@ created: 2026-11-02T18:55:00Z
 ---
 
 Aberto a partir da revisão de dívida técnica. Não é urgente; é o tipo de coisa que só custa quando alguém tenta rodar de novo.
+Groomed into `docs/specs/SPEC-0011-retire-refuted-experiment-driver.md` (draft). Saída escolhida: apagar `run.sh` e embutir no README a sequência exata (stage 1, harvest, stage 2, braço bare, probe). A verificação reconstrói os dois roots e compara os hashes congelados, sem rodada de modelo.
+
 <!-- COMMENTS:END -->
