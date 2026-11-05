@@ -1,10 +1,10 @@
 ---
 id: TASK-20
 title: 'audit-docs: modo drift contra o código, sem expandir escopo'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-03T10:38:00Z'
-updated_date: '2026-11-03T10:38:00Z'
+updated_date: '2026-11-05T12:49:00Z'
 labels: []
 dependencies: []
 ordinal: 20000
@@ -27,11 +27,11 @@ O repo já tem sensores que fazem parte disso (`spec-sha`, `check-sensor-parity`
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 modo novo exercitado em documento com afirmação verdadeira, falsa e intencionalmente futura
-- [ ] #2 cada divergência classificada em defeito, evolução intencional ou doc desatualizado
-- [ ] #3 documento de spec não implementada não gera drift
-- [ ] #4 nenhum arquivo alterado pelo modo (leitura e proposta apenas)
-- [ ] #5 reaproveita sensor existente, sem dependência de runtime nova
+- [x] #1 modo novo exercitado em documento com afirmação verdadeira, falsa e intencionalmente futura
+- [x] #2 cada divergência classificada em defeito, evolução intencional ou doc desatualizado
+- [x] #3 documento de spec não implementada não gera drift
+- [x] #4 nenhum arquivo alterado pelo modo (leitura e proposta apenas)
+- [x] #5 reaproveita sensor existente, sem dependência de runtime nova
 <!-- AC:END -->
 
 ## Comments
@@ -42,4 +42,6 @@ created: 2026-11-03T10:38:00Z
 ---
 
 Aberto a partir do processamento do inbox. É o mais barato dos quatro em risco (não toca em medição de skill) e o mais fácil de inflar — daí os ACs de escopo e de filtro por status.
+Groomed into `docs/specs/SPEC-0014-audit-docs-drift-mode.md` (draft). Modo drift no `audit-docs` com fixture de 4 afirmações (verdadeira, falsa, futura, evoluída), classificação em 3 buckets e zero escrita; reusa docs-check/`spec_sha` e os gates documentados, sem dependência nova.
+
 <!-- COMMENTS:END -->

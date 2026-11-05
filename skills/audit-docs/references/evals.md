@@ -34,3 +34,18 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - assert: nofile docs/decisions/ADR-*
    - assert: nofile docs/specs/*
    - assert: reply architecture
+
+4. **Check the docs against the code.**
+   - prompt: Do the docs still match the code? Tell me what drifted.
+   - why: four claims, one per outcome — `docs/system/gates.md` matches `package.json` (true); `docs/system/rate.md` promises a `RangeError` the code never throws (defect); `docs/system/limits.md` states a cap an accepted ADR removed (intentional evolution); `docs/specs/SPEC-0002-refunds.md` is `ready` and unimplemented (future, not drift).
+   - expect: Reports the rate doc as a defect with `file:line` on both sides.
+   - expect: Classifies the cap as intentional evolution, citing ADR-0001, not as a defect.
+   - expect: Does not list the refunds spec as a finding.
+   - expect: Proposes edits and changes nothing.
+   - assert: reply negative|RangeError
+   - assert: reply ADR-0001|intentional|superseded
+   - assert: noreply - \[(?:blocking|should-fix|nit)\][^\n]*(?:SPEC-0002|refunds)
+   - assert: unchanged docs/**/*.md
+   - assert: unchanged src/rate.js
+   - assert: unchanged test/rate.test.js
+   - assert: unchanged package.json
