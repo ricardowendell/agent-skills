@@ -174,3 +174,21 @@ the separators. Total ~115–145 runs. Judge calls add model cost, not runs.
 - **Judge language.** The replies are expected in English because the prompts
   are; a reply in another language may be invisible to the deterministic regex
   and is covered only by the judge.
+
+## Amendment — 2026-11-05: AC-7 and the control-arm leak
+
+AC-7 as written required zero transcripts to read `references/evals.md`. The
+staged-copy half holds: no with-skill run read the corpus inside its scratch,
+and the runner's `the staged skill carries no eval corpus` test still passes.
+The absolute half does not: one control run in #2 read a stale copy under
+`/private/var/folders/…/T/opencode/…`, and two control runs read the real
+`SKILL.md` at `/Users/wendell/.agents/skills/implement-from-prompt/SKILL.md`.
+The transcripts are named in `docs/evals/implement-from-prompt-matrix.md`
+under *Integrity*; the affected control draws are marked contaminated and
+excluded from the claim.
+
+AC-7 is amended to: no with-skill run reads a `references/evals.md` from its
+staged copy; any external read is recorded, and the affected cell is marked
+contaminated and excluded. Closing the filesystem path
+(`/Users/wendell/.agents`, `/private/var/folders/…/T/opencode`) is a follow-up,
+not part of this spec.
