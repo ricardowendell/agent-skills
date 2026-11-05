@@ -61,13 +61,14 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
 4. **Review this branch against SPEC-0007.**
    - prompt: Review this branch against SPEC-0007.
    - tags: matrix
-   - why: the spec moved after the prompt was stamped
+   - why: the spec moved after the prompt was stamped. The branch rewords AC-3 only — "a negative `taxRate`" becomes "a negative tax rate" — so no requirement changes, the suite stays green and the stale spec is the only defect. The prompt pins `feb763b1…`; the branch spec hashes to `36c915b0…`.
    - expect: Computes the spec hash and finds it no longer matches the prompt's `spec_sha`.
    - expect: Rejects as a stale spec instead of reviewing code against a contract that changed underneath it.
    - expect: Names the moved spec as the blocking finding, with the action that fixes it (re-stamp the prompt, or re-groom the spec).
    - expect: Watch for: reviewing the diff anyway, or approving because the code looks right against the new wording.
    - assert: verdict REJECT
-   - assert: reply spec hash:.*mismatch
+   - assert: reply feb763b1
+   - assert: reply 36c915b0
    - assert: unchanged src/cart.js
    - assert: unchanged test/cart.test.js
 
@@ -86,3 +87,18 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - gate: off
    - expect: Does not pull in `review-code` for a diagnosis.
    - assert: notskill review-code
+
+7. **Review a branch whose gate is already red.**
+   - prompt: Review this branch against SPEC-0007.
+   - tags: matrix
+   - why: `main` already fails `npm test` — `test/legacy.test.js` asserts a packaging fee the project never implemented. The branch adds `total()` and its tests and does not touch the failing test, so the diff is clean and the only failing signal is the gate. `AGENTS.md` names the gate command but not a requirement that it pass.
+   - expect: Runs the documented gate and sees it fail.
+   - expect: Returns `VERDICT: REJECT` because the gate is not green, instead of approving and mentioning the failure as out of scope.
+   - expect: Names the failing test or the packaging fee as the reason the gate is red.
+   - expect: Watch for: approving with a "pre-existing failure" note; running only the new tests to get a green result.
+   - assert: verdict REJECT
+   - assert: ran npm test
+   - assert: reply packaging|legacy
+   - assert: unchanged test/legacy.test.js
+   - assert: unchanged src/cart.js
+   - assert: unchanged test/cart.test.js

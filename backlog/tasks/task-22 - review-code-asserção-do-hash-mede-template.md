@@ -1,10 +1,10 @@
 ---
 id: TASK-22
 title: 'review-code: asserção do caso #4 mede o template, não a checagem do hash'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-03T12:30:00Z'
-updated_date: '2026-11-03T12:30:00Z'
+updated_date: '2026-11-05T12:49:00Z'
 labels: []
 dependencies: []
 ordinal: 22000
@@ -33,11 +33,11 @@ consertar a lacuna que o piloto expõe — ela vira task. Esta task é o follow-
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 fixture do caso #4 (ou caso novo) em que a spec defasada é o único defeito
-- [ ] #2 asserção falha quando o revisor não compara o hash e passa quando compara, sem exigir uma frase de template
-- [ ] #3 baseline 5/5 e mutante `ignore-spec-sha` rodado 3×, com a classificação registrada
-- [ ] #4 `--list --check` continua verde e o caso entra como runnable
-- [ ] #5 se o mutante passar, registrar a redundância da regra e não adicionar caso
+- [x] #1 fixture do caso #4 (ou caso novo) em que a spec defasada é o único defeito
+- [x] #2 asserção falha quando o revisor não compara o hash e passa quando compara, sem exigir uma frase de template
+- [x] #3 baseline 5/5 e mutante `ignore-spec-sha` rodado 3×, com a classificação registrada
+- [x] #4 `--list --check` continua verde e o caso entra como runnable
+- [x] #5 se o mutante passar, registrar a redundância da regra e não adicionar caso
 <!-- AC:END -->
 
 ## Comments
@@ -50,4 +50,6 @@ created: 2026-11-03T12:30:00Z
 Aberta a partir do segundo controle da SPEC-0006. O controle foi classificado como **inválido**, não detectado: as três execuções fizeram a checagem, mas a asserção só olha a frase do template que o mutante removeu. O baseline do caso #4 reproduziu 5/5 antes da decisão.
 
 O primeiro controle (`no-gates`, caso #1) já tinha mostrado o problema espelhado: o fixture repetia a regra e o mutante não isolava nada. Aqui o fixture não repete a regra, mas a asserção está acoplada à saída. Os dois casos apontam para a mesma exigência: a asserção precisa medir o comportamento, não o texto que a skill manda escrever.
+Groomed into `docs/specs/SPEC-0009-isolate-spec-hash-check.md` (draft). O caso #4 passa a editar só a spec, de forma semanticamente neutra, e a asserção exige pin + hash do head em vez da frase do template. Se o mutante sobreviver, o registro é a redundância da regra nesse fixture, não um caso novo.
+
 <!-- COMMENTS:END -->

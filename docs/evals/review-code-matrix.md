@@ -1,4 +1,4 @@
-# `review-code` matrix — 2026-11-01, revised 2026-11-02
+# `review-code` matrix — 2026-11-01, revised 2026-11-02 and 2026-11-05
 
 Measured after `c876d88`, which stopped staging `references/evals.md` and
 `references/evals/` into the agent's workspace. **Three cases**, two models, two
@@ -75,6 +75,10 @@ So the honest reading of the matrix is narrower than the headline: the skill
 separates on #1 and #4 (0/5 either model, either way), and on #3 it separates
 from *confident approval*, not from silence.
 
+That reading held until the #4 fixture was revised on 2026-11-05; see *Case #4
+fixture revision* below. The 0/5 control cells in the tables above belong to the
+previous fixture and no longer describe the current case.
+
 That gap was closed on 2026-11-03. Case #3 now requires the reply to name the
 missing basis — `provide the spec`, `withhold the verdict`, `can't review
 against` — instead of only forbidding approval, and the verdict guard names the
@@ -85,6 +89,54 @@ draws: **0/5 without the skill on each model, 5/5 with it** — 0/10 against
 skill runs passing and flips only control runs, which is the check that the
 tightening asks for a behaviour the skill actually produces rather than one the
 case invented.
+
+## Case #4 fixture revision
+
+The #4 cell was measured on a fixture where the branch changed the spec *and*
+the code: AC-3 grew a requirement the code did not meet, so `REJECT` could pass
+without the hash check, and the only rule-specific assertion quoted the skill's
+output template. The mutation control from SPEC-0006 showed the cost: a review
+that computed both hashes and rejected in prose was scored as a miss.
+
+The fixture was rewritten (SPEC-0009) so the branch rewords AC-3 and changes
+nothing else. The spec hashes to `36c915b0…`, the prompt still pins
+`feb763b1…`, the suite stays green, and the stale spec is the only defect. The
+assertions now require the verdict and the two hash prefixes, not the template
+sentence. Measured on the default model, five repetitions each:
+
+| arm | result | run |
+| --- | --- | --- |
+| with skill | 5/5 | `2026-11-05T07-34-32--review-code` |
+| without skill | 3/5 | `2026-11-05T07-47-21--review-code--without-skill` |
+
+The 2/5 control failures are `reply feb763b1` and `reply 36c915b0`: those runs
+rejected the change without showing both hashes. Separation is therefore on the
+hash evidence, not on the verdict — a bare agent that notices the pin also
+rejects. The luna cells have not been re-measured on this fixture.
+
+The `ignore-spec-sha` control from SPEC-0006 was re-run against the revised case:
+3/3 runs compared the hashes and rejected (2 passed; 1 exited 1 after a passing
+review, recorded as environmental). Removing the skill's hash clause did not
+remove the behaviour, because the prompt's `spec_sha` field supplies the cue. The
+rule is redundant in this fixture; the case now documents the behaviour, not the
+skill clause that produces it.
+
+## Case #7: a gate that is already red
+
+A new case (SPEC-0008) stages a repository whose `main` already fails `npm test`:
+`test/legacy.test.js` asserts a packaging fee nobody implemented. The branch adds
+`total()` and its tests and does not touch the failing test, so the diff is clean
+and the gate is the only failing signal. `AGENTS.md` names the gate command but
+does not say it must pass.
+
+| arm | result | run |
+| --- | --- | --- |
+| with skill | 3/3 rejected on the assertions (one run exited 1 after the review) | `2026-11-05T09-05-36--review-code` |
+| without skill | 0/3 — approved and named the failure | `2026-11-05T09-32-10--review-code--without-skill` |
+
+This is three draws per arm, not the five the table above uses, so it is
+recorded as a preliminary cell: the case separates, and the control's failure is
+`verdict REJECT` in all three runs.
 
 ## Case #2 left the matrix
 
@@ -115,13 +167,14 @@ Every red cell below 5/5, with the assertion that failed.
 | --- | --- | --- |
 | #1 | `verdict APPROVE`, `reply Not verified`, `ranpass npm test` | `verdict APPROVE`, `reply Not verified`, `reply AC-3` |
 | #3 | returns a verdict where the skill withholds | returns a verdict where the skill withholds |
-| #4 | `verdict REJECT`, `reply spec hash:.*mismatch` | `verdict REJECT`, `reply spec hash:.*mismatch` |
+| #4 | `verdict REJECT`, `reply feb763b1`, `reply 36c915b0` (3/5 runs rejected without both hashes) | not re-measured on the revised fixture |
+| #7 | `verdict REJECT` (approved 3/3 after naming the failure) | not measured |
 
 Without the skill the review is plausible and wrong in three directions: it
-approves a change whose gate was never run (#1), it reviews against a spec that
-moved underneath the prompt and approves the result (#4), and it answers a
-request with no spec at all by returning a verdict — mostly "request changes" —
-instead of asking for the intent or withholding (#3).
+approves a change whose gate was never run (#1), it rejects a moved spec without
+showing both hashes (#4, 3/5 on the revised fixture), and it answers a request
+with no spec at all by returning a verdict — mostly "request changes" — instead
+of asking for the intent or withholding (#3).
 
 One caveat on the #1 row, from the mutation pilot: `ranpass npm test` proves the
 gate was executed, not that the skill's gate step caused it. The fixture's own

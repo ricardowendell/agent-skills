@@ -1,6 +1,6 @@
 {
   "base": "../base",
   "branch": "feature/cart-tax",
-  "message": "feat(cart): add tax-aware total",
+  "message": "docs(spec): clarify AC-3 wording",
   "patch": "change.patch"
 }
