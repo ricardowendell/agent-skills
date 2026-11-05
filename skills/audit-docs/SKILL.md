@@ -1,6 +1,6 @@
 ---
 name: audit-docs
-description: Audit a product's whole doc set for contradictions, duplicates, unclear principles, misplaced ideas, and scope creep. Use when the user asks whether the docs agree with each other, for a product-doc audit, or for an architecture/constraints alignment check. Not for reviewing one change — a diff goes to review-code. Proposes scoped edits without expanding scope.
+description: Audit a product's whole doc set for contradictions, duplicates, unclear principles, misplaced ideas, and scope creep, or for drift between the docs and the code. Use when the user asks whether the docs agree with each other, what no longer matches the implementation, for a product-doc audit, or for an architecture/constraints alignment check. Not for reviewing one change — a diff goes to review-code. Proposes scoped edits without expanding scope.
 stack-agnostic: true
 ---
 
@@ -27,6 +27,36 @@ Review product-thinking Markdown files for drift, contradiction, duplication, an
    - Backlog and decisions.
 5. Identify only meaningful issues.
 
+## Mode: drift against the code
+
+Use this mode when the question is whether the docs still describe the code —
+"what drifted", "does this match the implementation", "is this still true". The
+workflow above compares documents with each other; this mode compares a document
+with the code, the tests and the documented gates. It is still read-only.
+
+1. Read `AGENTS.md` and resolve the normative docs, the code entry points and
+   the documented gates.
+2. Enumerate the falsifiable claims in the docs: a command, a field, a contract,
+   a behaviour, a component, a limit.
+3. Verify each claim against the code, the tests or the configuration. When the
+   claim is about behaviour and the project documents a local gate, run it and
+   keep the command and result. Otherwise cite the code or test and mark the
+   claim as not verified; do not guess.
+4. Filter by status and intent. A `draft` or `ready` spec, a roadmap item, a
+   backlog note or a `proposed` decision describes the future and is not drift.
+5. Classify each remaining divergence:
+   - **defect** — code and doc disagree and the doc is the contract;
+   - **intentional evolution** — a later decision changed the contract;
+   - **stale doc** — the code is the contract and the doc did not follow.
+   If the evidence cannot separate evolution from staleness, report an open
+   question instead of a defect.
+6. Report with `file:line` on both sides and a proposed scoped edit. Never
+   modify a file.
+
+Reuse the project's existing sensors: the docs-check `spec_sha` comparison for
+prompt/spec pairs, and the documented gates for behaviour claims. Do not add a
+scanner or a dependency.
+
 ## Review Checklist
 
 Look for:
@@ -38,6 +68,8 @@ Look for:
 - Features that violate the simplicity philosophy.
 - Architecture decisions or components not reflected in constraints.
 - Backlog items that imply product scope expansion without support from vision or constraints.
+- Claims that no longer match the code, tests or documented gates (drift).
+- Planned features or proposed decisions described as if they were already implemented.
 - Product-facing language that conflicts with the project's interface language direction (per `AGENTS.md`).
 
 ## Edit Policy
@@ -48,6 +80,7 @@ Look for:
 - Prefer removing, moving, merging, or clarifying over expanding.
 - Preserve the user's intent and terminology.
 - If the right fix requires a product decision, write it as an open question.
+- In drift mode, every finding is a proposal: read the code, never edit it.
 
 ## Output Format
 
