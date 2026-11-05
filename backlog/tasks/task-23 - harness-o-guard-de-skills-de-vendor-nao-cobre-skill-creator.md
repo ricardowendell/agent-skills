@@ -4,9 +4,8 @@ title: 'harness: o guard de skills de vendor não cobre skill-creator'
 status: Done
 assignee: []
 created_date: '2026-11-05T00:00:00Z'
-updated_date: '2026-11-05T10:00:00Z'
+updated_date: '2026-11-05T10:03:00Z'
 labels: []
-milestone: m-0
 dependencies: []
 ordinal: 23000
 ---
