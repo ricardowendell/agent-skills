@@ -14,6 +14,7 @@ skills/impeccable/
 skills/graphify/
 skills/find-skills/
 skills/orchestration/
+skills/skill-creator/
 
 # Secrets
 .env*
