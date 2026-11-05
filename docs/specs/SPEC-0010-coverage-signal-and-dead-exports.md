@@ -117,9 +117,9 @@ scripts/lib/evals/*.test.mjs`; locally it exits 0 and prints a per-file table
 gap the report is meant to expose). The stale `Node 20` comment in `glob.mjs` is
 replaced.
 
-AC-1, AC-2, AC-4, AC-5 and AC-6 are met. AC-3 is met locally; the CI job log was
-not observed because the branch was not pushed, so that half is reported as not
-verified.
+AC-1, AC-2, AC-4, AC-5 and AC-6 are met. AC-3 was observed on PR #1, run
+`42031683484`: the job prints `v24.22.1`, runs the harness at 125/125, and
+publishes the per-file table (78.73% lines overall, `agent.mjs` at 36.00%).
 
 ## Open Questions
 

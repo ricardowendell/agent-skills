@@ -4,7 +4,7 @@ title: 'harness: remover exports mortos e dar sinal de cobertura no CI'
 status: Done
 assignee: []
 created_date: '2026-11-02T18:55:00Z'
-updated_date: '2026-11-05T12:49:00Z'
+updated_date: '2026-11-05T12:59:00Z'
 labels: []
 dependencies: []
 ordinal: 15000
@@ -26,7 +26,7 @@ Ordem: medir a cobertura atual e publicá-la no log do CI; só depois, e com a T
 <!-- AC:BEGIN -->
 - [x] #1 `ARMS` removido e `gateFor`/`isInside`/`listTree` deixam de ser exportados se o uso for só interno
 - [x] #2 nenhum import quebrado, `node --test` e CI verdes
-- [ ] #3 cobertura aparece no log do CI com a versão de Node que o workflow usa
+- [x] #3 cobertura aparece no log do CI com a versão de Node que o workflow usa
 - [x] #4 nenhum limiar numérico imposto antes de a TASK-13 fechar
 <!-- AC:END -->
 
