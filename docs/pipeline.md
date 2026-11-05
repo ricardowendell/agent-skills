@@ -1,6 +1,6 @@
 ---
 mode: orchestrated      # direct | orchestrated
-release_tier: B         # A | B
+release_tier: A         # A (semver + CHANGELOG + tag) | B (tag seca)
 retry_budget: 1         # retries before escalating
 specs_dir: docs/specs/active
 trees_dir: .lane/trees
@@ -62,8 +62,17 @@ declara `task:` e `files:`.
 
 ## Release tier
 
-- **B** (interno): tag seca, sem semver nem CHANGELOG. O repo não versiona
-  pacote; o artefato é o conjunto de skills.
+- **A** (semver): a release is a version in `package.json`, an entry in
+  `CHANGELOG.md` and an annotated tag. The repo does not ship a package, but the
+  artifact is the set of skills plus the evidence behind them, so the version
+  names a claim: which skills, which cases, which measurements.
+- Antes de cortar: `pdlc drift` e `pdlc preflight` verdes, `lint` e `selftest`
+  verdes no `main`, e `docs/evals/coverage.md` atualizado. O gate do
+  `pdlc release` exige `package.json.version` e a entry correspondente no
+  `CHANGELOG.md`; o push da tag é human gate.
+- A mudança de B para A foi um human gate em 2026-11-05, com o `0.1.0`
+  registrado retroativamente para os três marcos anteriores (as duas matrizes e a
+  adoção do pdlc).
 
 ## Ways of working
 
