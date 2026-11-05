@@ -6,7 +6,7 @@ and every assertion kind. This file covers only what changes when you contribute
 
 ## Setup
 
-- Node 20 (same as CI). No dependencies to install.
+- Node 24 (same as CI). No dependencies to install.
 - Enable the committed hook once:
 
   ```sh
@@ -127,7 +127,7 @@ node scripts/run-evals.mjs --skill review-code --case 3 --repeat 3 --run --judge
 
 ## What CI enforces
 
-`.github/workflows/skills.yml` runs, on Node 20:
+`.github/workflows/skills.yml` runs, on Node 24:
 
 ```sh
 node scripts/validate-skills.mjs --root skills
