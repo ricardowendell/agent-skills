@@ -12,7 +12,7 @@ directories; they are not estimates.
 | `capture-idea` | 3 | 2 | 0 | trees 1–3 | none |
 | `find-blind-spots` | 4 | 2 | 0 | tree 4 | case 4: 3/3, skill loaded 3/3 (`why:`, no run dir) |
 | `groom-backlog` | 7 | 2 | 0 | trees 1, 3, 4, 5 | ablation on 4 fixture cases, 2026-11-05: both arms 4/4; index-first not promoted (tokens +65% on the adversarial case) (`09-32-51`, `09-34-43`, `09-39-15`, `09-43-45`) |
-| `implement-from-prompt` | 8 | 2 | 3 | trees 1, 3, 4, 7, 8 | none |
+| `implement-from-prompt` | 8 | 2 | 1 | trees 1, 2, 3, 4, 7, 8 | published matrix: #1 and #8 separate 12/12 vs 0/12 on the default (`2026-11-05T12-35-30--implement-from-prompt`, `2026-11-05T12-42-05--implement-from-prompt--without-skill`, `2026-11-05T12-48-46--implement-from-prompt`, `2026-11-05T12-56-03--implement-from-prompt--without-skill`); on `gpt-6-luna` both are 5/5 vs 1/5 (`2026-11-05T13-18-27--implement-from-prompt--opencode-go-gpt-6-luna`, `2026-11-05T13-22-08--implement-from-prompt--opencode-go-gpt-6-luna--without-skill`, `2026-11-05T13-25-10--implement-from-prompt--opencode-go-gpt-6-luna`, `2026-11-05T13-28-38--implement-from-prompt--opencode-go-gpt-6-luna--without-skill`; the one #1 control pass read the real `SKILL.md`); #7 non-discriminator 5/5 both arms; #2 broken-with-skill (skill-load; gate 2/5); #4 broken by the skill's blocking-gap rule (1/5); #3 manual; trigger #5 4/5, #6 5/5 (`2026-11-05T11-52-43--implement-from-prompt`) |
 | `process-inbox` | 3 | 2 | 0 | tree 1 | none |
 | `record-decision` | 5 | 2 | 0 | trees 1–5 | none |
 | `review-code` | 7 | 2 | 0 | trees 1–7 plus `base/` and `base-red/`; 1–4 and 7 via `git.json` | published matrix; #4 fixture revised 2026-11-05: 5/5 with, 3/5 without (`2026-11-05T07-34-32--review-code`, `…07-47-21--review-code--without-skill`); #7 red gate: 3/3 with, 0/3 without (`…09-05-36`, `…09-32-10--without-skill`) |
@@ -20,7 +20,7 @@ directories; they are not estimates.
 | `audit-code-quality` | 4 | 2 | 0 | trees 1 and 4 via `git.json` | iteration 1: with-skill 4/4 (`2026-11-04T21-55-53`); control case 1 0/1, only coverage `unknown` separated (`…21-47-51`); control case 4 passed once (`…21-57-53`) and failed once (`…21-59-17`, `SCOPE:`/`rule`/`CAPTURE OPTIONS`), so it does not separate reliably |
 | `tighten-harness` | 6 | 2 | 0 | trees 1, 2, 3, 5, 6 | case 5: 3/3 passed, skill loaded 0/3 (`why:`, no run dir) |
 | `write-implementation-prompt` | 6 | 2 | 1 | trees 1–4 | none |
-| **total** | **76** | **26** | **5** | | |
+| **total** | **76** | **26** | **3** | | |
 
 ## Evidence rules
 
@@ -37,9 +37,9 @@ directories; they are not estimates.
 
 ## Known holes
 
-- **Six skills have no recorded measurement of their cases**: `capture-idea`,
-  `groom-backlog`, `implement-from-prompt`, `process-inbox`, `record-decision`
-  and `write-implementation-prompt`. Their cases parse and gate the shape of the
+- **Five skills have no recorded measurement of their cases**: `capture-idea`,
+  `groom-backlog`, `process-inbox`, `record-decision` and
+  `write-implementation-prompt`. Their cases parse and gate the shape of the
   output; nobody has published whether they separate from a run without the
   skill. `groom-backlog` now has a four-case ablation (SPEC-0013), but that
   measured a candidate skill text, not the seven cases in this inventory. The `wip-operations-contract` experiment did measure
@@ -50,6 +50,13 @@ directories; they are not estimates.
   durable artefact is the rule-coverage map, not a pass rate. Re-run against the
   revised #4 fixture (SPEC-0009), `ignore-spec-sha` is a **survivor**: the rule
   is redundant there because the prompt's `spec_sha` supplies the cue.
+- **`implement-from-prompt` is measured but three cases remain defective**: #1
+  and #8 separate (12/12 vs 0/12 on the default model); #7 is a
+  non-discriminator (5/5 both arms); #2 is contaminated by a skill-load defect
+  (gate 2/5 with the skill), #4 is broken because the skill reads "add
+  `src/echo.js`" as a blocking gap, and #3 stays `manual`. The judge also marks
+  expectations `unverifiable` when the evidence is in a tool call. See
+  `implement-from-prompt-matrix.md`.
 - **`review-code` #2 left the matrix**: it measured 5/5 in both arms, so it is
   kept as a regression case rather than a discriminator.
 - **`audit-code-quality` #4 does not separate reliably**: its control arm passed
@@ -57,8 +64,8 @@ directories; they are not estimates.
   (`…21-59-17`) on the contract assertions (`SCOPE:`, `rule`/`judgement`,
   `CAPTURE OPTIONS`). Keep it as a regression case, not a discriminator; it
   separates only when the control drops the output contract.
-- **Five cases are `manual`**: `bootstrap-project-harness` #8 and three in
-  `implement-from-prompt`, plus one in `write-implementation-prompt`. They run
+- **Three cases are `manual`**: `bootstrap-project-harness` #8,
+  `implement-from-prompt` #3, and `write-implementation-prompt` #3. They run
   nowhere today.
 
 ## How to update

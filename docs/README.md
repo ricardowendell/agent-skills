@@ -13,8 +13,10 @@ templates.
 | --- | --- |
 | `inbox/` | raw analyses, processed in place (`status: processed`) |
 | `specs/` | `SPEC-NNNN-*.md` — the durable record of why the harness changed |
+| `specs/active/` | the pdlc work queue; `plan`, `prompt`, `verify` and `merge` read here |
 | `prompts/` | implementation prompts generated from `ready` specs |
-| `evals/` | the `review-code` matrix, experiment records, and `coverage.md` |
+| `evals/` | the `review-code` and `implement-from-prompt` matrices, experiment records, and `coverage.md` |
+| `../runs/` | pdlc run records, one per verified cycle |
 
 `evals/coverage.md` is the inventory: cases per skill, how each is staged, and
 what has actually been measured.
@@ -27,6 +29,15 @@ what has actually been measured.
   (`config.yml`, `tasks/task-N …`). A task becomes a spec under `docs/specs/`,
   and the spec names its source task in `source_docs`.
 
+## The pdlc cycle
+
+The process policy is [`pipeline.md`](pipeline.md): mode, release tier, retry
+budget and the `lint`/`selftest` gates. A spec enters the queue as
+`specs/active/SPEC-NNNN-*.md` with `status: ready`, a `task:` binding and a
+`files:` list; `pdlc plan` sees only that queue. After `verify` and `merge`, the
+task closes and the run record lands in `runs/`. Specs already implemented move
+to `specs/` as the durable record, untouched by the cycle.
+
 ## Where to start
 
 1. [`README.md`](../README.md) — what the skills are and how they are evaluated.
@@ -34,5 +45,6 @@ what has actually been measured.
    measure it.
 3. [`evals/coverage.md`](evals/coverage.md) — which cases exist and which have
    evidence.
-4. [`evals/review-code-matrix.md`](evals/review-code-matrix.md) — the one
-   published matrix.
+4. [`evals/review-code-matrix.md`](evals/review-code-matrix.md) and
+   [`evals/implement-from-prompt-matrix.md`](evals/implement-from-prompt-matrix.md)
+   — the published matrices.
