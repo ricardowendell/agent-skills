@@ -1,0 +1,8 @@
+{
+  "base": "../base",
+  "remote": true,
+  "branches": [
+    { "name": "feature/cart-tax", "patch": "tax.patch", "message": "feat: add tax" },
+    { "name": "feature/cart-discount", "patch": "discount.patch", "message": "feat: add discount" }
+  ]
+}

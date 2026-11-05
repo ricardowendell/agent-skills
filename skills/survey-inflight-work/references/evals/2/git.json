@@ -1,0 +1,6 @@
+{
+  "base": "../base",
+  "branches": [
+    { "name": "feature/cart-tax", "patch": "tax.patch", "message": "feat: add tax" }
+  ]
+}

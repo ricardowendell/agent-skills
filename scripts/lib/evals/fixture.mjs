@@ -6,6 +6,13 @@
 //   "patch": "change.patch" }` commits the base tree as `main`, prunes `remove`,
 // applies the patch on `branch`, and leaves that branch checked out.
 //
+// Two optional keys stage the state a survey skill needs:
+//   "remote": true   creates a bare repo beside the scratch dir, adds it as
+//                     `origin`, and pushes what was staged.
+//   "branches": [{ "name": "...", "patch": "...", "message": "..." }]
+//                    branches each cut from `main`; the last one is left checked
+//                    out. A branch without a patch is an empty branch.
+//
 // The skill is copied into `<scratch>/.opencode/skills/<id>/` because OpenCode
 // gives a project-local skill precedence over a global install of the same id
 // (verified: the `skill` tool reports `directory` inside the scratch dir). That
@@ -131,15 +138,40 @@ export function stageFixture(skill, c, scratch) {
 
   run("init", "-q", "-b", "main")
   commit("chore: fixture base")
-  if (spec.branch) run("checkout", "-q", "-b", spec.branch)
-  if (spec.patch) {
+
+  // A bare repo outside the scratch dir: a remote inside it would show up in
+  // every `git status` and in the tree the skill reviews.
+  if (spec.remote) {
+    const bare = `${scratch}-origin.git`
+    rmSync(bare, { recursive: true, force: true })
+    const init = spawnSync("git", ["init", "-q", "--bare", bare], { encoding: "utf8" })
+    if (init.status !== 0) throw new Error(`git init --bare failed: ${init.stderr}`)
+    run("remote", "add", "origin", bare)
+    run("push", "-q", "-u", "origin", "main")
+  }
+
+  const applyPatch = (file) => {
+    if (!file) return
     const tmp = join(scratch, ".eval-change.patch")
-    writeFileSync(tmp, readFileSync(join(caseDir, spec.patch), "utf8"))
+    writeFileSync(tmp, readFileSync(join(caseDir, file), "utf8"))
     try {
       run("apply", "--whitespace=nowarn", tmp)
     } finally {
       unlinkSync(tmp)
     }
   }
+
+  // A manifest without `branch` keeps the old behaviour: the patch lands on
+  // `main`. A manifest without `remote`/`branches` must stage exactly as before.
+  if (spec.branch) run("checkout", "-q", "-b", spec.branch)
+  applyPatch(spec.patch)
   commit(spec.message ?? "change under review")
+  if (spec.branch && spec.remote) run("push", "-q", "-u", "origin", spec.branch)
+
+  for (const b of spec.branches ?? []) {
+    run("checkout", "-q", "-B", b.name, "main")
+    applyPatch(b.patch)
+    commit(b.message ?? `change on ${b.name}`)
+    if (spec.remote) run("push", "-q", "-u", "origin", b.name)
+  }
 }

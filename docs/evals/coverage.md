@@ -16,9 +16,11 @@ directories; they are not estimates.
 | `process-inbox` | 3 | 2 | 0 | tree 1 | none |
 | `record-decision` | 5 | 2 | 0 | trees 1–5 | none |
 | `review-code` | 6 | 2 | 0 | trees 1–6 plus `base/`; 1–4 via `git.json` | published matrix (`review-code-matrix.md`) |
+| `survey-inflight-work` | 4 | 2 | 0 | tree 1 via `git.json` with a local bare `origin`; tree 2 without a remote | iteration 1, 1 draw/case: with-skill 4/4 (`2026-11-04T21-49-16`); control case 1 0/1, only the `unknown` PR state separated (`…21-45-26`); control case 2 0/1, only the no-remote line separated (`…21-57-53`) |
+| `audit-code-quality` | 4 | 2 | 0 | trees 1 and 4 via `git.json` | iteration 1: with-skill 4/4 (`2026-11-04T21-55-53`); control case 1 0/1, only coverage `unknown` separated (`…21-47-51`); control case 4 passed once (`…21-57-53`) and failed once (`…21-59-17`, `SCOPE:`/`rule`/`CAPTURE OPTIONS`), so it does not separate reliably |
 | `tighten-harness` | 6 | 2 | 0 | trees 1, 2, 3, 5, 6 | case 5: 3/3 passed, skill loaded 0/3 (`why:`, no run dir) |
 | `write-implementation-prompt` | 6 | 2 | 1 | trees 1–4 | none |
-| **total** | **66** | **22** | **5** | | |
+| **total** | **74** | **26** | **5** | | |
 
 ## Evidence rules
 
@@ -47,6 +49,11 @@ directories; they are not estimates.
   durable artefact is the rule-coverage map, not a pass rate.
 - **`review-code` #2 left the matrix**: it measured 5/5 in both arms, so it is
   kept as a regression case rather than a discriminator.
+- **`audit-code-quality` #4 does not separate reliably**: its control arm passed
+  on the first draw (`2026-11-04T21-57-53`) and failed on the second
+  (`…21-59-17`) on the contract assertions (`SCOPE:`, `rule`/`judgement`,
+  `CAPTURE OPTIONS`). Keep it as a regression case, not a discriminator; it
+  separates only when the control drops the output contract.
 - **Five cases are `manual`**: `bootstrap-project-harness` #8 and three in
   `implement-from-prompt`, plus one in `write-implementation-prompt`. They run
   nowhere today.

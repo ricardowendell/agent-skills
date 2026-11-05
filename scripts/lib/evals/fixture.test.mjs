@@ -83,6 +83,49 @@ test("the skill under review is copied into the scratch dir and hashed", () => {
   assert.equal(stageSkill({ id: "review-code", dir: skillDir }, b).hash, pinned.hash, "hash is not stable")
 })
 
+test("a git fixture can stage several branches and a local remote", () => {
+  const skillDir = files(mkdtempSync(join(tmpdir(), "fixture-branches-")), {
+    "SKILL.md": "---\nname: demo\n---\n",
+    "references/evals/1/base/shared.js": "one\n",
+    "references/evals/1/a.patch": "diff --git a/shared.js b/shared.js\n--- a/shared.js\n+++ b/shared.js\n@@ -1 +1 @@\n-one\n+from a\n",
+    "references/evals/1/b.patch": "diff --git a/shared.js b/shared.js\n--- a/shared.js\n+++ b/shared.js\n@@ -1 +1 @@\n-one\n+from b\n",
+    "references/evals/1/git.json": JSON.stringify({
+      base: "base",
+      remote: true,
+      branches: [{ name: "feature/a", patch: "a.patch" }, { name: "feature/b", patch: "b.patch" }],
+    }),
+  })
+  const scratch = makeScratch("demo", 3)
+  stageFixture({ id: "demo", dir: skillDir }, { n: 1 }, scratch)
+
+  assert.equal(git(scratch, "rev-parse", "--abbrev-ref", "HEAD"), "feature/b")
+  assert.equal(git(scratch, "rev-parse", "--abbrev-ref", "origin/feature/a"), "origin/feature/a")
+  assert.equal(git(scratch, "rev-parse", "--abbrev-ref", "origin/feature/b"), "origin/feature/b")
+  assert.equal(git(scratch, "show", "feature/a:shared.js"), "from a")
+  assert.equal(git(scratch, "show", "feature/b:shared.js"), "from b")
+  assert.equal(git(scratch, "status", "--porcelain"), "", "staging left a dirty tree")
+})
+
+test("a git fixture still applies a patch on main when no branch is named", () => {
+  const skillDir = files(mkdtempSync(join(tmpdir(), "fixture-patch-main-")), {
+    "SKILL.md": "---\nname: demo\n---\n",
+    "references/evals/1/base/shared.js": "one\n",
+    "references/evals/1/p.patch": "diff --git a/shared.js b/shared.js\n--- a/shared.js\n+++ b/shared.js\n@@ -1 +1 @@\n-one\n+patched\n",
+    "references/evals/1/git.json": JSON.stringify({
+      base: "base",
+      patch: "p.patch",
+      message: "change under review",
+    }),
+  })
+  const scratch = makeScratch("demo", 4)
+  stageFixture({ id: "demo", dir: skillDir }, { n: 1 }, scratch)
+
+  assert.equal(git(scratch, "rev-parse", "--abbrev-ref", "HEAD"), "main")
+  assert.equal(git(scratch, "log", "-1", "--pretty=%s"), "change under review")
+  assert.equal(readFileSync(join(scratch, "shared.js"), "utf8"), "patched\n")
+  assert.equal(git(scratch, "status", "--porcelain"), "", "staging left a dirty tree")
+})
+
 test("a pinned skill stays out of the fixture's git status", () => {
   const skillDir = files(mkdtempSync(join(tmpdir(), "pin-git-")), {
     "SKILL.md": "---\nname: demo\n---\n",
