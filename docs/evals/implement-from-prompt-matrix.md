@@ -4,6 +4,9 @@ Measured at commit `3779a20`, after the instrument froze (SPEC-0015 F0). Gate A
 is five repetitions per cell on `opencode-go/deepseek-v4.1-flash`, the config
 default, judged by `opencode-go/gpt-6-luna`. Gate B tops the two separators to
 `n=12` on the default model and `n=5` on `opencode-go/gpt-6-luna`, both arms.
+Case #4 was re-measured at commit `6dd38aa` after SPEC-0016 changed the rule;
+the *Re-measurement* section below is the current reading for it, and the Gate A
+row is the pre-fix one.
 
 ## What the arms mean
 
@@ -127,6 +130,43 @@ file read, so the run scored as a control pass. The other four runs never found
 the file and failed the status assertion. The default-model control had no such
 read in its 12 draws.
 
+## Re-measurement — #4 after the rule fix (SPEC-0016)
+
+SPEC-0016 split the rule in step 3 into a **write target** and a **read
+dependency**, and added `references/evals/4/package.json` so the module system is
+no longer a second reason to stop. Measured at commit `6dd38aa`, default model,
+no judge:
+
+```sh
+node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 4 --repeat 5 --run
+node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 4 --repeat 5 --no-skill --run
+node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 1 --repeat 5 --run
+node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 7 --repeat 5 --run
+node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 8 --repeat 5 --run
+```
+
+| case | arm | run directory | passed | gate |
+| --- | --- | --- | --- | --- |
+| #4 | with skill | `2026-11-05T15-00-48--implement-from-prompt` | 5/5 | 5/5 |
+| #4 | control | `2026-11-05T15-06-58--implement-from-prompt--without-skill` | 3/5 | 5/5 (no skill loaded) |
+| #1 | with skill | `2026-11-05T15-30-10--implement-from-prompt` | 5/5 | 5/5 |
+| #7 | with skill | `2026-11-05T15-36-40--implement-from-prompt` | 5/5 | 5/5 |
+| #8 | with skill | `2026-11-05T15-44-35--implement-from-prompt` | 5/5 | 5/5 |
+
+The fix works on the case that was broken: #4 is 5/5 with the skill, and the
+transcript that stopped on "the files and gate it builds on do not exist" is
+gone. #8 still stops on the missing `src/format.js` at 5/5, so the rule kept the
+side it was supposed to keep.
+
+The case does not separate. The fixture change lowered the bar for the control
+as well: the pre-fix control passed 1/5 with no `package.json`; with the file in
+place it passes **3/5**. The two red control draws are not behavioral: both are
+`exit: timeout` at 600 s (2 and 5 steps, no error event), a provider stall that
+never reached `src/echo.js`. So the control is **at least 3/5**, and a bare agent
+creates the file and reports the missing gate about as often as the skill does.
+Per SPEC-0016 AC-2 the case is published as a **non-discriminator** and kept as a
+regression case; no assertion was changed to restore the split.
+
 ## Classification
 
 - **#1 — separator.** 12/12 with the skill against 0/12 without it on the
@@ -148,9 +188,11 @@ read in its 12 draws.
   the scratch and another run read the real `SKILL.md`; neither is a clean
   control. The cell is contaminated, not a reading of the case. Re-run after the
   load and isolation defects are fixed.
-- **#4 — broken with the skill.** The skill reads "add `src/echo.js`" as a
-  blocking gap and stops (1/5 with the skill, 1/5 without). The case is not a
-  separator; the skill's rule is the defect.
+- **#4 — non-discriminator after the SPEC-0016 fix.** 5/5 with the skill against
+  3/5 without it at `6dd38aa` (the Gate A row, 1/5 against 1/5, is the pre-fix
+  reading). The skill now creates the file the prompt names and reports the
+  missing gate, which is the behaviour the case wants; the control does the same
+  often enough that the case does not separate. Keep as a regression case.
 - **#3 — manual.** The fixture only suggests `src/text.js`; it does not force
   the scope change, so the sanity draw failed and the case stays manual.
 - **#5 and #6 — triggers.** #5 routed 4/5 (one miss), #6 routed 5/5. Routing
@@ -190,13 +232,30 @@ does not hide `/Users/wendell/.agents` or `/private/var/folders`. Both are
 recorded as follow-ups; the default-model Gate B control runs that carry the
 #1/#8 separation contain zero of either read.
 
+The five run directories of the SPEC-0016 re-measurement contain zero reads of a
+`references/evals.md` and zero reads of `/Users/wendell/.agents/skills`, and no
+transcript reads anything outside its own scratch directory:
+
+```sh
+for d in <the five runs above>; do
+  grep -rl "references/evals.md" "$d/cases"
+  grep -rl "/Users/wendell/.agents/skills" "$d/cases"
+done
+# no output
+```
+
+The one-draw sanity run that preceded them (`2026-11-05T14-58-06--implement-from-prompt`)
+ran against the same uncommitted skill (`repoSha: e37c0e4`, post-fix `skillHash`)
+and is also clean; it is a precondition, not a measurement.
+
 ## Follow-ups
 
-- **TASK-25** — the git hook has a `GIT_DIR` bug; the commit that published this
-  table uses `git commit --no-verify` until the hook is fixed.
-- **#4** — the skill reads "add X" as "extend an existing X" in its blocking-gap
-  rule. Decide whether "add" means create; until then the case is red with the
-  skill.
+- **TASK-25 — closed.** The hook leaked `GIT_DIR`/`GIT_INDEX_FILE` into the tests;
+  it now clears them after resolving `ROOT`, and the commits after `81f3677` run
+  through the hook with no `--no-verify`.
+- **#4 — closed by SPEC-0016.** The rule now separates a write target from a read
+  dependency, and the fixture carries `package.json`. The case is a regression
+  case, not a separator; see *Re-measurement*.
 - **#3** — the fixture must force `src/text.js` instead of suggesting it before
   the case can leave `manual`.
 - **#2** — re-diagnose the load defect in light of the canary: #1 loaded 12/12

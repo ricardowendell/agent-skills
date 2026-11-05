@@ -9,7 +9,7 @@ run_records_dir: runs
 agents_dir: .opencode/agents
 lint: node scripts/validate-skills.mjs --root skills
 selftest: node scripts/run-evals.mjs --root skills --list --check && node --test scripts/lib/evals/*.test.mjs && node --test skills/bootstrap-project-harness/scripts/*.test.mjs && node scripts/check-sensor-parity.mjs
-pdlc_version: 0.4.0
+pdlc_version: 0.4.1
 ---
 
 # Pipeline
