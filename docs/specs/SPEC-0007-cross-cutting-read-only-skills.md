@@ -1,7 +1,7 @@
 ---
 id: SPEC-0007
 title: Read-only answers that span several specs
-status: ready
+status: implemented
 priority: P1
 created_at: 2026-11-04
 updated_at: 2026-11-05
@@ -225,3 +225,13 @@ Context for the measurement debt these two skills inherit: an external
 direction proposal (2026-11-04, examined at `3784ae7`) argues that evidence
 validity, not case count, is the library's main debt. It is not normative and is
 not copied into this repo.
+
+Review on 2026-11-05: APPROVE, retro-contract. One blocking finding was fixed
+before approval: `stageFixture` had stopped applying a `patch` on `main` when no
+`branch` was named; `scripts/lib/evals/fixture.mjs:164-169` restores the old
+path and `scripts/lib/evals/fixture.test.mjs:109` pins it. The out-of-scope
+`docs/README.md` direction note and the first-baseline bullet left this change.
+Gates: `validate-skills`; `run-evals --list --check` (74 parsed, 69 runnable, 5
+manual); `node --test scripts/lib/evals/*.test.mjs` (125/125); the bootstrap
+suite (17/17); `check-sensor-parity` (2/2). Commits: `c6ca22b` (SPEC-0007),
+`f90f374` (TASK-23), `1435f37` (milestone 0.2).
