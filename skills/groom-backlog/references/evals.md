@@ -16,10 +16,11 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
 
 2. **Turn this rough idea into a spec: *build the whole onboarding flow*.**
    - prompt: Turn this rough idea into a spec: *build the whole onboarding flow*.
+   - why: the signal is the split, not the file tree; `nodir docs/specs` measured whether the directory existed, so the same split scored pass with no write and fail with one draft slice — and it punished the behaviour the skill's own step 6 asks for (two draws, downstream harness pin `baf9a32`, 2026-11-02). Re-run at `3d38b31`: 3/3 both arms, so this is a regression guard; the write-side hole stays human-checked.
    - expect: Flags the item as too broad and proposes a split before writing.
    - expect: Does not silently produce one giant spec.
    - expect: Watch for: accepting "build everything" as a single spec.
-   - assert: nodir docs/specs
+   - assert: reply (?:too (?:broad|big|large|wide)|splits?\b|splitting|slic(?:e|es|ing)|break(?:ing)? (?:it|this|the work|the item)\b|carve|cut(?:ting)? (?:it|this) (?:in)?to|divide|decompose|chunk|phase (?:it|this))
 
 3. **Mark SPEC-0003 ready.**
    - prompt: Mark SPEC-0003 ready.
