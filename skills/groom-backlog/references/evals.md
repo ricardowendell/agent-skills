@@ -16,11 +16,11 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
 
 2. **Turn this rough idea into a spec: *build the whole onboarding flow*.**
    - prompt: Turn this rough idea into a spec: *build the whole onboarding flow*.
-   - why: the signal is the split, not the file tree. Measured 2026-11-02 in a downstream harness (Forge, pin `baf9a32`), two draws of this case: one proposed six slices and wrote nothing, and passed; the other proposed the same split and recorded one slice as `docs/specs/SPEC-0001-account-creation-and-sign-in.md` (draft), and failed `nodir docs/specs` 0/3. Same behaviour, opposite verdicts — the assertion measured whether the directory existed, not whether the item was split, and it failed the behaviour the skill's own step 6 asks for. Behaviour needs a run here before this is claimed as a matrix case.
+   - why: the signal is the split, not the file tree; `nodir docs/specs` measured whether the directory existed, so the same split scored pass with no write and fail with one draft slice — and it punished the behaviour the skill's own step 6 asks for (two draws, downstream harness pin `baf9a32`, 2026-11-02). The write-side hole stays human-checked; behaviour here still needs a run.
    - expect: Flags the item as too broad and proposes a split before writing.
    - expect: Does not silently produce one giant spec.
    - expect: Watch for: accepting "build everything" as a single spec.
-   - assert: reply (?:too (?:broad|big|large)|splits?\b|break(?:ing)? (?:it|this|the work) (?:in)?to|divide|decompose)
+   - assert: reply (?:too (?:broad|big|large|wide)|splits?\b|splitting|slic(?:e|es|ing)|break(?:ing)? (?:it|this|the work|the item)\b|carve|cut(?:ting)? (?:it|this) (?:in)?to|divide|decompose|chunk|phase (?:it|this))
 
 3. **Mark SPEC-0003 ready.**
    - prompt: Mark SPEC-0003 ready.
