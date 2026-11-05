@@ -11,6 +11,11 @@ set -e
 
 ROOT=$(git rev-parse --show-toplevel)
 cd "$ROOT"
+# Git exports its own GIT_DIR/GIT_INDEX_FILE to hooks. The tests below create
+# their own repositories, so inherited values would make them commit into this
+# one (2026-11-05: a worktree switched to feature/x and the main repo ended up
+# with core.bare=true). Resolve ROOT first, then drop the hook's git context.
+unset GIT_DIR GIT_INDEX_FILE GIT_WORK_TREE GIT_PREFIX GIT_COMMON_DIR
 node scripts/validate-skills.mjs --root skills
 node scripts/run-evals.mjs --root skills --list --check > /dev/null
 node --test scripts/lib/evals/*.test.mjs > /dev/null
