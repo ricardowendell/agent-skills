@@ -1,9 +1,10 @@
 ---
 id: TASK-24
 title: 'eval: medir o implement-from-prompt com matriz 2x2'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-11-05T13:50:00Z'
+updated_date: '2026-11-05T14:27:00Z'
 labels: []
 dependencies: []
 priority: high
