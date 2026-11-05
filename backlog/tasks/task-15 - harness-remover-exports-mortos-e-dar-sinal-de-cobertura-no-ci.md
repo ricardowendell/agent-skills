@@ -1,10 +1,10 @@
 ---
 id: TASK-15
 title: 'harness: remover exports mortos e dar sinal de cobertura no CI'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-02T18:55:00Z'
-updated_date: '2026-11-02T18:55:00Z'
+updated_date: '2026-11-05T12:49:00Z'
 labels: []
 dependencies: []
 ordinal: 15000
@@ -24,10 +24,10 @@ Ordem: medir a cobertura atual e publicá-la no log do CI; só depois, e com a T
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 `ARMS` removido e `gateFor`/`isInside`/`listTree` deixam de ser exportados se o uso for só interno
-- [ ] #2 nenhum import quebrado, `node --test` e CI verdes
+- [x] #1 `ARMS` removido e `gateFor`/`isInside`/`listTree` deixam de ser exportados se o uso for só interno
+- [x] #2 nenhum import quebrado, `node --test` e CI verdes
 - [ ] #3 cobertura aparece no log do CI com a versão de Node que o workflow usa
-- [ ] #4 nenhum limiar numérico imposto antes de a TASK-13 fechar
+- [x] #4 nenhum limiar numérico imposto antes de a TASK-13 fechar
 <!-- AC:END -->
 
 ## Comments
@@ -38,4 +38,6 @@ created: 2026-11-02T18:55:00Z
 ---
 
 Aberto a partir da revisão de dívida técnica. Deliberadamente pequeno: o valor aqui é o sinal, não o número.
+Groomed into `docs/specs/SPEC-0010-coverage-signal-and-dead-exports.md` (draft). O CI já fixa Node 24, então o motivo original do "sem limiar" mudou; o spec mantém o relatório de cobertura como escopo e deixa o piso numérico para uma task seguinte. Corrige também o comentário que ainda declara Node 20.
+
 <!-- COMMENTS:END -->

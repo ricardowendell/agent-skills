@@ -188,7 +188,7 @@ function check(kind, arg, { scratch, out, text, snapshot }) {
 
 // Both sides are realpathed: macOS tmpdir is /var/..., while the agent reports
 // /private/var/..., and a symlinked scratch would otherwise read as "outside".
-export function isInside(root, candidate) {
+function isInside(root, candidate) {
   if (!candidate) return false
   const real = (p) => {
     try {

@@ -14,11 +14,9 @@ import { agentArgs, runAgent } from "./agent.mjs"
 import { classify } from "./result.mjs"
 import { judgePrompt, runJudge, judgeOutcome } from "./judge.mjs"
 
-export const ARMS = ["with-skill", "without-skill"]
-
 // The gate answers "was the skill under review the artefact that ran?" — a
 // trigger case opts out, the control arm answers the inverse question.
-export function gateFor({ c, out, scratch, skillId, arm }) {
+function gateFor({ c, out, scratch, skillId, arm }) {
   if (c.gate === "off") return { ok: true, reason: "case does not gate on the skill (trigger/routing case)" }
   if (arm === "without-skill") {
     const loads = skillLoads(out)
