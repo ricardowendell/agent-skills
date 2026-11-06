@@ -213,11 +213,16 @@ control re-run produces a denominator worth quoting.
 
 ## Judge re-measurement — SPEC-0021
 
-The judge now sees a rebuilt tool-call ledger alongside the reply and the command
-log, and `verifyEvidence` normalises a leading `$ `. Re-judged at `0a53010` with
-`--judge opencode-go/gpt-6-luna`, threshold `0.8`, over the two stored Gate A
-directories; ten judge calls, no agent draw. The *Gate A* numbers above are the
-pre-fix reading and are not rewritten.
+The judge now sees a rebuilt tool-call ledger and the reply — exactly those two
+evidence blocks, with no separate command log — and `verifyEvidence` normalises a
+leading `$ `. Re-judged at `0a53010` with `--judge opencode-go/gpt-6-luna`,
+threshold `0.8`, over the two stored Gate A directories; ten judge calls, no agent
+draw. **That reading used the old prompt** (command log plus ledger); the review
+found the extra, unbudgeted command log could show lines the budgeted ledger cut,
+reintroducing the #7 downgrade on long runs. The rows below are therefore the
+before-reading under the old instrument; the final reading under the unified
+prompt follows separately and is not backfilled here. The *Gate A* numbers above
+are the pre-fix reading and are not rewritten.
 
 | cell | run directory | before | after | why |
 | --- | --- | --- | --- | --- |
@@ -357,11 +362,25 @@ and is also clean; it is a precondition, not a measurement.
 - **#2** — re-diagnose the load defect in light of the canary: #1 loaded 12/12
   while #2 lost 3/5 and #8 lost 1/5, so TASK-10's aggregate ~23% is case-specific
   here, not a universal miss.
-- **Judge calibration** — done by SPEC-0021: the judge now sees the tool-call
-  ledger, the `$ ` quote matches, and #7 control moved 1/5 → 5/5. The residual is
-  not the evidence path: expectation 1's "first" plus the skill's reading order,
-  expectation 2 by design, and expectation 4's composite form. Tracked as
-  TASK-40; see *Judge re-measurement — SPEC-0021*.
+- **Judge calibration** — done by SPEC-0021, with three clauses that must stay
+  true together:
+  1. **The judge sees the tool calls.** `judgePrompt` renders exactly two
+     evidence blocks, `## Tool calls` (the ledger: `read`/`edit`/`write`/`skill`
+     and `$ cmd  [exit]` with output) and `## Reply`; `verifyEvidence` searches
+     that same corpus, so the `$ node --test  [exit 1]` quote matches. In the
+     before-reading, #7 control moved 1/5 → 5/5.
+  2. **`unverifiable` still fails the case.** Supplying the evidence fixed the
+     instrument, not the bar: absence of evidence remains a finding, and the
+     judge can only fail a deterministic pass, never rescue a deterministic
+     failure.
+  3. **Re-judging requires the same provenance.** A re-judge is comparable only
+     when the stored run carries the same `fixtureHash`, `promptHash` and
+     `detectorVersion`; the re-judge report labels a run without them `partial`
+     and lists what is missing.
+
+  The residual is not the evidence path: expectation 1's "first" plus the
+  skill's reading order, expectation 2 by design, and expectation 4's composite
+  form. Tracked as TASK-40; see *Judge re-measurement — SPEC-0021*.
 - **Control-arm isolation** — `--no-skill` denies the skill tool and stages
   nothing, but the child can still read `/Users/wendell/.agents/skills/…` and
   stale copies under `/private/var/folders/…/T/opencode`. Two control transcripts

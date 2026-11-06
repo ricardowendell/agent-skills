@@ -137,10 +137,17 @@ test("the ledger never carries the body of a read", () => {
   assert.ok(!ledger.includes("SECRET BODY"), "a read body leaked into the ledger")
 })
 
-test("the ledger is deterministic and honours one total budget", () => {
+test("the ledger is deterministic and never exceeds its budget, marker included", () => {
   assert.equal(evidenceLedger(ledgerStream), evidenceLedger(ledgerStream))
-  const small = evidenceLedger(ledgerStream, { budget: 120 })
-  assert.ok(small.length <= 120, `ledger length ${small.length} exceeded the budget`)
-  assert.match(small, /\[ledger truncated\]$/)
-  assert.equal(small, evidenceLedger(ledgerStream, { budget: 120 }), "truncation moved between calls")
+  // The old fallback appended `separator + marker` when no room was left for
+  // the entry, which is how a 6000-char ledger came back at 6011. Walk every
+  // boundary, not just one comfortable budget.
+  const full = evidenceLedger(ledgerStream)
+  for (let budget = 0; budget <= full.length; budget++) {
+    const small = evidenceLedger(ledgerStream, { budget })
+    assert.ok(small.length <= budget, `budget ${budget} produced ${small.length} chars`)
+    assert.equal(small, evidenceLedger(ledgerStream, { budget }), "truncation moved between calls")
+  }
+  // Comfortably inside the budget, the marker still names the cut.
+  assert.match(evidenceLedger(ledgerStream, { budget: 120 }), /\[ledger truncated\]$/)
 })

@@ -60,13 +60,45 @@ function transcriptFor(dir, rep) {
 
 function tallyOf(draws) {
   const count = (outcome) => draws.filter((d) => d.outcome === outcome).length
+  // `skipped` covers two different things: a deterministic failure, which is a
+  // finding about the run, and a draw replay cannot rebuild (no transcript). A
+  // reader who sees only `0/0 judged` cannot tell which. Count them apart.
+  const deterministicFailed = draws.filter((d) => d.outcome === "skipped" && /^deterministic\b/.test(d.reason)).length
   return {
     total: draws.length,
     judged: draws.filter((d) => d.outcome !== "skipped").length,
     passed: count("passed"),
     failed: count("failed"),
     skipped: count("skipped"),
+    deterministicFailed,
   }
+}
+
+// What the artifact measured. The three hashes were introduced by SPEC-0020, so
+// a stored run from before it has none of them; the report must say so instead
+// of handing back a plausible-looking blank. Values are read from the draws
+// first (they are per-attempt) and fall back to the case-level result.
+const PROVENANCE = ["repoSha", "skillHash", "fixtureHash", "promptHash", "detectorVersion"]
+
+function provenanceOf(result, reps) {
+  const first = (read) => {
+    for (const rep of reps) {
+      const value = read(rep)
+      if (value !== undefined && value !== null && value !== "") return value
+    }
+    const value = read(result)
+    return value === undefined || value === "" ? null : (value ?? null)
+  }
+  const storedRepo = (r) => r?.repoSha ?? r?.meta?.repoSha
+  const values = {
+    repoSha: first(storedRepo),
+    skillHash: first((r) => r?.skillHash),
+    fixtureHash: first((r) => r?.fixtureHash),
+    promptHash: first((r) => r?.promptHash),
+    detectorVersion: first((r) => r?.detectorVersion),
+  }
+  const missing = PROVENANCE.filter((key) => values[key] === null)
+  return { ...values, provenance: missing.length ? "partial" : "complete", missing }
 }
 
 // A judge reply that cannot be parsed is reported with its raw text: the stop
@@ -137,6 +169,7 @@ export async function rejudge({
     case: result.case,
     model,
     threshold,
+    ...provenanceOf(result, reps),
     draws,
     tally: tallyOf(draws),
   }

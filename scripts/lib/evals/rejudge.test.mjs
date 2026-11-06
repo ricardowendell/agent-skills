@@ -32,10 +32,11 @@ function stream({ reply = "done", command = "node --test", exit = 1, output = "#
 }
 
 // One case directory with the stored result and the transcripts, laid out the
-// way `runs.mjs` writes them.
-function fixture(draws) {
+// way `runs.mjs` writes them. `result`/`rep` extras carry provenance for the
+// tests that need it without changing every other fixture.
+function fixture(draws, { result: resultExtra = {}, rep: repExtra = {} } = {}) {
   const dir = mkdtempSync(join(tmpdir(), "rejudge-"))
-  const result = { skill: "demo", case: 1, status: "failed", repetitions: [] }
+  const result = { skill: "demo", case: 1, status: "failed", repetitions: [], ...resultExtra }
   for (const d of draws) {
     result.repetitions.push({
       skill: "demo",
@@ -47,6 +48,7 @@ function fixture(draws) {
       skillGate: d.skillGate ?? { ok: true, reason: "loaded" },
       execution: { exit: d.executionExit ?? 0 },
       arm: "with-skill",
+      ...repExtra,
     })
     writeFileSync(join(dir, `transcript.r${d.rep}.md`), transcriptMd(d.stream ?? stream(d)))
   }
@@ -84,7 +86,7 @@ test("a quote from the ledger keeps the draw passed", async () => {
       out.draws.map((d) => [d.rep, d.outcome, d.score]),
       [[1, "passed", 1]],
     )
-    assert.deepEqual(out.tally, { total: 1, judged: 1, passed: 1, failed: 0, skipped: 0 })
+    assert.deepEqual(out.tally, { total: 1, judged: 1, passed: 1, failed: 0, skipped: 0, deterministicFailed: 0 })
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
@@ -98,7 +100,7 @@ test("a quote in neither the reply nor the ledger is unverifiable and fails", as
     assert.equal(out.draws[0].outcome, "failed")
     assert.equal(out.draws[0].verdicts[0].verdict, "unverifiable")
     assert.match(out.draws[0].reason, /could not be verified/)
-    assert.deepEqual(out.tally, { total: 1, judged: 1, passed: 0, failed: 1, skipped: 0 })
+    assert.deepEqual(out.tally, { total: 1, judged: 1, passed: 0, failed: 1, skipped: 0, deterministicFailed: 0 })
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
@@ -121,7 +123,7 @@ test("a deterministic failure is skipped, never judged and never rescued", async
       ],
     )
     assert.match(out.draws[0].reason, /deterministic/)
-    assert.deepEqual(out.tally, { total: 2, judged: 0, passed: 0, failed: 0, skipped: 2 })
+    assert.deepEqual(out.tally, { total: 2, judged: 0, passed: 0, failed: 0, skipped: 2, deterministicFailed: 2 })
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
@@ -140,7 +142,7 @@ test("a case with a pass and a failure re-judges only the eligible draw", async 
         [2, "skipped"],
       ],
     )
-    assert.deepEqual(out.tally, { total: 2, judged: 1, passed: 1, failed: 0, skipped: 1 })
+    assert.deepEqual(out.tally, { total: 2, judged: 1, passed: 1, failed: 0, skipped: 1, deterministicFailed: 1 })
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
@@ -154,6 +156,48 @@ test("re-judging leaves the stored result and transcript byte-identical", async 
     await rejudge({ dir, c, model: "stub", spawnAgent })
     const after = [join(dir, "result.json"), join(dir, "transcript.r1.md")].map((f) => readFileSync(f, "utf8"))
     assert.deepEqual(after, before, "the immutable run directory was rewritten")
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test("the report says what it measured: repo and skill, hashes when present", async () => {
+  // A pre-SPEC-0020 result: the three provenance hashes do not exist yet, and
+  // the report must say `partial` instead of pretending they do.
+  const dir = fixture([{ rep: 1 }], {
+    result: { meta: { repoSha: "3779a20" } },
+    rep: { skillHash: "a58c5074c2e5" },
+  })
+  const { spawnAgent } = stub(judgeReply("$ node --test  [exit 1]"))
+  try {
+    const out = await rejudge({ dir, c, model: "stub", spawnAgent })
+    assert.equal(out.repoSha, "3779a20")
+    assert.equal(out.skillHash, "a58c5074c2e5")
+    assert.equal(out.provenance, "partial")
+    assert.deepEqual(out.missing, ["fixtureHash", "promptHash", "detectorVersion"])
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test("complete provenance when the three hashes and the two ids exist", async () => {
+  const dir = fixture([{ rep: 1 }], {
+    result: { meta: { repoSha: "abc123" } },
+    rep: {
+      skillHash: "skillhash",
+      fixtureHash: "fixturehash",
+      promptHash: "prompthash",
+      detectorVersion: "detector-1",
+    },
+  })
+  const { spawnAgent } = stub(judgeReply("$ node --test  [exit 1]"))
+  try {
+    const out = await rejudge({ dir, c, model: "stub", spawnAgent })
+    assert.equal(out.provenance, "complete")
+    assert.deepEqual(out.missing, [])
+    assert.equal(out.fixtureHash, "fixturehash")
+    assert.equal(out.promptHash, "prompthash")
+    assert.equal(out.detectorVersion, "detector-1")
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }

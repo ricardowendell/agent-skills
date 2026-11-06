@@ -9,8 +9,9 @@
 //
 // `--judge <model>` takes the same stored transcripts and calls the semantic
 // judge again over the reply and the rebuilt tool-call ledger. It spends judge
-// turns, never an agent draw, and prints the per-draw verdicts plus a per-case
-// tally. Nothing is written into the run directory; `--json` is the artifact.
+// turns, never an agent draw, and prints the per-draw verdicts, a per-case tally
+// and the provenance it measured. Nothing is written into the run directory;
+// `--json` is the artifact and requires `--judge`.
 //
 // Filesystem assertions (`file`, `nofile`, `filematch`, `unchanged`, `changed`)
 // are reported as skipped: they need the scratch tree, and `unchanged` needs the
@@ -87,6 +88,13 @@ if (opt.case !== null && !(Number.isInteger(opt.case) && opt.case > 0)) {
   process.exit(2)
 }
 
+// `--json` is the re-judge artifact; without `--judge` there is no artifact to
+// emit, and silently replaying in text mode hides the mistake.
+if (opt.json && !opt.judge) {
+  console.error("--json needs --judge")
+  process.exit(2)
+}
+
 function loadCases(root) {
   const map = new Map()
   for (const entry of readdirSync(root, { withFileTypes: true })) {
@@ -138,7 +146,9 @@ if (opt.judge) {
   const reports = []
   for (const { label, path } of transcriptPaths()) {
     if (opt.skill && !label.includes(opt.skill)) continue
-    if (opt.run && !label.includes(opt.run)) continue
+    // Prefix on the run directory's own name, as documented. `includes` matched
+    // a run id that merely appeared anywhere in the label.
+    if (opt.run && !label.startsWith(opt.run)) continue
     const dir = dirname(path)
     if (seen.has(dir)) continue
     seen.add(dir)
@@ -168,11 +178,21 @@ if (opt.judge) {
         console.log(`    ${v.i}: ${v.verdict}${evidence ? ` — ${evidence}` : ""}`)
       }
     }
-    const t = report.tally
+    // The artifact must say what it measured: two stored runs from before
+    // SPEC-0020 carry no fixture/prompt/detector hash, and a bare tally would
+    // make them look comparable to a run that does.
     console.log(
-      `  tally: ${t.passed}/${t.judged} judged passed` +
+      `  provenance: ${report.provenance}` +
+        (report.missing.length ? ` (missing ${report.missing.join(", ")})` : "") +
+        `  repo ${report.repoSha ?? "?"}  skill ${report.skillHash ? `${report.skillHash.slice(0, 12)}…` : "?"}`,
+    )
+    const t = report.tally
+    const rebuilt = t.skipped - t.deterministicFailed
+    console.log(
+      `  tally: ${t.passed}/${t.total} judged passed` +
         (t.failed ? `, ${t.failed} failed` : "") +
-        (t.skipped ? `, ${t.skipped} skipped (deterministic)` : ""),
+        (t.deterministicFailed ? `, ${t.deterministicFailed} skipped (deterministic failures)` : "") +
+        (rebuilt ? `, ${rebuilt} skipped (no transcript)` : ""),
     )
   }
   if (opt.json) console.log(JSON.stringify(reports, null, 2))
@@ -182,7 +202,7 @@ if (opt.judge) {
 
 for (const { label, path } of transcriptPaths()) {
   if (opt.skill && !label.includes(opt.skill)) continue
-  if (opt.run && !label.includes(opt.run)) continue
+  if (opt.run && !label.startsWith(opt.run)) continue
   {
     const parsed = parseTranscript(readFileSync(path, "utf8"))
     if (!parsed) continue

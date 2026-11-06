@@ -136,10 +136,15 @@ export function evidenceLedger(out, { budget = LEDGER_BUDGET } = {}) {
       text += separator + entry
       continue
     }
-    const room = budget - text.length - separator.length - TRUNCATED.length - 1
-    if (room > 0) text += `${separator}${entry.slice(0, room)}${TRUNCATED}`
-    else text += `${separator}${TRUNCATED}`
-    return text
+    // The marker counts against the same ceiling. The old fallback appended
+    // `separator + TRUNCATED` whenever no room was left for the entry, so a
+    // ledger already at the budget came back longer than it: 6000 became 6011.
+    // Clip what was written instead of overshooting.
+    const room = budget - text.length - separator.length - TRUNCATED.length
+    if (room >= 1) return `${text}${separator}${entry.slice(0, room)}${TRUNCATED}`
+    const tail = `${separator}${TRUNCATED}`
+    if (text.length + tail.length <= budget) return text + tail
+    return `${text}${text ? "\n" : ""}${TRUNCATED}`.slice(0, Math.max(0, budget))
   }
   return text
 }

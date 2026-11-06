@@ -84,10 +84,17 @@ judge can fail a deterministic pass, never rescue a deterministic failure.
   drifting apart again.
 - **Judge prompt.** The system prompt may cite the reply or the tool log, with
   the same verbatim-quote rule. The ledger is labelled as the run's own tool
-  calls, distinct from the command log, so a judge does not read a `read` line as
-  something the agent said. `## Command log` stays next to `## Tool calls`: the
-  matcher accepts either source, and the command log is a subset of the ledger,
-  so keeping both costs a few lines and preserves the old quotations.
+  calls, so a judge does not read a `read` line as something the agent said. The
+  prompt renders **exactly two evidence blocks**: `## Tool calls` (the ledger)
+  and `## Reply`. The earlier draft kept `## Command log` beside them; that was
+  wrong. The command log was a second rendering of the same stream, showing every
+  command unbudgeted while the ledger cuts at 6000 chars. In a long run the judge
+  could quote a command the ledger had dropped; `verifyEvidence` searched the
+  corpus the prompt no longer contained, and a correct `met` was downgraded — the
+  #7 bug reintroduced. One rendering means the prompt and the corpus are the
+  same string by construction. The accepted consequence: when a run's ledger
+  exceeds the budget its tail is cut and the judge cannot cite what it cannot
+  see. That is a limit of the budget, not of the corpus.
 - **Evidence verification.** `verifyEvidence` searches the corpus the judge was
   given, normalises a leading `$ ` and code fences, and accepts a short but
   literal quote. Empty evidence stays `unverifiable`: a `met` with nothing to
@@ -99,13 +106,20 @@ judge can fail a deterministic pass, never rescue a deterministic failure.
   rebuilds the judge prompt from a stored transcript, calls the judge, and returns
   per-draw verdicts plus a per-case tally; `scripts/replay-evals.mjs` exposes it
   as `--judge <model>` and `--json`. `--run <id>` narrows the scan to one stored
-  run by prefix match on the directory name; it exists because `--judge` without
-  it re-judges every stored run of a case, and the measurement must select two
-  directories out of a growing history. The module is what the tests drive with a
-  stub spawn, so the CLI stays thin. It writes nothing into the immutable run
-  directory; the JSON goes to stdout so it can be saved under
-  `~/.local/share/opencode/evals/rejudge/`. No agent draw is spent, and a stored
-  `result.json` is never rewritten.
+  run by **prefix** match (`startsWith`) on the directory name; it exists because
+  `--judge` without it re-judges every stored run of a case, and the measurement
+  must select two directories out of a growing history. The module is what the
+  tests drive with a stub spawn, so the CLI stays thin. It writes nothing into the
+  immutable run directory; the JSON goes to stdout so it can be saved under
+  `~/.local/share/opencode/evals/rejudge/`. `--json` without `--judge` is a
+  usage error, not a silently ignored flag. Each report carries the provenance it
+  measured — `repoSha` and `skillHash` from the stored `result.json`, and
+  `fixtureHash` / `promptHash` / `detectorVersion` when they exist — with a
+  `provenance: "complete" | "partial"` and the list of missing fields. A pre-
+  SPEC-0020 run has none of the three hashes; the report says `partial` instead of
+  inventing them. A deterministic failure is counted as `skipped` and named as
+  such (`deterministicFailed`), not hidden behind a `0/0 judged` headline. No
+  agent draw is spent, and a stored `result.json` is never rewritten.
 - **Publication.** Update the *Judge calibration* text in
   `docs/evals/implement-from-prompt-matrix.md` with the measured before/after and
   the rule that re-judging needs the same three provenance hashes.
@@ -130,9 +144,11 @@ No assertion, fixture, gate or case prompt changes.
    that a stream containing `read`, `edit` (with `oldString`/`newString`), `write`
    and `shell` (with output) yields the expected compact lines, and that the
    ledger does not contain the body of a `read` target.
-2. **F1 — feed it to the judge.** `judgePrompt(c, { reply, ledger })`; the prompt
-   shows the ledger under its own heading. `verifyEvidence` receives
-   `[reply, ledger].join("\n")`.
+2. **F1 — feed it to the judge.** `judgePrompt(c, { reply, ledger })` renders
+   exactly the two evidence blocks, `## Tool calls` and `## Reply`.
+   `verifyEvidence` receives `[reply, ledger].join("\n")`, so the corpus is
+   exactly what the prompt shows. A test asserts that the live `executeCase` path
+   and the `rejudge` path render the same text from the same stream.
 3. **F2 — fix the matcher.** Normalise `$ `, code fences and whitespace; accept a
    literal short quote; keep empty evidence unverifiable. Tests for each case,
    including the exact `$ node --test  [exit 1]` shape from #7.
@@ -187,6 +203,14 @@ No assertion, fixture, gate or case prompt changes.
    prompt is touched (`git diff -- skills/` empty).
 
 ## Results
+
+**These numbers predate the unified prompt.** They were measured at `0a53010`
+with the old instrument: a `## Command log` plus the ledger, where the shell lines
+existed twice (once unbudgeted, once inside the ledger). The review found that
+the extra block reintroduced #7 on long runs, so the final reading must be taken
+again under the unified prompt (`## Tool calls` + `## Reply`). The numbers below
+are kept as the before-reading; **no new numbers are invented here**, and the
+re-measurement follows this fix.
 
 Measured on 2026-11-06 at `0a53010`, judge `opencode-go/gpt-6-luna`, threshold
 `0.8`. Ten judge calls (5 + 5), zero agent draws. Both commands were run from

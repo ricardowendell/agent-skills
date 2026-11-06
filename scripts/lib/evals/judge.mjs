@@ -8,9 +8,8 @@
 //   - opt-in: it costs a model call per case, so it never runs by default;
 //   - advisory in one direction only: it can fail a case that passed
 //     deterministically, never rescue a case that failed;
-//   - it sees expectations, the reply, the command log and the tool-call
-//     ledger — never `why`, which describes the scenario and would hand over the
-//     answer;
+//   - it sees expectations, the reply and the tool-call ledger — never `why`,
+//     which describes the scenario and would hand over the answer;
 //   - it runs in an empty scratch dir with the skill tool denied, so it cannot
 //     wander into the fixture and grade the code instead of the behaviour.
 
@@ -23,13 +22,13 @@ import { replyText } from "./events.mjs"
 const SYSTEM = `You grade one agent run against a case's expectations.
 
 For each expectation decide, from the evidence only:
-- "met": the reply, the command log or the tool calls show it happened.
+- "met": the reply or the tool calls show it happened.
 - "not-met": it clearly did not happen, or the opposite happened.
 - "unverifiable": the evidence does not say either way. Use this freely; do not
   guess from what a good run would look like.
 
-Evidence must be one contiguous passage copied verbatim from the reply, the
-command log or the tool calls. Never join two quotes with an ellipsis.
+Evidence must be one contiguous passage copied verbatim from the reply or the
+tool calls. Never join two quotes with an ellipsis.
 
 The "Tool calls" section is the run's own log: the tools it called and what they
 changed. It is evidence of what the run did, not text the agent wrote. A read
@@ -54,31 +53,37 @@ export function evidenceCorpus(reply, ledger) {
 // to appear would score every good run as broken.
 const isNegative = (text) => /^(watch for|avoid)\b/i.test(text.trim())
 
-export function judgePrompt(c, { reply, shell = [], ledger = "" }) {
+// Exactly two evidence blocks: the ledger and the reply. The old prompt also
+// printed a `## Command log` from a second pass over the stream. That log showed
+// every command unbudgeted while the ledger cuts at 6000 chars, so in a long run
+// the judge could quote a line the corpus had dropped and `verifyEvidence`
+// downgraded a correct `met` — the #7 bug, reintroduced by the extra section.
+// With one rendering, what the judge sees and what the matcher reads are the
+// same string by construction.
+export function judgePrompt(c, { reply, ledger = "" }) {
   const expectations = c.expect
     .map((e, i) => `${i + 1}. ${isNegative(e) ? "[NEGATIVE] " : ""}${e}`)
     .join("\n")
-  const commands = shell.length ? shell.map((cmd) => `$ ${cmd}`).join("\n") : "(no shell commands)"
-  const sections = [
+  const calls = String(ledger ?? "").trim() || "(no tool calls)"
+  return [
     SYSTEM,
     "",
     "## Expectations",
     expectations,
     "",
-    "## Command log",
+    // Its own heading on purpose: a `read:` line is something the run did, not a
+    // sentence the agent wrote, and merging the two made the judge quote tool
+    // output as if it were the reply.
+    "## Tool calls",
     "```",
-    commands,
+    calls,
     "```",
     "",
-  ]
-  // Its own heading on purpose: a `read:` line is something the run did, not a
-  // sentence the agent wrote, and merging the two made the judge quote tool
-  // output as if it were the reply.
-  if (String(ledger ?? "").trim()) {
-    sections.push("## Tool calls", "```", String(ledger).trim(), "```", "")
-  }
-  sections.push("## Reply", "```", reply.trim() || "(empty reply)", "```")
-  return sections.join("\n")
+    "## Reply",
+    "```",
+    reply.trim() || "(empty reply)",
+    "```",
+  ].join("\n")
 }
 
 // Every top-level JSON object in the text, balanced and string-aware — a nested
@@ -145,9 +150,9 @@ export function parseJudge(text) {
 export function verifyEvidence(parsed, source) {
   if (!parsed) return parsed
   // Normalise the presentation both sides may disagree on: the `$ ` prompt a
-  // command log carries, code fences, inline backticks and run-of-whitespace.
-  // #7 quoted `$ node --test  [exit 1]` while the corpus has no `$ `, and that
-  // alone downgraded a correct `met`.
+  // shell line carries, code fences, inline backticks and run-of-whitespace.
+  // #7 quoted `$ node --test  [exit 1]` while the old corpus had no `$ `, and
+  // that alone downgraded a correct `met`.
   const norm = (s) =>
     String(s ?? "")
       .replace(/^\s*(```|~~~)[^\n]*$/gm, " ")

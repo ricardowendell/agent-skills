@@ -137,17 +137,14 @@ export async function executeCase({
   // Same rule in every front end: the judge can fail a case that passed, never
   // rescue one that did not.
   if (judge && result.status === "passed") {
-    // One corpus, built once: the ledger's shell lines are byte-identical to the
-    // command-log lines, so every block the prompt shows lives in this string.
-    // The prompt and `verifyEvidence` must never be handed different halves.
+    // One corpus, built once, and the prompt is rendered from exactly it: the
+    // ledger and the reply. There is no second, unbudgeted rendering of the
+    // stream that the judge could quote from and the matcher never see.
     const reply = replyText(out)
     const ledger = evidenceLedger(out)
     const corpus = evidenceCorpus(reply, ledger)
-    const shell = toolCalls(out)
-      .filter((t) => t.tool === "shell")
-      .map((t) => `${String(t.input.command ?? "").split("\n")[0]}  [exit ${t.exit ?? "?"}]`)
     const threshold = judge.threshold ?? 0.8
-    const run = await runJudge({ model: judge.model, prompt: judgePrompt(c, { reply, shell, ledger }), source: corpus, env, timeout: Math.min(Math.round(timeoutMs / 1000), 300), spawnAgent })
+    const run = await runJudge({ model: judge.model, prompt: judgePrompt(c, { reply, ledger }), source: corpus, env, timeout: Math.min(Math.round(timeoutMs / 1000), 300), spawnAgent })
     const outcome = judgeOutcome(run.parsed, threshold)
     judged = { outcome, parsed: run.parsed, threshold, model: judge.model }
     result = {

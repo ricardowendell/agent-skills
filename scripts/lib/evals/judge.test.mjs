@@ -9,24 +9,29 @@ const c = {
 }
 
 test("the judge prompt carries the expectations but never the scenario note", () => {
-  const p = judgePrompt(c, { reply: "VERDICT: APPROVE", shell: ["npm test"] })
+  const p = judgePrompt(c, { reply: "VERDICT: APPROVE", ledger: "$ npm test  [exit 0]" })
   assert.match(p, /Walks AC-1 through AC-3\./)
   assert.match(p, /npm test/)
   assert.ok(!p.includes("the diff satisfies every AC"), "the why line leaked into the judge prompt")
 })
 
-test("the tool-call ledger gets its own heading, apart from the command log", () => {
-  const p = judgePrompt(c, {
-    reply: "done",
-    shell: ["node --test  [exit 1]"],
-    ledger: "read: src/cart.js\n$ node --test  [exit 1]\n  # fail 1",
-  })
-  assert.match(p, /## Command log\n```\n\$ node --test {2}\[exit 1\]\n```/)
+test("the prompt has exactly two evidence blocks: the ledger and the reply", () => {
+  const ledger = "read: src/cart.js\n$ node --test  [exit 1]\n  # fail 1"
+  const p = judgePrompt(c, { reply: "done", ledger })
   assert.match(p, /## Tool calls\n```\nread: src\/cart\.js/)
-  // The ledger is between the command log and the reply, not inside either.
-  assert.ok(p.indexOf("## Tool calls") > p.indexOf("## Command log"))
+  assert.match(p, /\$ node --test {2}\[exit 1\]/)
+  // No second, unbudgeted rendering of the stream: the command log used to show
+  // lines the ledger's budget had cut, and the judge could quote one of them.
+  assert.ok(!p.includes("## Command log"), "the command log section came back")
+  assert.equal(p.match(/## (Tool calls|Reply)/g).length, 2)
   assert.ok(p.indexOf("## Tool calls") < p.indexOf("## Reply"))
   assert.match(p, /A read\nline shows a file was opened, not what the file said/)
+})
+
+test("an empty ledger still renders its block, not a missing section", () => {
+  const p = judgePrompt({ expect: ["Runs the gate."] }, { reply: "ok" })
+  assert.match(p, /## Tool calls\n```\n\(no tool calls\)\n```/)
+  assert.match(p, /## Reply\n```\nok\n```/)
 })
 
 test("watch-for lines are marked negative so the judge does not require them", () => {

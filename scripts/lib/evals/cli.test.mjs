@@ -127,7 +127,17 @@ test("replay --judge --json reports a skipped deterministic failure", () => {
   assert.equal(report.length, 1)
   assert.equal(report[0].draws[0].outcome, "skipped")
   assert.match(report[0].draws[0].reason, /deterministic/)
-  assert.deepEqual(report[0].tally, { total: 1, judged: 0, passed: 0, failed: 0, skipped: 1 })
+  assert.deepEqual(report[0].tally, { total: 1, judged: 0, passed: 0, failed: 0, skipped: 1, deterministicFailed: 1 })
+  // Human output must not reduce a skipped case to a meaningless `0/0 judged`.
+  const text = cli(REPLAY, ["--dir", dir, "--judge", "default"])
+  assert.equal(text.code, 0, text.err)
+  assert.match(text.out, /tally: 0\/1 judged passed, 1 skipped \(deterministic failures\)/)
+  assert.match(text.out, /provenance: partial/)
+})
+
+test("replay --json without --judge is rejected instead of ignored", () => {
+  const dir = mkdtempSync(join(tmpdir(), "replay-json-"))
+  rejects(["--dir", dir, "--json"], /--json needs --judge/, { script: REPLAY, code: 2 })
 })
 
 // Without a filter, re-judging scans every stored run of a case; a measurement
@@ -161,11 +171,14 @@ test("replay --run selects one stored run", () => {
   }
   makeRun("2026-01-01T00-00-00--demo")
   makeRun("2026-01-02T00-00-00--demo")
+  // The same id embedded later in a directory name: `includes` selected it,
+  // though the documented rule is a prefix on the run directory's name.
+  makeRun("pre-2026-01-02T00-00-00--demo")
   const all = JSON.parse(cli(REPLAY, ["--dir", dir, "--judge", "default", "--json"]).out)
-  assert.equal(all.length, 2)
+  assert.equal(all.length, 3)
   const one = JSON.parse(cli(REPLAY, ["--dir", dir, "--judge", "default", "--json", "--run", "2026-01-02"]).out)
   assert.equal(one.length, 1)
-  assert.match(one[0].dir, /2026-01-02/)
+  assert.match(one[0].dir, /^2026-01-02/)
 })
 
 test("replay --run refuses to swallow the next flag as an id", () => {
