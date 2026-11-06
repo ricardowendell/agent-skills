@@ -27,6 +27,8 @@
 //   node scripts/replay-evals.mjs --skill review-code --case 3
 //   node scripts/replay-evals.mjs --changed       # exit 1 when a verdict moves
 //   node scripts/replay-evals.mjs --dir <path>    # default: ~/.local/share/opencode/evals
+//   node scripts/replay-evals.mjs --run 2026-11-05T11-45-57
+//                                                 # one stored run (prefix match)
 //   node scripts/replay-evals.mjs --judge opencode-go/gpt-6-luna [--json]
 //                                                 # re-judge stored draws, no agent run
 
@@ -46,7 +48,7 @@ import { rejudge } from "./lib/evals/rejudge.mjs"
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const OUT_ROOT = join(homedir(), ".local/share/opencode/evals")
 
-const opt = { dir: OUT_ROOT, root: join(REPO, "skills"), skill: null, case: null, changed: false, quiet: false, judge: null, json: false }
+const opt = { dir: OUT_ROOT, root: join(REPO, "skills"), skill: null, case: null, run: null, changed: false, quiet: false, judge: null, json: false }
 const argv = process.argv.slice(2)
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i]
@@ -54,6 +56,14 @@ for (let i = 0; i < argv.length; i++) {
   else if (a === "--root") opt.root = resolve(argv[++i])
   else if (a === "--skill") opt.skill = argv[++i]
   else if (a === "--case") opt.case = Number(argv[++i])
+  else if (a === "--run") {
+    const value = argv[++i]
+    if (value === undefined || value.startsWith("--")) {
+      console.error("--run needs a run id (prefix match)")
+      process.exit(2)
+    }
+    opt.run = value
+  }
   else if (a === "--changed") opt.changed = true
   else if (a === "--quiet") opt.quiet = true
   else if (a === "--json") opt.json = true
@@ -128,6 +138,7 @@ if (opt.judge) {
   const reports = []
   for (const { label, path } of transcriptPaths()) {
     if (opt.skill && !label.includes(opt.skill)) continue
+    if (opt.run && !label.includes(opt.run)) continue
     const dir = dirname(path)
     if (seen.has(dir)) continue
     seen.add(dir)
@@ -171,6 +182,7 @@ if (opt.judge) {
 
 for (const { label, path } of transcriptPaths()) {
   if (opt.skill && !label.includes(opt.skill)) continue
+  if (opt.run && !label.includes(opt.run)) continue
   {
     const parsed = parseTranscript(readFileSync(path, "utf8"))
     if (!parsed) continue

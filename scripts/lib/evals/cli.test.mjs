@@ -129,3 +129,46 @@ test("replay --judge --json reports a skipped deterministic failure", () => {
   assert.match(report[0].draws[0].reason, /deterministic/)
   assert.deepEqual(report[0].tally, { total: 1, judged: 0, passed: 0, failed: 0, skipped: 1 })
 })
+
+// Without a filter, re-judging scans every stored run of a case; a measurement
+// that cites two directories must be able to select exactly those two.
+test("replay --run selects one stored run", () => {
+  const dir = mkdtempSync(join(tmpdir(), "replay-run-filter-"))
+  const makeRun = (id) => {
+    const caseDir = join(dir, "runs", id, "cases", "implement-from-prompt--01")
+    mkdirSync(caseDir, { recursive: true })
+    writeFileSync(
+      join(caseDir, "result.json"),
+      JSON.stringify({
+        skill: "implement-from-prompt",
+        case: 1,
+        status: "failed",
+        repetitions: [
+          {
+            rep: 1,
+            status: "failed",
+            assertions: [{ kind: "reply", arg: "must exist", pass: false }],
+            skillGate: { ok: true },
+            execution: { exit: 0 },
+          },
+        ],
+      }),
+    )
+    writeFileSync(
+      join(caseDir, "transcript.r1.md"),
+      "# Eval: implement-from-prompt case 1\n\n**Scratch:** /tmp/x\n**Exit:** 0\n**Status:** failed\n\n## Transcript\n\n```\n{}\n```\n",
+    )
+  }
+  makeRun("2026-01-01T00-00-00--demo")
+  makeRun("2026-01-02T00-00-00--demo")
+  const all = JSON.parse(cli(REPLAY, ["--dir", dir, "--judge", "default", "--json"]).out)
+  assert.equal(all.length, 2)
+  const one = JSON.parse(cli(REPLAY, ["--dir", dir, "--judge", "default", "--json", "--run", "2026-01-02"]).out)
+  assert.equal(one.length, 1)
+  assert.match(one[0].dir, /2026-01-02/)
+})
+
+test("replay --run refuses to swallow the next flag as an id", () => {
+  const dir = mkdtempSync(join(tmpdir(), "replay-cli-"))
+  rejects(["--dir", dir, "--run", "--json"], /--run needs a run id/, { script: REPLAY, code: 2 })
+})
