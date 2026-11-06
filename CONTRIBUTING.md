@@ -172,6 +172,23 @@ node scripts/run-evals.mjs --skill review-code --case 3 --repeat 3 --run --judge
 - Keep a failed control as a finding. The mutation pilot in
   `docs/evals/experiments/` records two `invalid` results on purpose.
 
+### Per-release health pass
+
+Before writing the CHANGELOG entry for a release, run the health report and read
+the delta against the previous release in
+[`docs/evals/harness-health.md`](docs/evals/harness-health.md):
+
+```sh
+node scripts/harness-health.mjs --pdlc .pdlc/runs.json
+```
+
+It reads the eval store and the pdlc run records, spends no model and writes
+nothing. Compare like with like: a number moves the trend only when the
+artefacts are comparable (same fixture/prompt/detector hashes, same case shape);
+a different mix of runs is variance. Paste the new table into the baseline doc,
+then open at most three findings and at most one spec. The report is evidence,
+not a CI gate: a red number does not fail a build.
+
 ## What CI enforces
 
 `.github/workflows/skills.yml` runs, on Node 24:
