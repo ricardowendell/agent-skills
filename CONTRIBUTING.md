@@ -81,6 +81,10 @@ Rules:
 - `status: manual` keeps a case in the file as design intent without running it.
 - `gate: off` is required by trigger cases, which ask whether a skill was
   chosen at all.
+- `stage: <skill-id>` stages a second skill in the scratch when the case asserts
+  on a sibling (`- assert: skill process-inbox` while reviewing `capture-idea`).
+  `--check` rejects an unknown id and one that names the skill under review. The
+  control arm ignores it.
 - `needs: gates` marks an expensive case that `--level behavior` may skip.
   Nothing uses it today.
 - Tags in use: `trigger`, `matrix`, `regression`, `harness-state`.

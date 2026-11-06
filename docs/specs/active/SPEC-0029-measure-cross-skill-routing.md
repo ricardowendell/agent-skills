@@ -22,6 +22,7 @@ files:
   - scripts/lib/evals/execute.test.mjs
   - skills/capture-idea/references/evals.md
   - skills/process-inbox/references/evals.md
+  - CONTRIBUTING.md
   - docs/evals/pipeline-bookends-matrix.md
   - docs/evals/coverage.md
   - docs/specs/active/SPEC-0029-measure-cross-skill-routing.md

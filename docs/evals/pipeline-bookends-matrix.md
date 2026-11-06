@@ -157,9 +157,9 @@ rates; their clean scored subsets are named above.
 | `record-decision` #2 refuse an incomplete decision | 4/5 | 5/5 | **0/5 clean** | 5/5 no skill loaded | **separator** |
 | `record-decision` #3 supersede ADR-0002 | 4/5 | 5/5 | **5/5 clean** | 5/5 no skill loaded | **non-discriminator** |
 | `capture-idea` #2 trigger | 5/5 | gate off | — | — | trigger, routed 5/5 |
-| `capture-idea` #3 routing | 0/4 clean | gate off | — | — | trigger, not routed (staging) |
+| `capture-idea` #3 routing | 0/4 clean | gate off | — | — | trigger, not routed (staging) — **superseded** by the SPEC-0029 section below |
 | `process-inbox` #2 trigger | 4/5, `r1` stalled | gate off | — | — | trigger, routed 4/5 |
-| `process-inbox` #3 near-miss | 0/5 | gate off | — | — | trigger, not routed (staging) |
+| `process-inbox` #3 near-miss | 0/5 | gate off | — | — | trigger, not routed (staging) — **superseded** by the SPEC-0029 section below |
 | `record-decision` #4 trigger | 5/5 | gate off | — | — | trigger, routed 5/5 |
 | `record-decision` #5 near-miss | 5/5 | gate off | — | — | trigger, routed 5/5 |
 
