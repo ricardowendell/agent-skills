@@ -11,7 +11,8 @@ source_docs:
   - docs/evals/implement-from-prompt-matrix.md
   - docs/evals/coverage.md
 related_decisions: []
-depends_on: []
+depends_on:
+  - docs/specs/active/SPEC-0020-runner-efficiency.md
 blocks: []
 files:
   - docs/evals/implement-from-prompt-matrix.md
