@@ -23,6 +23,7 @@ files:
   - scripts/lib/evals/leak.test.mjs
   - scripts/replay-evals.mjs
   - scripts/run-evals.mjs
+  - scripts/check-eval-run.mjs
   - docs/evals/coverage.md
   - docs/specs/active/SPEC-0028-detector-host-corpus.md
 tests:
