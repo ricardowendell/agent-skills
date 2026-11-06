@@ -46,9 +46,9 @@ skill changes anything: six cases, one `manual`, and `none` in
 ## User Outcome
 
 Every case of `write-implementation-prompt` either carries a run directory and a
-classification — separator, non-discriminator or broken — or a written reason it
-cannot be run. The coverage row cites that evidence, so a reader can tell what
-the skill actually buys over not loading it.
+classification — separator, non-discriminator, broken or unresolved — or a
+written reason it cannot be run (`manual`). The coverage row cites that
+evidence, so a reader can tell what the skill actually buys over not loading it.
 
 ## Scope
 
@@ -137,13 +137,15 @@ is roughly 15–25 minutes of wall time. No judge.
 1. **All six cases are accounted for.** Five are runnable and #3 is either
    runnable with a deterministic verdict or `manual` with a written `why:`;
    `--list --check` exits 0 and reports the counts the spec records.
-2. **Five draws per arm on every behavioural case**, at one commit, each run
-   directory cited; every cited run passes `check-eval-run` with
+2. **Five draws per arm on every behavioural case**, on one measurement surface
+   (the same `fixtureHash`, `promptHash`, `skillHash` and `detectorVersion`),
+   each run directory cited; every cited run passes `check-eval-run` with
    `findings=0 warnings=0`, or is cited as the failure record with the finding
    named and no rate taken from it.
 3. **Every case has a classification** (`separator`, `non-discriminator`,
-   `broken`) and every red cell names the assertion or gate reason that failed.
-   No repetition is rounded into a rate; `reps` and `passed` are the numbers.
+   `broken` or `unresolved`) or is `manual` with a written reason, and every red
+   cell names the assertion or gate reason that failed. No repetition is rounded
+   into a rate; `reps` and `passed` are the numbers.
 4. **`docs/evals/write-implementation-prompt-matrix.md` is published** with the
    commands, the run directories, the table and the red cells, and the coverage
    row for this skill cites it.
@@ -156,9 +158,12 @@ is roughly 15–25 minutes of wall time. No judge.
 
 ## Results
 
-Measured at `8e26cf6` on `opencode-go/deepseek-v4.1-flash` (config default), no
-judge. All run directories live under
-`~/.local/share/opencode/evals/runs/`. The published reading is
+Measured on `opencode-go/deepseek-v4.1-flash` (config default), no judge. The
+with-skill cells are at `8e26cf6`; the control and trigger re-runs are at
+`fff5b96`, which changed only this spec document. `fixtureHash`, `promptHash`,
+`skillHash` and `detectorVersion` are identical across the two commits, so the
+surface is the same; the matrix carries the hash table. All run directories live
+under `~/.local/share/opencode/evals/runs/`. The published reading is
 [`docs/evals/write-implementation-prompt-matrix.md`](../../evals/write-implementation-prompt-matrix.md).
 
 **F0 — repro.** `node scripts/run-evals.mjs --root skills --list --check`
@@ -171,15 +176,17 @@ went back to `manual` (below).
 `2026-11-06T14-01-54--write-implementation-prompt` **4/5**, gate 5/5,
 `findings=0 warnings=0`. Four draws stopped and listed the open questions;
 `r3` treated both as non-blocking, turned them into non-goals, and wrote
-`docs/prompts/SPEC-0009-audit-log.prompt.md`. Five draws did not produce a
-deterministic verdict, so the case is back to `status: manual` with a `why:`
-naming that run. The fixture is confirmed runnable and stages cleanly.
+`docs/prompts/SPEC-0009-audit-log.prompt.md`, failing `nodir docs/prompts`.
+Five draws did not produce a deterministic verdict, so the case is back to
+`status: manual` with a `why:` naming that run and assertion. The fixture is
+confirmed runnable and stages cleanly.
 
 **Canary.** `2026-11-06T13-51-35--write-implementation-prompt`: **12/12**
-passed, **12/12** skill-gate holds, `findings=0 warnings=0`. The first
-invocation without `--stop 12/0` stopped at 8/8 under the default `5/3` rule
-(`2026-11-06T13-46-05--write-implementation-prompt`, also
-`findings=0 warnings=0`); it is not the 12-draw canary.
+passed, **12/12** skill-gate holds, `findings=0 warnings=0`. The eight-draw
+`2026-11-06T13-46-05--write-implementation-prompt` is **discarded, not clean**:
+`r8` read this spec's worktree under `.lane/trees/SPEC-0025-.../docs/`, which the
+detector does not cover, so its `findings=0` says nothing. It is not a 12-draw
+canary and is not used.
 
 **Gate A — with skill (five draws each, no judge).**
 
@@ -192,49 +199,56 @@ invocation without `--stop 12/0` stopped at 8/8 under the default `5/3` rule
 
 All four pass `check-eval-run` with `findings=0 warnings=0`.
 
-**Gate A — control (five draws each, no judge, no triggers).** None of these
-four runs is a clean five-draw cell except #4; the contaminated draws are
-excluded and named.
+**Gate A — control (five draws each, no judge, no triggers).** Only #2 and #4
+reach a clean five-draw run; #1 did not in three attempts.
 
 | case | run directory | clean draws | passed clean | checker |
 | --- | --- | --- | --- | --- |
-| #1 | `2026-11-06T14-28-07--write-implementation-prompt--without-skill` | 4/5 | 0/4 | `findings=1` (leak `r3`) |
-| #2 | `2026-11-06T14-30-42--write-implementation-prompt--without-skill` | 2/5 | 0/2 | `findings=3` (leaks `r2`,`r3`,`r4`) |
-| #2 | `2026-11-06T14-40-36--write-implementation-prompt--without-skill` | 4/5 | 1/4 | `findings=1` (leak `r2`) |
+| #1 | `2026-11-06T15-15-52--write-implementation-prompt--without-skill` | 3/5 | 0/3 | `findings=2` (leaks `r1`,`r3`) |
+| #1 | `2026-11-06T15-18-26--write-implementation-prompt--without-skill` | 4/5 | 0/4 | `findings=1` (leak `r3`) |
+| #1 | `2026-11-06T15-20-43--write-implementation-prompt--without-skill` | 3/5 | 0/3 | `findings=2` (leaks `r2`,`r5`) |
+| #2 | `2026-11-06T15-25-06--write-implementation-prompt--without-skill` | 3/5 | 0/3 | `findings=2` (leaks `r3`,`r4`) |
+| #2 | `2026-11-06T15-27-30--write-implementation-prompt--without-skill` | 3/5 | 0/3 | `findings=2` (leaks `r3`,`r4`) |
+| #2 | `2026-11-06T15-30-39--write-implementation-prompt--without-skill` | **5/5** | **0/5** | `findings=0 warnings=0` |
 | #3 | `2026-11-06T14-32-58--write-implementation-prompt--without-skill` | 4/5 | 0/4 | `findings=1` (leak `r3`) |
-| #4 | `2026-11-06T14-37-23--write-implementation-prompt--without-skill` | 5/5 | 5/5 | `findings=0 warnings=0` |
+| #4 | `2026-11-06T14-37-23--write-implementation-prompt--without-skill` | **5/5** | **5/5** | `findings=0 warnings=0` |
 
-The leaked draws read `/Users/wendell/.agents/skills/write-implementation-prompt`
-(and, for #1, the real `spec-sha.mjs`); they are cited as the failure record, not
-as clean rates.
+No #1 attempt has five clean draws, so #1 is **unresolved**, not a separator.
+Every clean #1 draw failed `filematch ... spec_sha:`. The #2 clean cell is
+`15-30-39` (0/5, `nodir docs/prompts`).
 
-**Triggers — skill arm only.**
+**Triggers — skill arm only.** Three fresh attempts, no clean five-draw run for
+#5; the numbers are per run, not stacked.
 
-| trigger | run directory | result |
-| --- | --- | --- |
-| #5 | `2026-11-06T14-07-04--write-implementation-prompt` | 4/5, `r5` stalled (infrastructure) |
-| #6 | `2026-11-06T14-07-04--write-implementation-prompt` | 3/5; `r1`,`r2` loaded the skill |
-| #5 | `2026-11-06T14-43-01--write-implementation-prompt` | 2/5; `r1`,`r4` stalled, `r3` contaminated |
-| #6 | `2026-11-06T14-43-01--write-implementation-prompt` | 5/5 |
+| run directory | #5 | #6 | checker |
+| --- | --- | --- | --- |
+| `2026-11-06T14-07-04--write-implementation-prompt` | 4/5, `r5` stalled | 3/5; `r1`,`r2` loaded | `findings=1` |
+| `2026-11-06T14-43-01--write-implementation-prompt` | 2/5; `r1`,`r4` stalled, `r3` contaminated | 5/5 | `findings=3` |
+| `2026-11-06T15-33-16--write-implementation-prompt` | 3/3 clean scored loaded; `r1` contaminated+stalled, `r4` contaminated | 5/5 | `findings=2` |
+| `2026-11-06T15-49-43--write-implementation-prompt` | 3/3 clean scored loaded; `r1` stalled, `r3` contaminated | 3/5; `r1`,`r2` loaded | `findings=2` |
+| `2026-11-06T16-02-56--write-implementation-prompt` | **3/3 clean scored loaded**; `r1`,`r2` contaminated | 4/5; `r2` loaded | `findings=2` |
 
-Across both runs #5 loaded in **6/6 clean scored draws**; three stalls and one
-contaminated draw make both trigger directories failure records
-(`findings=1` and `findings=3`), not clean cells. #6 did not load in **8/10**
-draws; the two loads are `14-07-04 r1`/`r2`, both after a filesystem search for
-the missing `SPEC-0012` and then a load of the staged skill. #6's near-miss
-therefore holds at 5/5 only in `14-43-01`, not in the first run; it is recorded
-as the finding and not fixed here.
+The quoted #5 reading is `16-02-56`: 3/3 clean scored draws loaded, two
+contaminated, no stall. The two earlier re-runs each lost one draw to a stall;
+no trigger run reached five scored draws. #6 is not deterministic: 5/5, 3/5 and
+4/5 in the three re-runs. In every failing #6 draw the **first action is the
+`skill` call** — `14-07-04 r1` says "I'll load the skill first, then find the
+spec"; `r2` says "this looks like a spec-related request"; `15-49-43 r2` says
+"I'll load the skill that handles spec-to-prompt work, then find the spec." The
+near-miss prompt itself routes to the skill; the earlier "filesystem search"
+cause was wrong. The empty trigger scratch (`fixtureHash e3b0c442…`) has no
+`SPEC-0012`, which is part of the case-construction defect.
 
-**Classification.** #1 **separator** (5/5 vs 0/4 clean), #2 **separator**
-(5/5 vs 1/6 clean across two contaminated runs), #4 **non-discriminator**
-(5/5 vs 5/5), #3 **manual** (reverted with a `why:` after the 4/5 split). The
-triggers are routing evidence, not rates.
+**Classification.** #1 **unresolved** (four control attempts, no five clean
+draws; clean subsets 0/3, 0/4, 0/3 and the older 0/4), #2 **separator** (5/5 vs
+0/5 clean), #4 **non-discriminator** (5/5 vs 5/5), #3 **manual** (reverted with
+a `why:` after the 4/5 split). Triggers are routing evidence, not rates.
 
-**Budget.** 85 draws, against the ~62 estimated: 20 canary (8 under the default
-stop rule, then 12 with `--stop 12/0`), 20 with-skill Gate A, 20 triggers (two
-runs; the first had a stall and the second was needed for #6), and 25 control
-(the #2 cell was re-run after a contaminated first attempt). No single command
-exceeded its planned repeat count.
+**Budget.** 145 draws against the ~62 estimated, because cells were re-run: 20
+canary (8 under the default stop rule, then 12 with `--stop 12/0`), 20 with-skill
+Gate A, 50 triggers (five runs), and 55 control (three #1 attempts, three #2
+attempts, plus the earlier #3/#4 runs). No single command exceeded its planned
+repeat count.
 
 **Gates.** All five pass: `validate-skills` (13 SKILL.md, all clear),
 `--list --check` (exit 0, 76/74/2), `scripts/lib/evals/*.test.mjs` (252/252),
