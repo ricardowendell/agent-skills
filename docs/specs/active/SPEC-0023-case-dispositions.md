@@ -1,7 +1,7 @@
 ---
 id: SPEC-0023
 title: Record the disposition of the two undecided regression cases
-status: ready
+status: implemented
 priority: P2
 task: TASK-34
 created_at: 2026-11-06
@@ -155,6 +155,62 @@ assertion, gate or code.
 ## Budget
 
 Zero draws. Documentation only; `check-eval-run` is local and free.
+
+## Results
+
+**Dispositions (2026-11-06, TASK-34).** Both cases stay in the corpus as
+`regression`; neither is removed.
+
+- **`audit-code-quality` #4 — `regression`.** The control passed
+  `2026-11-04T21-57-53--audit-code-quality--without-skill` and failed
+  `2026-11-04T21-59-17--audit-code-quality--without-skill` on `SCOPE:`,
+  `rule`/`judgement` and `CAPTURE OPTIONS`. It separates only when the control
+  drops the output contract, so it guards the contract, not model separation.
+- **`review-code` #2 — `regression`.** 5/5 in both arms on the replaced fixture
+  (`2026-11-02T10-27-26--review-code`,
+  `2026-11-02T10-31-40--review-code--without-skill`); the control finds the spec
+  and cites AC-2, so the diff-reading case cannot discriminate.
+
+Both pairs are pre-detector (`review-code` `warnings=5`, `audit-code-quality`
+`warnings=1`); the numbers are cited as history, and the decision does not rest
+on a clean rate. `docs/evals/coverage.md` carries a `Dispositions` table with
+the reasons, directories and date; `docs/evals/review-code-matrix.md` carries
+the dated decision in *Case #2 left the matrix*.
+
+**Discrimination audit.** Every separator claim the audit walked has a control on
+the same fixture and prompt, so nothing was reclassified:
+`implement-from-prompt` #1/#8 (default, both arms at `3779a20`; luna #1 pairs
+`2026-11-05T13-18-27` with the contamination re-measure
+`2026-11-06T07-05-38`, and `evals/1/` plus the case-1 assertions are unchanged
+across `3779a20..8777e0b`; luna #8 runs both arms at `3779a20`), `review-code`
+#4/#7 (both arms at `7a44564`), and `survey-inflight-work` #1/#2 plus
+`audit-code-quality` #1 (both arms at `3784ae7`). No run carries
+`fixtureHash`/`promptHash` — all predate SPEC-0020 — so sameness is established
+by `repoSha` plus the identical case prompt. Caveats recorded in coverage: the
+default `implement-from-prompt` cells are pre-detector (`warnings=12`); the luna
+with-skill and #8 cells and `review-code` #4/#7 are pre-detector too
+(`warnings=5`; #7 `warnings=3`), with the luna #1 control the one clean
+re-measure (`warnings=0`); and the `survey` and `audit-code-quality` #1 cells are
+one draw per case, directional only.
+
+**Sibling reconciliation.** The `implement-from-prompt` judge sentence no longer
+says tool-call evidence is `unverifiable`: it records that the judge sees the
+tool-call ledger since SPEC-0021, #7 moved 1/5 → 5/5, #1 stays 0/5 on a
+behavioural residual (TASK-40), `unverifiable` still fails, and both re-judged
+cells are `provenance: partial`. `#3` is already published as a regression after
+SPEC-0022 (1/1 with skill, no control), and the `Manual`/total columns already
+read 2 manual out of 76. Re-running `--list` prints
+`Parsed 76 case(s): 74 runnable, 2 manual`.
+
+**Citations.** `node scripts/check-eval-run.mjs` on the four disposition
+directories: `findings=0 warnings=5` each for the `review-code` pair and
+`findings=0 warnings=1` each for the `audit-code-quality` pair. No post-detector
+directory is cited as a clean rate.
+
+**Files.** The diff is the three `files:` entries:
+`docs/evals/coverage.md`, `docs/evals/review-code-matrix.md`,
+`docs/specs/active/SPEC-0023-case-dispositions.md`. No draw, no code, no
+`skills/` or `scripts/` change.
 
 ## Open Questions
 

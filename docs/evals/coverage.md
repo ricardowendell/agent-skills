@@ -91,18 +91,57 @@ directories; they are not estimates.
   control's bar as well, so #4 is now a regression case instead of broken; #3
   is no longer `manual` after SPEC-0022 (1/1 with skill at
   `2026-11-06T11-28-49--implement-from-prompt`, no control), so it is a
-  regression case, not a separator. The judge also marks expectations
-  `unverifiable` when the evidence is in a tool call. See
-  `implement-from-prompt-matrix.md`.
-- **`review-code` #2 left the matrix**: it measured 5/5 in both arms, so it is
-  kept as a regression case rather than a discriminator.
+  regression case, not a separator. Since SPEC-0021 the judge reads the
+  tool-call ledger: the #7 control moved from 1/5 to 5/5, while #1 with the skill
+  stays 0/5 on a behavioural residual (TASK-40) and `unverifiable` still fails
+  the case; both re-judged cells are `provenance: partial` because they predate
+  SPEC-0020's hashes. See `implement-from-prompt-matrix.md`.
+- **`review-code` #2 left the matrix**: it measured 5/5 in both arms on the
+  replaced fixture (`2026-11-02T10-27-26--review-code`,
+  `2026-11-02T10-31-40--review-code--without-skill`; both pre-detector,
+  `warnings=5`), so it is kept as a regression case — regression, not a
+  discriminator; decision recorded 2026-11-06 (TASK-34). See
+  `review-code-matrix.md`.
 - **`audit-code-quality` #4 does not separate reliably**: its control arm passed
-  on the first draw (`2026-11-04T21-57-53`) and failed on the second
-  (`…21-59-17`) on the contract assertions (`SCOPE:`, `rule`/`judgement`,
-  `CAPTURE OPTIONS`). Keep it as a regression case, not a discriminator; it
-  separates only when the control drops the output contract.
+  on the first draw (`2026-11-04T21-57-53--audit-code-quality--without-skill`)
+  and failed on the second
+  (`2026-11-04T21-59-17--audit-code-quality--without-skill`) on the contract
+  assertions (`SCOPE:`, `rule`/`judgement`, `CAPTURE OPTIONS`). It separates
+  only when the control drops the output contract, so it is kept as a regression
+  case — regression, not a discriminator; decision recorded 2026-11-06
+  (TASK-34).
 - **Two cases are `manual`**: `bootstrap-project-harness` #8 and
   `write-implementation-prompt` #3. They run nowhere today.
+
+## Dispositions
+
+A case published as `regression` is kept to catch a control that misses the
+spec, the contract or the gate; `removed` would mean it adds no evidence. Both
+rows below were decided on existing runs, not a new draw.
+
+| case | decision | reason | run directories | date |
+| --- | --- | --- | --- | --- |
+| `audit-code-quality` #4 | `regression` | One control draw held the output contract and the next dropped `SCOPE:`, `rule`/`judgement` and `CAPTURE OPTIONS`; the case guards the contract, not model separation. | `2026-11-04T21-57-53--audit-code-quality--without-skill`, `2026-11-04T21-59-17--audit-code-quality--without-skill` (`warnings=1` each, pre-detector) | 2026-11-06 |
+| `review-code` #2 | `regression` | 5/5 in both arms on the replaced fixture: the control finds the spec and cites AC-2, so a diff-reading case cannot discriminate. | `2026-11-02T10-27-26--review-code`, `2026-11-02T10-31-40--review-code--without-skill` (`warnings=5` each, pre-detector) | 2026-11-06 |
+
+Neither case is removed: each fails a control that breaks the contract or
+ignores an acceptance criterion, which is evidence a later wave can cite.
+
+### Discrimination audit
+
+Every separator claim the audit walked has a control on the same fixture and
+prompt, so none is reclassified: `implement-from-prompt` #1/#8 (default, both
+arms at `3779a20`), luna #1 (with `13-18-27` at `3779a20` against the
+`2026-11-06T07-05-38` control at `8777e0b`; only case #4's `why:` changed in
+between, so `evals/1/` is unchanged) and luna #8 (both at `3779a20`),
+`review-code` #4/#7 (both arms at `7a44564`), and `survey-inflight-work` #1/#2
+plus `audit-code-quality` #1 (both arms at `3784ae7`). No run carries
+`fixtureHash`/`promptHash` (all predate SPEC-0020), so matching is by `repoSha`
+plus the identical case prompt. Caveats: the default `implement-from-prompt`
+cells are pre-detector (`warnings=12`); the luna with-skill and #8 cells and
+`review-code` #4/#7 are pre-detector too (`warnings=5`; #7 `warnings=3`), with
+the luna #1 control the one clean re-measure (`warnings=0`); and the `survey` and
+`audit-code-quality` #1 cells are one draw per case — directional, not rates.
 
 ## How to update
 

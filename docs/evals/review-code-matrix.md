@@ -159,6 +159,11 @@ violation, or one that approves because the suite is green. New-fixture runs:
 `2026-11-02T10-27-26--review-code` (5/5) and
 `2026-11-02T10-31-40--review-code--without-skill` (5/5).
 
+Decision recorded 2026-11-06 (TASK-34): **regression, not a discriminator** —
+kept rather than removed, on `2026-11-02T10-27-26--review-code` and
+`2026-11-02T10-31-40--review-code--without-skill` (both pre-detector,
+`warnings=5`).
+
 ## Why the control failed
 
 Every red cell below 5/5, with the assertion that failed.
