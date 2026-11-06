@@ -201,6 +201,10 @@ node scripts/replay-evals.mjs --dir "$HOME/.local/share/opencode/evals" --skill 
 re-judge every stored run of the case, and the measurement would grow with the
 history instead of naming its two cells.
 
+The raw `--json` output is kept beside the other local evidence, not in the repo:
+`~/.local/share/opencode/evals/rejudge/spec-0021-case-01-r01.json` (sha256
+`aa3255ac…8facc9`) and `…/spec-0021-case-07-r01.json` (sha256 `6eb0bc8d…99fef5`).
+
 ### AC-3 — the measured cells
 
 | cell | run directory | before | after | tally |
