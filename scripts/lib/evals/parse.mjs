@@ -10,10 +10,13 @@
 //      - status: manual          (default: run)
 //      - needs: gates            (skipped by --level behavior)
 //      - tags: review, git
+//      - stage: process-inbox    (a sibling skill the case expects on the menu;
+//                                 repeatable. `--check` rejects an unknown id
+//                                 and one that names the skill under review.)
 //
 // The bold line is a title for humans and never reaches the agent. `prompt` is
-// the only text the agent sees; `why`, `expect`, `status`, `needs` and `tags`
-// exist to record intent without contaminating the run.
+// the only text the agent sees; `why`, `expect`, `status`, `needs`, `tags` and
+// `stage` exist to record intent without contaminating the run.
 //
 // Legacy syntax (pre-v2) is still read so unmigrated cases keep working:
 // `1. **"prompt"** (note)` with bare bullets. The quoted
@@ -24,7 +27,7 @@ import { readFileSync } from "node:fs"
 import { ASSERT_KINDS } from "./kinds.mjs"
 
 const STATUSES = new Set(["run", "manual"])
-const FIELD = /^(prompt|expect|why|status|needs|tags|gate|assert):\s*(.*)$/
+const FIELD = /^(prompt|expect|why|status|needs|tags|gate|stage|assert):\s*(.*)$/
 const CASE = /^\s*(\d+)\.\s+\*\*(.+?)\*\*\s*(.*)$/
 const BULLET = /^\s*[-*]\s+(.*)$/
 const LEGACY_ASSERT = /^\[assert\]\s+(\w+)\s+(.+)$/
@@ -55,6 +58,7 @@ function emptyCase(n, title, note) {
     gate: "auto",
     needs: [],
     tags: [],
+    stage: [],
   }
 }
 
@@ -70,6 +74,7 @@ function finishCase(c) {
     gate: c.gate,
     needs: c.needs,
     tags: c.tags,
+    stage: c.stage,
   }
   if (!c.promptExplicit) {
     // Legacy convention: the bold text was the prompt, written in quotes. An
@@ -147,6 +152,10 @@ export function parseCases(md) {
             break
           case "tags":
             cur.tags.push(...value.split(",").map((s) => s.trim()).filter(Boolean))
+            target = null
+            break
+          case "stage":
+            cur.stage.push(value.trim())
             target = null
             break
           case "expect":

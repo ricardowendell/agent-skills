@@ -63,6 +63,9 @@ export function createRun({ root, label, arm = "with-skill", model = null, agent
     status: "running",
     counts: null,
     skillHashes: {},
+    // Declared siblings staged for a case (`stage:`), keyed like skillHashes.
+    // Empty for a run whose cases declare none.
+    stagedSkills: {},
   }
   writeAtomic(join(dir, "manifest.json"), JSON.stringify(manifest, null, 2))
 
@@ -80,6 +83,7 @@ export function createRun({ root, label, arm = "with-skill", model = null, agent
       mkdirSync(caseDir(skill, n), { recursive: true })
       writeAtomic(join(caseDir(skill, n), "result.json"), JSON.stringify(result, null, 2))
       if (result?.skillHash) manifest.skillHashes[`${skill}#${n}`] = result.skillHash
+      if (result?.stagedSkills?.length) manifest.stagedSkills[`${skill}#${n}`] = result.stagedSkills
     },
     finish({ status = "completed", counts = null } = {}) {
       manifest.finishedAt = new Date().toISOString()

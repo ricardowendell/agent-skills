@@ -3,7 +3,8 @@ import assert from "node:assert/strict"
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs"
 import { spawnSync } from "node:child_process"
 import { tmpdir } from "node:os"
-import { join, dirname } from "node:path"
+import { join, dirname, resolve } from "node:path"
+import { fileURLToPath } from "node:url"
 import { stageFixture, stageSkill, makeScratch, snapshotTree, treeHash } from "./fixture.mjs"
 
 function files(root, map) {
@@ -136,6 +137,64 @@ test("a pinned skill stays out of the fixture's git status", () => {
   stageFixture({ id: "demo", dir: skillDir }, { n: 1 }, scratch)
   stageSkill({ id: "demo", dir: skillDir }, scratch)
   assert.equal(git(scratch, "status", "--porcelain"), "")
+})
+
+// A routing case names a sibling it expects on the menu. The sibling is a skill
+// exactly like the arm's: copied into the scratch, stripped of its eval corpus,
+// and hashed so the run can prove which copy the agent could see.
+test("two synthetic skills stage side by side, each with its own hash", () => {
+  const arm = files(mkdtempSync(join(tmpdir(), "fixture-arm-")), {
+    "SKILL.md": "---\nname: capture\n---\nbody\n",
+    "references/notes.md": "arm\n",
+    "references/evals.md": "1. **x**\n",
+  })
+  const sibling = files(mkdtempSync(join(tmpdir(), "fixture-sibling-")), {
+    "SKILL.md": "---\nname: process\n---\nbody\n",
+    "references/notes.md": "sibling\n",
+    "references/evals.md": "1. **y**\n",
+  })
+  const scratch = makeScratch("capture", 3)
+  const pinned = stageSkill({ id: "capture", dir: arm }, scratch)
+  const staged = stageSkill({ id: "process", dir: sibling }, scratch)
+
+  assert.equal(staged.id, "process")
+  assert.equal(staged.hash, treeHash(join(scratch, ".opencode/skills/process")))
+  assert.equal(pinned.hash, treeHash(join(scratch, ".opencode/skills/capture")))
+  assert.notEqual(staged.hash, pinned.hash, "two skills cannot share one hash")
+  // The answer key stays out of both copies, not just the arm's.
+  assert.equal(existsSync(join(scratch, ".opencode/skills/process/references/evals.md")), false)
+})
+
+// `stage:` is case syntax validated by the CLI, so the check runs the real
+// script on synthetic roots: a known sibling is accepted, a self-reference and
+// an unknown id are refused.
+const RUN_EVALS = resolve(dirname(fileURLToPath(import.meta.url)), "../../run-evals.mjs")
+function stageRoot(skills) {
+  const root = mkdtempSync(join(tmpdir(), "stage-check-"))
+  for (const [id, stage] of Object.entries(skills)) {
+    files(join(root, id), {
+      "SKILL.md": `---\nname: ${id}\n---\n`,
+      "references/evals.md": `1. **T.**\n   - prompt: do it\n   - stage: ${stage}\n   - assert: skill ${stage}\n`,
+    })
+  }
+  return root
+}
+const checkRoot = (root) => spawnSync(process.execPath, [RUN_EVALS, "--root", root, "--list", "--check"], { encoding: "utf8" })
+
+test("--check accepts a declared sibling and rejects a self-reference", () => {
+  const ok = checkRoot(stageRoot({ capture: "process", process: "capture" }))
+  assert.equal(ok.status, 0, ok.stderr)
+  assert.match(ok.stdout, /Parsed 2 case/)
+
+  const self = checkRoot(stageRoot({ capture: "capture" }))
+  assert.equal(self.status, 1)
+  assert.match(self.stderr, /names the skill under review/)
+})
+
+test("--check rejects an unknown stage id", () => {
+  const unknown = checkRoot(stageRoot({ capture: "ghost" }))
+  assert.equal(unknown.status, 1)
+  assert.match(unknown.stderr, /unknown stage 'ghost'/)
 })
 
 test("the snapshot records staged content, so a later edit is visible", () => {

@@ -1,10 +1,10 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { executeCase } from "./execute.mjs"
-import { makeScratch } from "./fixture.mjs"
+import { makeScratch, treeHash } from "./fixture.mjs"
 import { DETECTOR_VERSION } from "./leak.mjs"
 import { rejudge } from "./rejudge.mjs"
 
@@ -124,6 +124,50 @@ test("the control arm passes its gate when nothing loaded", async () => {
     assert.match(result.skillGate.reason, /control arm/)
   } finally {
     cleanup()
+  }
+})
+
+test("a declared sibling is staged, hashed and reported", async () => {
+  const skill = skillDir("demo")
+  const sibling = skillDir("sibling")
+  const scratch = makeScratch("demo", 7)
+  const c = { n: 3, title: "routing", prompt: "Process the inbox.", gate: "off", assert: [{ kind: "skill", arg: "sibling" }] }
+  try {
+    const siblingInside = join(scratch, ".opencode/skills/sibling")
+    const { spawn } = agent({ out: stream({ reply: "done", loads: [{ id: "sibling", directory: siblingInside }] }) })
+    const { result } = await executeCase({ skill, c, scratch, siblings: [sibling], spawnAgent: spawn })
+
+    assert.equal(result.status, "passed")
+    assert.deepEqual(result.stagedSkills, [{ id: "sibling", hash: treeHash(siblingInside) }])
+    // The arm's hash is still the arm's skill; the gate still answers for it.
+    assert.equal(result.skillHash, treeHash(join(scratch, ".opencode/skills/demo")))
+    assert.equal(result.skillGate.ok, true)
+  } finally {
+    rmSync(scratch, { recursive: true, force: true })
+    rmSync(skill.dir, { recursive: true, force: true })
+    rmSync(sibling.dir, { recursive: true, force: true })
+  }
+})
+
+test("the control arm ignores a declared sibling and denies the skill tool", async () => {
+  const skill = skillDir("demo")
+  const sibling = skillDir("sibling")
+  const scratch = makeScratch("demo", 8)
+  const c = { n: 3, title: "routing", prompt: "Process the inbox.", gate: "off", assert: [{ kind: "reply", arg: "done" }] }
+  try {
+    const { spawn } = agent({ out: stream({ reply: "done" }) })
+    const { result } = await executeCase({ skill, c, scratch, siblings: [sibling], arm: "without-skill", spawnAgent: spawn })
+
+    assert.deepEqual(result.stagedSkills, [])
+    assert.equal(result.skillHash, null)
+    assert.equal(existsSync(join(scratch, ".opencode/skills/sibling")), false, "the declared sibling leaked into the control arm")
+    assert.equal(existsSync(join(scratch, ".opencode/skills/demo")), false, "the arm's skill was staged under --no-skill")
+    const config = JSON.parse(readFileSync(join(scratch, ".opencode/opencode.json"), "utf8"))
+    assert.equal(config.tools.skill, false)
+  } finally {
+    rmSync(scratch, { recursive: true, force: true })
+    rmSync(skill.dir, { recursive: true, force: true })
+    rmSync(sibling.dir, { recursive: true, force: true })
   }
 })
 

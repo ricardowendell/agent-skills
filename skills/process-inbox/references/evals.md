@@ -3,7 +3,7 @@
 A fixture in `references/evals/1/` is copied into the scratch repo before the
 prompt runs.
 
-Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `- expect:` (human-checked), `- assert: <kind> <arg>` (machine-checked; the full kind list is in the README), `- status: manual` (recorded, not run), `- needs: gates` (skipped at `--level behavior`).
+Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `- expect:` (human-checked), `- assert: <kind> <arg>` (machine-checked; the full kind list is in the README), `- status: manual` (recorded, not run), `- needs: gates` (skipped at `--level behavior`), `- stage: <skill-id>` (stages a sibling skill the case asserts on).
 
 1. **Process the inbox.**
    - prompt: Process the inbox.
@@ -29,6 +29,7 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - tags: trigger
    - why: the word "inbox" appears, but a note is arriving and nothing is being classified
    - gate: off
+   - stage: capture-idea
    - expect: Routes to `capture-idea` and writes one raw note.
    - assert: notskill process-inbox
    - assert: skill capture-idea
