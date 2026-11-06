@@ -9,6 +9,46 @@ skills, which cases, and which published measurements.
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-11-06
+
+The trust wave: a control run can no longer score a pass by reading the skill it
+is supposed to be measured against.
+
+### Added
+
+- **Leak detection** (SPEC-0017). Every repetition records `leak` (the tool calls
+  that touched an installed skill or the eval corpus outside the scratch) and
+  `contaminated`. A contaminated repetition is not a pass in either arm.
+- **`scripts/check-eval-run.mjs`** (SPEC-0018). A model-free checker over a run
+  directory: it fails on a leak, on a contaminated repetition, on a lost skill
+  gate in the `with-skill` arm, and on an incomplete run (not `completed`, or a
+  case directory without `result.json`). `CONTRIBUTING.md` requires it before a
+  run directory is cited as a clean measurement.
+
+### Changed
+
+- A contaminated repetition is `unscored`, not `failed`, and leaves the pass-rate
+  denominator. `compareRuns` counts any transition out of `passed` as a
+  regression, including `passed → unscored`.
+- `permission.external_directory: "deny"` ships in the child config as a
+  best-effort layer. It does **not** block the read; detection is the guarantee.
+
+### Fixed
+
+- **`implement-from-prompt` #1 on `gpt-6-luna`: the control was 0/5, not 1/5.**
+  The single control pass had read the installed `SKILL.md`; re-measured with the
+  detector, the separator is 5/5 against 0/5 on both models.
+- **`groom-backlog` #2 is unresolved, not a non-discriminator.** Its published
+  3/3 tie had 2/3 contaminated control draws; the one clean draw failed. The
+  `coverage.md` row now says so.
+
+### Known gaps
+
+- The control arm can still read the installed skill; only detection stands
+  between that and a false pass.
+- Three pre-detector run directories cannot be re-judged: they have no `leak`
+  field and the checker reports `warnings` instead of a clean verdict.
+
 ## [0.1.0] — 2026-11-05
 
 First versioned cut. This entry is retroactive: it records what landed before the
