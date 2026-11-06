@@ -63,7 +63,8 @@ inventory that cites the run directories. The three skills stop reading `none`.
   `gate: off`: their evidence is the routing assertion, not a gate.
 - **Classification per case**, same rule as SPEC-0025:
   `separator` (skill ≥ 4/5, control ≤ 1/5), `non-discriminator` (both ≥ 4/5, or
-  a gap under 3/5), `broken` (skill ≤ 3/5). A with-skill draw with
+  a gap under 3/5), `broken` (skill ≤ 3/5), `unresolved` (skill ≥ 4/5 but no
+  control run reaches five clean draws). A with-skill draw with
   `skillGate.ok !== true` is not a pass; more than one miss in five makes the
   cell unreadable and the case is re-run after diagnosis.
 - **Publish `docs/evals/pipeline-bookends-matrix.md`** in the shape of the

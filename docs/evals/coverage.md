@@ -83,13 +83,15 @@ directories; they are not estimates.
   Recorded as a regression case; see `write-implementation-prompt-matrix.md`.
 - **`capture-idea` #1 is unresolved.** 5/5 with the skill
   (`2026-11-06T16-40-32--capture-idea`); three control attempts produced clean
-  subsets of 0/2, 0/2 and 0/0, and every clean draw failed `status: unprocessed`.
+  subsets of 0/2, 0/2 and 0/0 (`2026-11-06T17-07-09--capture-idea--without-skill`,
+  `…17-23-44…`, `…17-32-50…`), and every clean draw failed `status: unprocessed`.
   The direction is a separator, but no control run has five clean draws.
   Recorded as a regression case pending a re-measure. See
   `pipeline-bookends-matrix.md`.
 - **`process-inbox` #1 is unresolved, not the expected non-discriminator.** 5/5
   with the skill (`2026-11-06T16-41-50--process-inbox`); the control never had
-  five clean draws (0/1 in each of three attempts). Measured, every clean control
+  five clean draws (0/1 in each of `2026-11-06T17-08-43--process-inbox--without-skill`,
+  `…17-25-52…` and `…17-34-41…`). Measured, every clean control
   draw marked the note processed and created `docs/backlog`, failing `unchanged`
   and `nodir`; the case was not redesigned. Recorded as a regression case pending
   a re-measure. See `pipeline-bookends-matrix.md`.

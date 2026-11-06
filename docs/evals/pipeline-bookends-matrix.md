@@ -138,7 +138,7 @@ draws across three runs (`0/2`, `0/2`, `0/0`) and `process-inbox #1` three
 
 | run directory | `process-inbox` #2 | `process-inbox` #3 | checker |
 | --- | --- | --- | --- |
-| `2026-11-06T16-55-11--process-inbox` | 4/4 clean scored, `r1` stalled | 0/5 | `findings=1` |
+| `2026-11-06T16-55-11--process-inbox` | 4/5, `r1` stalled (4 clean scored) | 0/5 | `findings=1` |
 
 | run directory | `record-decision` #4 | `record-decision` #5 | checker |
 | --- | --- | --- | --- |
@@ -158,7 +158,7 @@ rates; their clean scored subsets are named above.
 | `record-decision` #3 supersede ADR-0002 | 4/5 | 5/5 | **5/5 clean** | 5/5 no skill loaded | **non-discriminator** |
 | `capture-idea` #2 trigger | 5/5 | gate off | — | — | trigger, routed 5/5 |
 | `capture-idea` #3 routing | 0/4 clean | gate off | — | — | trigger, not routed (staging) |
-| `process-inbox` #2 trigger | 4/4 clean scored | gate off | — | — | trigger, routed 4/4 |
+| `process-inbox` #2 trigger | 4/5, `r1` stalled | gate off | — | — | trigger, routed 4/5 |
 | `process-inbox` #3 near-miss | 0/5 | gate off | — | — | trigger, not routed (staging) |
 | `record-decision` #4 trigger | 5/5 | gate off | — | — | trigger, routed 5/5 |
 | `record-decision` #5 near-miss | 5/5 | gate off | — | — | trigger, routed 5/5 |
@@ -246,7 +246,7 @@ spec.
   ADR-0003, marks ADR-0002 superseded and updates the index — as reliably as the
   skill. Kept as a regression case.
 - **Triggers — routing evidence, not rates.** `capture-idea` #2 routed 5/5;
-  `process-inbox` #2 routed 4/4 clean scored draws with one stall;
+  `process-inbox` #2 routed 4/5 with `r1` stalled (4 clean scored);
   `record-decision` #4 and #5 routed 5/5. `capture-idea` #3 and `process-inbox`
   #3 are 0/4 and 0/5 on the cross-skill assertion for the structural reason
   above.
@@ -287,7 +287,7 @@ node scripts/check-eval-run.mjs ~/.local/share/opencode/evals/runs/<dir>
 #   leak #1 r1–r5 — real install
 # 2026-11-06T17-34-41--process-inbox--without-skill
 #   infrastructure #1 r4 — stalled
-#   leak #1 r2, r3, r5 — real install
+#   leak #1 r2, r3, r5 — real install (r2, r3) and stale copy /private/tmp/as-remote (r5)
 ```
 
 The excluded control draws read the install as a hand-off: the agent searches
