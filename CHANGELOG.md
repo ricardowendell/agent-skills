@@ -9,6 +9,56 @@ skills, which cases, and which published measurements.
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-11-06
+
+The runner stopped paying for evidence it does not need, and the load question
+was answered: the defect did not reproduce.
+
+### Added
+
+- **Parallel repetitions.** `--concurrency` now limits draws, not cases, so
+  `--case 1 --repeat 12` runs four draws at a time. A 12-draw cell went from
+  `387 s` of draw time to `176.6 s` of wall time (the same artifact, 12/12).
+- **`--stop <passes>/<fails>`.** Defaults to `5/3` when `repeat > 5`; the artifact
+  records `stoppedEarly` and the observed `sequence`, and `reps` is what actually
+  ran. The stop is evaluated between waves, so a 5-pass target with four lanes
+  can finish at eight draws.
+- **Provenance for reuse.** Each result records `fixtureHash`, `promptHash` and a
+  derived `detectorVersion`; `CONTRIBUTING.md` allows citing an earlier control
+  only when all three match.
+- **`--stall-seconds`** (default 120). A draw whose event stream goes quiet is
+  killed as `stalled`, distinct from `timeout`, instead of waiting the full 600 s.
+- **Infrastructure outcomes.** `timeout` and `stalled` become `unscored` with an
+  infrastructure reason, at most one retry, and never count as a pass or a
+  behavioural failure. `check-eval-run` reports them as findings.
+
+### Changed
+
+- `manifest.json` records `concurrency`, `repeat`, `stop` and `stallMs`.
+- A retry re-stages the fixture and the skill into a fresh scratch, so `unchanged`
+  assertions cannot be satisfied by the dead attempt.
+
+### Fixed
+
+- `check-eval-run` now sees a legacy `execution.exit: "timeout"`; two 2026-11-05
+  directories stopped reading as clean.
+- A draw that both stalled and leaked is counted once, as infrastructure.
+
+### Measured
+
+- **The load defect did not reproduce.** At `07f4fe6`, 45 of 46 clean draws
+  loaded the skill across `#1`, `#2`, `#5` and `#8` at `n=12`. `#2` is readable
+  (11/12 passed) instead of gate 2/5; the description was not changed.
+- The Gate A reading is recorded as "did not reproduce", not "fixed": the delta
+  includes the SPEC-0016 rule change, so the cause is not isolated.
+
+### Known gaps
+
+- The control arm can still read the installed skill; detection remains the only
+  guarantee.
+- A direct read of the staged `SKILL.md` is not counted as a load (`TASK-39`).
+- `groom-backlog` #2 stays unresolved: its clean control is 0/1.
+
 ## [0.2.0] — 2026-11-06
 
 The trust wave: a control run can no longer score a pass by reading the skill it
