@@ -1,6 +1,6 @@
 ---
 name: write-implementation-prompt
-description: Generate or update a scoped implementation prompt from a ready feature spec. Use when the user asks to create an implementation prompt, convert a spec into a prompt, or prepare a coding agent to implement a SPEC file. Stops if the spec is not `ready`.
+description: Create or update an implementation prompt file that a coding agent can execute from a ready feature spec. Use when the user asks to write, generate, or update that executable prompt, or to make a ready spec implementable. Does not summarise, explain, or review a spec. Stops if the spec is not `ready`.
 stack-agnostic: true
 ---
 
@@ -11,6 +11,8 @@ stack-agnostic: true
 Turn one implementation-ready spec into a scoped prompt that a coding agent can execute later.
 
 This skill creates prompt artifacts. It does not implement code.
+
+**Boundary:** this skill produces an executable implementation prompt file. Summarising, explaining, or reviewing a spec — for example, "three bullets for the standup" — is not this work; answer it directly instead of writing a prompt.
 
 ## Workflow
 

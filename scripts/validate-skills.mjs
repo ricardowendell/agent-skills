@@ -17,6 +17,7 @@ import { execFileSync } from "node:child_process"
 import { createHash } from "node:crypto"
 import { join, basename, dirname, relative } from "node:path"
 import { homedir } from "node:os"
+import { readEvals } from "./lib/evals/parse.mjs"
 
 const args = process.argv.slice(2)
 const maxDescArg = args.indexOf("--max-desc")
@@ -149,6 +150,20 @@ for (const root of ROOTS) {
       if (rootArg >= 0 && isTracked(file)) errors.push(msg)
       else warnings.push(msg)
     }
+    // The eval corpus is authored next to the skill; run its structural checks
+    // here too so `lint` refuses an assertion the run cannot stage, before a
+    // behavioural draw burns time proving it can never pass (SPEC-0030).
+    const evals = join(dirname(file), "references/evals.md")
+    if (rootArg >= 0 && existsSync(evals) && isTracked(evals)) {
+      try {
+        const parsed = readEvals(evals, id)
+        for (const e of parsed.errors) errors.push(`${evals}: ${e}`)
+        for (const w of parsed.warnings) warnings.push(`${evals}: ${w}`)
+      } catch (e) {
+        errors.push(`unreadable eval corpus: ${evals} (${e.message})`)
+      }
+    }
+
     if (!fm.hasDesc) warnings.push(`${file}: missing 'description' (skill will not be advertised)`)
     if (!ID_RE.test(id)) warnings.push(`${file}: ID '${id}' is not lowercase kebab-case`)
     if (fm.description.length > MAX_DESC)
