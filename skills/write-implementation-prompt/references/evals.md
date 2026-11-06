@@ -27,6 +27,8 @@ machine-checked after the case (see `run-evals.mjs`).
    - assert: unchanged docs/specs/SPEC-0008-export.md
 
 3. **Open questions that block implementation.**
+   - prompt: Create the implementation prompt for SPEC-0009.
+   - why: five draws split 4/5: `2026-11-06T14-01-54--write-implementation-prompt` r3 failed `nodir docs/prompts` by treating both open questions as non-blocking and writing the prompt
    - status: manual
    - expect: Lists the questions instead of inventing answers.
    - expect: Watch for: fabricating decisions to fill gaps.
