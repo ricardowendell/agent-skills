@@ -129,6 +129,28 @@ test("a read into each host root is a host finding that names the root", () => {
   }
 })
 
+test("the checkout root covers .git, CONTRIBUTING, package.json and .pdlc", () => {
+  const hits = findLeaks(
+    [
+      call("shell", { command: `git -C ${HOST} log -1` }),
+      call("read", { path: `${HOST}/CONTRIBUTING.md` }),
+      call("read", { path: `${HOST}/package.json` }),
+      call("read", { path: `${HOST}/.pdlc/runs.json` }),
+      call("read", { path: `${HOST}/.git/HEAD` }),
+    ],
+    SCRATCH,
+    [HOST],
+  )
+  assert.deepEqual(paths(hits), [
+    HOST,
+    `${HOST}/CONTRIBUTING.md`,
+    `${HOST}/package.json`,
+    `${HOST}/.pdlc/runs.json`,
+    `${HOST}/.git/HEAD`,
+  ])
+  assert.ok(hits.every((h) => h.kind === "host" && h.root === HOST))
+})
+
 test("a shell call that reads the host checkout is a host finding", () => {
   const path = `${HOST}/docs/specs/SPEC-0012-demo.md`
   const hits = findLeaks([call("shell", { command: `sed -n '1,20p' ${path}` })], SCRATCH, HOST_ROOTS)

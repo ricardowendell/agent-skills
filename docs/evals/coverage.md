@@ -24,15 +24,22 @@ directories; they are not estimates.
 
 ## Evidence rules
 
-- A run directory cited **as a clean measurement or a pass rate** must pass
-  `node scripts/check-eval-run.mjs <run-dir>` with `findings=0 warnings=0`,
-  `skillLeaks=0` and `isolated=yes`: no leaked read (skill or host corpus), no
-  contaminated draw, no lost skill gate, no missing provenance, and no
-  unfinished run. A directory that fails may still be cited **as the record of
-  the failure itself**, with the finding named; it cannot supply a clean pass
-  rate. `findings=0` alone is not isolation: before detector v2 the checker
-  could not see a host read, so an old run prints `isolated=no` even when it
-  has no finding.
+- A run directory cited **as a clean measurement or a pass rate** takes one of
+  two explicit paths:
+  - **v2** (`detectorVersion` `71bfb85a91cd68ab`): `node
+    scripts/check-eval-run.mjs <run-dir>` reports `findings=0 warnings=0
+    skillLeaks=0 hostReads=0 isolated=yes`. That means no skill or host read, no
+    contaminated draw, no lost gate, no missing provenance, no unfinished run,
+    and the manifest records an isolated run (`params.isolate: true`).
+  - **v1** (`a31d58f79a6c7038` and earlier): history, not a clean measurement.
+    It is citable only when `node scripts/replay-evals.mjs --leaks <run-dir>`
+    prints `clean`, and the citation names that replay. A v1 run never prints
+    `isolated=yes`; with no read detected it prints `isolated=unknown`, because
+    v1 did not look for host reads.
+  A directory that fails may still be cited **as the record of the failure
+  itself**, with the finding named; it cannot supply a clean pass rate.
+  `isolated=no` means the checker saw a skill or host read; `unknown` is neither
+  a dirty verdict nor a clean one.
 - `stoppedEarly: true` is a complete run, not an unfinished one: the stop rule
   fired between waves and `reps` is the number of draws actually run. Cite
   `reps`/`passed` (e.g. "8/8, stopped early"), never the requested `--repeat`.
@@ -58,19 +65,19 @@ directories; they are not estimates.
 The rows above were measured with detector v1 (`a31d58f79a6c7038`), which saw
 installed skill roots and `references/evals.md` but not the host checkout.
 Detector v2 (`71bfb85a91cd68ab`) adds a separate `host` finding for a read into
-`docs/`, the checkout `AGENTS.md`, `scripts/`, `skills/`, `runs/` or
-`.lane/trees/`; a `leak` finding keeps its v1 meaning (installed skill or answer
-key). The numbers above are unchanged — this note records which cells they can
-no longer carry. Old runs stay citable as history only; their
-`detectorVersion` is v1, and `check-eval-run` prints `isolated=no` for them even
-when `findings=0`.
+the checkout root or one of its documented subdirectories (`docs/`, the checkout
+`AGENTS.md`, `scripts/`, `skills/`, `runs/`) or into `.lane/trees/`; a `leak`
+finding keeps its v1 meaning (installed skill or answer key). The numbers above
+are unchanged. The 0.5.0 rows are **replay-verified v1 history**, not v2
+measurements: none of them can print `isolated=yes`, and each is citable only
+through the replay below.
 
-`node scripts/replay-evals.mjs --leaks <run-dir…>` re-judged the 0.5.0 wave from
-its transcripts, with no model and no write into the run directories: 49 run
-directories and 57 cells (the four skills, their controls, the two
-`write-implementation-prompt` canaries, and the `agentworks-gpt-oss-120b` pilot
-cells, which all replay clean). 23 cells are dirty; a cell is listed once, with
-the rules the replay found.
+`node scripts/replay-evals.mjs --leaks <run-dir…>` (or `--leaks --all`)
+re-judged the 0.5.0 wave from its transcripts, with no model and no write into
+the run directories: 49 run directories and 57 cells (the four skills, their
+controls, the two `write-implementation-prompt` canaries, and the
+`agentworks-gpt-oss-120b` pilot cells, which all replay clean). 26 cells are
+dirty; a cell is listed once, with the rules the replay found.
 
 | cell | run dir | draws | replay verdict | clean under v1? |
 | --- | --- | --- | --- | --- |
@@ -79,47 +86,63 @@ the rules the replay found.
 | `write-implementation-prompt#6` | `2026-11-06T14-07-04--write-implementation-prompt` | 5 | `dirty(host)` | yes — **new** |
 | `write-implementation-prompt#1` | `2026-11-06T14-28-07--write-implementation-prompt--without-skill` | 5 | `dirty(leak,host)` | no |
 | `write-implementation-prompt#2` | `2026-11-06T14-30-42--write-implementation-prompt--without-skill` | 5 | `dirty(leak,host)` | no |
-| `write-implementation-prompt#3` | `2026-11-06T14-32-58--write-implementation-prompt--without-skill` | 5 | `dirty(leak)` | no |
-| `write-implementation-prompt#2` | `2026-11-06T14-40-36--write-implementation-prompt--without-skill` | 5 | `dirty(leak)` | no |
+| `write-implementation-prompt#3` | `2026-11-06T14-32-58--write-implementation-prompt--without-skill` | 5 | `dirty(leak,host)` | no |
+| `write-implementation-prompt#4` | `2026-11-06T14-37-23--write-implementation-prompt--without-skill` | 5 | `dirty(host)` | yes — **new** (r5 grep of the checkout root, denied) |
+| `write-implementation-prompt#2` | `2026-11-06T14-40-36--write-implementation-prompt--without-skill` | 5 | `dirty(leak,host)` | no |
 | `write-implementation-prompt#5` | `2026-11-06T14-43-01--write-implementation-prompt` | 5 | `dirty(leak)` | no |
 | `write-implementation-prompt#1` | `2026-11-06T15-15-52--write-implementation-prompt--without-skill` | 5 | `dirty(leak,host)` | no |
-| `write-implementation-prompt#1` | `2026-11-06T15-18-26--write-implementation-prompt--without-skill` | 5 | `dirty(leak)` | no |
+| `write-implementation-prompt#1` | `2026-11-06T15-18-26--write-implementation-prompt--without-skill` | 5 | `dirty(leak,host)` | no |
 | `write-implementation-prompt#1` | `2026-11-06T15-20-43--write-implementation-prompt--without-skill` | 5 | `dirty(leak,host)` | no |
-| `write-implementation-prompt#2` | `2026-11-06T15-25-06--write-implementation-prompt--without-skill` | 5 | `dirty(leak)` | no |
-| `write-implementation-prompt#2` | `2026-11-06T15-27-30--write-implementation-prompt--without-skill` | 5 | `dirty(leak)` | no |
+| `write-implementation-prompt#2` | `2026-11-06T15-25-06--write-implementation-prompt--without-skill` | 5 | `dirty(leak,host)` | no |
+| `write-implementation-prompt#2` | `2026-11-06T15-27-30--write-implementation-prompt--without-skill` | 5 | `dirty(leak,host)` | no |
+| `write-implementation-prompt#2` | `2026-11-06T15-30-39--write-implementation-prompt--without-skill` | 5 | `dirty(host)` | yes — **new** (r1 glob of the checkout root, denied) |
 | `write-implementation-prompt#5` | `2026-11-06T15-33-16--write-implementation-prompt` | 5 | `dirty(leak,host)` | no |
+| `write-implementation-prompt#6` | `2026-11-06T15-33-16--write-implementation-prompt` | 5 | `dirty(host)` | yes — **new** (r1 grep of the checkout root, denied) |
 | `write-implementation-prompt#5` | `2026-11-06T15-49-43--write-implementation-prompt` | 5 | `dirty(leak,host)` | no |
 | `write-implementation-prompt#5` | `2026-11-06T16-02-56--write-implementation-prompt` | 5 | `dirty(leak,host)` | no |
 | `capture-idea#3` | `2026-11-06T16-50-30--capture-idea` | 5 | `dirty(leak)` | no |
 | `capture-idea#1` | `2026-11-06T17-07-09--capture-idea--without-skill` | 5 | `dirty(leak)` | no |
 | `process-inbox#1` | `2026-11-06T17-08-43--process-inbox--without-skill` | 5 | `dirty(leak)` | no |
-| `capture-idea#1` | `2026-11-06T17-23-44--capture-idea--without-skill` | 5 | `dirty(leak)` | no |
-| `process-inbox#1` | `2026-11-06T17-25-52--process-inbox--without-skill` | 5 | `dirty(leak)` | no |
-| `capture-idea#1` | `2026-11-06T17-32-50--capture-idea--without-skill` | 5 | `dirty(leak)` | no |
+| `capture-idea#1` | `2026-11-06T17-23-44--capture-idea--without-skill` | 5 | `dirty(leak,host)` | no |
+| `process-inbox#1` | `2026-11-06T17-25-52--process-inbox--without-skill` | 5 | `dirty(leak,host)` | no |
+| `capture-idea#1` | `2026-11-06T17-32-50--capture-idea--without-skill` | 5 | `dirty(leak,host)` | no |
 | `process-inbox#1` | `2026-11-06T17-34-41--process-inbox--without-skill` | 5 | `dirty(leak)` | no |
 
-A cell-level dirty verdict does not by itself shrink a published clean subset:
-where the row above cites a clean subset (for example `write-implementation-prompt`
-#5 at `2026-11-06T16-02-56`, 3/3), the replay's per-draw pass leaves that subset
-intact. The two **new** invalidations are called out because a draw that had been
-clean is now contaminated.
+Five cells that were clean under v1 are newly invalidated by a host read (the
+sixth, `13-46-05`, was already discarded by hand):
 
-The two **new** invalidations are with-skill trigger/canary runs: in
-`2026-11-06T14-07-04--write-implementation-prompt`, r1 of both `#5` and `#6`
-read the checkout `AGENTS.md` and `docs/specs/SPEC-0012-paraphrase-lens-spec-reviewer.md`.
-They were counted as clean draws under v1; the `#6` "failed 2/5 in the first
-run" note above is therefore one dirty draw and one clean failure, not a clean
-2/5. No control cell that was clean under v1 becomes dirty: every dirty control
-above already carried a leak finding, and the controls behind the published
-separators replay clean — `write-implementation-prompt` #2
-(`2026-11-06T15-30-39`), #4 (`2026-11-06T14-37-23`), and `record-decision`
-#1/#2/#3 (`17-11-37`, `17-15-33`, `17-20-53`, `17-28-10`). The 12-draw canary
-at `2026-11-06T13-51-35` is clean and still citable. The deny-layer question
-(SPEC-0028) stays open: the host reads are common in the controls that were
-already broken, not in every control.
+- `2026-11-06T14-07-04--write-implementation-prompt` #5: r1 read the checkout
+  `AGENTS.md` and `docs/specs/SPEC-0012-paraphrase-lens-spec-reviewer.md`
+  (both denied). #6: r1 read only
+  `docs/specs/SPEC-0012-paraphrase-lens-spec-reviewer.md`; the `AGENTS.md` read
+  is `#5.r1`, not `#6.r1`.
+- `2026-11-06T14-37-23--write-implementation-prompt--without-skill` #4: r5
+  grepped `/Users/wendell/.agents` (denied). The published "5/5 in both arms" is
+  now 4/5 clean on the control.
+- `2026-11-06T15-30-39--write-implementation-prompt--without-skill` #2: r1
+  globbed `/Users/wendell/.agents` (denied). The #2 separator's published "0/5
+  clean control" is 0/4 clean — the direction is unchanged, but the clean
+  five-draw control is not.
+- `2026-11-06T15-33-16--write-implementation-prompt` #6: r1 grepped
+  `/Users/wendell/.agents` (denied), so this trigger run's clean subset is one
+  draw smaller.
 
-The cells above keep their published numbers. SPEC-0031 re-measures the ones
-that still matter under v2; this note only names them.
+The `record-decision` controls (`17-11-37`, `17-15-33`, `17-20-53`, `17-28-10`)
+and the two agentworks controls replay clean, so not every 0.5.0 control reads
+the host; the deny-layer question (SPEC-0028) stays open. The 12-draw canary at
+`2026-11-06T13-51-35` is clean and remains citable as replay-verified v1
+history. A denied read still counts: detection is the guarantee, denial is the
+permission layer's separate decision.
+
+A cell-level dirty verdict does not by itself shrink every published clean
+subset: where a row above cites a subset (for example,
+`write-implementation-prompt` #5 at `2026-11-06T16-02-56`, 3/3), the replay's
+per-draw pass leaves that subset intact. The cells above keep their published
+numbers; SPEC-0031 re-measures the ones that still matter under v2.
+
+The replay above is the named v1 replay for every 0.5.0 row in the table: a row
+not listed here is `clean` under it and citable as replay-verified history; a
+row listed here is not a clean measurement.
 
 ## Known holes
 

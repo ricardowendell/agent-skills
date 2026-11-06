@@ -42,18 +42,18 @@ const kinds = (findings) => findings.map((f) => f.kind)
 
 test("a clean with-skill run at 5/5 has no findings", () => {
   const cases = [aggregate(Array.from({ length: 5 }, (_, i) => rep({ rep: i + 1 })))]
-  const { findings, counts } = checkRun({ arm: "with-skill", cases })
+  const { findings, counts } = checkRun({ arm: "with-skill", cases, isolation: true })
   assert.deepEqual(findings, [])
-  assert.deepEqual(counts, { cases: 1, reps: 5, findings: 0, infrastructure: 0, skillLeaks: 0, hostReads: 0, isolated: true })
+  assert.deepEqual(counts, { cases: 1, reps: 5, findings: 0, infrastructure: 0, skillLeaks: 0, hostReads: 0, isolated: "yes" })
 })
 
 test("a clean control run at 0/5 is not dirty just because it failed", () => {
   const reps = Array.from({ length: 5 }, (_, i) =>
     rep({ rep: i + 1, status: "failed", arm: "without-skill", skillGate: controlGate() }),
   )
-  const { findings, counts } = checkRun({ arm: "without-skill", cases: [aggregate(reps, { contaminated: 0 })] })
+  const { findings, counts } = checkRun({ arm: "without-skill", cases: [aggregate(reps, { contaminated: 0 })], isolation: true })
   assert.deepEqual(findings, [])
-  assert.deepEqual(counts, { cases: 1, reps: 5, findings: 0, infrastructure: 0, skillLeaks: 0, hostReads: 0, isolated: true })
+  assert.deepEqual(counts, { cases: 1, reps: 5, findings: 0, infrastructure: 0, skillLeaks: 0, hostReads: 0, isolated: "yes" })
 })
 
 test("a control repetition that loaded a skill is a gate miss", () => {
@@ -110,9 +110,9 @@ test("a run with no leak field at all is recognised as pre-detector", () => {
 
   // The pure rule stays strict; the CLI downgrades these to warnings for the
   // historical artefact so the old run remains citable.
-  const { findings, counts } = checkRun({ arm: "with-skill", cases })
+  const { findings, counts } = checkRun({ arm: "with-skill", cases, isolation: true })
   assert.deepEqual(kinds(findings), Array(12).fill("leak-missing"))
-  assert.deepEqual(counts, { cases: 1, reps: 12, findings: 12, infrastructure: 0, skillLeaks: 0, hostReads: 0, isolated: false })
+  assert.deepEqual(counts, { cases: 1, reps: 12, findings: 12, infrastructure: 0, skillLeaks: 0, hostReads: 0, isolated: "unknown" })
 })
 
 test("a run that carries leak somewhere must carry it everywhere", () => {
@@ -234,7 +234,7 @@ test("a host-corpus read is its own finding, and skillLeaks stays zero", () => {
   assert.match(findings[0].detail, /SPEC-0012-demo\.md/)
   assert.equal(counts.skillLeaks, 0)
   assert.equal(counts.hostReads, 1)
-  assert.equal(counts.isolated, false)
+  assert.equal(counts.isolated, "no")
 })
 
 test("a skill leak and a host read in one draw are two findings", () => {
@@ -247,22 +247,36 @@ test("a skill leak and a host read in one draw are two findings", () => {
   assert.deepEqual(kinds(findings), ["leak", "host"])
   assert.equal(counts.skillLeaks, 1)
   assert.equal(counts.hostReads, 1)
-  assert.equal(counts.isolated, false)
+  assert.equal(counts.isolated, "no")
 })
 
-test("a run written by an older detector is never called isolated", () => {
+test("a run written by an older detector is unknown, not dirty and not isolated", () => {
   const cases = [aggregate([rep({ rep: 1, detectorVersion: "a31d58f79a6c7038" })])]
-  const { findings, counts } = checkRun({ arm: "with-skill", cases })
+  const { findings, counts } = checkRun({ arm: "with-skill", cases, isolation: true })
   assert.deepEqual(findings, [])
   assert.equal(counts.skillLeaks, 0)
   assert.equal(counts.hostReads, 0)
-  assert.equal(counts.isolated, false, "the old detector did not look for host reads")
+  assert.equal(counts.isolated, "unknown", "the old detector did not look for host reads")
+})
+
+test("a v2 run with no isolation record is unknown, not yes", () => {
+  const cases = [aggregate([rep({ rep: 1 })])]
+  const { findings, counts } = checkRun({ arm: "with-skill", cases })
+  assert.deepEqual(findings, [])
+  assert.equal(counts.isolated, "unknown")
+})
+
+test("a v2 run that did not isolate (--no-isolate/--shared) is unknown", () => {
+  const cases = [aggregate([rep({ rep: 1 })])]
+  const { findings, counts } = checkRun({ arm: "with-skill", cases, isolation: false })
+  assert.deepEqual(findings, [])
+  assert.equal(counts.isolated, "unknown")
 })
 
 test("a single-draw result is the repetition at the root", () => {
   const root = rep({ rep: 1, skillGate: gate({ ok: false, loaded: [], reason: "MISSING" }) })
-  const { findings, counts } = checkRun({ arm: "with-skill", cases: [root] })
-  assert.deepEqual(counts, { cases: 1, reps: 1, findings: 1, infrastructure: 0, skillLeaks: 0, hostReads: 0, isolated: true })
+  const { findings, counts } = checkRun({ arm: "with-skill", cases: [root], isolation: true })
+  assert.deepEqual(counts, { cases: 1, reps: 1, findings: 1, infrastructure: 0, skillLeaks: 0, hostReads: 0, isolated: "yes" })
   assert.deepEqual(kinds(findings), ["gate-miss"])
   assert.equal(findings[0].rep, 1)
 })
@@ -353,7 +367,53 @@ test("replay --leaks re-judges stored transcripts and writes nothing", (t) => {
   assert.match(r.stdout, /demo#2 → clean  \[1 draw\(s\)\]/)
   assert.deepEqual(snapshot(run), before, "the replay writes nothing into the run directory")
 })
-const modern = (overrides = {}) => ({ arm: "with-skill", status: "completed", startedAt: "2026-11-06T12:00:00.000Z", ...overrides })
+
+test("replay --leaks exits 2 for a path that is not a run dir", () => {
+  const missing = join(tmpdir(), `pdlc-replay-missing-${process.pid}-${Date.now()}`)
+  const r = spawnSync(process.execPath, [REPLAY, "--leaks", missing], { encoding: "utf8" })
+  assert.equal(r.status, 2)
+  assert.match(r.stderr, /not a readable run dir/)
+})
+
+test("replay --leaks exits 2 for a directory without cases/", (t) => {
+  const dir = mkdtempSync(join(tmpdir(), "pdlc-replay-empty-"))
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const r = spawnSync(process.execPath, [REPLAY, "--leaks", dir], { encoding: "utf8" })
+  assert.equal(r.status, 2)
+  assert.match(r.stderr, /not a run dir \(no cases\/\)/)
+})
+
+test("replay --leaks exits 2 for a run dir with no transcripts", (t) => {
+  const dir = mkdtempSync(join(tmpdir(), "pdlc-replay-notrans-"))
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  mkdirSync(join(dir, "cases", "x--01"), { recursive: true })
+  const r = spawnSync(process.execPath, [REPLAY, "--leaks", dir], { encoding: "utf8" })
+  assert.equal(r.status, 2)
+  assert.match(r.stderr, /no transcripts in run dir/)
+})
+
+test("replay --leaks with no run dir exits 2 instead of scanning the store", () => {
+  const r = spawnSync(process.execPath, [REPLAY, "--leaks"], { encoding: "utf8" })
+  assert.equal(r.status, 2)
+  assert.match(r.stderr, /needs one or more run directories/)
+  assert.match(r.stderr, /--all/)
+})
+
+test("replay --leaks --all with an empty store exits 2", (t) => {
+  const dir = mkdtempSync(join(tmpdir(), "pdlc-replay-all-"))
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  const r = spawnSync(process.execPath, [REPLAY, "--leaks", "--all", "--dir", dir], { encoding: "utf8" })
+  assert.equal(r.status, 2)
+  assert.match(r.stderr, /no run directories found/)
+})
+
+const modern = (overrides = {}) => ({
+  arm: "with-skill",
+  status: "completed",
+  startedAt: "2026-11-06T12:00:00.000Z",
+  params: { isolate: true },
+  ...overrides,
+})
 
 test("CLI exits 0 for a clean completed run", (t) => {
   const dir = makeRun(t, { manifest: modern(), cases: [{ name: "x--01", result: aggregate([rep({ rep: 1 })]) }] })
@@ -403,7 +463,27 @@ test("CLI does not credit an old-detector run as isolated", (t) => {
   const r = runCli(dir)
   assert.equal(r.status, 0)
   assert.match(r.stdout, /findings=0 warnings=0/)
-  assert.match(r.stdout, /isolated=no/)
+  assert.match(r.stdout, /isolated=unknown/)
+})
+
+test("CLI reports unknown when the manifest did not record isolation", (t) => {
+  const dir = makeRun(t, {
+    manifest: modern({ params: {} }),
+    cases: [{ name: "x--01", result: aggregate([rep({ rep: 1 })]) }],
+  })
+  const r = runCli(dir)
+  assert.equal(r.status, 0)
+  assert.match(r.stdout, /skillLeaks=0 hostReads=0 isolated=unknown/)
+})
+
+test("CLI reports unknown for a v2 run that ran --no-isolate/--shared", (t) => {
+  const dir = makeRun(t, {
+    manifest: modern({ params: { isolate: false } }),
+    cases: [{ name: "x--01", result: aggregate([rep({ rep: 1 })]) }],
+  })
+  const r = runCli(dir)
+  assert.equal(r.status, 0)
+  assert.match(r.stdout, /skillLeaks=0 hostReads=0 isolated=unknown/)
 })
 
 test("CLI treats an infrastructure draw as incomplete evidence, not clean", (t) => {

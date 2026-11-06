@@ -227,6 +227,10 @@ const HOME = homedir()
 // the manifest so the replay can re-judge the run without guessing.
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const hostRootsFor = (root) => [
+  // The checkout itself, not just the known subdirectories: `git -C <checkout>
+  // log`, `.git/`, `CONTRIBUTING.md`, `package.json` and `.pdlc/` are host
+  // corpus too, and "read nothing outside the scratch" has to mean all of it.
+  root,
   join(root, "docs"),
   join(root, "AGENTS.md"),
   join(root, "scripts"),
@@ -270,6 +274,10 @@ const run = () =>
       repeat: opt.repeat,
       stop: STOP,
       stallMs: opt.stallSeconds * 1000,
+      // The checker may only say `isolated=yes` when the run itself records that
+      // the child got a scratch cwd and a throwaway home. `--shared` or
+      // `--no-isolate` writes false, and the verdict stays `unknown`.
+      isolate: opt.isolate && opt.standalone,
       // Machine-specific, so the run carries them: the replay must judge the
       // transcript against the checkout that produced it, not its own.
       hostRoots: HOST_ROOTS,

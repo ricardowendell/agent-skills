@@ -9,11 +9,15 @@
 //
 // SPEC-0028 separates the two verdicts the old `findings=N` summary conflated.
 // `skillLeaks` counts draws that read an installed skill or the answer key;
-// `isolated` says no draw read anything outside the scratch. A host-corpus read
-// is its own `host` finding, so an empty skill-leak list is no longer evidence
-// that the cell was isolated. A run written before the host rules (its
-// `detectorVersion` is not the current one) is never credited as isolated: the
-// detector did not look, and silence is not a clean bill.
+// `isolated` answers whether anything outside the scratch was read. A host-corpus
+// read is its own `host` finding, so an empty skill-leak list is no longer
+// evidence that the cell was isolated.
+//
+// The answer is three-state because two states overclaim. `no` requires a read
+// the checker actually saw. `yes` requires a v2 detector and a manifest that
+// records an isolated run. Everything else — a v1 run, a missing isolation
+// record, unproven provenance — is `unknown`, which is neither an accusation nor
+// a clean bill.
 //
 // There is no separator manifest. The stronger rule needs no list: in a
 // `with-skill` run every repetition that did not load the skill is a finding,
@@ -107,7 +111,7 @@ function leakPaths(result, kind) {
 // incompleteness (manifest status, a missing `result.json`) is a filesystem
 // fact, so the CLI records it as an `incomplete` finding; this module assumes
 // the cases it was given were actually read.
-export function checkRun({ arm = null, cases = [] } = {}) {
+export function checkRun({ arm = null, cases = [], isolation = null } = {}) {
   const findings = []
   let reps = 0
   let infrastructure = 0
@@ -183,7 +187,16 @@ export function checkRun({ arm = null, cases = [] } = {}) {
   // A missing `leak` field, or contamination with no named path, leaves the
   // question open; an open question is not isolation.
   const unproven = findings.some((f) => f.kind === "leak-missing" || f.kind === "contaminated")
-  const isolated = detectorCurrent && !unproven && skillLeaks === 0 && hostReads === 0
+  // Three states, because two overclaim. `no` is reserved for a read the checker
+  // actually saw. `yes` needs both a v2 detector and a recorded isolated mode.
+  // Everything else — a v1 run, a run with no isolation record, a missing leak
+  // field — is `unknown`, which is not the same accusation as `no`.
+  const read = skillLeaks > 0 || hostReads > 0
+  const isolated = read
+    ? "no"
+    : detectorCurrent && isolation === true && !unproven
+      ? "yes"
+      : "unknown"
   return {
     findings,
     counts: { cases: cases.length, reps, findings: findings.length, infrastructure, skillLeaks, hostReads, isolated },

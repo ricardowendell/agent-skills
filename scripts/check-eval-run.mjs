@@ -13,11 +13,14 @@ import { checkRun, isPreDetector } from "./lib/evals/runcheck.mjs"
 const USAGE = `Usage: node scripts/check-eval-run.mjs <run-dir>...
 
 Check one or more eval run directories for leaked reads, contamination, a lost
-skill gate, missing provenance, or a run that never completed. The checker reads
-what the runner already wrote; it does not call a model.
+skill gate, missing provenance, or a run that never completed. The summary names
+skillLeaks, hostReads and isolated=yes|no|unknown: "no" means a read was
+detected, "yes" needs a v2 detector and a recorded isolated run, and "unknown"
+is neither. The checker reads what the runner already wrote; it does not call a
+model.
 
 Exit codes:
-  0  every repetition is clean (pre-detector warnings may still be printed)
+  0  no findings (isolated may still be "unknown"; pre-detector warnings may print)
   1  at least one finding
   2  a path is not a readable eval run directory (no manifest.json and no cases/)
 `
@@ -35,6 +38,7 @@ function readRun(dir) {
 
   let arm = null
   let startedAt = null
+  let isolation = null
   const structural = []
   const incomplete = (name, detail) => structural.push({ case: name, rep: 0, kind: "incomplete", detail })
 
@@ -43,6 +47,9 @@ function readRun(dir) {
       const manifest = readJson(manifestPath)
       arm = manifest.arm ?? null
       startedAt = manifest.startedAt ?? null
+      // The runner records whether the child got an isolated home and a scratch
+      // cwd. Without that record a run cannot claim `isolated=yes`.
+      isolation = typeof manifest.params?.isolate === "boolean" ? manifest.params.isolate : null
       if (manifest.status !== "completed") {
         incomplete("manifest", `status ${manifest.status ?? "missing"}; run did not complete`)
       }
@@ -78,7 +85,7 @@ function readRun(dir) {
   // A manifest with no cases, or an empty cases/, is not evidence about anything.
   if (cases.length === 0 && missing === 0) incomplete("cases", "run contains no case results")
 
-  return { ok: true, arm, startedAt, cases, structural }
+  return { ok: true, arm, startedAt, isolation, cases, structural }
 }
 
 function main(argv) {
@@ -100,7 +107,7 @@ function main(argv) {
     }
 
     const preDetector = isPreDetector(run.cases, run.startedAt)
-    const checked = checkRun({ arm: run.arm, cases: run.cases })
+    const checked = checkRun({ arm: run.arm, cases: run.cases, isolation: run.isolation })
     let findings = [...run.structural, ...checked.findings]
     let counts = { ...checked.counts, findings: findings.length }
     // A run with no `leak` field at all predates SPEC-0017. Warn per draw
@@ -121,7 +128,7 @@ function main(argv) {
     }
     process.stdout.write(
       `cases=${counts.cases} reps=${counts.reps} findings=${counts.findings} warnings=${warnings.length} ` +
-        `skillLeaks=${counts.skillLeaks} hostReads=${counts.hostReads} isolated=${counts.isolated ? "yes" : "no"} (${dir})\n`,
+        `skillLeaks=${counts.skillLeaks} hostReads=${counts.hostReads} isolated=${counts.isolated} (${dir})\n`,
     )
     if (findings.length) dirty = true
   }

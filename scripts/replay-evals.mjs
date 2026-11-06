@@ -36,6 +36,7 @@
 //                                                 # re-run the leak detector over the
 //                                                 # stored transcripts: no model,
 //                                                 # no write into the run directory
+//   node scripts/replay-evals.mjs --leaks --all    # same, over every stored run
 
 import { readFileSync, readdirSync, existsSync } from "node:fs"
 import { join, dirname, resolve } from "node:path"
@@ -66,6 +67,7 @@ const opt = {
   judge: null,
   json: false,
   leaks: false,
+  all: false,
   hostRoots: [],
   runs: [],
 }
@@ -88,6 +90,7 @@ for (let i = 0; i < argv.length; i++) {
   else if (a === "--quiet") opt.quiet = true
   else if (a === "--json") opt.json = true
   else if (a === "--leaks") opt.leaks = true
+  else if (a === "--all") opt.all = true
   else if (a === "--host-root") {
     const value = argv[++i]
     if (value === undefined || value.startsWith("--")) {
@@ -143,6 +146,10 @@ if (!opt.leaks && opt.runs.length) {
 // not typed; a machine-specific list still comes from the manifest when present.
 function hostRootsFor(root) {
   return [
+    // The checkout itself: `.git/`, `CONTRIBUTING.md`, `package.json`, `.pdlc/`
+    // and anything else outside the scratch are host corpus, not just the
+    // five documented subdirectories.
+    root,
     join(root, "docs"),
     join(root, "AGENTS.md"),
     join(root, "scripts"),
@@ -183,9 +190,16 @@ function manifestHostRoots(runDir) {
 // `--leaks` re-judges what the stored transcripts actually did. It reads only;
 // nothing is written into the run directory and no model is called.
 if (opt.leaks) {
+  // No default store scan here: "0 cells, 0 dirty" from a mistyped path would
+  // read as a clean bill. `--all` is the explicit request for the whole store.
+  if (!opt.runs.length && !opt.all) {
+    console.error("--leaks needs one or more run directories, or --all to scan the store")
+    console.error(`usage: node scripts/replay-evals.mjs --leaks <run-dir…> | --leaks --all [--dir ${OUT_ROOT}]`)
+    process.exit(2)
+  }
   const dirs = (opt.runs.length ? opt.runs : listRuns(opt.dir)).slice().sort()
   if (!dirs.length) {
-    console.error("no run directories found")
+    console.error(`no run directories found in ${opt.dir}`)
     process.exit(2)
   }
   const fallback = defaultHostRoots()
@@ -198,10 +212,14 @@ if (opt.leaks) {
       unreadable++
       continue
     }
+    const casesDir = join(runDir, "cases")
+    if (!existsSync(casesDir)) {
+      console.error(`not a run dir (no cases/): ${runDir}`)
+      unreadable++
+      continue
+    }
     const name = runDir.replace(/\/+$/, "").split("/").pop()
     const hostRoots = opt.hostRoots.length ? opt.hostRoots : manifestHostRoots(runDir) ?? fallback
-    const casesDir = join(runDir, "cases")
-    if (!existsSync(casesDir)) continue
     const byCell = new Map()
     for (const c of readdirSync(casesDir)) {
       const cdir = join(casesDir, c)
@@ -222,6 +240,11 @@ if (opt.leaks) {
         byCell.set(key, entry)
       }
     }
+    if (!byCell.size) {
+      console.error(`no transcripts in run dir: ${runDir}`)
+      unreadable++
+      continue
+    }
     for (const [cell, entry] of [...byCell.entries()].sort(([a], [b]) => a.localeCompare(b))) {
       cells++
       const rules = [entry.leak ? "leak" : "", entry.host ? "host" : ""].filter(Boolean)
@@ -230,12 +253,12 @@ if (opt.leaks) {
       console.log(`${name}  ${cell} → ${verdict}  [${entry.draws} draw(s)]`)
     }
   }
-  console.log(
-    `\nDetector ${DETECTOR_VERSION}: ${cells} cell(s), ${dirty} dirty` +
-      (unreadable ? `, ${unreadable} unreadable run dir(s)` : "") +
-      `. No model, no write.`,
-  )
-  process.exit(unreadable ? 2 : 0)
+  if (unreadable) {
+    console.error(`\n${unreadable} unreadable/invalid run dir(s); replay incomplete, no clean verdict.`)
+    process.exit(2)
+  }
+  console.log(`\nDetector ${DETECTOR_VERSION}: ${cells} cell(s), ${dirty} dirty. No model, no write.`)
+  process.exit(0)
 }
 
 function loadCases(root) {
