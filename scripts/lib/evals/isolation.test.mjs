@@ -63,3 +63,33 @@ test("a home without a config dir still yields a usable isolated home", () => {
     iso.cleanup()
   }
 })
+
+test("the isolated config keeps the user's settings and denies external directories", () => {
+  const home = fakeHome()
+  writeFileSync(
+    join(home, ".config/opencode/opencode.json"),
+    JSON.stringify({ model: "opencode-go/gpt-6-luna", permission: { bash: "ask" } }),
+  )
+  const iso = isolateHome({}, { home, base: mkdtempSync(join(tmpdir(), "iso-test-base-")) })
+  try {
+    const config = JSON.parse(readFileSync(join(iso.env.XDG_CONFIG_HOME, "opencode/opencode.json"), "utf8"))
+    assert.equal(config.model, "opencode-go/gpt-6-luna", "the user's model survives")
+    assert.equal(config.permission.bash, "ask", "an existing rule survives")
+    assert.equal(config.permission.external_directory, "deny", "a read outside the scratch is denied")
+    // The copy must not be the real file: the child would otherwise rewrite it.
+    assert.equal(JSON.parse(readFileSync(join(home, ".config/opencode/opencode.json"), "utf8")).permission.external_directory, undefined)
+  } finally {
+    iso.cleanup()
+  }
+})
+
+test("a config the merge cannot parse is linked as-is, not dropped", () => {
+  const home = fakeHome()
+  writeFileSync(join(home, ".config/opencode/opencode.json"), "{ not json")
+  const iso = isolateHome({}, { home, base: mkdtempSync(join(tmpdir(), "iso-test-base-")) })
+  try {
+    assert.equal(readFileSync(join(iso.env.XDG_CONFIG_HOME, "opencode/opencode.json"), "utf8"), "{ not json")
+  } finally {
+    iso.cleanup()
+  }
+})

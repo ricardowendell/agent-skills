@@ -6,14 +6,20 @@
 // look similar, and a case that moved the other way is worth naming too.
 
 import { readFileSync } from "node:fs"
+import { contaminatedReps } from "./result.mjs"
 
 export const key = (r) => `${r.skill}#${r.case}`
 
+// `counts.contaminated` is a repetition count, not a case count: a case that was
+// re-run five times can have one contaminated draw without changing its verdict,
+// and the summary has to say so. Contaminated draws are excluded from the pass
+// rate (the repetition itself is `failed`), never silently folded into `failed`.
 export function summarizeRun({ results, ...meta }) {
+  const counts = results.reduce((acc, r) => ({ ...acc, [r.status]: (acc[r.status] ?? 0) + 1 }), {})
   return {
     ...meta,
     finishedAt: new Date().toISOString(),
-    counts: results.reduce((acc, r) => ({ ...acc, [r.status]: (acc[r.status] ?? 0) + 1 }), {}),
+    counts: { ...counts, contaminated: results.reduce((n, r) => n + contaminatedReps(r), 0) },
     results: results.map(({ transcript, ...rest }) => rest),
   }
 }

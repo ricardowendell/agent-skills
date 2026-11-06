@@ -72,8 +72,9 @@ import { readEvals } from "./lib/evals/parse.mjs"
 import { scrubEnv } from "./lib/evals/agent.mjs"
 import { isolateHome } from "./lib/evals/isolation.mjs"
 import { stageFixture, stageSkill, makeScratch, denySkillTool } from "./lib/evals/fixture.mjs"
-import { summarize, aggregateReps, caseResult, PASSED, UNSCORED } from "./lib/evals/result.mjs"
+import { summarize, aggregateReps, caseResult, contaminate, PASSED, UNSCORED } from "./lib/evals/result.mjs"
 import { executeCase } from "./lib/evals/execute.mjs"
+import { leaksIn } from "./lib/evals/leak.mjs"
 import { createRun } from "./lib/evals/runs.mjs"
 import { summarizeRun, compareRuns, formatComparison, readRun } from "./lib/evals/report.mjs"
 import { renderHeader, patchStatus } from "./lib/evals/transcript.mjs"
@@ -441,13 +442,16 @@ async function runCase(skill, c, rep = null) {
     return failed
   }
 
-  const { result: core, out, err, code, pinned: staged, gate, asserts, verdict, judged, durationMs } = exec
+  const { result: core, out, err, code, pinned: staged, gate, asserts, judged, durationMs } = exec
+  // The leak is a property of this repetition's transcript and scratch, so it is
+  // recorded here, per draw, not inferred later from a run summary.
+  const clean = contaminate(core, leaksIn(out, scratch))
   const skillLabel = opt.noSkill
     ? `**Skill:** ${gate.ok ? "not loaded (control arm)" : "LOADED — the control arm is broken"} (${gate.reason})`
     : `**Skill:** ${gate.ok ? "loaded" : "MISSING"} (${gate.reason})`
 
   const result = caseResult(skill, c, {
-    ...core,
+    ...clean,
     ...(rep ? { rep: rep.index } : {}),
     meta: { repoSha: meta.repoSha, agent: meta.agent, model: meta.model, level: meta.level },
     transcript: file,
@@ -467,8 +471,8 @@ async function runCase(skill, c, rep = null) {
       prompt: c.prompt,
       scratch,
       exit: code,
-      status: verdict.status,
-      reason: verdict.reason,
+      status: result.status,
+      reason: result.reason,
       skillLine: skillLabel,
       skillHash: staged.hash,
       meta: { repoSha: meta.repoSha, agent: meta.agent, model: meta.model, level: meta.level },
@@ -510,7 +514,7 @@ async function runCaseReps(skill, c) {
     // Buffered: printing per repetition interleaves with the other lanes.
     reps.push(await runCase(skill, c, times > 1 ? { index: i } : null))
   }
-  const repLine = times > 1 ? reps.map((r, i) => `r${i + 1}:${r.status}`).join(" ") : ""
+  const repLine = times > 1 ? reps.map((r, i) => `r${i + 1}:${r.contaminated ? "contaminated" : r.status}`).join(" ") : ""
   if (times === 1) return reps[0]
 
   const agg = aggregateReps(reps, opt.minPass)
@@ -520,6 +524,7 @@ async function runCaseReps(skill, c) {
     passRate: agg.passRate,
     passed: agg.passed,
     reps: agg.total,
+    contaminated: agg.contaminated,
     skillHash: reps[0]?.skillHash ?? null,
     arm: reps[0]?.arm,
     meta: reps[0]?.meta ?? {},
@@ -557,6 +562,7 @@ await Promise.all(Array.from({ length: lanes }, lane))
 const totals = summarize(results)
 console.log(
   `\n${totals.passed} passed, ${totals.failed} failed, ${totals.unscored} unscored` +
+    (totals.contaminated ? `, ${totals.contaminated} contaminated` : "") +
     (totals.staged ? `, ${totals.staged} staged` : "") +
     ` (of ${totals.total}). Transcripts in ${OUT_ROOT}`,
 )
@@ -565,7 +571,13 @@ if (skipped.length) console.log(`${skipped.length} case(s) skipped at --level ${
 const runFile = join(OUT_ROOT, "last-run.json")
 if (RUN) {
   RUN.finish({
-    counts: { passed: totals.passed, failed: totals.failed, unscored: totals.unscored, staged: totals.staged ?? 0 },
+    counts: {
+      passed: totals.passed,
+      failed: totals.failed,
+      unscored: totals.unscored,
+      staged: totals.staged ?? 0,
+      contaminated: totals.contaminated,
+    },
   })
   console.error(`Run directory: ${RUN.dir}`)
 }

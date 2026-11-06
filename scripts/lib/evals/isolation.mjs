@@ -15,7 +15,7 @@
 // behind. Nothing is copied except directories, and cleanup removes links, never
 // their targets.
 
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, symlinkSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
 import { homedir, tmpdir } from "node:os"
 import { join } from "node:path"
 
@@ -27,6 +27,34 @@ const SHARED = [".local", ".secrets", ".bun", ".gitconfig", ".npm"]
 // The whole point. `skills` is the corpus, and `.retired-skills` is still on
 // disk next to it.
 const HIDDEN = /^(skills|\.retired-skills)$/
+
+// The control arm must not read the installed copy of the skill it is measuring.
+// `external_directory: deny` is a rule on tool reads, not an OS boundary: the
+// child still runs as this user. Detection (`leak.mjs`) is the guarantee; this
+// key is the preference, and a run that hits a legitimate read of the fixture or
+// the state dir is the signal to drop it.
+const DENY_EXTERNAL = { external_directory: "deny" }
+
+// The real `opencode.json` is copied and merged rather than symlinked, because
+// the permission has to be added without losing the user's providers, plugins
+// and model. A config the merge cannot parse is linked as-is: a broken run is
+// worse than an isolated run, and the detector still records what happened.
+function linkConfig(src, dest) {
+  let config
+  try {
+    config = JSON.parse(readFileSync(src, "utf8"))
+  } catch {
+    symlinkSync(src, dest)
+    return
+  }
+  if (!config || typeof config !== "object" || Array.isArray(config)) {
+    symlinkSync(src, dest)
+    return
+  }
+  const permission =
+    config.permission && typeof config.permission === "object" && !Array.isArray(config.permission) ? config.permission : {}
+  writeFileSync(dest, JSON.stringify({ ...config, permission: { ...permission, ...DENY_EXTERNAL } }, null, 2))
+}
 
 export function isolateHome(env = process.env, { home = homedir(), base = tmpdir() } = {}) {
   const dir = mkdtempSync(join(base, "opencode-eval-home-"))
@@ -43,7 +71,8 @@ export function isolateHome(env = process.env, { home = homedir(), base = tmpdir
   if (existsSync(src)) {
     for (const entry of readdirSync(src)) {
       if (HIDDEN.test(entry)) continue
-      symlinkSync(join(src, entry), join(config, entry))
+      if (entry === "opencode.json") linkConfig(join(src, entry), join(config, entry))
+      else symlinkSync(join(src, entry), join(config, entry))
     }
   }
 

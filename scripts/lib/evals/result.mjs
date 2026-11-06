@@ -23,9 +23,38 @@ export function classify({ exit, asserts, skillGate = null }) {
   return { status: PASSED, reason: "" }
 }
 
+// A repetition that read an installed skill or the eval corpus is not evidence
+// about the skill under test, whichever arm it ran in. It keeps its assertions
+// (so the run is still readable) but its status becomes `failed` — never a new
+// status, because every aggregator, baseline and comparison already knows what
+// `failed` means, and the contamination is the field that names the reason.
+export function contaminate(result, leak = []) {
+  const paths = [...new Set(leak.map((l) => l.path))]
+  const contaminated = paths.length > 0
+  const reason = contaminated
+    ? `contaminated — read ${paths.join(", ")}${result.reason ? `; ${result.reason}` : ""}`
+    : result.reason
+  return {
+    ...result,
+    leak: leak.map(({ tool, path }) => ({ tool, path })),
+    contaminated,
+    status: contaminated ? FAILED : result.status,
+    reason,
+  }
+}
+
+// A case artifact carries either a boolean (single draw) or the count of its
+// contaminated repetitions (a repeated case), so the summary reads both.
+export function contaminatedReps(result) {
+  if (typeof result.contaminated === "number") return result.contaminated
+  if (result.contaminated === true) return 1
+  return (result.repetitions ?? []).filter((r) => r.contaminated).length
+}
+
 export function summarize(results) {
-  const count = { passed: 0, failed: 0, unscored: 0 }
+  const count = { passed: 0, failed: 0, unscored: 0, contaminated: 0 }
   for (const r of results) count[r.status] = (count[r.status] ?? 0) + 1
+  count.contaminated = results.reduce((n, r) => n + contaminatedReps(r), 0)
   return { ...count, total: results.length }
 }
 
@@ -44,21 +73,33 @@ export function caseResult(skill, c, fields = {}) {
 // A single run of a non-deterministic agent is one draw, not a measurement.
 // Repetitions turn it into a pass rate; the case still passes by default only
 // when every repetition passed, so a flake is visible instead of averaged away.
+// A contaminated repetition never counts as a pass: it stays in the denominator
+// (the published rate is `passed/total`, not `passed/clean`) and is reported
+// apart from failures, with the path that leaked.
 export function aggregateReps(reps, minPass = 1) {
   const total = reps.length
-  const passed = reps.filter((r) => r.status === PASSED).length
+  const contaminated = reps.filter((r) => r.contaminated).length
+  const passed = reps.filter((r) => r.status === PASSED && !r.contaminated).length
   const unscored = reps.filter((r) => r.status === UNSCORED).length
   const passRate = total ? passed / total : 0
-  const failedReason = reps.find((r) => r.status === FAILED)?.reason ?? ""
+  const failedReason = reps.find((r) => r.status === FAILED && !r.contaminated)?.reason ?? ""
+  const leaked = [...new Set(reps.flatMap((r) => (r.leak ?? []).map((l) => l.path)))]
+  const contamination = contaminated
+    ? `${contaminated}/${total} repetition(s) contaminated${leaked.length ? ` (${leaked.join(", ")})` : ""}`
+    : ""
 
-  if (total && unscored === total) return { status: UNSCORED, passRate, passed, total, reason: "no repetition was scored" }
+  if (total && contaminated === total) {
+    return { status: FAILED, passRate, passed, total, contaminated, reason: contamination }
+  }
+  if (total && unscored === total) return { status: UNSCORED, passRate, passed, total, contaminated, reason: "no repetition was scored" }
   if (passRate >= minPass) {
     return {
       status: PASSED,
       passRate,
       passed,
       total,
-      reason: passed === total ? "" : `${passed}/${total} repetitions passed (min ${minPass})`,
+      contaminated,
+      reason: [passed === total ? "" : `${passed}/${total} repetitions passed (min ${minPass})`, contamination].filter(Boolean).join("; "),
     }
   }
   return {
@@ -66,6 +107,9 @@ export function aggregateReps(reps, minPass = 1) {
     passRate,
     passed,
     total,
-    reason: `${passed}/${total} repetitions passed (min ${minPass})${failedReason ? `: ${failedReason}` : ""}`,
+    contaminated,
+    reason: [`${passed}/${total} repetitions passed (min ${minPass})${failedReason ? `: ${failedReason}` : ""}`, contamination]
+      .filter(Boolean)
+      .join("; "),
   }
 }

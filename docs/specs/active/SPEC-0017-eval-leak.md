@@ -20,6 +20,8 @@ files:
   - scripts/lib/evals/leak.mjs
   - scripts/lib/evals/leak.test.mjs
   - scripts/lib/evals/result.mjs
+  - scripts/lib/evals/report.mjs
+  - scripts/lib/evals/report.test.mjs
   - scripts/run-evals.mjs
   - docs/evals/implement-from-prompt-matrix.md
   - docs/evals/coverage.md
