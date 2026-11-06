@@ -269,7 +269,7 @@ test("two invocations over the same store are byte-identical", () => {
   assert.equal(jsonFirst.out, jsonSecond.out)
 })
 
-test("--since filters runs by manifest.startedAt and leaves pdlc alone", () => {
+test("--since filters eval runs and keeps pdlc records that have no start", () => {
   const store = makeStore()
   const report = reportFor(store, ["--since", "2026-01-15"])
 
@@ -291,6 +291,67 @@ test("--since filters runs by manifest.startedAt and leaves pdlc alone", () => {
   assert.equal(empty.evals.runs, 0)
   assert.equal(empty.evals.draws, 0)
   assert.equal(empty.evals.rate, null)
+})
+
+test("--until is inclusive and filters both eval runs and pdlc records", () => {
+  const root = mkdtempSync(join(tmpdir(), "harness-health-until-"))
+  const store = join(root, "store")
+  const runsRoot = join(store, "runs")
+  const starts = [
+    ["2026-01-01T10-00-00--before", "2026-01-01T10:00:00.000Z"],
+    ["2026-01-15T12-00-00--exact", "2026-01-15T12:00:00.000Z"],
+    ["2026-01-20T00-00-00--after", "2026-01-20T00:00:00.000Z"],
+  ]
+  for (const [id, startedAt] of starts) {
+    const dir = join(runsRoot, id)
+    writeJson(join(dir, "manifest.json"), manifest({ run: id, dir, startedAt, finishedAt: startedAt }))
+    writeJson(join(dir, "cases", "demo--01", "result.json"), {
+      skill: "demo",
+      case: 1,
+      status: "passed",
+      assertions: [{ kind: "reply", arg: "x", pass: true }],
+      execution: { exit: 0, durationMs: 10 },
+      fixtureHash: "fixture",
+      promptHash: "prompt",
+      detectorVersion: "1",
+      skillGate: { ok: true },
+      leak: [],
+    })
+  }
+
+  const pdlc = join(root, "runs.json")
+  writeJson(pdlc, {
+    a: { run_id: "a", status: "merged", attempts: 1, gates: [], duration: 100, started_at: "2026-01-01T10:00:00.000Z" },
+    b: { run_id: "b", status: "merged", attempts: 1, gates: [], duration: 100, started_at: "2026-01-15T12:00:00.000Z" },
+    c: { run_id: "c", status: "merged", attempts: 1, gates: [], duration: 100, started_at: "2026-01-20T00:00:00.000Z" },
+  })
+
+  // The run exactly at the bound is included; the one after it is not. The same
+  // bound applies to the pdlc records.
+  const atLimit = reportFor({ store, pdlc }, ["--until", "2026-01-15T12:00:00Z"])
+  assert.equal(atLimit.evals.runs, 2)
+  assert.equal(atLimit.evals.draws, 2)
+  assert.equal(atLimit.pdlc.runs, 2)
+  assert.deepEqual(atLimit.pdlc.byStatus, { merged: 2 })
+
+  // A date-only bound is the end of that UTC day, so the noon run is included.
+  const dateOnly = reportFor({ store, pdlc }, ["--until", "2026-01-15"])
+  assert.equal(dateOnly.evals.runs, 2)
+  assert.equal(dateOnly.pdlc.runs, 2)
+
+  // `--since` and `--until` close the window on both sources.
+  const window = reportFor({ store, pdlc }, ["--since", "2026-01-10", "--until", "2026-01-15T12:00:00Z"])
+  assert.equal(window.evals.runs, 1)
+  assert.equal(window.evals.draws, 1)
+  assert.equal(window.pdlc.runs, 1)
+  assert.equal(window.pdlc.byStatus.merged, 1)
+
+  for (const value of ["2026-13-01", "nope"]) {
+    const bad = cli(["--runs", store, "--pdlc", pdlc, "--until", value])
+    assert.equal(bad.code, 2, value)
+    assert.match(bad.err, /--until expects/)
+    assert.equal(bad.out, "")
+  }
 })
 
 test("an unknown flag and a malformed --since exit 2 before reading the store", () => {

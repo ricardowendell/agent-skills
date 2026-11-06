@@ -62,12 +62,14 @@ Published baseline for release **0.4.0** on **2026-11-06**. Snapshot:
 checkout with:
 
 ```sh
-node scripts/harness-health.mjs
+node scripts/harness-health.mjs --until 2026-11-06T16:12:50Z
 ```
 
-A dispatched worktree has no `.pdlc/`, so this baseline was produced there with
-`--pdlc /Users/wendell/.agents/.pdlc/runs.json`; the numbers are the same when
-the simple command runs from the main checkout.
+The store only grows, so the `--until` bound is what reconstructs this snapshot;
+without it the report counts runs that started later. A dispatched worktree has
+no `.pdlc/`, so this baseline was produced there with `--until
+2026-11-06T16:12:50Z --pdlc /Users/wendell/.agents/.pdlc/runs.json`; the numbers
+are the same when the simple command runs from the main checkout.
 
 ## How to read it
 
@@ -89,8 +91,8 @@ the simple command runs from the main checkout.
   draw durations and judge counts include unfinished runs: the spend happened.
   Only the rates, the dirty-draw counts and wall time exclude unfinished runs.
 - **The store is the history.** A release appends runs; compare the same section
-  with the previous release's table. The report is deterministic over a fixed
-  store, so a diff is a change in artefacts, not in the reader.
+  with the previous release's table. Use that release's `--until` bound to
+  reconstruct its snapshot; the report is deterministic over that window.
 - **A regression is a move against a comparable number.** Same case shape, same
   arm and model. A new matrix, a control arm, or a draw with partial provenance
   changes the mix: that is variance, not a regression. Name the run directory

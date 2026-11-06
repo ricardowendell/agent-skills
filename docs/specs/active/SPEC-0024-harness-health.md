@@ -62,8 +62,9 @@ abstract.
     and each case's `result.json`) and `.pdlc/runs.json`. Both are read, never
     written.
   - Filters: `--runs <dir>` (default the local eval store), `--pdlc <file>`
-    (default `.pdlc/runs.json`), `--since <YYYY-MM-DD>` on the run's
-    `startedAt`. Output: markdown by default, `--json` for an artifact.
+    (default `.pdlc/runs.json`), `--since <YYYY-MM-DD>` and
+    `--until <YYYY-MM-DD|ISO timestamp>` on the run's `startedAt`; the window is
+    closed and inclusive. Output: markdown by default, `--json` for an artifact.
   - Deterministic: runs sorted by id, durations rounded to seconds, no clock
     inside the report. Two invocations over the same store print identical text.
   - Metrics, per section:
@@ -107,7 +108,7 @@ behavior changes.
    `renderMarkdown(report)`. No I/O in the pure layer, so the tests do not need a
    fake home.
 2. **F1 — CLI.** `scripts/harness-health.mjs`: discovery, filters, JSON/markdown.
-   Refuses an unknown flag and a malformed `--since` (same contract as
+   Refuses an unknown flag and a malformed `--since`/`--until` (same contract as
    `replay-evals`).
 3. **F2 — tests.** A temp store with: a repeated case (12 draws, one
    infrastructure, one contaminated), a single-draw case, one judge failure, one
@@ -138,11 +139,11 @@ behavior changes.
    output; the test asserts it on a fixture store.
 3. **Every metric is covered by a unit test** on a fixture store: single and
    repeated cases, pass/fail/unscored, contamination, infrastructure, judge
-   failure, provenance complete/partial, pdlc retry and gate failure. `--since`
-   and an unknown flag are tested.
+   failure, provenance complete/partial, pdlc retry and gate failure. `--since`,
+   `--until` and an unknown flag are tested.
 4. **The 0.4.0 baseline is published** in `docs/evals/harness-health.md` with the
-   command, the date and the real numbers; a reader can regenerate it and get the
-   same text.
+   command, the date and the real numbers; a reader can regenerate it with the
+   same `--until` bound and get the same text.
 5. **The loop is written down** in `CONTRIBUTING.md`: per release, before the
    CHANGELOG, at most three findings, one spec.
 6. **No draws, no model, no behavior change.** `git diff -- skills/` empty; the
@@ -152,6 +153,10 @@ behavior changes.
 
 Baseline published in `docs/evals/harness-health.md` for 0.4.0 on 2026-11-06,
 snapshot `2026-11-06T16:12:50Z` UTC: 173 runs, 245 readable cases, 844 draws.
+The published command carries that bound:
+`node scripts/harness-health.mjs --until 2026-11-06T16:12:50Z` (plus the
+absolute `--pdlc` in a worktree). The store only grows, so the bound is what
+makes the snapshot reproducible.
 
 - **Eligible rate:** 827 eligible draws (completed runs, no contamination, no
   infrastructure) and an 814 non-staged denominator: 547 passed, 267 failed,

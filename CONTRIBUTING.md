@@ -179,19 +179,20 @@ main checkout and read the delta against the previous release in
 [`docs/evals/harness-health.md`](docs/evals/harness-health.md):
 
 ```sh
-node scripts/harness-health.mjs
+node scripts/harness-health.mjs --until <release-cut-ISO-timestamp>
 ```
 
-It reads the eval store and `.pdlc/runs.json`, spends no model and writes
-nothing. A dispatched worktree does not carry `.pdlc/`; there, pass
-`--pdlc /path/to/.pdlc/runs.json`. Compare like with like: a number moves the
-trend only when the artefacts are comparable (same fixture/prompt/detector
-hashes, same case shape); a different mix of runs is variance. The strict rate
-is per draw; `coverage.md`'s rule is per run directory, so use strict as the
-closest comparable trend and the eligible rate for the broad trend. Paste the
-new table into the baseline doc, then open at most three findings and at most
-one spec. The report is evidence, not a CI gate: a red number does not fail a
-build.
+Bind the snapshot to the cut time with `--until`: the store only grows, so the
+bound is what makes the release reproducible. It reads the eval store and
+`.pdlc/runs.json`, spends no model and writes nothing. A dispatched worktree
+does not carry `.pdlc/`; there, pass `--pdlc /path/to/.pdlc/runs.json`. Compare
+like with like: a number moves the trend only when the artefacts are comparable
+(same fixture/prompt/detector hashes, same case shape); a different mix of runs
+is variance. The strict rate is per draw; `coverage.md`'s rule is per run
+directory, so use strict as the closest comparable trend and the eligible rate
+for the broad trend. Paste the new table into the baseline doc, then open at most
+three findings and at most one spec. The report is evidence, not a CI gate: a
+red number does not fail a build.
 
 ## What CI enforces
 

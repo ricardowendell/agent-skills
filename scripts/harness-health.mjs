@@ -4,7 +4,7 @@
 // It reads stored eval artefacts and pdlc run records and prints the same
 // numbers twice for the same store. No model, no clock, no writes. The pure
 // fold lives in `lib/evals/health.mjs`; this file only discovers paths, applies
-// `--since`, and chooses markdown or JSON.
+// `--since`/`--until`, and chooses markdown or JSON.
 //
 // The report is evidence, not a gate: a red number does not fail a build.
 
@@ -18,6 +18,8 @@ const opt = {
   pdlc: resolve(".pdlc/runs.json"),
   since: null,
   sinceMs: null,
+  until: null,
+  untilMs: null,
   json: false,
 }
 
@@ -28,13 +30,37 @@ function fail(message) {
 
 // `Date.parse("2026-02-30")` rolls over instead of failing, so the shape and the
 // round-trip are both checked. `--since` is a day, in UTC, matching `startedAt`.
+function validDate(y, m, d) {
+  const at = new Date(Date.UTC(y, m - 1, d))
+  return at.getUTCFullYear() === y && at.getUTCMonth() === m - 1 && at.getUTCDate() === d
+}
+
 function parseSince(value) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
   if (!match) return null
   const [, y, m, d] = match.map(Number)
-  const at = new Date(Date.UTC(y, m - 1, d))
-  if (at.getUTCFullYear() !== y || at.getUTCMonth() !== m - 1 || at.getUTCDate() !== d) return null
-  return at.getTime()
+  if (!validDate(y, m, d)) return null
+  return Date.UTC(y, m - 1, d)
+}
+
+// `--until` is an inclusive upper bound. A date-only value means the end of
+// that UTC day, so `--until 2026-11-06` includes every run started on the 6th;
+// an ISO timestamp is exact. The date part of an ISO value is still checked
+// against the calendar, because `Date.parse` rolls 2026-02-30 into March.
+function parseUntil(value) {
+  const day = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+  if (day) {
+    const [, y, m, d] = day.map(Number)
+    if (!validDate(y, m, d)) return null
+    return Date.UTC(y, m - 1, d, 23, 59, 59, 999)
+  }
+
+  const iso = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/.exec(value)
+  if (!iso) return null
+  const [, y, m, d, h, mi, s] = iso.map(Number)
+  if (!validDate(y, m, d) || h > 23 || mi > 59 || s > 59) return null
+  const at = Date.parse(value)
+  return Number.isFinite(at) ? at : null
 }
 
 const argv = process.argv.slice(2)
@@ -54,6 +80,12 @@ for (let i = 0; i < argv.length; i++) {
     opt.since = value
     opt.sinceMs = parseSince(value)
     if (opt.sinceMs === null) fail(`--since expects YYYY-MM-DD (got ${value})`)
+  } else if (arg === "--until") {
+    const value = argv[++i]
+    if (value === undefined || value.startsWith("--")) fail("--until needs a date or an ISO timestamp")
+    opt.until = value
+    opt.untilMs = parseUntil(value)
+    if (opt.untilMs === null) fail(`--until expects YYYY-MM-DD or an ISO timestamp (got ${value})`)
   } else if (arg === "--json") {
     opt.json = true
   } else {
@@ -114,12 +146,20 @@ if (!existsSync(runsRoot)) {
   runs = names.map((name) => readRun(join(runsRoot, name), name))
 }
 
-// A run that cannot be read is named even under `--since`: there is no
-// `startedAt` to filter on, and dropping it would hide the unreadable artefact.
+// The window is closed on both ends and inclusive. A record or run without a
+// parseable start is kept: dropping it would hide an unreadable artefact and
+// make the report depend on which fields happened to be present.
+function inWindow(value) {
+  const at = Date.parse(value)
+  if (!Number.isFinite(at)) return true
+  if (opt.sinceMs !== null && at < opt.sinceMs) return false
+  if (opt.untilMs !== null && at > opt.untilMs) return false
+  return true
+}
+
 const filtered = runs.filter((run) => {
-  if (!opt.sinceMs || run.error || !run.manifest) return true
-  const started = Date.parse(run.manifest.startedAt)
-  return !Number.isFinite(started) || started >= opt.sinceMs
+  if (run.error || !run.manifest) return true
+  return inWindow(run.manifest.startedAt)
 })
 
 let pdlcRuns = {}
@@ -129,7 +169,11 @@ try {
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
     throw new Error("expected an object keyed by run id")
   }
-  pdlcRuns = parsed
+  const windowed = {}
+  for (const [id, record] of Object.entries(parsed)) {
+    if (inWindow(record?.started_at ?? record?.startedAt)) windowed[id] = record
+  }
+  pdlcRuns = windowed
 } catch (error) {
   pdlcError = error.code === "ENOENT" ? "not found" : `unreadable (${error.message})`
 }
