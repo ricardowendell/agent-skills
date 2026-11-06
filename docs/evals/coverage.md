@@ -40,8 +40,8 @@ directories; they are not estimates.
   itself**, with the finding named; it cannot supply a clean pass rate.
   `isolated=no` means the checker saw a skill or host read; `unknown` is neither
   a dirty verdict nor a clean one.
-- The two paths above apply to runs with stored transcripts (the 0.5.0 wave and
-  later). Rows whose runs predate that replay — the pre-detector
+- The two paths above apply to runs covered by a named replay (the 0.5.0 wave
+  and later). Rows whose runs predate that replay — the pre-detector
   `implement-from-prompt` 12/12 vs 0/12 cells (`warnings=12`) are the example —
   are **history**: their numbers are cited as historical direction, not as a
   clean measurement, and cannot underwrite a v2 claim.
@@ -176,10 +176,13 @@ row listed here is not a clean measurement.
   regression case pending a re-measure, not a separator. See
   `write-implementation-prompt-matrix.md`.
 - **`write-implementation-prompt` #4 is a non-discriminator.** 5/5 in both arms
-  (`2026-11-06T14-04-25--write-implementation-prompt`,
-  `2026-11-06T14-37-23--write-implementation-prompt--without-skill`): a bare
-  agent mirrors the existing prompt and records `spec_sha` as often as the skill.
-  Recorded as a regression case; see `write-implementation-prompt-matrix.md`.
+  under v1 (`2026-11-06T14-04-25--write-implementation-prompt`,
+  `2026-11-06T14-37-23--write-implementation-prompt--without-skill`); under v2
+  the control is 4/5 draws clean and 4/4 passed, because `r5` read the checkout
+  root (denied) and is `dirty(host)`. The decision stands; the clean five-draw
+  measurement is **pending SPEC-0031**. A bare agent mirrors the existing prompt
+  and records `spec_sha` as often as the skill. Recorded as a regression case;
+  see `write-implementation-prompt-matrix.md`.
 - **`capture-idea` #1 is unresolved.** 5/5 with the skill
   (`2026-11-06T16-40-32--capture-idea`); three control attempts produced clean
   subsets of 0/2, 0/2 and 0/0 (`2026-11-06T17-07-09--capture-idea--without-skill`,
@@ -259,7 +262,7 @@ rows below were decided on existing runs, not a new draw.
 | --- | --- | --- | --- | --- |
 | `audit-code-quality` #4 | `regression` | On the final 8-assertion case it separated once (1/1 with the skill vs 0/1 without), but one draw per arm cannot carry a discriminator claim; the earlier 5-assertion run predates the contract. | `2026-11-04T21-57-53--audit-code-quality--without-skill` (pre-contract 5-assertion version), `2026-11-04T21-59-17--audit-code-quality` and `2026-11-04T21-59-17--audit-code-quality--without-skill` (final 8-assertion pair; `warnings=1` each) | 2026-11-06 |
 | `review-code` #2 | `regression` | 5/5 in both arms on the replaced fixture: the control finds the spec and cites AC-2, so a diff-reading case cannot discriminate. | `2026-11-02T10-27-26--review-code`, `2026-11-02T10-31-40--review-code--without-skill` (`warnings=5` each, pre-detector) | 2026-11-06 |
-| `write-implementation-prompt` #4 | `regression` | 5/5 in both arms: a bare agent mirrors the existing prompt and records `spec_sha` as often as the skill does. | `2026-11-06T14-04-25--write-implementation-prompt`, `2026-11-06T14-37-23--write-implementation-prompt--without-skill` | 2026-11-06 |
+| `write-implementation-prompt` #4 | `regression` | 5/5 in both arms under v1; under v2 the control is 4/5 draws clean (4/4 passed) because `r5` read the checkout root (denied). A bare agent mirrors the existing prompt and records `spec_sha` as often as the skill does; the clean five-draw cell is pending SPEC-0031. | `2026-11-06T14-04-25--write-implementation-prompt`, `2026-11-06T14-37-23--write-implementation-prompt--without-skill` (v2: `dirty(host)`) | 2026-11-06 |
 | `record-decision` #3 | `regression` | 4/5 with the skill against 5/5 without it: the control writes ADR-0003, marks ADR-0002 superseded and updates the index as reliably as the skill. | `2026-11-06T16-48-00--record-decision`, `2026-11-06T17-20-53--record-decision--without-skill` | 2026-11-06 |
 
 No case is removed: each fails a control that breaks the contract or ignores an
