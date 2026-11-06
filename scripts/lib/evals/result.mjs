@@ -9,7 +9,19 @@ export const PASSED = "passed"
 export const FAILED = "failed"
 export const UNSCORED = "unscored"
 
+// A timeout or a stall says nothing about the model's behaviour: the process
+// was killed by the harness (or stopped emitting), so the draw is infrastructure.
+// It is unscored on purpose — never a pass, never a behavioural failure — and
+// `reason` names which one so the checker can report it as incomplete evidence.
+const INFRASTRUCTURE_EXITS = new Set(["timeout", "stalled"])
+
+export function infrastructureReason(exit) {
+  return INFRASTRUCTURE_EXITS.has(exit) ? `infrastructure: ${exit}` : null
+}
+
 export function classify({ exit, asserts, skillGate = null }) {
+  const infra = infrastructureReason(exit)
+  if (infra) return { status: UNSCORED, reason: infra, infrastructure: true, infrastructureReason: exit }
   if (exit !== 0) return { status: FAILED, reason: `exit ${exit}` }
   if (!asserts.length) return { status: UNSCORED, reason: "no assertions — nothing was checked" }
   const failed = asserts.filter((a) => !a.pass)
@@ -52,14 +64,33 @@ export function contaminatedReps(result) {
   return (result.repetitions ?? []).filter((r) => r.contaminated).length
 }
 
+// Infrastructure draws are counted like contaminated ones: on the case artifact
+// the count is a number, on a single draw it is a boolean, and older artifacts
+// carry neither. A draw is infrastructure when it says so or when its unscored
+// reason names it (the field was added after the first `stalled` runs).
+export function isInfrastructure(result) {
+  if (result?.infrastructure === true) return true
+  if (typeof result?.infrastructure === "number" && result.infrastructure > 0) return true
+  return result?.status === UNSCORED && /^infrastructure:/.test(result?.reason ?? "")
+}
+
+export function infrastructureReps(result) {
+  if (typeof result.infrastructure === "number") return result.infrastructure
+  if (result.infrastructure === true) return 1
+  if (Array.isArray(result.repetitions)) return result.repetitions.filter((r) => isInfrastructure(r)).length
+  return isInfrastructure(result) ? 1 : 0
+}
+
 // A case whose only draws were contaminated is `unscored`, never `failed`; the
-// contaminated count is reported apart from the status counts. A mixed case takes
-// the status of its clean draws (see `aggregateReps`), so `failed` always means
-// the clean evidence failed.
+// contaminated count is reported apart from the status counts. Infrastructure
+// draws get their own count for the same reason: they are incomplete evidence,
+// not behaviour. A mixed case takes the status of its clean draws (see
+// `aggregateReps`), so `failed` always means the clean evidence failed.
 export function summarize(results) {
-  const count = { passed: 0, failed: 0, unscored: 0, contaminated: 0 }
+  const count = { passed: 0, failed: 0, unscored: 0, contaminated: 0, infrastructure: 0 }
   for (const r of results) count[r.status] = (count[r.status] ?? 0) + 1
   count.contaminated = results.reduce((n, r) => n + contaminatedReps(r), 0)
+  count.infrastructure = results.reduce((n, r) => n + infrastructureReps(r), 0)
   return { ...count, total: results.length }
 }
 // The per-case artifact the console, the JSON file and the replay tool read.
@@ -78,13 +109,16 @@ export function caseResult(skill, c, fields = {}) {
 // Repetitions turn it into a pass rate; the case still passes by default only
 // when every clean repetition passed, so a flake is visible instead of averaged
 // away. A contaminated repetition is not evidence either way: it is removed from
-// both the numerator and the denominator (`passed / (total − contaminated)`), and
-// a case with no clean draw is `unscored`, never `failed`. The path that leaked
-// is still named.
+// both the numerator and the denominator (`passed / (total − contaminated −
+// infrastructure)`), and a case with no clean draw is `unscored`, never `failed`.
+// Infrastructure draws follow the same denominator rule with their own count: a
+// timeout is incomplete evidence, not a failed draw. The path that leaked is
+// still named.
 export function aggregateReps(reps, minPass = 1) {
   const total = reps.length
   const contaminated = reps.filter((r) => r.contaminated).length
-  const cleanReps = reps.filter((r) => !r.contaminated)
+  const infrastructure = reps.filter((r) => isInfrastructure(r)).length
+  const cleanReps = reps.filter((r) => !r.contaminated && !isInfrastructure(r))
   const clean = cleanReps.length
   const passed = cleanReps.filter((r) => r.status === PASSED).length
   const unscored = cleanReps.filter((r) => r.status === UNSCORED).length
@@ -94,16 +128,16 @@ export function aggregateReps(reps, minPass = 1) {
   const contamination = contaminated
     ? `${contaminated}/${total} repetition(s) contaminated${leaked.length ? ` (${leaked.join(", ")})` : ""}`
     : ""
+  const infra = infrastructure ? `${infrastructure}/${total} repetition(s) infrastructure` : ""
 
   if (total && clean === 0) {
-    return {
-      status: UNSCORED,
-      passRate: 0,
-      passed: 0,
-      total,
-      contaminated,
-      reason: `every repetition contaminated${leaked.length ? ` (${leaked.join(", ")})` : ""}`,
-    }
+    const reason =
+      contaminated === total
+        ? `every repetition contaminated${leaked.length ? ` (${leaked.join(", ")})` : ""}`
+        : infrastructure === total
+          ? "every repetition infrastructure — incomplete evidence"
+          : "no clean repetition — every draw was contaminated or infrastructure"
+    return { status: UNSCORED, passRate: 0, passed: 0, total, contaminated, infrastructure, reason }
   }
   if (clean && unscored === clean) {
     return {
@@ -112,7 +146,8 @@ export function aggregateReps(reps, minPass = 1) {
       passed,
       total,
       contaminated,
-      reason: ["no repetition was scored", contamination].filter(Boolean).join("; "),
+      infrastructure,
+      reason: ["no repetition was scored", contamination, infra].filter(Boolean).join("; "),
     }
   }
   if (passRate >= minPass) {
@@ -122,7 +157,10 @@ export function aggregateReps(reps, minPass = 1) {
       passed,
       total,
       contaminated,
-      reason: [passed === clean ? "" : `${passed}/${clean} repetitions passed (min ${minPass})`, contamination].filter(Boolean).join("; "),
+      infrastructure,
+      reason: [passed === clean ? "" : `${passed}/${clean} repetitions passed (min ${minPass})`, contamination, infra]
+        .filter(Boolean)
+        .join("; "),
     }
   }
   return {
@@ -131,7 +169,8 @@ export function aggregateReps(reps, minPass = 1) {
     passed,
     total,
     contaminated,
-    reason: [`${passed}/${clean} repetitions passed (min ${minPass})${failedReason ? `: ${failedReason}` : ""}`, contamination]
+    infrastructure,
+    reason: [`${passed}/${clean} repetitions passed (min ${minPass})${failedReason ? `: ${failedReason}` : ""}`, contamination, infra]
       .filter(Boolean)
       .join("; "),
   }

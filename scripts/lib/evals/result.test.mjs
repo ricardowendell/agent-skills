@@ -13,7 +13,42 @@ test("exit 0 with no assertions is unscored, never passed", () => {
 })
 
 test("a non-zero exit fails even when every assertion passed", () => {
-  assert.equal(classify({ exit: "timeout", asserts: [pass], skillGate: okGate }).status, FAILED)
+  assert.equal(classify({ exit: 1, asserts: [pass], skillGate: okGate }).status, FAILED)
+})
+
+test("a timeout is infrastructure, never a behavioural failure", () => {
+  const r = classify({ exit: "timeout", asserts: [pass], skillGate: okGate })
+  assert.equal(r.status, UNSCORED)
+  assert.equal(r.reason, "infrastructure: timeout")
+  assert.equal(r.infrastructure, true)
+  assert.equal(r.infrastructureReason, "timeout")
+})
+
+test("a stall is its own infrastructure reason, distinct from a timeout", () => {
+  const r = classify({ exit: "stalled", asserts: [], skillGate: null })
+  assert.equal(r.status, UNSCORED)
+  assert.equal(r.reason, "infrastructure: stalled")
+  assert.equal(r.infrastructureReason, "stalled")
+})
+
+test("an infrastructure draw is excluded from the pass-rate denominator", () => {
+  const agg = aggregateReps([{ status: PASSED }, { status: UNSCORED, infrastructure: true, reason: "infrastructure: timeout" }])
+  assert.equal(agg.status, PASSED)
+  assert.equal(agg.passed, 1)
+  assert.equal(agg.passRate, 1)
+  assert.equal(agg.infrastructure, 1)
+  assert.match(agg.reason, /1\/2 repetition\(s\) infrastructure/)
+})
+
+test("a case whose only draws were infrastructure is unscored, never failed", () => {
+  const agg = aggregateReps([
+    { status: UNSCORED, infrastructure: true, reason: "infrastructure: timeout" },
+    { status: UNSCORED, infrastructure: true, reason: "infrastructure: stalled" },
+  ])
+  assert.equal(agg.status, UNSCORED)
+  assert.equal(agg.passed, 0)
+  assert.equal(agg.infrastructure, 2)
+  assert.match(agg.reason, /every repetition infrastructure/)
 })
 
 test("one failed assertion fails the case", () => {
@@ -146,5 +181,22 @@ test("summarize counts contaminated repetitions apart and never as failed", () =
       ],
     },
   ])
-  assert.deepEqual(totals, { passed: 1, failed: 1, unscored: 1, contaminated: 3, total: 3 })
+  assert.deepEqual(totals, { passed: 1, failed: 1, unscored: 1, contaminated: 3, infrastructure: 0, total: 3 })
+})
+
+test("summarize counts infrastructure draws apart, never as failed", () => {
+  const totals = summarize([
+    { status: PASSED },
+    { status: UNSCORED, infrastructure: true, reason: "infrastructure: timeout" },
+    {
+      status: PASSED,
+      infrastructure: 2,
+      repetitions: [
+        { status: UNSCORED, infrastructure: true },
+        { status: UNSCORED, infrastructure: true },
+        { status: PASSED },
+      ],
+    },
+  ])
+  assert.deepEqual(totals, { passed: 2, failed: 0, unscored: 1, contaminated: 0, infrastructure: 3, total: 3 })
 })

@@ -21,6 +21,11 @@
 
 import { toolCalls } from "./events.mjs"
 
+// Recorded in every draw's artifact. A later wave may cite an earlier control
+// run only when this matches (SPEC-0020 AC-3): a change to what counts as a leak
+// changes the meaning of "clean".
+export const DETECTOR_VERSION = "leak-v1"
+
 // macOS reports the same tmp dir as both `/var/…` and `/private/var/…`; the
 // scratch header usually records one and the tool the other.
 const norm = (p) => String(p).replace(/^\/private(?=\/)/, "").replace(/\/+$/, "")

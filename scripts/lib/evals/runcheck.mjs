@@ -13,6 +13,11 @@
 // repetition that did load a skill is a finding, because the arm is supposed to
 // prove the skill is absent.
 //
+// A timeout or a stall is a third invariant: the draw never ran to a verdict, so
+// it is an `infrastructure` finding (incomplete evidence). It is deliberately not
+// a `gate-miss`: the skill was never given a chance to load, and the kill says
+// nothing about its behaviour.
+//
 // Unknown provenance is a finding, not silence. A repetition without `leak`
 // post-SPEC-0017 cannot be called clean; a repetition without `skillGate`
 // cannot be called a load. Both fail the checker explicitly. The one exception
@@ -24,6 +29,17 @@ const isContaminated = (result) =>
   result.contaminated === true || (typeof result.contaminated === "number" && result.contaminated > 0)
 
 const isControl = (arm) => arm === "without-skill" || arm === "control"
+
+// A timeout or a stall is a harness event, not a draw of behaviour. It is never
+// clean evidence — the run is incomplete — but it is not a `gate-miss` either:
+// the skill simply never got a chance to load. Infrastructure gets its own kind.
+function infrastructureOf(result) {
+  if (result.infrastructure === true) return result.infrastructureReason ?? "timeout"
+  if (typeof result.infrastructure === "number" && result.infrastructure > 0) return "unscored"
+  const reason = result.reason ?? ""
+  if (result.status === "unscored" && /^infrastructure:/.test(reason)) return reason.slice("infrastructure: ".length)
+  return null
+}
 
 // `repetitions[]` is the aggregate artifact; when `--repeat 1` (or a smoke run)
 // the case root is the repetition itself, `skillGate` included.
@@ -59,6 +75,7 @@ function leakPaths(result) {
 export function checkRun({ arm = null, cases = [] } = {}) {
   const findings = []
   let reps = 0
+  let infrastructure = 0
 
   for (const c of cases) {
     const name = `${c.skill ?? "unknown"}#${c.case ?? "?"}`
@@ -70,6 +87,16 @@ export function checkRun({ arm = null, cases = [] } = {}) {
       const rep = r.rep ?? r.index ?? i + 1
       const repArm = arm ?? r.arm ?? c.arm ?? null
       const add = (kind, detail) => findings.push({ case: name, rep, kind, detail })
+
+      // An infrastructure draw is incomplete evidence, not behaviour: report it
+      // and skip the load/leak checks, which a killed draw cannot satisfy.
+      const infra = infrastructureOf(r)
+      if (infra) {
+        infrastructure++
+        const retries = r.execution?.retries
+        add("infrastructure", `infrastructure: ${infra}${retries ? ` (retried ${retries}x)` : ""}`)
+        continue
+      }
 
       // SPEC-0017 made `leak` mandatory. A missing field is not an empty field:
       // it means this draw cannot be checked, so it fails loudly.
@@ -101,5 +128,5 @@ export function checkRun({ arm = null, cases = [] } = {}) {
     }
   }
 
-  return { findings, counts: { cases: cases.length, reps, findings: findings.length } }
+  return { findings, counts: { cases: cases.length, reps, findings: findings.length, infrastructure } }
 }

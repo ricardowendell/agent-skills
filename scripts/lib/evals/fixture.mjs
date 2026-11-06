@@ -47,6 +47,11 @@ export function treeHash(root) {
   return h.digest("hex")
 }
 
+// A prompt is not a tree; the same digest shape keeps the artifact uniform.
+export function textHash(value) {
+  return createHash("sha256").update(String(value ?? "")).digest("hex")
+}
+
 // Content hashes of the staged tree, for `unchanged`/`changed`.
 export function snapshotTree(root) {
   const map = new Map()
@@ -103,15 +108,19 @@ export function denySkillTool(scratch) {
 
 // Stage the case's starting state. A case with no fixture tree stages nothing:
 // its prompt carries the whole situation, and the assertions decide the rest.
+// Returns `{ hash }`, the hash of the tree the agent will see as its starting
+// state. `treeHash` skips `.git`/`node_modules`, and the staged skill (which
+// lives under `.opencode/`) is copied *after* this, so the hash describes the
+// fixture alone — a fixture edit moves it, a skill edit does not.
 export function stageFixture(skill, c, scratch) {
   const caseDir = join(skill.dir, "references/evals", String(c.n))
   const manifest = join(caseDir, "git.json")
   const isGit = existsSync(manifest)
   const spec = isGit ? JSON.parse(readFileSync(manifest, "utf8")) : {}
   const baseDir = isGit ? resolve(caseDir, spec.base ?? ".") : caseDir
-  if (!existsSync(baseDir)) return
+  if (!existsSync(baseDir)) return { hash: treeHash(scratch) }
   copyTree(baseDir, scratch, (src) => !/(^|\/)(git\.json|change\.patch)$/.test(src))
-  if (!isGit) return
+  if (!isGit) return { hash: treeHash(scratch) }
 
   // `remove` prunes paths from the base before the first commit — for a case
   // where the artefact under review (a spec, a prompt) must not exist yet.
@@ -174,4 +183,6 @@ export function stageFixture(skill, c, scratch) {
     commit(b.message ?? `change on ${b.name}`)
     if (spec.remote) run("push", "-q", "-u", "origin", b.name)
   }
+
+  return { hash: treeHash(scratch) }
 }

@@ -5,6 +5,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { executeCase } from "./execute.mjs"
 import { makeScratch } from "./fixture.mjs"
+import { DETECTOR_VERSION } from "./leak.mjs"
 
 // The run path is the contract every measurement goes through, and it used to
 // call `runAgent` directly, which meant it could only be exercised by running a
@@ -138,13 +139,60 @@ test("a trigger case opts out of the gate", async () => {
   }
 })
 
-test("a timeout is a failure, not an unscored case", async () => {
+test("a timeout is infrastructure: unscored and retried once by default", async () => {
   const { skill, scratch, c, cleanup } = setup()
   try {
-    const { spawn } = agent({ out: "", code: "timeout" })
+    const { spawn, calls } = agent({ out: "", code: "timeout" })
     const { result } = await executeCase({ skill, c, scratch, spawnAgent: spawn })
-    assert.equal(result.status, "failed")
-    assert.equal(result.reason, "exit timeout")
+    assert.equal(result.status, "unscored")
+    assert.equal(result.reason, "infrastructure: timeout")
+    assert.equal(result.infrastructure, true)
+    assert.equal(calls.length, 2, "one automatic retry")
+    assert.equal(result.execution.retries, 1)
+  } finally {
+    cleanup()
+  }
+})
+
+test("a stall is infrastructure and is named as a stall, not a timeout", async () => {
+  const { skill, scratch, c, cleanup } = setup()
+  try {
+    const { spawn } = agent({ out: "", code: "stalled" })
+    const { result } = await executeCase({ skill, c, scratch, spawnAgent: spawn })
+    assert.equal(result.status, "unscored")
+    assert.equal(result.reason, "infrastructure: stalled")
+    assert.equal(result.infrastructureReason, "stalled")
+  } finally {
+    cleanup()
+  }
+})
+
+test("the infrastructure retry is capped at one", async () => {
+  const { skill, scratch, c, cleanup } = setup()
+  try {
+    const { spawn, calls } = agent({ out: "", code: "timeout" })
+    const { result } = await executeCase({ skill, c, scratch, spawnAgent: spawn, maxInfraRetries: 0 })
+    assert.equal(result.status, "unscored")
+    assert.equal(calls.length, 1, "no retry when the cap is zero")
+    assert.equal(result.execution.retries, 0)
+  } finally {
+    cleanup()
+  }
+})
+
+test("a retry that succeeds keeps the behavioural verdict and records the retry", async () => {
+  const { skill, scratch, c, inside, cleanup } = setup()
+  try {
+    let call = 0
+    const spawn = async () => {
+      call++
+      if (call === 1) return { out: "", err: "", code: "stalled" }
+      return { out: stream({ reply: "done", loads: [{ id: "demo", directory: inside }] }), err: "", code: 0 }
+    }
+    const { result } = await executeCase({ skill, c, scratch, spawnAgent: spawn })
+    assert.equal(result.status, "passed")
+    assert.equal(result.infrastructure, false)
+    assert.equal(result.execution.retries, 1)
   } finally {
     cleanup()
   }
@@ -172,6 +220,43 @@ test("a failing assertion is named in the reason", async () => {
     assert.match(result.reason, /nothing here/)
   } finally {
     cleanup()
+  }
+})
+
+test("a draw records the fixture, prompt and detector provenance", async () => {
+  const skill = skillDir()
+  const fixtureDir = join(skill.dir, "references/evals/1")
+  mkdirSync(fixtureDir, { recursive: true })
+  writeFileSync(join(fixtureDir, "RULES.md"), "one\n")
+  const c = { n: 1, title: "fixture", prompt: "Do the thing.", assert: [{ kind: "file", arg: "RULES.md" }] }
+  const runWith = async (prompt = c.prompt) => {
+    const scratch = makeScratch(skill.id, 1)
+    try {
+      const inside = join(scratch, ".opencode/skills", skill.id)
+      const { spawn } = agent({ out: stream({ reply: "done", loads: [{ id: "demo", directory: inside }] }) })
+      const { result } = await executeCase({ skill, c: { ...c, prompt }, scratch, spawnAgent: spawn })
+      return result
+    } finally {
+      rmSync(scratch, { recursive: true, force: true })
+    }
+  }
+
+  try {
+    const first = await runWith()
+    assert.match(first.fixtureHash, /^[0-9a-f]{64}$/)
+    assert.match(first.promptHash, /^[0-9a-f]{64}$/)
+    assert.equal(first.detectorVersion, DETECTOR_VERSION)
+
+    const otherPrompt = await runWith("Do something else.")
+    assert.equal(otherPrompt.fixtureHash, first.fixtureHash, "a prompt edit does not move the fixture hash")
+    assert.notEqual(otherPrompt.promptHash, first.promptHash, "a prompt edit moves the prompt hash")
+
+    writeFileSync(join(fixtureDir, "RULES.md"), "two\n")
+    const otherFixture = await runWith()
+    assert.notEqual(otherFixture.fixtureHash, first.fixtureHash, "a fixture byte moves the fixture hash")
+    assert.equal(otherFixture.promptHash, first.promptHash, "a fixture edit does not move the prompt hash")
+  } finally {
+    rmSync(skill.dir, { recursive: true, force: true })
   }
 })
 

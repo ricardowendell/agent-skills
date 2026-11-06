@@ -6,7 +6,7 @@
 // look similar, and a case that moved the other way is worth naming too.
 
 import { readFileSync } from "node:fs"
-import { contaminatedReps } from "./result.mjs"
+import { contaminatedReps, infrastructureReps } from "./result.mjs"
 
 export const key = (r) => `${r.skill}#${r.case}`
 
@@ -19,7 +19,11 @@ export function summarizeRun({ results, ...meta }) {
   return {
     ...meta,
     finishedAt: new Date().toISOString(),
-    counts: { ...counts, contaminated: results.reduce((n, r) => n + contaminatedReps(r), 0) },
+    counts: {
+      ...counts,
+      contaminated: results.reduce((n, r) => n + contaminatedReps(r), 0),
+      infrastructure: results.reduce((n, r) => n + infrastructureReps(r), 0),
+    },
     results: results.map(({ transcript, ...rest }) => rest),
   }
 }

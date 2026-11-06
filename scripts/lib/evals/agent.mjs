@@ -24,13 +24,19 @@ export function agentArgs({ prompt, model, agent = "build", standalone = true })
   return args
 }
 
-export function runAgent({ args, cwd, env, timeoutMs = 600000 }) {
+// Pure decision, so the rule has a unit test without spawning a provider.
+// `stallMs <= 0` disables the watchdog, matching `--stall-seconds 0`.
+export function isStalled(lastActivityAt, now, stallMs) {
+  return Number.isFinite(stallMs) && stallMs > 0 && now - lastActivityAt >= stallMs
+}
+
+export function runAgent({ args, cwd, env, timeoutMs = 600000, stallMs = 120000, command = "opencode" }) {
   const started = Date.now()
   return new Promise((resolve) => {
     // detached => the child leads its own process group, so the whole tree can
     // be killed. A lingering grandchild holding stdout can otherwise keep
     // 'close' from firing, so a hard timer guarantees resolution.
-    const child = spawn("opencode", args, {
+    const child = spawn(command, args, {
       cwd,
       // spawn's cwd does NOT update the inherited PWD, and opencode resolves its
       // project from PWD.
@@ -41,11 +47,29 @@ export function runAgent({ args, cwd, env, timeoutMs = 600000 }) {
     let out = ""
     let err = ""
     let finished = false
+    let lastActivity = started
+    let stallTimer = null
+
+    // The hard timeout is the ceiling; the watchdog is the "still working?" test.
+    // Every chunk on either stream counts as activity: the JSON event stream
+    // emits one line per step, so a live but slow draw keeps resetting it while
+    // a stuck process does not. A watchdog kill is `stalled`, never `timeout`,
+    // because the two lead to different retry and reporting decisions.
+    const armStall = () => {
+      if (!(stallMs > 0)) return
+      clearTimeout(stallTimer)
+      stallTimer = setTimeout(() => {
+        if (finished) return
+        if (isStalled(lastActivity, Date.now(), stallMs)) finish("stalled")
+        else armStall()
+      }, stallMs)
+    }
 
     const finish = (code) => {
       if (finished) return
       finished = true
       clearTimeout(timer)
+      clearTimeout(stallTimer)
       try {
         process.kill(-child.pid, "SIGKILL")
       } catch {
@@ -64,12 +88,22 @@ export function runAgent({ args, cwd, env, timeoutMs = 600000 }) {
     }
 
     const timer = setTimeout(() => finish("timeout"), timeoutMs)
-    child.stdout.on("data", (d) => (out += d))
-    child.stderr.on("data", (d) => (err += d))
+    const activity = (chunk) => {
+      lastActivity = Date.now()
+      armStall()
+      return chunk
+    }
+    child.stdout.on("data", (d) => {
+      out += activity(d)
+    })
+    child.stderr.on("data", (d) => {
+      err += activity(d)
+    })
     child.on("close", (code) => finish(code ?? "closed"))
     child.on("error", (e) => {
       err += `spawn error: ${e.message}\n`
       finish("error")
     })
+    armStall()
   })
 }

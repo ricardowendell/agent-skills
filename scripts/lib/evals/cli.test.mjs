@@ -57,6 +57,18 @@ test("an out-of-range --judge-threshold is rejected", () => {
   rejects(["--judge-threshold", "2", "--list"], /--judge-threshold/)
 })
 
+test("a malformed --stop is rejected instead of running the full count", () => {
+  rejects(["--stop", "5-3", "--list"], /--stop/)
+})
+
+test("a zero-pass --stop is rejected", () => {
+  rejects(["--stop", "0/3", "--list"], /--stop/)
+})
+
+test("a non-numeric --stall-seconds is rejected", () => {
+  rejects(["--stall-seconds", "abc", "--list"], /--stall-seconds/)
+})
+
 test("an unknown flag is rejected", () => {
   rejects(["--nope", "--list"], /unknown flag/)
 })

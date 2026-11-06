@@ -42,7 +42,7 @@ test("a clean with-skill run at 5/5 has no findings", () => {
   const cases = [aggregate(Array.from({ length: 5 }, (_, i) => rep({ rep: i + 1 })))]
   const { findings, counts } = checkRun({ arm: "with-skill", cases })
   assert.deepEqual(findings, [])
-  assert.deepEqual(counts, { cases: 1, reps: 5, findings: 0 })
+  assert.deepEqual(counts, { cases: 1, reps: 5, findings: 0, infrastructure: 0 })
 })
 
 test("a clean control run at 0/5 is not dirty just because it failed", () => {
@@ -51,7 +51,7 @@ test("a clean control run at 0/5 is not dirty just because it failed", () => {
   )
   const { findings, counts } = checkRun({ arm: "without-skill", cases: [aggregate(reps, { contaminated: 0 })] })
   assert.deepEqual(findings, [])
-  assert.deepEqual(counts, { cases: 1, reps: 5, findings: 0 })
+  assert.deepEqual(counts, { cases: 1, reps: 5, findings: 0, infrastructure: 0 })
 })
 
 test("a control repetition that loaded a skill is a gate miss", () => {
@@ -110,7 +110,7 @@ test("a run with no leak field at all is recognised as pre-detector", () => {
   // historical artefact so the old run remains citable.
   const { findings, counts } = checkRun({ arm: "with-skill", cases })
   assert.deepEqual(kinds(findings), Array(12).fill("leak-missing"))
-  assert.deepEqual(counts, { cases: 1, reps: 12, findings: 12 })
+  assert.deepEqual(counts, { cases: 1, reps: 12, findings: 12, infrastructure: 0 })
 })
 
 test("a run that carries leak somewhere must carry it everywhere", () => {
@@ -129,6 +129,38 @@ test("a contaminated repetition is a finding even with an empty leak list", () =
   const { findings } = checkRun({ arm: "with-skill", cases })
   assert.deepEqual(kinds(findings), ["contaminated"])
   assert.equal(findings[0].rep, 4)
+})
+
+test("an infrastructure draw is its own finding, not a gate miss", () => {
+  const cases = [
+    aggregate([
+      rep({ rep: 1 }),
+      rep({
+        rep: 2,
+        status: "unscored",
+        reason: "infrastructure: timeout",
+        infrastructure: true,
+        infrastructureReason: "timeout",
+        skillGate: { ok: false, loaded: [], reason: "killed before it could load" },
+        execution: { retries: 1 },
+      }),
+    ]),
+  ]
+  const { findings, counts } = checkRun({ arm: "with-skill", cases })
+  assert.deepEqual(kinds(findings), ["infrastructure"])
+  assert.equal(findings[0].case, "implement-from-prompt#1")
+  assert.equal(findings[0].rep, 2)
+  assert.match(findings[0].detail, /infrastructure: timeout \(retried 1x\)/)
+  assert.equal(counts.infrastructure, 1)
+  assert.equal(counts.findings, 1, "the run is not clean")
+})
+
+test("an unscored reason naming infrastructure is recognised without the flag", () => {
+  const cases = [aggregate([rep({ rep: 1, status: "unscored", reason: "infrastructure: stalled" })])]
+  const { findings, counts } = checkRun({ arm: "with-skill", cases })
+  assert.deepEqual(kinds(findings), ["infrastructure"])
+  assert.match(findings[0].detail, /stalled/)
+  assert.equal(counts.infrastructure, 1)
 })
 
 test("a run without manifest.json falls back to each repetition's arm", () => {
@@ -164,7 +196,7 @@ test("the aggregated case reads repetitions[] and names the leaking draw", () =>
 test("a single-draw result is the repetition at the root", () => {
   const root = rep({ rep: 1, skillGate: gate({ ok: false, loaded: [], reason: "MISSING" }) })
   const { findings, counts } = checkRun({ arm: "with-skill", cases: [root] })
-  assert.deepEqual(counts, { cases: 1, reps: 1, findings: 1 })
+  assert.deepEqual(counts, { cases: 1, reps: 1, findings: 1, infrastructure: 0 })
   assert.deepEqual(kinds(findings), ["gate-miss"])
   assert.equal(findings[0].rep, 1)
 })
@@ -206,6 +238,31 @@ test("CLI exits 1 and names a leaking draw", (t) => {
   assert.equal(r.status, 1)
   assert.match(r.stdout, /leak implement-from-prompt#1 r2/)
   assert.match(r.stdout, /SKILL\.md/)
+})
+
+test("CLI treats an infrastructure draw as incomplete evidence, not clean", (t) => {
+  const dir = makeRun(t, {
+    manifest: modern(),
+    cases: [
+      {
+        name: "x--01",
+        result: aggregate([
+          rep({ rep: 1 }),
+          rep({
+            rep: 2,
+            status: "unscored",
+            reason: "infrastructure: timeout",
+            infrastructure: true,
+            infrastructureReason: "timeout",
+          }),
+        ]),
+      },
+    ],
+  })
+  const r = runCli(dir)
+  assert.equal(r.status, 1)
+  assert.match(r.stdout, /infrastructure implement-from-prompt#1 r2/)
+  assert.doesNotMatch(r.stdout, /gate-miss/)
 })
 
 test("CLI exits 2 for a path that is not a run dir", () => {

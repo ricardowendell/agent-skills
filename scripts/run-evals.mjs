@@ -35,6 +35,10 @@
 //   --judge-threshold   minimum judge score (default 0.8)
 //   --repeat <n>        run each selected case n times (default 1); the case
 //                       passes only when every repetition does
+//   --stop <p>/<f>      stop a repeated case after p clean passes with zero
+//                       failures or f failures (default 5/3 when repeat > 5)
+//   --stall-seconds <n> kill a draw whose event stream is silent for n seconds
+//                       (default 120); recorded as `stalled`, not `timeout`
 //   --min-pass <ratio>  relax that to a rate, explicitly (default 1)
 //   --tag <a,b>         only cases carrying every listed tag
 //   --baseline <file>   compare this run against a stored run JSON
@@ -71,10 +75,11 @@ import { homedir } from "node:os"
 import { readEvals } from "./lib/evals/parse.mjs"
 import { scrubEnv } from "./lib/evals/agent.mjs"
 import { isolateHome } from "./lib/evals/isolation.mjs"
-import { stageFixture, stageSkill, makeScratch, denySkillTool } from "./lib/evals/fixture.mjs"
+import { stageFixture, stageSkill, makeScratch, denySkillTool, textHash } from "./lib/evals/fixture.mjs"
 import { summarize, aggregateReps, caseResult, contaminate, PASSED, UNSCORED } from "./lib/evals/result.mjs"
 import { executeCase } from "./lib/evals/execute.mjs"
-import { leaksIn } from "./lib/evals/leak.mjs"
+import { leaksIn, DETECTOR_VERSION } from "./lib/evals/leak.mjs"
+import { parseStop, runScheduled } from "./lib/evals/schedule.mjs"
 import { createRun } from "./lib/evals/runs.mjs"
 import { summarizeRun, compareRuns, formatComparison, readRun } from "./lib/evals/report.mjs"
 import { renderHeader, patchStatus } from "./lib/evals/transcript.mjs"
@@ -102,6 +107,8 @@ const opt = {
   judgeThreshold: 0.8,
   repeat: 1,
   minPass: 1,
+  stop: null,
+  stallSeconds: 120,
   tags: [],
 }
 const unknown = []
@@ -145,6 +152,8 @@ for (let i = 0; i < argv.length; i++) {
   }
   else if (a === "--judge-threshold") opt.judgeThreshold = Number(value("--judge-threshold"))
   else if (a === "--repeat") opt.repeat = Number(value("--repeat"))
+  else if (a === "--stop") opt.stop = value("--stop")
+  else if (a === "--stall-seconds") opt.stallSeconds = Number(value("--stall-seconds"))
   else if (a === "--tag") opt.tags.push(...value("--tag").split(",").map((t) => t.trim()).filter(Boolean))
   else if (a === "--min-pass") opt.minPass = Number(value("--min-pass"))
   else if (a === "--quick") {
@@ -196,7 +205,20 @@ if (!(opt.minPass > 0 && opt.minPass <= 1)) {
   console.error(`--min-pass expects a ratio in (0, 1] (got ${opt.minPass})`)
   process.exit(1)
 }
+if (!(Number.isFinite(opt.stallSeconds) && opt.stallSeconds >= 0)) {
+  console.error(`--stall-seconds expects a non-negative number of seconds (got ${opt.stallSeconds})`)
+  process.exit(1)
+}
+if (opt.stop !== null && parseStop(opt.stop) === null) {
+  console.error(`--stop expects <passes>/<fails>, both integers (got ${opt.stop})`)
+  process.exit(1)
+}
 if (opt.concurrency === null) opt.concurrency = opt.level === "smoke" ? 1 : 4
+
+// The stop rule is a default, not a claim: enable it only where a rate is not
+// being measured. Above five draws, five clean passes (or three failures) is
+// enough separation; at or below five the full count already is the answer.
+const STOP = opt.level === "smoke" ? null : opt.stop !== null ? parseStop(opt.stop) : opt.repeat > 5 ? { passes: 5, fails: 3 } : null
 
 const HOME = homedir()
 const ROOTS = (
@@ -349,7 +371,8 @@ console.log(
 console.log(
   `Level: ${opt.level} (concurrency=${opt.concurrency}, agent=${opt.agent}, model=${opt.model ?? "default"}, arm=${opt.noSkill ? "without-skill" : "with-skill"}` +
     `${opt.judge ? `, judge=${opt.judge}@${opt.judgeThreshold}` : ""}` +
-    `${opt.repeat > 1 ? `, repeat=${opt.repeat}@min-pass=${opt.minPass}` : ""})\n`,
+    `${opt.repeat > 1 ? `, repeat=${opt.repeat}@min-pass=${opt.minPass}${STOP ? `@stop=${STOP.passes}/${STOP.fails}` : ""}` : ""}` +
+    `, stall=${opt.stallSeconds}s)\n`,
 )
 
 async function runCase(skill, c, rep = null) {
@@ -371,8 +394,9 @@ async function runCase(skill, c, rep = null) {
   // It stages for itself; every other level stages inside executeCase.
   if (opt.level === "smoke") {
     let pinned = { hash: null }
+    let fixture = { hash: null }
     try {
-      stageFixture(skill, c, scratch)
+      fixture = stageFixture(skill, c, scratch)
       if (opt.noSkill) denySkillTool(scratch)
       else pinned = stageSkill(skill, scratch)
     } catch (e) {
@@ -381,6 +405,9 @@ async function runCase(skill, c, rep = null) {
         status: "failed",
         reason: "fixture failed to stage",
         skillHash: null,
+        fixtureHash: null,
+        promptHash: textHash(c.prompt),
+        detectorVersion: DETECTOR_VERSION,
         assertions: [],
         transcript: file,
       })
@@ -400,17 +427,18 @@ async function runCase(skill, c, rep = null) {
         `\n\n## Expectations (human-checked)\n\n${c.expect.map((e) => `- [ ] ${e}`).join("\n")}\n\n` +
         `## Assertions (auto-checked)\n\nnot run at --level smoke\n`,
     )
-    const staged = caseResult(skill, c, {
+    return caseResult(skill, c, {
       status: "staged",
       reason: "staged only (smoke)",
       skillHash: pinned.hash,
+      fixtureHash: fixture.hash,
+      promptHash: textHash(c.prompt),
+      detectorVersion: DETECTOR_VERSION,
       assertions: [],
       execution: { durationMs: Date.now() - started },
       meta: { repoSha: meta.repoSha, agent: meta.agent, model: meta.model, level: meta.level },
       transcript: file,
     })
-    run().writeResult(skill.id, c.n, staged)
-    return staged
   }
 
   let exec
@@ -424,22 +452,22 @@ async function runCase(skill, c, rep = null) {
       agent: opt.agent,
       standalone: opt.standalone,
       timeoutMs: opt.timeout * 1000,
+      stallMs: opt.stallSeconds * 1000,
       env: CHILD_ENV,
       judge: opt.judge ? { model: JUDGE_MODEL, threshold: opt.judgeThreshold, selfJudged: SELF_JUDGED } : null,
     })
   } catch (e) {
     writeFailure("fixture failed to stage", `${e.message}\n${e.stderr ?? ""}`)
-    const failed = caseResult(skill, c, {
+    return caseResult(skill, c, {
       status: "failed",
       reason: "fixture failed to stage",
       skillHash: null,
+      fixtureHash: null,
+      promptHash: textHash(c.prompt),
+      detectorVersion: DETECTOR_VERSION,
       assertions: [],
       transcript: file,
     })
-    // Recorded, not skipped: the previous layout left the old JSON in place and
-    // a failed staging could be read as the last run's green.
-    run().writeResult(skill.id, c.n, failed)
-    return failed
   }
 
   const { result: core, out, err, code, pinned: staged, gate, asserts, judged, durationMs } = exec
@@ -457,7 +485,6 @@ async function runCase(skill, c, rep = null) {
     meta: { repoSha: meta.repoSha, agent: meta.agent, model: meta.model, level: meta.level },
     transcript: file,
   })
-  if (!rep) run().writeResult(skill.id, c.n, result)
 
   const assertBlock = asserts.length
     ? `## Assertions (auto-checked)\n\n${asserts
@@ -493,7 +520,6 @@ async function runCase(skill, c, rep = null) {
       "\n"
     appendFileSync(file, section)
     patchHeader(file, result)
-    if (!rep) run().writeResult(skill.id, c.n, result)
   }
   return result
 }
@@ -504,20 +530,28 @@ function patchHeader(file, { status, reason }) {
   writeFileSync(file, patchStatus(readFileSync(file, "utf8"), status, reason))
 }
 
-// Repetitions exist because one verdict from a non-deterministic agent is one
-// draw. The case passes only when every repetition does, unless --min-pass says
-// otherwise out loud.
-async function runCaseReps(skill, c) {
-  // Staging is deterministic: repeating it would only re-copy the same tree.
-  const times = opt.level === "smoke" ? 1 : opt.repeat
-  const reps = []
-  for (let i = 1; i <= times; i++) {
-    // Buffered: printing per repetition interleaves with the other lanes.
-    reps.push(await runCase(skill, c, times > 1 ? { index: i } : null))
+// The case artifact is written once, after every draw it will ever run has run.
+// That is what keeps a parallel run readable: no draw touches result.json and
+// the final write is the only one (the same rule the serial runner followed).
+function finalizeCase(state) {
+  const { skill, c } = state.item
+  const reps = state.results
+  const first = reps[0]
+  const provenance = {
+    fixtureHash: first?.fixtureHash ?? null,
+    promptHash: first?.promptHash ?? null,
+    detectorVersion: first?.detectorVersion ?? null,
   }
-  const repLine = times > 1 ? reps.map((r, i) => `r${i + 1}:${r.contaminated ? "contaminated" : r.status}`).join(" ") : ""
-  if (times === 1) return reps[0]
 
+  if (state.item.times === 1) {
+    const single = { ...first, sequence: state.sequence, stoppedEarly: false }
+    run().writeResult(skill.id, c.n, single)
+    return { ...single, transcript: run().transcriptPath(skill.id, c.n, null), repLine: "" }
+  }
+
+  // Repetitions exist because one verdict from a non-deterministic agent is one
+  // draw. The case passes only when every repetition does, unless --min-pass
+  // says otherwise out loud.
   const agg = aggregateReps(reps, opt.minPass)
   const artifact = caseResult(skill, c, {
     status: agg.status,
@@ -526,14 +560,21 @@ async function runCaseReps(skill, c) {
     passed: agg.passed,
     reps: agg.total,
     contaminated: agg.contaminated,
-    skillHash: reps[0]?.skillHash ?? null,
-    arm: reps[0]?.arm,
-    meta: reps[0]?.meta ?? {},
+    infrastructure: agg.infrastructure,
+    stoppedEarly: state.stoppedEarly,
+    sequence: state.sequence,
+    ...provenance,
+    skillHash: first?.skillHash ?? null,
+    arm: first?.arm,
+    meta: first?.meta ?? {},
     repetitions: reps,
   })
   run().writeResult(skill.id, c.n, artifact)
   // The console summary drops the per-repetition array; the artifact keeps it.
   const { repetitions: _reps, ...summary } = artifact
+  const repLine = reps
+    .map((r, i) => `r${state.indexes[i] ?? i + 1}:${r.infrastructure ? "infrastructure" : r.contaminated ? "contaminated" : r.status}`)
+    .join(" ")
   return {
     ...summary,
     transcript: run().transcriptPath(skill.id, c.n, { index: 1 }),
@@ -542,31 +583,46 @@ async function runCaseReps(skill, c) {
 }
 
 const startedAt = Date.now()
-const queue = [...selected]
-const lanes = Math.max(1, Math.min(opt.concurrency, queue.length || 1))
+// Every selected case enters the pool; a draw is the unit of work, so a single
+// case with --repeat 12 still fills the lanes. Stop is null at smoke.
+const items = selected.map(({ skill, c }) => ({
+  skill,
+  c,
+  times: opt.level === "smoke" ? 1 : opt.repeat,
+}))
+const scheduled = await runScheduled({
+  cases: items,
+  concurrency: opt.concurrency,
+  stop: STOP,
+  runDraw: ({ skill, c, rep }) => runCase(skill, c, rep),
+})
+
 const results = []
-async function lane() {
-  while (queue.length) {
-    const { skill, c } = queue.shift()
-    process.stdout.write(`→ ${skill.id} #${c.n}… `)
-    const r = await runCaseReps(skill, c)
-    results.push(r)
-    if (r.status === PASSED) ok++
-    else if (r.status === UNSCORED) unscored++
-    else fail++
-    // The published rate excludes contaminated draws: show the clean denominator
-    // when it differs from the raw repetition count.
-    const clean = r.reps !== undefined ? r.reps - (r.contaminated ?? 0) : null
-    const rate = r.reps ? (r.contaminated ? ` [${r.passed}/${clean} clean, ${r.contaminated} contaminated]` : ` [${r.passed}/${r.reps}]`) : ""
-    console.log(`${skill.id} #${c.n}: ${r.status}${rate}${r.reason ? ` (${r.reason})` : ""} — ${r.transcript}` + (r.repLine ? `\n     ${r.repLine}` : ""))
-  }
+for (const state of scheduled) {
+  const r = finalizeCase(state)
+  results.push(r)
+  if (r.status === PASSED) ok++
+  else if (r.status === UNSCORED) unscored++
+  else fail++
+  // The published rate excludes contaminated and infrastructure draws: show the
+  // clean denominator when it differs from the raw draw count.
+  const excluded = (r.contaminated ?? 0) + (r.infrastructure ?? 0)
+  const clean = r.reps !== undefined ? r.reps - excluded : null
+  const rate = r.reps
+    ? excluded
+      ? ` [${r.passed}/${clean} clean, ${r.contaminated ?? 0} contaminated, ${r.infrastructure ?? 0} infrastructure]`
+      : ` [${r.passed}/${r.reps}]`
+    : ""
+  console.log(
+    `${r.skill} #${r.case}: ${r.status}${rate}${r.reason ? ` (${r.reason})` : ""} — ${r.transcript}` + (r.repLine ? `\n     ${r.repLine}` : ""),
+  )
 }
-await Promise.all(Array.from({ length: lanes }, lane))
 
 const totals = summarize(results)
 console.log(
   `\n${totals.passed} passed, ${totals.failed} failed, ${totals.unscored} unscored` +
     (totals.contaminated ? `, ${totals.contaminated} contaminated` : "") +
+    (totals.infrastructure ? `, ${totals.infrastructure} infrastructure` : "") +
     (totals.staged ? `, ${totals.staged} staged` : "") +
     ` (of ${totals.total}). Transcripts in ${OUT_ROOT}`,
 )
@@ -581,6 +637,7 @@ if (RUN) {
       unscored: totals.unscored,
       staged: totals.staged ?? 0,
       contaminated: totals.contaminated,
+      infrastructure: totals.infrastructure,
     },
   })
   console.error(`Run directory: ${RUN.dir}`)
