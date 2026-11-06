@@ -351,6 +351,20 @@ function discoverEvals() {
   return found
 }
 
+// Every discovered skill, keyed by id, not only the ones with evals. A case may
+// name a sibling with `stage:`; the id has to resolve to a real skill checkout
+// even when that sibling carries no evals of its own. First root wins, the same
+// order `discoverEvals` uses.
+function discoverSkillDirs() {
+  const found = new Map()
+  for (const root of ROOTS) {
+    for (const { id, dir } of skillDirs(root)) {
+      if (!found.has(id)) found.set(id, { id, dir })
+    }
+  }
+  return found
+}
+
 function repoSha() {
   const r = spawnSync("git", ["rev-parse", "--short", "HEAD"], { cwd: dirname(fileURLToPath(import.meta.url)), encoding: "utf8" })
   return r.status === 0 ? r.stdout.trim() : "unknown"
@@ -362,6 +376,7 @@ if (!skills.length) {
   process.exit(1)
 }
 
+const SKILLS = discoverSkillDirs()
 const plan = []
 const warnings = []
 const errors = []
@@ -370,10 +385,22 @@ for (const s of skills) {
   errors.push(...parsed.errors.map((e) => `${s.id}: ${e}`))
   warnings.push(...parsed.warnings.map((w) => `${s.id}: ${w}`))
   for (const c of parsed.cases) {
+    // `stage:` is validated against every discovered skill, not against the
+    // `--case`/`--skill` selection: a bad declaration must fail `--check` even
+    // when its case is not the one being run.
+    for (const id of c.stage ?? []) {
+      if (id === s.id) errors.push(`${s.id}: case ${c.n}: stage '${id}' names the skill under review`)
+      else if (!SKILLS.has(id)) errors.push(`${s.id}: case ${c.n}: unknown stage '${id}'`)
+    }
     if (opt.case !== null && c.n !== opt.case) continue
     plan.push({ skill: s, c })
   }
 }
+
+// The declared stages resolve to real checkouts; executeCase stages them next
+// to the arm's skill. A case without `stage:` gets an empty list and behaves
+// exactly as before.
+const siblingsFor = (c) => (c.stage ?? []).map((id) => SKILLS.get(id)).filter(Boolean)
 
 for (const w of warnings) console.error(`warn: ${w}`)
 for (const e of errors) console.error(`error: ${e}`)
@@ -436,11 +463,15 @@ async function runCase(skill, c, rep = null) {
   // It stages for itself; every other level stages inside executeCase.
   if (opt.level === "smoke") {
     let pinned = { hash: null }
+    let stagedSkills = []
     let fixture = { hash: null }
     try {
       fixture = stageFixture(skill, c, scratch)
       if (opt.noSkill) denySkillTool(scratch)
-      else pinned = stageSkill(skill, scratch)
+      else {
+        pinned = stageSkill(skill, scratch)
+        stagedSkills = siblingsFor(c).map(({ id, dir }) => ({ id, hash: stageSkill({ id, dir }, scratch).hash }))
+      }
     } catch (e) {
       writeFailure("fixture failed to stage", `${e.message}\n${e.stderr ?? ""}`)
       return caseResult(skill, c, {
@@ -473,6 +504,7 @@ async function runCase(skill, c, rep = null) {
       status: "staged",
       reason: "staged only (smoke)",
       skillHash: pinned.hash,
+      stagedSkills,
       fixtureHash: fixture.hash,
       promptHash: textHash(c.prompt),
       detectorVersion: DETECTOR_VERSION,
@@ -490,6 +522,7 @@ async function runCase(skill, c, rep = null) {
       c,
       scratch,
       arm: opt.noSkill ? "without-skill" : "with-skill",
+      siblings: siblingsFor(c),
       model: opt.model,
       agent: opt.agent,
       standalone: opt.standalone,
@@ -613,6 +646,7 @@ function finalizeCase(state) {
     sequence: state.sequence,
     ...provenance,
     skillHash: first?.skillHash ?? null,
+    stagedSkills: first?.stagedSkills ?? [],
     arm: first?.arm,
     meta: first?.meta ?? {},
     repetitions: reps,

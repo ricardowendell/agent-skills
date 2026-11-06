@@ -122,7 +122,25 @@ case files. No skill prose, no assertion, no detector and no gate changes.
 
 ## Results
 
-_Filled during implementation._
+- **Declaration.** `- stage:` is parsed as a repeatable case field; `--check`
+  rejects a self-reference (`names the skill under review`) and an unknown id
+  (`unknown stage '<id>'`). Cases without the key keep `stage: []` and behave as
+  before.
+- **Staging.** The declared sibling is copied by `stageSkill` beside the arm's
+  skill, hashed, and reported as `stagedSkills: [{ id, hash }]` in the case
+  result and the run manifest. `skillHash` and `skillGate` still describe the
+  arm's skill. `--no-skill` stages neither and denies the `skill` tool.
+- **Tests.** Two synthetic skills stage side by side with distinct hashes; the
+  result reports the sibling; the control arm stages nothing; the CLI accepts a
+  known sibling and refuses a self-reference and an unknown id.
+- **Measurement.** Five draws per case, skill arm only, detector v2:
+  `capture-idea` #3 5/5 (`2026-11-06T19-06-50--capture-idea`, staged
+  `process-inbox`) and `process-inbox` #3 5/5
+  (`2026-11-06T19-09-27--process-inbox`, staged `capture-idea`). Both runs print
+  `findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes`.
+- **Published.** `docs/evals/pipeline-bookends-matrix.md` (declared-stage section
+  and the routing classification note) and the two `coverage.md` rows name the
+  staged set and the pre-fix record.
 
 ## Open Questions
 

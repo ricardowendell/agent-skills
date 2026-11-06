@@ -29,6 +29,7 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - tags: trigger
    - why: capture and process share vocabulary; picking the wrong one leaves the notes unclassified
    - gate: off
+   - stage: process-inbox
    - expect: Routes to `process-inbox`.
    - assert: skill process-inbox
    - assert: notskill capture-idea

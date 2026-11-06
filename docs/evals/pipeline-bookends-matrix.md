@@ -215,8 +215,41 @@ tripping the detector. The target skill is therefore absent from the only clean
 environment: a passing draw is impossible, and the one draw that found
 `process-inbox` read the real install (`2026-11-06T16-50-30--capture-idea` `r3`,
 contaminated). This is a construction defect of the routing pair, not a router
-verdict. It is recorded, not fixed: changing the cases or staging is outside this
-spec.
+verdict. It was recorded, not fixed, by this measurement wave; SPEC-0029 fixes
+it and re-measures the pair below.
+
+### Cross-skill routing with a declared stage — SPEC-0029
+
+The defect above is a staging gap, not a router verdict, and SPEC-0029 closes it.
+The two cases now declare the sibling they expect (`- stage: process-inbox` in
+`capture-idea` #3, `- stage: capture-idea` in `process-inbox` #3), and the runner
+stages that copy beside the arm's skill, hashes it and records it in
+`stagedSkills` in `result.json` and the run manifest. `skillHash` and
+`skillGate` still describe the arm's skill only.
+
+Re-measured on the same config default (`opencode-go/deepseek-v4.1-flash`), five
+draws per case, skill arm only, detector v2 (`71bfb85a91cd68ab`). The runs record
+`repoSha d982aba`; the SPEC-0029 implementation was in the working tree, not yet
+committed, and `skills/` changed only in the two `evals.md` declarations — the
+staged copies (and their hashes) are the same as the 0.5.0 rows.
+
+| case | run directory | staged set | result | checker |
+| --- | --- | --- | --- | --- |
+| `capture-idea` #3 | `2026-11-06T19-06-50--capture-idea` | arm `capture-idea` + `process-inbox` | 5/5 | `findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes` |
+| `process-inbox` #3 | `2026-11-06T19-09-27--process-inbox` | arm `process-inbox` + `capture-idea` | 5/5 | `findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes` |
+
+| case | fixture | prompt | arm skill | staged sibling | detector |
+| --- | --- | --- | --- | --- | --- |
+| `capture-idea` #3 | `3d529bddbd4fe027…` | `7f1f12f2223375fc…` | `ca93be4c42d19c11…` | `process-inbox` `003ddb1565dddc02…` | `71bfb85a91cd68ab` |
+| `process-inbox` #3 | `e3b0c44298fc1c14…` (empty) | `cf124064ee6bae9b…` | `003ddb1565dddc02…` | `capture-idea` `ca93be4c42d19c11…` | `71bfb85a91cd68ab` |
+
+Every draw in both runs loaded the staged sibling and not the arm's skill: the
+assertions `skill process-inbox`/`notskill capture-idea` and `skill
+capture-idea`/`notskill process-inbox` were green in all five reps. The earlier
+0/4 and 0/5 rows above are the record of the staging defect at `db7c49a` under
+detector v1; they are not comparable to this cell, because the sibling was not on
+the menu and the one `capture-idea` draw that found it had to read the host
+install. Bookends budget: ten draws (five per case).
 
 ## Classification
 
@@ -249,7 +282,8 @@ spec.
   `process-inbox` #2 routed 4/5 with `r1` stalled (4 clean scored);
   `record-decision` #4 and #5 routed 5/5. `capture-idea` #3 and `process-inbox`
   #3 are 0/4 and 0/5 on the cross-skill assertion for the structural reason
-  above.
+  above; SPEC-0029 re-measured the pair with the sibling staged and both are
+  5/5 (see the declared-stage section).
 
 ## Integrity
 

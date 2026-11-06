@@ -39,6 +39,10 @@ export async function executeCase({
   c,
   scratch,
   arm = "with-skill",
+  // Sibling skills the case declares with `stage: <id>`. They are staged the
+  // same way as the arm's skill so a cross-skill routing case has both on the
+  // menu; the control arm ignores them (nothing is staged there).
+  siblings = [],
   model,
   agent = "build",
   standalone = true,
@@ -57,10 +61,20 @@ export async function executeCase({
   // `unchanged`/`changed` and the provenance describe the attempt that counted.
   const stageAttempt = (target) => {
     let attemptPinned = { hash: null }
+    let stagedSkills = []
     const attemptFixture = stageFixture(skill, c, target)
     if (arm === "without-skill") denySkillTool(target)
-    else attemptPinned = stageSkill(skill, target)
-    return { pinned: attemptPinned, fixture: attemptFixture, snapshot: snapshotTree(target) }
+    else {
+      attemptPinned = stageSkill(skill, target)
+      // A declared sibling is a menu entry, not a dependency: stage it exactly
+      // as the arm's skill and hash the copy the agent could see. The control
+      // arm never reaches here, so a declaration cannot leak into it.
+      stagedSkills = siblings.map((sibling) => {
+        const { id, hash } = stageSkill(sibling, target)
+        return { id, hash }
+      })
+    }
+    return { pinned: attemptPinned, stagedSkills, fixture: attemptFixture, snapshot: snapshotTree(target) }
   }
 
   let scratchUsed = scratch
@@ -95,7 +109,7 @@ export async function executeCase({
   // The final attempt owns the duration; a retry must not hide the slow draw it
   // replaced behind a sum of both.
   const { out, err, code, durationMs } = attempt
-  const { pinned, fixture, snapshot } = staged
+  const { pinned, stagedSkills, fixture, snapshot } = staged
   const provenance = {
     fixtureHash: fixture.hash,
     promptHash: textHash(c.prompt),
@@ -118,6 +132,9 @@ export async function executeCase({
     infrastructure: Boolean(verdict.infrastructure),
     infrastructureReason: verdict.infrastructureReason ?? null,
     skillHash: pinned.hash,
+    // The arm's skill hash stays `skillHash`; the declared stages are reported
+    // apart so `skillGate` keeps answering only "did the arm's skill load".
+    stagedSkills,
     skillGate: { ok: gate.ok, reason: gate.reason, loaded: skillLoads(out).map((l) => l.id) },
     assertions: asserts.map(({ kind, arg, pass, detail }) => ({ kind, arg, pass, detail })),
     execution: {
@@ -162,5 +179,5 @@ export async function executeCase({
     }
   }
 
-  return { result, out, err, code, pinned, gate, asserts, verdict, usage, judged, durationMs, scratch: scratchUsed }
+  return { result, out, err, code, pinned, stagedSkills, gate, asserts, verdict, usage, judged, durationMs, scratch: scratchUsed }
 }

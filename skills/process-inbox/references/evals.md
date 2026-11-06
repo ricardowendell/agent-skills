@@ -29,6 +29,7 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - tags: trigger
    - why: the word "inbox" appears, but a note is arriving and nothing is being classified
    - gate: off
+   - stage: capture-idea
    - expect: Routes to `capture-idea` and writes one raw note.
    - assert: notskill process-inbox
    - assert: skill capture-idea
