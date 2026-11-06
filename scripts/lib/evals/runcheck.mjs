@@ -7,6 +7,14 @@
 // (no filesystem, no model) so the rule has unit tests and the CLI can read a run
 // that already happened.
 //
+// SPEC-0028 separates the two verdicts the old `findings=N` summary conflated.
+// `skillLeaks` counts draws that read an installed skill or the answer key;
+// `isolated` says no draw read anything outside the scratch. A host-corpus read
+// is its own `host` finding, so an empty skill-leak list is no longer evidence
+// that the cell was isolated. A run written before the host rules (its
+// `detectorVersion` is not the current one) is never credited as isolated: the
+// detector did not look, and silence is not a clean bill.
+//
 // There is no separator manifest. The stronger rule needs no list: in a
 // `with-skill` run every repetition that did not load the skill is a finding,
 // because that cell cannot be credited to the skill. In a control run every
@@ -24,6 +32,8 @@
 // is a run that started before the detector landed and has no `leak` anywhere:
 // the CLI warns per draw and keeps the historical artefact citable. It never
 // calls those draws clean.
+
+import { DETECTOR_VERSION } from "./leak.mjs"
 
 const isContaminated = (result) =>
   result.contaminated === true || (typeof result.contaminated === "number" && result.contaminated > 0)
@@ -72,8 +82,23 @@ export function isPreDetector(cases = [], startedAt = null) {
   return Number.isFinite(started) && started < LEAK_DETECTOR_LANDED_AT
 }
 
-function leakPaths(result) {
-  return (result.leak ?? []).map((l) => (typeof l === "string" ? l : l?.path)).filter(Boolean)
+// Before the host rules every entry was `{ tool, path }`; an entry without a
+// kind is therefore a skill/corpus leak. A `host` entry carries the root that
+// matched, so the finding can name what was read.
+function leakEntries(result) {
+  return (result.leak ?? [])
+    .map((l) =>
+      typeof l === "string"
+        ? { path: l, kind: "leak" }
+        : { path: l?.path, kind: l?.kind === "host" ? "host" : "leak", root: l?.root },
+    )
+    .filter((e) => e.path)
+}
+
+function leakPaths(result, kind) {
+  return leakEntries(result)
+    .filter((e) => e.kind === kind)
+    .map((e) => e.path)
 }
 
 // `{ arm, cases }` → `{ findings, counts }`. `arm` comes from `manifest.json`
@@ -86,6 +111,12 @@ export function checkRun({ arm = null, cases = [] } = {}) {
   const findings = []
   let reps = 0
   let infrastructure = 0
+  let skillLeaks = 0
+  let hostReads = 0
+  // A cell is isolated only when the detector that judged it already looked for
+  // host reads. Pre-SPEC-0028 artefacts (a different or missing version) are
+  // history: no host finding was possible, so silence cannot be a clean bill.
+  const versions = []
 
   for (const c of cases) {
     const name = `${c.skill ?? "unknown"}#${c.case ?? "?"}`
@@ -97,6 +128,7 @@ export function checkRun({ arm = null, cases = [] } = {}) {
       const rep = r.rep ?? r.index ?? i + 1
       const repArm = arm ?? r.arm ?? c.arm ?? null
       const add = (kind, detail) => findings.push({ case: name, rep, kind, detail })
+      versions.push(r.detectorVersion ?? c.detectorVersion ?? null)
 
       // An infrastructure draw is incomplete evidence, not behaviour: report it
       // and skip the load/leak checks, which a killed draw cannot satisfy.
@@ -110,17 +142,26 @@ export function checkRun({ arm = null, cases = [] } = {}) {
 
       // SPEC-0017 made `leak` mandatory. A missing field is not an empty field:
       // it means this draw cannot be checked, so it fails loudly.
-      const paths = leakPaths(r)
+      const skill = leakPaths(r, "leak")
+      const host = leakEntries(r).filter((e) => e.kind === "host")
       if (r.leak === undefined) {
         add("leak-missing", "leak field missing — provenance unknown")
-      } else if (paths.length) {
-        add("leak", `read ${paths.join(", ")}`)
+      } else {
+        if (skill.length) {
+          skillLeaks++
+          add("leak", `read ${skill.join(", ")}`)
+        }
+        if (host.length) {
+          hostReads++
+          const named = host.map((e) => (e.root ? `${e.path} (${e.root})` : e.path))
+          add("host", `read host corpus ${named.join(", ")}`)
+        }
       }
 
       // Contamination is its own finding even when no path survived (an old
       // aggregate could mark the draw and drop the evidence). When a leak is
       // named, that finding already carries the failure.
-      if (isContaminated(r) && !paths.length) {
+      if (isContaminated(r) && !skill.length && !host.length) {
         add("contaminated", "marked contaminated without a named leak path")
       }
 
@@ -138,5 +179,13 @@ export function checkRun({ arm = null, cases = [] } = {}) {
     }
   }
 
-  return { findings, counts: { cases: cases.length, reps, findings: findings.length, infrastructure } }
+  const detectorCurrent = versions.length > 0 && versions.every((v) => v === DETECTOR_VERSION)
+  // A missing `leak` field, or contamination with no named path, leaves the
+  // question open; an open question is not isolation.
+  const unproven = findings.some((f) => f.kind === "leak-missing" || f.kind === "contaminated")
+  const isolated = detectorCurrent && !unproven && skillLeaks === 0 && hostReads === 0
+  return {
+    findings,
+    counts: { cases: cases.length, reps, findings: findings.length, infrastructure, skillLeaks, hostReads, isolated },
+  }
 }

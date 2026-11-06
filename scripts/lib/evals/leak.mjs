@@ -1,4 +1,4 @@
-// leak.mjs — did the child reach a skill (or the eval corpus) outside the scratch?
+// leak.mjs — did the child read anything outside the scratch?
 //
 // `--no-skill` denies the `skill` tool and stages nothing, but the child still
 // runs as this user: it can read the installed copy at `~/.agents/skills/<id>`,
@@ -6,9 +6,18 @@
 // `references/evals.md`. Three published control draws did exactly that and were
 // scored as passes, because the gate only watched the `skill` tool.
 //
+// The same hole existed one level up. A control draw can read the host checkout
+// the runner lives in — `docs/`, the checkout `AGENTS.md`, `scripts/`, `skills/`,
+// `runs/` — or a sibling worktree under `.lane/trees/`. That is the eval corpus,
+// not the scratch, so it is a finding too, but a different kind: `leak` means an
+// installed skill or the answer key, `host` means the host corpus. The caller
+// passes the roots (`hostRoots`) because they are machine-specific; the runner
+// records them in the run manifest and the replay derives them from it.
+//
 // This is the detector the runner records per repetition and the replay tool
-// reads. Pure: it takes the tool calls and the scratch path, and never touches
-// the filesystem, so a transcript can be re-read without the run that made it.
+// reads. Pure: it takes the tool calls, the scratch path and the host roots, and
+// never touches the filesystem, so a transcript can be re-read without the run
+// that made it.
 //
 // Two paths deliberately do not count. `~/…` does not reach the real install:
 // `isolateHome` gives the child a throwaway `HOME`, so `~/.agents/skills` is a
@@ -37,6 +46,9 @@ const RULES = {
     "(?:^|/)T/opencode/(?:[^/]+/)*skills(?:/|$)",
   ],
   corpus: "/references/evals\\.md$",
+  // The roots themselves are machine-specific and passed by the caller; this
+  // rule pins the semantics: an absolute read inside one of them is a finding.
+  hostCorpus: "absolute-host-corpus-read",
 }
 
 export const DETECTOR_RULES = Object.freeze([
@@ -45,6 +57,7 @@ export const DETECTOR_RULES = Object.freeze([
   RULES.isolatedHome,
   ...RULES.skillRoots,
   RULES.corpus,
+  RULES.hostCorpus,
 ])
 
 export function detectorVersion(rules = DETECTOR_RULES) {
@@ -87,14 +100,27 @@ function isCorpus(path) {
   return CORPUS.test(path)
 }
 
-function classifies(path, scratch) {
+// The host roots arrive as absolute paths (a directory or a file such as
+// `AGENTS.md`). A path is inside one when it is equal or sits below it; the
+// scratch check runs first, so a fixture that stages a `docs/` tree stays clean.
+function hostRootOf(path, hostRoots = []) {
+  for (const root of hostRoots) {
+    if (typeof root !== "string" || !root.startsWith("/")) continue
+    if (inside(path, root)) return root
+  }
+  return null
+}
+
+function classifies(path, scratch, hostRoots = []) {
   // Only an absolute path can be outside the scratch *and* outside the throwaway
   // home. A relative `references/evals.md` resolves inside the scratch, where
   // reading it is legitimate; `~/…` resolves inside the isolated home.
-  if (!path.startsWith("/")) return false
-  if (ISOLATED_HOME.test(path)) return false
-  if (inside(path, scratch)) return false
-  return isSkillRoot(path) || isCorpus(path)
+  if (!path.startsWith("/")) return null
+  if (ISOLATED_HOME.test(path)) return null
+  if (inside(path, scratch)) return null
+  if (isSkillRoot(path) || isCorpus(path)) return { kind: "leak" }
+  const root = hostRootOf(path, hostRoots)
+  return root ? { kind: "host", root } : null
 }
 
 // One token per whitespace/quoted/punctuation-delimited word: enough to read a
@@ -110,19 +136,26 @@ function strings(value, out = []) {
 
 // `{ tool, path }` per external skill/corpus read, deduplicated. The staged
 // skill (`<scratch>/.opencode/skills/<id>`) and the fixture stay inside the
-// scratch, so neither ever appears.
-export function findLeaks(calls, scratch) {
+// scratch, so neither ever appears. A `host` hit carries its `kind` and the
+// matching `root`; a `leak` hit keeps the original shape, which is also what
+// every artefact written before the host rules contains.
+export function findLeaks(calls, scratch, hostRoots = []) {
   const hits = []
   const seen = new Set()
   for (const call of calls) {
     const text = [...strings(call.input ?? {}), ...strings(call.meta ?? {})].join("\n")
     for (const m of text.matchAll(TOKEN)) {
       const path = m[0].replace(/[.:]+$/, "")
-      if (!classifies(path, scratch)) continue
+      const hit = classifies(path, scratch, hostRoots)
+      if (!hit) continue
       const key = `${call.tool}\u0000${path}`
       if (seen.has(key)) continue
       seen.add(key)
-      hits.push({ tool: call.tool, path })
+      hits.push(
+        hit.kind === "host"
+          ? { tool: call.tool, path, kind: "host", root: hit.root }
+          : { tool: call.tool, path },
+      )
     }
   }
   return hits
@@ -132,7 +165,14 @@ export function findLeaks(calls, scratch) {
 // A missing or non-string stream is an empty transcript, not a crash: a run that
 // never produced output still has to be scored (and must not be called clean by
 // accident).
-export function leaksIn(out, scratch) {
+export function leaksIn(out, scratch, hostRoots = []) {
   if (typeof out !== "string" || out === "") return []
-  return findLeaks(toolCalls(out), scratch)
+  return findLeaks(toolCalls(out), scratch, hostRoots)
+}
+
+// The caller's form named in the spec: `leak({ calls, scratch, hostRoots })`.
+// It is the same pure detector, with the arguments named so the runner, the
+// replay and the tests cannot disagree about their order.
+export function leak({ calls = [], scratch = null, hostRoots = [] } = {}) {
+  return findLeaks(calls, scratch, hostRoots)
 }

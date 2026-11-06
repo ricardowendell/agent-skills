@@ -25,11 +25,14 @@ directories; they are not estimates.
 ## Evidence rules
 
 - A run directory cited **as a clean measurement or a pass rate** must pass
-  `node scripts/check-eval-run.mjs <run-dir>` with `findings=0 warnings=0`: no
-  leaked read, no contaminated draw, no lost skill gate, no missing provenance,
-  and no unfinished run. A directory that fails may still be cited **as the
-  record of the failure itself**, with the finding named; it cannot supply a
-  clean pass rate.
+  `node scripts/check-eval-run.mjs <run-dir>` with `findings=0 warnings=0`,
+  `skillLeaks=0` and `isolated=yes`: no leaked read (skill or host corpus), no
+  contaminated draw, no lost skill gate, no missing provenance, and no
+  unfinished run. A directory that fails may still be cited **as the record of
+  the failure itself**, with the finding named; it cannot supply a clean pass
+  rate. `findings=0` alone is not isolation: before detector v2 the checker
+  could not see a host read, so an old run prints `isolated=no` even when it
+  has no finding.
 - `stoppedEarly: true` is a complete run, not an unfinished one: the stop rule
   fired between waves and `reps` is the number of draws actually run. Cite
   `reps`/`passed` (e.g. "8/8, stopped early"), never the requested `--repeat`.
@@ -49,6 +52,74 @@ directories; they are not estimates.
   beside `review-code-matrix.md`.
 - Never round a repetition into a rate: `--repeat 3` gives three draws, and the
   matrix says five is enough to see a direction, not to publish a per-case rate.
+
+## Detector v2
+
+The rows above were measured with detector v1 (`a31d58f79a6c7038`), which saw
+installed skill roots and `references/evals.md` but not the host checkout.
+Detector v2 (`71bfb85a91cd68ab`) adds a separate `host` finding for a read into
+`docs/`, the checkout `AGENTS.md`, `scripts/`, `skills/`, `runs/` or
+`.lane/trees/`; a `leak` finding keeps its v1 meaning (installed skill or answer
+key). The numbers above are unchanged — this note records which cells they can
+no longer carry. Old runs stay citable as history only; their
+`detectorVersion` is v1, and `check-eval-run` prints `isolated=no` for them even
+when `findings=0`.
+
+`node scripts/replay-evals.mjs --leaks <run-dir…>` re-judged the 0.5.0 wave from
+its transcripts, with no model and no write into the run directories: 49 run
+directories and 57 cells (the four skills, their controls, the two
+`write-implementation-prompt` canaries, and the `agentworks-gpt-oss-120b` pilot
+cells, which all replay clean). 23 cells are dirty; a cell is listed once, with
+the rules the replay found.
+
+| cell | run dir | draws | replay verdict | clean under v1? |
+| --- | --- | --- | --- | --- |
+| `write-implementation-prompt#1` | `2026-11-06T13-46-05--write-implementation-prompt` | 8 | `dirty(host)` | yes — already discarded by hand (r8 read `.lane/trees`) |
+| `write-implementation-prompt#5` | `2026-11-06T14-07-04--write-implementation-prompt` | 5 | `dirty(host)` | yes — **new** |
+| `write-implementation-prompt#6` | `2026-11-06T14-07-04--write-implementation-prompt` | 5 | `dirty(host)` | yes — **new** |
+| `write-implementation-prompt#1` | `2026-11-06T14-28-07--write-implementation-prompt--without-skill` | 5 | `dirty(leak,host)` | no |
+| `write-implementation-prompt#2` | `2026-11-06T14-30-42--write-implementation-prompt--without-skill` | 5 | `dirty(leak,host)` | no |
+| `write-implementation-prompt#3` | `2026-11-06T14-32-58--write-implementation-prompt--without-skill` | 5 | `dirty(leak)` | no |
+| `write-implementation-prompt#2` | `2026-11-06T14-40-36--write-implementation-prompt--without-skill` | 5 | `dirty(leak)` | no |
+| `write-implementation-prompt#5` | `2026-11-06T14-43-01--write-implementation-prompt` | 5 | `dirty(leak)` | no |
+| `write-implementation-prompt#1` | `2026-11-06T15-15-52--write-implementation-prompt--without-skill` | 5 | `dirty(leak,host)` | no |
+| `write-implementation-prompt#1` | `2026-11-06T15-18-26--write-implementation-prompt--without-skill` | 5 | `dirty(leak)` | no |
+| `write-implementation-prompt#1` | `2026-11-06T15-20-43--write-implementation-prompt--without-skill` | 5 | `dirty(leak,host)` | no |
+| `write-implementation-prompt#2` | `2026-11-06T15-25-06--write-implementation-prompt--without-skill` | 5 | `dirty(leak)` | no |
+| `write-implementation-prompt#2` | `2026-11-06T15-27-30--write-implementation-prompt--without-skill` | 5 | `dirty(leak)` | no |
+| `write-implementation-prompt#5` | `2026-11-06T15-33-16--write-implementation-prompt` | 5 | `dirty(leak,host)` | no |
+| `write-implementation-prompt#5` | `2026-11-06T15-49-43--write-implementation-prompt` | 5 | `dirty(leak,host)` | no |
+| `write-implementation-prompt#5` | `2026-11-06T16-02-56--write-implementation-prompt` | 5 | `dirty(leak,host)` | no |
+| `capture-idea#3` | `2026-11-06T16-50-30--capture-idea` | 5 | `dirty(leak)` | no |
+| `capture-idea#1` | `2026-11-06T17-07-09--capture-idea--without-skill` | 5 | `dirty(leak)` | no |
+| `process-inbox#1` | `2026-11-06T17-08-43--process-inbox--without-skill` | 5 | `dirty(leak)` | no |
+| `capture-idea#1` | `2026-11-06T17-23-44--capture-idea--without-skill` | 5 | `dirty(leak)` | no |
+| `process-inbox#1` | `2026-11-06T17-25-52--process-inbox--without-skill` | 5 | `dirty(leak)` | no |
+| `capture-idea#1` | `2026-11-06T17-32-50--capture-idea--without-skill` | 5 | `dirty(leak)` | no |
+| `process-inbox#1` | `2026-11-06T17-34-41--process-inbox--without-skill` | 5 | `dirty(leak)` | no |
+
+A cell-level dirty verdict does not by itself shrink a published clean subset:
+where the row above cites a clean subset (for example `write-implementation-prompt`
+#5 at `2026-11-06T16-02-56`, 3/3), the replay's per-draw pass leaves that subset
+intact. The two **new** invalidations are called out because a draw that had been
+clean is now contaminated.
+
+The two **new** invalidations are with-skill trigger/canary runs: in
+`2026-11-06T14-07-04--write-implementation-prompt`, r1 of both `#5` and `#6`
+read the checkout `AGENTS.md` and `docs/specs/SPEC-0012-paraphrase-lens-spec-reviewer.md`.
+They were counted as clean draws under v1; the `#6` "failed 2/5 in the first
+run" note above is therefore one dirty draw and one clean failure, not a clean
+2/5. No control cell that was clean under v1 becomes dirty: every dirty control
+above already carried a leak finding, and the controls behind the published
+separators replay clean — `write-implementation-prompt` #2
+(`2026-11-06T15-30-39`), #4 (`2026-11-06T14-37-23`), and `record-decision`
+#1/#2/#3 (`17-11-37`, `17-15-33`, `17-20-53`, `17-28-10`). The 12-draw canary
+at `2026-11-06T13-51-35` is clean and still citable. The deny-layer question
+(SPEC-0028) stays open: the host reads are common in the controls that were
+already broken, not in every control.
+
+The cells above keep their published numbers. SPEC-0031 re-measures the ones
+that still matter under v2; this note only names them.
 
 ## Known holes
 

@@ -69,7 +69,7 @@
 
 import { readdirSync, lstatSync, realpathSync, existsSync, mkdirSync, writeFileSync, appendFileSync, readFileSync } from "node:fs"
 import { spawnSync } from "node:child_process"
-import { join, basename, dirname } from "node:path"
+import { join, basename, dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { homedir } from "node:os"
 import { readEvals } from "./lib/evals/parse.mjs"
@@ -221,6 +221,31 @@ if (opt.concurrency === null) opt.concurrency = opt.level === "smoke" ? 1 : 4
 const STOP = opt.level === "smoke" ? null : opt.stop !== null ? parseStop(opt.stop) : opt.repeat > 5 ? { passes: 5, fails: 3 } : null
 
 const HOME = homedir()
+// The host corpus: the checkout the runner lives in, plus its sibling worktrees.
+// A control draw that reads any of these has not been isolated, even when it
+// never touched an installed skill. Absolute by construction, and recorded in
+// the manifest so the replay can re-judge the run without guessing.
+const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..")
+const hostRootsFor = (root) => [
+  join(root, "docs"),
+  join(root, "AGENTS.md"),
+  join(root, "scripts"),
+  join(root, "skills"),
+  join(root, "runs"),
+  join(root, ".lane/trees"),
+]
+// The checkout that holds the repo, even when the runner itself is launched from
+// a worktree: the main worktree's `docs/` and the sibling trees are still the
+// host corpus.
+function mainCheckout() {
+  const r = spawnSync("git", ["rev-parse", "--path-format=absolute", "--git-common-dir"], { cwd: REPO, encoding: "utf8" })
+  if (r.status === 0) {
+    const common = r.stdout.trim()
+    if (common) return dirname(common)
+  }
+  return REPO
+}
+const HOST_ROOTS = [...new Set([...hostRootsFor(mainCheckout()), ...hostRootsFor(REPO)])]
 const ROOTS = (
   opt.root
     ? [opt.root]
@@ -245,6 +270,9 @@ const run = () =>
       repeat: opt.repeat,
       stop: STOP,
       stallMs: opt.stallSeconds * 1000,
+      // Machine-specific, so the run carries them: the replay must judge the
+      // transcript against the checkout that produced it, not its own.
+      hostRoots: HOST_ROOTS,
     },
   }))
 
@@ -482,13 +510,17 @@ async function runCase(skill, c, rep = null) {
   // The leak is a property of this repetition's transcript and scratch, so it is
   // recorded here, per draw, not inferred later from a run summary. A single draw
   // is the whole case, so its reason says "every repetition contaminated".
-  const clean = contaminate(core, leaksIn(out, finalScratch ?? scratch), { all: !rep })
+  const leaks = leaksIn(out, finalScratch ?? scratch, HOST_ROOTS)
+  const clean = contaminate(core, leaks, { all: !rep })
   const skillLabel = opt.noSkill
     ? `**Skill:** ${gate.ok ? "not loaded (control arm)" : "LOADED — the control arm is broken"} (${gate.reason})`
     : `**Skill:** ${gate.ok ? "loaded" : "MISSING"} (${gate.reason})`
 
   const result = caseResult(skill, c, {
     ...clean,
+    // `contaminate` keeps the legacy `{ tool, path }` shape; the artifact needs
+    // the kind so the checker can separate a skill leak from a host read.
+    leak: leaks,
     ...(rep ? { rep: rep.index } : {}),
     meta: { repoSha: meta.repoSha, agent: meta.agent, model: meta.model, level: meta.level },
     transcript: file,

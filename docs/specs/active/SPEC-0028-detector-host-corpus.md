@@ -140,7 +140,28 @@ scheduling change. **No model draw.**
 
 ## Results
 
-_Filled during implementation._
+- **Detector v2.** `leak.mjs` takes `hostRoots` from the caller and returns a
+  `host` hit (with the matched root) for an absolute read into the recorded host
+  corpus, separate from the `leak` hit for skill roots/`references/evals.md`.
+  `DETECTOR_VERSION` moved from `a31d58f79a6c7038` to `71bfb85a91cd68ab`; the
+  test golden is updated to the new digest. `run-evals.mjs` records the roots it
+  used in `manifest.params.hostRoots` (main checkout and worktree) and keeps the
+  hit kind in each repetition's artifact.
+- **Two verdicts.** `checkRun` now reports `skillLeaks`, `hostReads` and
+  `isolated`; a run whose `detectorVersion` is not v2 is never credited as
+  isolated. `check-eval-run` prints the new fields and keeps the 0/1/2 exit
+  contract.
+- **Replay.** `replay-evals.mjs --leaks <run-dir…>` re-reads the stored
+  transcripts, derives host roots from the manifest (or the main checkout for
+  pre-v2 runs), prints `cell → clean | dirty(rule)` per run and writes nothing.
+- **0.5.0 replay.** 49 run directories / 57 cells: 23 dirty, 3 of them clean
+  under v1. `write-implementation-prompt` `14-07-04` `#5` and `#6` are newly
+  invalidated by `dirty(host)`; `13-46-05` was already discarded for the same
+  read. Every dirty control was already dirty under v1, and no published clean
+  control changes verdict. The table is in `docs/evals/coverage.md` under
+  "Detector v2".
+- **No draw.** No model was called; all five gates pass (277 harness tests, 17
+  bootstrap tests, sensor parity 2/2).
 
 ## Open Questions
 

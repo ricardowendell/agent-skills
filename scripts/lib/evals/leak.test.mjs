@@ -1,6 +1,6 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { DETECTOR_RULES, DETECTOR_VERSION, detectorVersion, findLeaks, leaksIn } from "./leak.mjs"
+import { DETECTOR_RULES, DETECTOR_VERSION, detectorVersion, findLeaks, leak, leaksIn } from "./leak.mjs"
 
 test("the detector version is derived from the rule list and pinned", () => {
   assert.match(DETECTOR_VERSION, /^[0-9a-f]{16}$/)
@@ -9,7 +9,7 @@ test("the detector version is derived from the rule list and pinned", () => {
   // Golden: if a rule changes, the digest changes and this fails until the new
   // value is written here — the signal that an earlier control is no longer
   // citable. Recompute with `detectorVersion()`.
-  assert.equal(DETECTOR_VERSION, "a31d58f79a6c7038")
+  assert.equal(DETECTOR_VERSION, "71bfb85a91cd68ab")
 })
 
 const SCRATCH = "/var/folders/aa/T/eval-review-code-1-abc123"
@@ -100,6 +100,98 @@ test("the corpus staged inside the scratch is not a leak", () => {
   // under another name, and that copy is inside the scratch.
   const hits = findLeaks([call("read", { path: `${SCRATCH}/references/evals.md` })], SCRATCH)
   assert.deepEqual(hits, [])
+})
+
+// The host corpus. These roots are machine-specific and passed by the caller;
+// the fixtures below pin one rule per root the runner records.
+const HOST = "/Users/me/host"
+const HOST_ROOTS = [
+  `${HOST}/docs`,
+  `${HOST}/AGENTS.md`,
+  `${HOST}/scripts`,
+  `${HOST}/skills`,
+  `${HOST}/runs`,
+  `${HOST}/.lane/trees`,
+]
+
+test("a read into each host root is a host finding that names the root", () => {
+  const samples = [
+    [`${HOST}/docs/specs/SPEC-0012-demo.md`, `${HOST}/docs`],
+    [`${HOST}/AGENTS.md`, `${HOST}/AGENTS.md`],
+    [`${HOST}/scripts/lib/evals/leak.mjs`, `${HOST}/scripts`],
+    [`${HOST}/skills/capture-idea/SKILL.md`, `${HOST}/skills`],
+    [`${HOST}/runs/record.json`, `${HOST}/runs`],
+    [`${HOST}/.lane/trees/SPEC-0025-demo/scripts`, `${HOST}/.lane/trees`],
+  ]
+  for (const [path, root] of samples) {
+    const hits = findLeaks([call("read", { path })], SCRATCH, HOST_ROOTS)
+    assert.deepEqual(hits, [{ tool: "read", path, kind: "host", root }])
+  }
+})
+
+test("a shell call that reads the host checkout is a host finding", () => {
+  const path = `${HOST}/docs/specs/SPEC-0012-demo.md`
+  const hits = findLeaks([call("shell", { command: `sed -n '1,20p' ${path}` })], SCRATCH, HOST_ROOTS)
+  assert.deepEqual(hits, [{ tool: "shell", path, kind: "host", root: `${HOST}/docs` }])
+})
+
+test("the bare host root and its files count, without naming a child", () => {
+  const hits = findLeaks(
+    [call("shell", { command: `ls ${HOST}/scripts` }), call("read", { path: `${HOST}/AGENTS.md` })],
+    SCRATCH,
+    HOST_ROOTS,
+  )
+  assert.deepEqual(paths(hits), [`${HOST}/scripts`, `${HOST}/AGENTS.md`])
+  assert.deepEqual(hits.map((h) => h.kind), ["host", "host"])
+})
+
+test("a host-shaped path inside the scratch stays invisible", () => {
+  const hits = findLeaks(
+    [
+      call("read", { path: `${SCRATCH}/docs/specs/SPEC-0012-demo.md` }),
+      call("read", { path: `${SCRATCH}/AGENTS.md` }),
+    ],
+    SCRATCH,
+    [`${SCRATCH}/docs`, `${SCRATCH}/AGENTS.md`],
+  )
+  assert.deepEqual(hits, [])
+})
+
+test("a host-shaped path in the throwaway home is not the host", () => {
+  const home = "/var/folders/aa/T/opencode-eval-home-PJWuQN"
+  const hits = findLeaks(
+    [call("read", { path: `${home}/docs/specs/SPEC-0012-demo.md` })],
+    SCRATCH,
+    [`${home}/docs`],
+  )
+  assert.deepEqual(hits, [])
+})
+
+test("an absolute path outside every host root stays benign", () => {
+  const hits = findLeaks(
+    [call("read", { path: "/Users/me/projects/elsewhere/docs/specs/SPEC-0012-demo.md" })],
+    SCRATCH,
+    HOST_ROOTS,
+  )
+  assert.deepEqual(hits, [])
+})
+
+test("skill leaks and host reads are separate kinds in one call", () => {
+  const skill = "/Users/me/.agents/skills/review-code/SKILL.md"
+  const host = `${HOST}/docs/specs/SPEC-0012-demo.md`
+  const hits = findLeaks([call("read", { path: skill }), call("read", { path: host })], SCRATCH, HOST_ROOTS)
+  assert.deepEqual(hits, [
+    { tool: "read", path: skill },
+    { tool: "read", path: host, kind: "host", root: `${HOST}/docs` },
+  ])
+})
+
+test("leak({ calls, scratch, hostRoots }) is the same detector", () => {
+  const host = `${HOST}/scripts/lib/evals/leak.mjs`
+  assert.deepEqual(leak({ calls: [call("read", { path: host })], scratch: SCRATCH, hostRoots: HOST_ROOTS }), [
+    { tool: "read", path: host, kind: "host", root: `${HOST}/scripts` },
+  ])
+  assert.deepEqual(leak(), [])
 })
 
 test("a path that only resembles a skill root is benign", () => {

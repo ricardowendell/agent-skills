@@ -32,11 +32,16 @@
 //                                                 # one stored run (prefix match)
 //   node scripts/replay-evals.mjs --judge opencode-go/gpt-6-luna [--json]
 //                                                 # re-judge stored draws, no agent run
+//   node scripts/replay-evals.mjs --leaks <run-dir…>
+//                                                 # re-run the leak detector over the
+//                                                 # stored transcripts: no model,
+//                                                 # no write into the run directory
 
 import { readFileSync, readdirSync, existsSync } from "node:fs"
 import { join, dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { homedir } from "node:os"
+import { spawnSync } from "node:child_process"
 import { parseCases } from "./lib/evals/parse.mjs"
 import { REPLAYABLE } from "./lib/evals/kinds.mjs"
 import { evaluateAssertions, skillGate } from "./lib/evals/assertions.mjs"
@@ -45,11 +50,25 @@ import { classify } from "./lib/evals/result.mjs"
 import { listRuns } from "./lib/evals/runs.mjs"
 import { parseTranscript } from "./lib/evals/transcript.mjs"
 import { rejudge } from "./lib/evals/rejudge.mjs"
+import { leaksIn, DETECTOR_VERSION } from "./lib/evals/leak.mjs"
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const OUT_ROOT = join(homedir(), ".local/share/opencode/evals")
 
-const opt = { dir: OUT_ROOT, root: join(REPO, "skills"), skill: null, case: null, run: null, changed: false, quiet: false, judge: null, json: false }
+const opt = {
+  dir: OUT_ROOT,
+  root: join(REPO, "skills"),
+  skill: null,
+  case: null,
+  run: null,
+  changed: false,
+  quiet: false,
+  judge: null,
+  json: false,
+  leaks: false,
+  hostRoots: [],
+  runs: [],
+}
 const argv = process.argv.slice(2)
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i]
@@ -68,6 +87,15 @@ for (let i = 0; i < argv.length; i++) {
   else if (a === "--changed") opt.changed = true
   else if (a === "--quiet") opt.quiet = true
   else if (a === "--json") opt.json = true
+  else if (a === "--leaks") opt.leaks = true
+  else if (a === "--host-root") {
+    const value = argv[++i]
+    if (value === undefined || value.startsWith("--")) {
+      console.error("--host-root needs a directory")
+      process.exit(2)
+    }
+    opt.hostRoots.push(resolve(value))
+  }
   else if (a === "--judge") {
     const value = argv[++i]
     if (value === undefined || value.startsWith("--")) {
@@ -75,6 +103,10 @@ for (let i = 0; i < argv.length; i++) {
       process.exit(2)
     }
     opt.judge = value
+  } else if (!a.startsWith("-")) {
+    // Positional arguments are run directories for `--leaks`; every other mode
+    // keeps its flag-only interface.
+    opt.runs.push(resolve(a))
   } else {
     console.error(`unknown flag ${a}`)
     process.exit(2)
@@ -93,6 +125,117 @@ if (opt.case !== null && !(Number.isInteger(opt.case) && opt.case > 0)) {
 if (opt.json && !opt.judge) {
   console.error("--json needs --judge")
   process.exit(2)
+}
+
+if (opt.leaks && opt.judge) {
+  console.error("--leaks is model-free; drop --judge")
+  process.exit(2)
+}
+
+if (!opt.leaks && opt.runs.length) {
+  console.error("positional run directories are only accepted with --leaks")
+  process.exit(2)
+}
+
+// The host corpus the runner recorded. Pre-SPEC-0028 manifests do not carry it,
+// so the replay falls back to the checkout this script was cloned from: the
+// main worktree (via the common git dir) and this checkout. Both are derived,
+// not typed; a machine-specific list still comes from the manifest when present.
+function hostRootsFor(root) {
+  return [
+    join(root, "docs"),
+    join(root, "AGENTS.md"),
+    join(root, "scripts"),
+    join(root, "skills"),
+    join(root, "runs"),
+    join(root, ".lane/trees"),
+  ]
+}
+
+function mainCheckout() {
+  const r = spawnSync("git", ["rev-parse", "--path-format=absolute", "--git-common-dir"], {
+    cwd: REPO,
+    encoding: "utf8",
+  })
+  if (r.status === 0) {
+    const common = r.stdout.trim()
+    if (common) return dirname(common)
+  }
+  return REPO
+}
+
+function defaultHostRoots() {
+  return [...new Set([...hostRootsFor(mainCheckout()), ...hostRootsFor(REPO)])]
+}
+
+function manifestHostRoots(runDir) {
+  try {
+    const manifest = JSON.parse(readFileSync(join(runDir, "manifest.json"), "utf8"))
+    const roots = manifest?.hostRoots ?? manifest?.params?.hostRoots
+    if (Array.isArray(roots)) {
+      const valid = roots.filter((r) => typeof r === "string" && r.startsWith("/"))
+      if (valid.length) return valid
+    }
+  } catch {}
+  return null
+}
+
+// `--leaks` re-judges what the stored transcripts actually did. It reads only;
+// nothing is written into the run directory and no model is called.
+if (opt.leaks) {
+  const dirs = (opt.runs.length ? opt.runs : listRuns(opt.dir)).slice().sort()
+  if (!dirs.length) {
+    console.error("no run directories found")
+    process.exit(2)
+  }
+  const fallback = defaultHostRoots()
+  let cells = 0
+  let dirty = 0
+  let unreadable = 0
+  for (const runDir of dirs) {
+    if (!existsSync(runDir)) {
+      console.error(`not a readable run dir: ${runDir}`)
+      unreadable++
+      continue
+    }
+    const name = runDir.replace(/\/+$/, "").split("/").pop()
+    const hostRoots = opt.hostRoots.length ? opt.hostRoots : manifestHostRoots(runDir) ?? fallback
+    const casesDir = join(runDir, "cases")
+    if (!existsSync(casesDir)) continue
+    const byCell = new Map()
+    for (const c of readdirSync(casesDir)) {
+      const cdir = join(casesDir, c)
+      if (!existsSync(cdir)) continue
+      for (const file of readdirSync(cdir)) {
+        if (!file.startsWith("transcript") || !file.endsWith(".md")) continue
+        const parsed = parseTranscript(readFileSync(join(cdir, file), "utf8"))
+        if (!parsed) continue
+        if (opt.skill && parsed.skill !== opt.skill) continue
+        if (opt.case !== null && parsed.n !== opt.case) continue
+        const key = `${parsed.skill}#${parsed.n}`
+        const entry = byCell.get(key) ?? { draws: 0, leak: false, host: false }
+        entry.draws++
+        for (const hit of leaksIn(parsed.text, parsed.scratch, hostRoots)) {
+          if (hit.kind === "host") entry.host = true
+          else entry.leak = true
+        }
+        byCell.set(key, entry)
+      }
+    }
+    for (const [cell, entry] of [...byCell.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+      cells++
+      const rules = [entry.leak ? "leak" : "", entry.host ? "host" : ""].filter(Boolean)
+      if (rules.length) dirty++
+      const verdict = rules.length ? `dirty(${rules.join(",")})` : "clean"
+      console.log(`${name}  ${cell} → ${verdict}  [${entry.draws} draw(s)]`)
+    }
+  }
+  console.log(
+    `\nDetector ${DETECTOR_VERSION}: ${cells} cell(s), ${dirty} dirty` +
+      (unreadable ? `, ${unreadable} unreadable run dir(s)` : "") +
+      `. No model, no write.`,
+  )
+  process.exit(unreadable ? 2 : 0)
 }
 
 function loadCases(root) {

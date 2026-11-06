@@ -1,11 +1,12 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 import { spawnSync } from "node:child_process"
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { checkRun, isPreDetector } from "./runcheck.mjs"
+import { DETECTOR_VERSION } from "./leak.mjs"
 
 const gate = ({ ok = true, loaded = ["implement-from-prompt"], reason = "loaded implement-from-prompt" } = {}) => ({
   ok,
@@ -22,6 +23,7 @@ const rep = (overrides = {}) => ({
   arm: "with-skill",
   leak: [],
   contaminated: false,
+  detectorVersion: DETECTOR_VERSION,
   skillGate: gate(),
   ...overrides,
 })
@@ -42,7 +44,7 @@ test("a clean with-skill run at 5/5 has no findings", () => {
   const cases = [aggregate(Array.from({ length: 5 }, (_, i) => rep({ rep: i + 1 })))]
   const { findings, counts } = checkRun({ arm: "with-skill", cases })
   assert.deepEqual(findings, [])
-  assert.deepEqual(counts, { cases: 1, reps: 5, findings: 0, infrastructure: 0 })
+  assert.deepEqual(counts, { cases: 1, reps: 5, findings: 0, infrastructure: 0, skillLeaks: 0, hostReads: 0, isolated: true })
 })
 
 test("a clean control run at 0/5 is not dirty just because it failed", () => {
@@ -51,7 +53,7 @@ test("a clean control run at 0/5 is not dirty just because it failed", () => {
   )
   const { findings, counts } = checkRun({ arm: "without-skill", cases: [aggregate(reps, { contaminated: 0 })] })
   assert.deepEqual(findings, [])
-  assert.deepEqual(counts, { cases: 1, reps: 5, findings: 0, infrastructure: 0 })
+  assert.deepEqual(counts, { cases: 1, reps: 5, findings: 0, infrastructure: 0, skillLeaks: 0, hostReads: 0, isolated: true })
 })
 
 test("a control repetition that loaded a skill is a gate miss", () => {
@@ -110,7 +112,7 @@ test("a run with no leak field at all is recognised as pre-detector", () => {
   // historical artefact so the old run remains citable.
   const { findings, counts } = checkRun({ arm: "with-skill", cases })
   assert.deepEqual(kinds(findings), Array(12).fill("leak-missing"))
-  assert.deepEqual(counts, { cases: 1, reps: 12, findings: 12, infrastructure: 0 })
+  assert.deepEqual(counts, { cases: 1, reps: 12, findings: 12, infrastructure: 0, skillLeaks: 0, hostReads: 0, isolated: false })
 })
 
 test("a run that carries leak somewhere must carry it everywhere", () => {
@@ -215,10 +217,52 @@ test("the aggregated case reads repetitions[] and names the leaking draw", () =>
   assert.match(findings[0].detail, /SKILL\.md/)
 })
 
+test("a host-corpus read is its own finding, and skillLeaks stays zero", () => {
+  const host = [
+    {
+      tool: "read",
+      path: "/Users/me/host/docs/specs/SPEC-0012-demo.md",
+      kind: "host",
+      root: "/Users/me/host/docs",
+    },
+  ]
+  const cases = [aggregate([rep({ rep: 1 }), rep({ rep: 2, leak: host, contaminated: true })])]
+  const { findings, counts } = checkRun({ arm: "with-skill", cases })
+  assert.deepEqual(kinds(findings), ["host"])
+  assert.equal(findings[0].rep, 2)
+  assert.match(findings[0].detail, /read host corpus/)
+  assert.match(findings[0].detail, /SPEC-0012-demo\.md/)
+  assert.equal(counts.skillLeaks, 0)
+  assert.equal(counts.hostReads, 1)
+  assert.equal(counts.isolated, false)
+})
+
+test("a skill leak and a host read in one draw are two findings", () => {
+  const leak = [
+    { tool: "read", path: "/Users/me/.agents/skills/review-code/SKILL.md" },
+    { tool: "read", path: "/Users/me/host/AGENTS.md", kind: "host", root: "/Users/me/host/AGENTS.md" },
+  ]
+  const cases = [aggregate([rep({ rep: 1, leak, contaminated: true })])]
+  const { findings, counts } = checkRun({ arm: "with-skill", cases })
+  assert.deepEqual(kinds(findings), ["leak", "host"])
+  assert.equal(counts.skillLeaks, 1)
+  assert.equal(counts.hostReads, 1)
+  assert.equal(counts.isolated, false)
+})
+
+test("a run written by an older detector is never called isolated", () => {
+  const cases = [aggregate([rep({ rep: 1, detectorVersion: "a31d58f79a6c7038" })])]
+  const { findings, counts } = checkRun({ arm: "with-skill", cases })
+  assert.deepEqual(findings, [])
+  assert.equal(counts.skillLeaks, 0)
+  assert.equal(counts.hostReads, 0)
+  assert.equal(counts.isolated, false, "the old detector did not look for host reads")
+})
+
 test("a single-draw result is the repetition at the root", () => {
   const root = rep({ rep: 1, skillGate: gate({ ok: false, loaded: [], reason: "MISSING" }) })
   const { findings, counts } = checkRun({ arm: "with-skill", cases: [root] })
-  assert.deepEqual(counts, { cases: 1, reps: 1, findings: 1, infrastructure: 0 })
+  assert.deepEqual(counts, { cases: 1, reps: 1, findings: 1, infrastructure: 0, skillLeaks: 0, hostReads: 0, isolated: true })
   assert.deepEqual(kinds(findings), ["gate-miss"])
   assert.equal(findings[0].rep, 1)
 })
@@ -227,6 +271,7 @@ test("a single-draw result is the repetition at the root", () => {
 // pure rule. These run the real script against synthetic run directories in
 // $TMPDIR so the exit codes and the summary cannot drift.
 const CLI = fileURLToPath(new URL("../../check-eval-run.mjs", import.meta.url))
+const REPLAY = fileURLToPath(new URL("../../replay-evals.mjs", import.meta.url))
 
 function makeRun(t, { manifest, cases = [] } = {}) {
   const dir = mkdtempSync(join(tmpdir(), "pdlc-runcheck-"))
@@ -241,6 +286,73 @@ function makeRun(t, { manifest, cases = [] } = {}) {
 }
 
 const runCli = (dir) => spawnSync(process.execPath, [CLI, dir], { encoding: "utf8" })
+
+function transcriptMd({ skill = "demo", n = 1, scratch, command }) {
+  return [
+    `# Eval: ${skill} case ${n}`,
+    "",
+    "**Prompt:** demo",
+    "",
+    `**Scratch:** ${scratch}`,
+    "",
+    "**Exit:** 0",
+    "**Status:** passed",
+    "",
+    "## Transcript",
+    "",
+    "```",
+    JSON.stringify({
+      type: "tool_use",
+      part: { id: `${n}`, tool: "shell", state: { status: "completed", input: { command }, metadata: { metadata: {} } } },
+    }),
+    "```",
+    "",
+  ].join("\n")
+}
+
+// The replay is read-only by contract; compare the tree before and after.
+function snapshot(dir) {
+  const out = []
+  const walk = (d) => {
+    for (const entry of readdirSync(d, { withFileTypes: true })) {
+      const p = join(d, entry.name)
+      if (entry.isDirectory()) {
+        out.push(`d ${p}`)
+        walk(p)
+      } else out.push(`f ${p}\n${readFileSync(p, "utf8")}`)
+    }
+  }
+  walk(dir)
+  return out
+}
+
+test("replay --leaks re-judges stored transcripts and writes nothing", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pdlc-replay-leaks-"))
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+  const run = join(root, "run-demo")
+  mkdirSync(run, { recursive: true })
+  const scratch = "/var/folders/aa/T/eval-demo-1-abc"
+  const host = "/Users/me/host/docs/specs/SPEC-0012-demo.md"
+  writeFileSync(
+    join(run, "manifest.json"),
+    JSON.stringify({ arm: "without-skill", params: { hostRoots: ["/Users/me/host/docs"] } }),
+  )
+  const caseDir = join(run, "cases", "demo--01")
+  mkdirSync(caseDir, { recursive: true })
+  writeFileSync(join(caseDir, "transcript.r1.md"), transcriptMd({ n: 1, scratch, command: `sed -n '1,5p' ${host}` }))
+  writeFileSync(join(caseDir, "transcript.r2.md"), transcriptMd({ n: 1, scratch, command: `cat ${scratch}/docs/SPEC-0012-demo.md` }))
+  // A second cell reads only the scratch and must stay clean.
+  const cleanDir = join(run, "cases", "demo--02")
+  mkdirSync(cleanDir, { recursive: true })
+  writeFileSync(join(cleanDir, "transcript.r1.md"), transcriptMd({ n: 2, scratch, command: `cat ${scratch}/AGENTS.md` }))
+
+  const before = snapshot(run)
+  const r = spawnSync(process.execPath, [REPLAY, "--leaks", run], { encoding: "utf8" })
+  assert.equal(r.status, 0, r.stderr)
+  assert.match(r.stdout, /demo#1 → dirty\(host\)  \[2 draw\(s\)\]/)
+  assert.match(r.stdout, /demo#2 → clean  \[1 draw\(s\)\]/)
+  assert.deepEqual(snapshot(run), before, "the replay writes nothing into the run directory")
+})
 const modern = (overrides = {}) => ({ arm: "with-skill", status: "completed", startedAt: "2026-11-06T12:00:00.000Z", ...overrides })
 
 test("CLI exits 0 for a clean completed run", (t) => {
@@ -248,6 +360,7 @@ test("CLI exits 0 for a clean completed run", (t) => {
   const r = runCli(dir)
   assert.equal(r.status, 0)
   assert.match(r.stdout, /findings=0 warnings=0/)
+  assert.match(r.stdout, /skillLeaks=0 hostReads=0 isolated=yes/)
 })
 
 test("CLI exits 1 and names a leaking draw", (t) => {
@@ -260,6 +373,37 @@ test("CLI exits 1 and names a leaking draw", (t) => {
   assert.equal(r.status, 1)
   assert.match(r.stdout, /leak implement-from-prompt#1 r2/)
   assert.match(r.stdout, /SKILL\.md/)
+})
+
+test("CLI names a host-corpus read and denies isolation", (t) => {
+  const leak = [
+    {
+      tool: "read",
+      path: "/Users/me/host/docs/specs/SPEC-0012-demo.md",
+      kind: "host",
+      root: "/Users/me/host/docs",
+    },
+  ]
+  const dir = makeRun(t, {
+    manifest: modern(),
+    cases: [{ name: "x--01", result: aggregate([rep({ rep: 2, leak })]) }],
+  })
+  const r = runCli(dir)
+  assert.equal(r.status, 1)
+  assert.match(r.stdout, /host implement-from-prompt#1 r2/)
+  assert.match(r.stdout, /read host corpus/)
+  assert.match(r.stdout, /skillLeaks=0 hostReads=1 isolated=no/)
+})
+
+test("CLI does not credit an old-detector run as isolated", (t) => {
+  const dir = makeRun(t, {
+    manifest: modern(),
+    cases: [{ name: "x--01", result: aggregate([rep({ rep: 1, detectorVersion: "a31d58f79a6c7038" })]) }],
+  })
+  const r = runCli(dir)
+  assert.equal(r.status, 0)
+  assert.match(r.stdout, /findings=0 warnings=0/)
+  assert.match(r.stdout, /isolated=no/)
 })
 
 test("CLI treats an infrastructure draw as incomplete evidence, not clean", (t) => {

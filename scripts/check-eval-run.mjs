@@ -120,7 +120,8 @@ function main(argv) {
       process.stdout.write(`${f.kind} ${f.case} r${f.rep} — ${f.detail}\n`)
     }
     process.stdout.write(
-      `cases=${counts.cases} reps=${counts.reps} findings=${counts.findings} warnings=${warnings.length} (${dir})\n`,
+      `cases=${counts.cases} reps=${counts.reps} findings=${counts.findings} warnings=${warnings.length} ` +
+        `skillLeaks=${counts.skillLeaks} hostReads=${counts.hostReads} isolated=${counts.isolated ? "yes" : "no"} (${dir})\n`,
     )
     if (findings.length) dirty = true
   }
