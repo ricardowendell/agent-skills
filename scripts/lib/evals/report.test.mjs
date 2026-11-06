@@ -13,9 +13,27 @@ test("a passed case that now fails is a regression", () => {
 })
 
 test("falling to unscored counts as a regression, not as neutral", () => {
-  const c = compareRuns(run([r(1, "passed")]), run([r(1, "unscored")]))
+  const c = compareRuns(run([r(1, "passed")]), run([r(1, "unscored", "every repetition contaminated")]))
   assert.equal(c.ok, false)
   assert.equal(c.regressions[0].to, "unscored")
+  assert.deepEqual(c.fixes, [])
+})
+
+test("failed → unscored is lost evidence, not a fix", () => {
+  const c = compareRuns(run([r(1, "failed", "reply")]), run([r(1, "unscored", "every repetition contaminated — read …/skills/x/SKILL.md")]))
+  assert.equal(c.ok, false)
+  assert.deepEqual(c.fixes, [])
+  assert.deepEqual(c.regressions.map((x) => x.key), ["review-code#1"])
+  assert.equal(c.regressions[0].from, "failed")
+  assert.equal(c.regressions[0].to, "unscored")
+  assert.match(c.regressions[0].reason, /contaminated/)
+})
+
+test("unscored → failed is not a fix either", () => {
+  const c = compareRuns(run([r(1, "unscored")]), run([r(1, "failed", "verdict")]))
+  assert.equal(c.ok, false)
+  assert.deepEqual(c.fixes, [])
+  assert.deepEqual(c.regressions.map((x) => x.key), ["review-code#1"])
 })
 
 test("a case that recovered is reported as fixed, not as noise", () => {

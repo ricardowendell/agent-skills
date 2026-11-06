@@ -24,8 +24,10 @@ export function summarizeRun({ results, ...meta }) {
   }
 }
 
-// Regressions are strict on purpose: `unscored` is not a pass, and a case that
-// disappeared from the run is reported as missing, not as fine.
+// Regressions are strict on purpose: `unscored` is not a pass, a case that
+// disappeared from the run is reported as missing, and only a transition into
+// `passed` is a fix. A failure that becomes `unscored` lost its evidence (a
+// contaminated re-run lands there); it is not an improvement.
 export function compareRuns(baseline, current) {
   const before = new Map((baseline.results ?? []).map((r) => [key(r), r]))
   const after = new Map((current.results ?? []).map((r) => [key(r), r]))
@@ -42,8 +44,7 @@ export function compareRuns(baseline, current) {
     }
     if (was.status === now.status) continue
     if (now.status === "passed") fixes.push({ key: k, from: was.status, to: now.status })
-    else if (was.status === "passed") regressions.push({ key: k, from: was.status, to: now.status, reason: now.reason })
-    else fixes.push({ key: k, from: was.status, to: now.status })
+    else regressions.push({ key: k, from: was.status, to: now.status, reason: now.reason })
   }
   for (const k of before.keys()) if (!after.has(k)) missing.push({ key: k, status: before.get(k).status })
 
