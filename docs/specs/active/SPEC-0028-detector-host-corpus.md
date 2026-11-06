@@ -25,6 +25,7 @@ files:
   - scripts/run-evals.mjs
   - scripts/check-eval-run.mjs
   - docs/evals/coverage.md
+  - docs/evals/write-implementation-prompt-matrix.md
   - docs/specs/active/SPEC-0028-detector-host-corpus.md
 tests:
   - node scripts/validate-skills.mjs --root skills
@@ -142,8 +143,9 @@ scheduling change. **No model draw.**
 ## Results
 
 - **Detector v2.** `leak.mjs` takes `hostRoots` from the caller and returns a
-  `host` hit (with the matched root) for an absolute read into the recorded host
-  corpus, separate from the `leak` hit for skill roots/`references/evals.md`.
+  `host` hit (with the **most specific** matching root) for an absolute read into
+  the recorded host corpus, separate from the `leak` hit for skill
+  roots/`references/evals.md`.
   `DETECTOR_VERSION` moved from `a31d58f79a6c7038` to `71bfb85a91cd68ab`; the
   test golden is updated to the new digest. The roots include the checkout root
   itself, so `git -C <checkout> log`, `.git/`, `CONTRIBUTING.md`, `package.json`
@@ -161,17 +163,21 @@ scheduling change. **No model draw.**
   pre-v2 runs), prints `cell → clean | dirty(rule)` per run and writes nothing.
   A missing path, a directory without `cases/`, or a run with no transcripts is
   a named error and exit 2; `--leaks` without run directories requires `--all`
-  instead of silently scanning the store.
+  instead of silently scanning the store. `--all` skips runs whose manifest is
+  not `completed` and reports `skipped=N`; exit 2 is reserved for explicitly
+  named dirs.
 - **0.5.0 replay.** 49 run directories / 57 cells: 26 dirty, 6 of them clean
   under v1 (1 already discarded, 5 newly invalidated). Among the new ones are
-  the clean controls for `write-implementation-prompt` #2
-  (`2026-11-06T15-30-39`) and #4 (`2026-11-06T14-37-23`), each with one denied
-  read of the checkout root, so their published `0/5` and `5/5` are no longer
-  five clean draws. The record-decision controls and the agentworks controls
-  replay clean, so the host was read by many controls, not all. The table is in
-  `docs/evals/coverage.md` under "Detector v2"; the 0.5.0 rows are
-  replay-verified v1 history, not v2 measurements.
-- **No draw.** No model was called; all five gates pass (287 harness tests, 17
+  the controls for `write-implementation-prompt` #2 (`2026-11-06T15-30-39`) and
+  #4 (`2026-11-06T14-37-23`), each with one denied read of the checkout root:
+  the published `0/5` and `5/5` are now **0/4 replay-clean** and **4/5 draws
+  clean (4/4 passed)**, both pending SPEC-0031. The corrections are beside the
+  published numbers in `docs/evals/coverage.md` and
+  `docs/evals/write-implementation-prompt-matrix.md`. The record-decision
+  controls and the agentworks controls replay clean, so the host was read by
+  many controls, not all. The 0.5.0 rows are replay-verified v1 history, not v2
+  measurements.
+- **No draw.** No model was called; all five gates pass (289 harness tests, 17
   bootstrap tests, sensor parity 2/2).
 
 ## Open Questions

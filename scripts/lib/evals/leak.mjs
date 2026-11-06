@@ -103,12 +103,17 @@ function isCorpus(path) {
 // The host roots arrive as absolute paths (a directory or a file such as
 // `AGENTS.md`). A path is inside one when it is equal or sits below it; the
 // scratch check runs first, so a fixture that stages a `docs/` tree stays clean.
+// Return the longest matching root, not the first: the caller usually passes the
+// checkout root plus its known subdirectories, and the finding should name
+// `docs/` for a `docs/specs/…` read, not the whole checkout.
 function hostRootOf(path, hostRoots = []) {
+  let best = null
   for (const root of hostRoots) {
     if (typeof root !== "string" || !root.startsWith("/")) continue
-    if (inside(path, root)) return root
+    if (!inside(path, root)) continue
+    if (!best || norm(root).length > norm(best).length) best = root
   }
-  return null
+  return best
 }
 
 function classifies(path, scratch, hostRoots = []) {

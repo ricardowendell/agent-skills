@@ -151,6 +151,21 @@ test("the checkout root covers .git, CONTRIBUTING, package.json and .pdlc", () =
   assert.ok(hits.every((h) => h.kind === "host" && h.root === HOST))
 })
 
+test("the most specific host root names the read", () => {
+  const hits = findLeaks(
+    [
+      call("read", { path: `${HOST}/docs/specs/SPEC-0012-demo.md` }),
+      call("read", { path: `${HOST}/AGENTS.md` }),
+    ],
+    SCRATCH,
+    [HOST, `${HOST}/docs`, `${HOST}/AGENTS.md`],
+  )
+  assert.deepEqual(
+    hits.map((h) => h.root),
+    [`${HOST}/docs`, `${HOST}/AGENTS.md`],
+  )
+})
+
 test("a shell call that reads the host checkout is a host finding", () => {
   const path = `${HOST}/docs/specs/SPEC-0012-demo.md`
   const hits = findLeaks([call("shell", { command: `sed -n '1,20p' ${path}` })], SCRATCH, HOST_ROOTS)

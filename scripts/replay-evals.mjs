@@ -175,15 +175,20 @@ function defaultHostRoots() {
   return [...new Set([...hostRootsFor(mainCheckout()), ...hostRootsFor(REPO)])]
 }
 
-function manifestHostRoots(runDir) {
+function readManifest(runDir) {
   try {
-    const manifest = JSON.parse(readFileSync(join(runDir, "manifest.json"), "utf8"))
-    const roots = manifest?.hostRoots ?? manifest?.params?.hostRoots
-    if (Array.isArray(roots)) {
-      const valid = roots.filter((r) => typeof r === "string" && r.startsWith("/"))
-      if (valid.length) return valid
-    }
-  } catch {}
+    return JSON.parse(readFileSync(join(runDir, "manifest.json"), "utf8"))
+  } catch {
+    return null
+  }
+}
+
+function manifestHostRoots(manifest) {
+  const roots = manifest?.hostRoots ?? manifest?.params?.hostRoots
+  if (Array.isArray(roots)) {
+    const valid = roots.filter((r) => typeof r === "string" && r.startsWith("/"))
+    if (valid.length) return valid
+  }
   return null
 }
 
@@ -203,23 +208,36 @@ if (opt.leaks) {
     process.exit(2)
   }
   const fallback = defaultHostRoots()
+  // A named directory is a claim about that directory, so a broken one is exit 2.
+  // A store scan is a survey: unfinished runs (manifest-only, `status: running`)
+  // are named as skipped, not turned into a failed run.
+  const explicit = opt.runs.length > 0
   let cells = 0
   let dirty = 0
   let unreadable = 0
+  let skipped = 0
   for (const runDir of dirs) {
+    const manifest = readManifest(runDir)
+    if (!explicit && manifest && manifest.status !== "completed") {
+      console.error(`skipped ${runDir} — manifest status ${manifest.status ?? "missing"}`)
+      skipped++
+      continue
+    }
     if (!existsSync(runDir)) {
-      console.error(`not a readable run dir: ${runDir}`)
-      unreadable++
+      if (explicit) console.error(`not a readable run dir: ${runDir}`)
+      unreadable += explicit ? 1 : 0
+      skipped += explicit ? 0 : 1
       continue
     }
     const casesDir = join(runDir, "cases")
     if (!existsSync(casesDir)) {
-      console.error(`not a run dir (no cases/): ${runDir}`)
-      unreadable++
+      if (explicit) console.error(`not a run dir (no cases/): ${runDir}`)
+      unreadable += explicit ? 1 : 0
+      skipped += explicit ? 0 : 1
       continue
     }
     const name = runDir.replace(/\/+$/, "").split("/").pop()
-    const hostRoots = opt.hostRoots.length ? opt.hostRoots : manifestHostRoots(runDir) ?? fallback
+    const hostRoots = opt.hostRoots.length ? opt.hostRoots : manifestHostRoots(manifest) ?? fallback
     const byCell = new Map()
     for (const c of readdirSync(casesDir)) {
       const cdir = join(casesDir, c)
@@ -241,8 +259,9 @@ if (opt.leaks) {
       }
     }
     if (!byCell.size) {
-      console.error(`no transcripts in run dir: ${runDir}`)
-      unreadable++
+      if (explicit) console.error(`no transcripts in run dir: ${runDir}`)
+      unreadable += explicit ? 1 : 0
+      skipped += explicit ? 0 : 1
       continue
     }
     for (const [cell, entry] of [...byCell.entries()].sort(([a], [b]) => a.localeCompare(b))) {
@@ -257,7 +276,11 @@ if (opt.leaks) {
     console.error(`\n${unreadable} unreadable/invalid run dir(s); replay incomplete, no clean verdict.`)
     process.exit(2)
   }
-  console.log(`\nDetector ${DETECTOR_VERSION}: ${cells} cell(s), ${dirty} dirty. No model, no write.`)
+  console.log(
+    `\nDetector ${DETECTOR_VERSION}: ${cells} cell(s), ${dirty} dirty` +
+      (skipped ? `, skipped=${skipped}` : "") +
+      `. No model, no write.`,
+  )
   process.exit(0)
 }
 

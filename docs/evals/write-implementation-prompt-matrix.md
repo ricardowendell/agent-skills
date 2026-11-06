@@ -9,7 +9,8 @@ those commits the only change under `skills/` is case #3's `prompt:`/`why:` in
 covers only the prompt text, so every re-run repeats the `8e26cf6`
 `fixtureHash`, `promptHash`, `detectorVersion` and — for the trigger arm —
 `skillHash`. The assertion sets for #1/#2/#4/#5/#6 are unchanged by that same
-skills diff.
+skills diff. Every run carries detector v1 (`a31d58f79a6c7038`); the v2
+correction is in "What clean means" below.
 
 The skill is six cases: `#1`–`#4` are behavioural, `#5`/`#6` are routing
 triggers. Everything below runs under `node scripts/run-evals.mjs --root skills
@@ -29,16 +30,32 @@ A deterministic cell reads `passed/reps`: every assertion passed and the skill
 gate held. A draw that lost its skill gate is not a pass and does not count as
 one. No judge ran, so there is no judge column.
 
-## What "clean" means — TASK-43 caveat
+## What "clean" means — detector v2 correction
 
-`findings=0 warnings=0` means the detector saw **no read of an installed skill or
-of a `references/evals.md` answer key** outside the scratch. It does **not** mean
-the draw was isolated. `scripts/lib/evals/leak.mjs` classifies only skill roots
-and `references/evals.md$`; a draw can read the host's `docs/` corpus or the
-global `AGENTS.md` and still score `findings=0`. That gap is real and open
-(TASK-43), and it applies to **every** control cell here and to the trigger
-cells, whose clean scored draws also read host `docs/`, `scripts/` and
-`Projects/` (the #5 reading below), and the discarded canary below is another.
+Every measurement in this matrix was written by detector v1
+(`a31d58f79a6c7038`). V1 saw **no read of an installed skill or a
+`references/evals.md` answer key** outside the scratch, so `findings=0` meant
+that and nothing more: a draw could read the host checkout and still score
+`findings=0`. V2 (`71bfb85a91cd68ab`) adds the `host` finding, including the
+checkout root. The 0.5.0 numbers below are unchanged and remain history; where
+the replay changes a cell, the correction is beside it and the clean five-draw
+measurement is **pending SPEC-0031**.
+
+`node scripts/replay-evals.mjs --leaks <run-dir>` re-judged the stored
+transcripts with no model. Two control dirs are `dirty(host)`:
+
+- `2026-11-06T15-30-39--write-implementation-prompt--without-skill` (#2): `r1`
+  globbed `/Users/wendell/.agents` and was denied by `external_directory`. The
+  v1 "0/5 clean" is **0/4 replay-clean**; all four clean draws still failed
+  `nodir docs/prompts`. The direction is unchanged, but the clean five-draw
+  control does not exist.
+- `2026-11-06T14-37-23--write-implementation-prompt--without-skill` (#4): `r5`
+  grepped `/Users/wendell/.agents` and was denied. The v1 "5/5 clean" is **4/5
+  draws clean (4/4 passed)**; the non-discriminator reading holds on the clean
+  subset, but it is not a five-draw clean cell.
+
+`check-eval-run` cannot see this in the old artifacts: they carry v1 and print
+`isolated=unknown`, not `yes`. The replay is the citation.
 
 ## Load canary
 
@@ -47,15 +64,16 @@ node scripts/run-evals.mjs --root skills --skill write-implementation-prompt --c
 ```
 
 `2026-11-06T13-51-35--write-implementation-prompt`: **12/12 passed, 12/12
-skill-gate holds** (`findings=0 warnings=0`). The canary is a precondition, not a
-case rate.
+skill-gate holds** (`findings=0 warnings=0`; v1). The v2 replay is `clean`, so
+this remains replay-verified history; it is a precondition, not a case rate.
 
 The earlier eight-draw invocation `2026-11-06T13-46-05--write-implementation-prompt`
 (which stopped at 8/8 under the default `5/3` rule) is **discarded, not clean**:
 `transcript.r8.md` reads this spec's own worktree under
-`.lane/trees/SPEC-0025-.../docs/` and `docs/prompts/`, which the detector does
-not cover, so the checker still reports `findings=0`. It is not a 12-draw canary
-and it is not evidence for anything below.
+`.lane/trees/SPEC-0025-.../docs/` and `docs/prompts/`. V1 did not cover that, so
+the old checker reported `findings=0`; the v2 replay marks the cell
+`dirty(host)`. It is not a 12-draw canary and it is not evidence for anything
+below.
 
 ## Gate A — default model, five repetitions, no judge
 
@@ -109,18 +127,20 @@ skills diff cited at the top, not the table alone.
 | #1 | control (3) | `2026-11-06T15-20-43--write-implementation-prompt--without-skill` | `fff5b96` | `findings=2` |
 | #2 | control (1) | `2026-11-06T15-25-06--write-implementation-prompt--without-skill` | `fff5b96` | `findings=2` |
 | #2 | control (2) | `2026-11-06T15-27-30--write-implementation-prompt--without-skill` | `fff5b96` | `findings=2` |
-| #2 | control (3) | `2026-11-06T15-30-39--write-implementation-prompt--without-skill` | `fff5b96` | `findings=0 warnings=0` |
+| #2 | control (3) | `2026-11-06T15-30-39--write-implementation-prompt--without-skill` | `fff5b96` | v1 `findings=0 warnings=0`; v2 replay `dirty(host)` (`r1`, 0/4 clean) |
 | #3 | control | `2026-11-06T14-32-58--write-implementation-prompt--without-skill` | `8e26cf6` | `findings=1` |
-| #4 | control | `2026-11-06T14-37-23--write-implementation-prompt--without-skill` | `8e26cf6` | `findings=0 warnings=0` |
+| #4 | control | `2026-11-06T14-37-23--write-implementation-prompt--without-skill` | `8e26cf6` | v1 `findings=0 warnings=0`; v2 replay `dirty(host)` (`r5`, 4/4 passed clean) |
 
 The older #1 control run `2026-11-06T14-28-07` appears only in the #1
 unresolved history; the older #2 runs (`14-30-42`, `14-40-36`) are superseded by
-the clean `15-30-39` and are not used.
+`15-30-39` under v1 (v2: `dirty(host)`, 0/4 replay-clean) and are not used.
 
 The three #1 attempts never produced a clean five-draw run. Their clean counts
 are `0/3` (`15-15-52`), `0/4` (`15-18-26`) and `0/3` (`15-20-43`); every clean
-draw failed. The three #2 attempts are `0/3`, `0/3` and **`0/5`**; the third is
-the clean cell.
+draw failed. The three #2 attempts are `0/3`, `0/3` and **`0/5`** under v1; the
+third is **0/4 replay-clean** under v2 (`r1` is `dirty(host)`), so it is not a
+five-draw clean cell. The #4 control is **4/5 draws clean (4/4 passed)** under
+v2 (`r5` is `dirty(host)`), not the v1 5/5.
 
 ### Trigger runs
 
@@ -143,14 +163,19 @@ latest run `16-02-56` is the one to quote: **#5 3/3 clean scored draws loaded**
 infrastructure, not a routing verdict; the contamination is a read of the real
 skill or a stale copy.
 
+Under v2, `14-07-04` `r1` (#5 and #6) and `15-33-16` `r1` (#6) are also
+`dirty(host)` (checkout-root reads, denied). The v1 columns are unchanged; those
+cells lose one clean draw, and their five-clean-draw readings remain pending
+SPEC-0031.
+
 ### Scores
 
 | case | with skill | with, gate | control | control, gate | classification |
 | --- | --- | --- | --- | --- | --- |
 | #1 create the demo prompt | 5/5 | 5/5 | no clean run; largest clean subset 0/4 | 4/4 no skill loaded | **unresolved** |
-| #2 draft spec | 5/5 | 5/5 | **0/5 clean** | 5/5 no skill loaded | **separator** |
+| #2 draft spec | 5/5 | 5/5 | **0/4 replay-clean** (v1 0/5; `r1` host) | 5/5 no skill loaded | **separator**, pending SPEC-0031 |
 | #3 open questions | 4/5 | 5/5 | 0/4 clean (1 contaminated) | 4/4 no skill loaded | **manual** (reverted) |
-| #4 overlapping prompt | 5/5 | 5/5 | **5/5 clean** | 5/5 no skill loaded | **non-discriminator** |
+| #4 overlapping prompt | 5/5 | 5/5 | **4/4 replay-clean** (v1 5/5; `r5` host, 4/5 draws) | 5/5 no skill loaded | **non-discriminator**, pending SPEC-0031 |
 
 The red cells, by assertion or gate reason:
 
@@ -161,18 +186,22 @@ The red cells, by assertion or gate reason:
   the spec. Every attempt also lost one or two draws to a read of the real
   install (`15-15-52` `r1`,`r3`; `15-18-26` `r3`; `15-20-43` `r2`,`r5`). The
   contaminated draws are excluded, and no attempt has five clean draws.
-- **#2 control** — the clean run `15-30-39` failed `nodir docs/prompts` in **5/5**:
-  the control generated a prompt from a `draft` spec. The two rejected attempts
-  (`15-25-06`, `15-27-30`) failed the same assertion in their three clean draws
-  each; three of the four contaminated draws read the real install and one
-  (`15-27-30 r3`) a stale copy under `/private/tmp/as-remote/...`.
+- **#2 control** — `15-30-39` failed `nodir docs/prompts` in all five v1 draws:
+  the control generated a prompt from a `draft` spec. Under v2 `r1` is
+  `dirty(host)` (glob of the checkout root, denied), so the reading is **0/4
+  replay-clean**. The two rejected attempts (`15-25-06`, `15-27-30`) failed the
+  same assertion in their three clean draws each; three of the four contaminated
+  draws read the real install and one (`15-27-30 r3`) a stale copy under
+  `/private/tmp/as-remote/...`.
 - **#3 with skill** — `nodir docs/prompts` failed in `r3`: the draw treated both
   open questions as non-blocking, turned them into non-goals, and wrote
   `docs/prompts/SPEC-0009-audit-log.prompt.md`. The other four stopped.
 - **#3 control** — `nodir docs/prompts` failed in all four clean draws; the
   fifth read the real install and is excluded.
-- **#4** — no red: both arms passed both assertions in five draws. The control
-  produced the prompt and the `spec_sha` without the skill.
+- **#4** — no red: both arms passed both assertions in five draws under v1. The
+  control produced the prompt and the `spec_sha` without the skill; under v2 its
+  `r5` is `dirty(host)` (grep of the checkout root, denied), leaving **4/5 draws
+  clean (4/4 passed)**, so the clean five-draw cell is pending SPEC-0031.
 - **#5** — no assertion red in any clean scored draw. Stalls: `14-07-04 r5`,
   `14-43-01 r1`/`r4`, `15-33-16 r1` (also contaminated), `15-49-43 r1`.
   Contamination: `14-43-01 r3` (stale copy under
@@ -208,15 +237,21 @@ were stable; it is not, and five draws cannot promote it.
   forbids promoting a separator from a rejected run, and draws from different
   runs are not summed into a five-draw cell. Re-measure after the control arm
   can no longer read the install.
-- **#2 — separator.** 5/5 with the skill against **0/5** clean without it in
-  `15-30-39`. The clean run is a single directory with `findings=0 warnings=0`;
-  the two earlier attempts are history, not part of the denominator.
+- **#2 — separator, pending SPEC-0031 under detector v2.** 5/5 with the skill
+  against **0/5** clean without it in `15-30-39` under v1. The v2 replay marks
+  `r1` `dirty(host)` (glob of the checkout root, denied), so the reading is
+  **0/4 replay-clean**: the direction is unchanged, but the five-draw clean
+  control does not exist and must be re-measured. The two earlier attempts are
+  history, not part of the denominator.
 - **#3 — manual (reverted).** The five draws split 4/5, so the case carries a
   `why:` instead of a classification. The run pair is cited as the record of
   that split, not as a separator.
-- **#4 — non-discriminator.** 5/5 in both arms. A bare agent mirrors the
-  existing prompt and records `spec_sha` as often as the skill does. Keep as a
-  regression case.
+- **#4 — non-discriminator, pending SPEC-0031 under detector v2.** 5/5 in both
+  arms under v1. The control's `r5` is `dirty(host)` (grep of the checkout root,
+  denied), so the v2 reading is **4/5 draws clean (4/4 passed)**: the
+  non-discriminator reading holds on the clean subset, but the five-draw clean
+  cell is pending. A bare agent mirrors the existing prompt and records
+  `spec_sha` as often as the skill does. Keep as a regression case.
 - **#5 and #6 — triggers, not rates.** `#5` loaded in 3/3 clean scored draws in
   the latest run (`16-02-56`), with two contaminated draws; no #5 run has
   five scored draws. `#6` is not deterministic: 5/5 in `15-33-16`, 3/5 in
@@ -249,8 +284,10 @@ node scripts/check-eval-run.mjs ~/.local/share/opencode/evals/runs/<dir>
 #   leak #2 r3, r4 — /Users/wendell/.agents/skills/...
 # 2026-11-06T15-27-30--write-implementation-prompt--without-skill
 #   leak #2 r3, r4 — /private/tmp/as-remote/... and /Users/wendell/.agents/skills/...
+# 2026-11-06T14-37-23--write-implementation-prompt--without-skill
+#   findings=0 warnings=0 (v1; v2 replay: dirty(host), r5)
 # 2026-11-06T15-30-39--write-implementation-prompt--without-skill
-#   findings=0 warnings=0
+#   findings=0 warnings=0 (v1; v2 replay: dirty(host), r1)
 # 2026-11-06T15-33-16--write-implementation-prompt
 #   infrastructure #5 r1 — stalled; leak #5 r4 — stale copy
 # 2026-11-06T15-49-43--write-implementation-prompt
@@ -274,5 +311,7 @@ leak detector; they are not evidence for this table. The with-skill cells are
 `8e26cf6` and the control/trigger re-runs are `fff5b96`; the hash table proves the
 measurement surface is identical. The `#1` control has no five-draw clean run and
 stays `unresolved`. The `#2`, `#3` and `#4` control cells are one run each
-(`15-30-39`, `14-32-58`, `14-37-23`); the first is clean, the other two are read
-from clean draws with the leak named.
+(`15-30-39`, `14-32-58`, `14-37-23`). Under v2 the first and third are
+`dirty(host)` (`15-30-39 r1`, `14-37-23 r5`), so their readings are **0/4** and
+**4/4** replay-verified and the five-draw clean cells are pending SPEC-0031; the
+middle is a leak, read from its clean draws with the leak named.

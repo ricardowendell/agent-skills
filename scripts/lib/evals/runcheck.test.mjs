@@ -407,6 +407,31 @@ test("replay --leaks --all with an empty store exits 2", (t) => {
   assert.match(r.stderr, /no run directories found/)
 })
 
+test("replay --leaks --all skips an unfinished manifest-only run", (t) => {
+  const store = mkdtempSync(join(tmpdir(), "pdlc-replay-store-"))
+  t.after(() => rmSync(store, { recursive: true, force: true }))
+  const scratch = "/var/folders/aa/T/eval-demo-1-abc"
+  const good = join(store, "runs", "good-run")
+  mkdirSync(join(good, "cases", "demo--01"), { recursive: true })
+  writeFileSync(
+    join(good, "manifest.json"),
+    JSON.stringify({ status: "completed", params: { hostRoots: ["/Users/me/host/docs"] } }),
+  )
+  writeFileSync(
+    join(good, "cases", "demo--01", "transcript.r1.md"),
+    transcriptMd({ n: 1, scratch, command: "cat /Users/me/host/docs/specs/SPEC-0012-demo.md" }),
+  )
+  const broken = join(store, "runs", "running-run")
+  mkdirSync(join(broken, "cases"), { recursive: true })
+  writeFileSync(join(broken, "manifest.json"), JSON.stringify({ status: "running" }))
+
+  const r = spawnSync(process.execPath, [REPLAY, "--leaks", "--all", "--dir", store], { encoding: "utf8" })
+  assert.equal(r.status, 0, r.stderr)
+  assert.match(r.stdout, /good-run  demo#1 → dirty\(host\)  \[1 draw\(s\)\]/)
+  assert.match(r.stdout, /skipped=1/)
+  assert.match(r.stderr, /skipped .*running-run/)
+})
+
 const modern = (overrides = {}) => ({
   arm: "with-skill",
   status: "completed",

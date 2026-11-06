@@ -19,27 +19,32 @@ directories; they are not estimates.
 | `survey-inflight-work` | 4 | 2 | 0 | tree 1 via `git.json` with a local bare `origin`; tree 2 without a remote | iteration 1, 1 draw/case: with-skill 4/4 (`2026-11-04T21-49-16`); control case 1 0/1, only the `unknown` PR state separated (`…21-45-26`); control case 2 0/1, only the no-remote line separated (`…21-57-53`) |
 | `audit-code-quality` | 4 | 2 | 0 | trees 1 and 4 via `git.json` | iteration 1: with-skill 4/4 (`2026-11-04T21-55-53`); control case 1 0/1, only coverage `unknown` separated (`…21-47-51`); case 4 on the final 8-assertion version 1/1 with skill (`2026-11-04T21-59-17`) against 0/1 without (`2026-11-04T21-59-17--without-skill`) on `SCOPE:`/`rule`/`CAPTURE OPTIONS` — one draw per arm, so it does not separate reliably (`…21-57-53` is the pre-contract 5-assertion version) |
 | `tighten-harness` | 6 | 2 | 0 | trees 1, 2, 3, 5, 6 | case 5: 3/3 passed, skill loaded 0/3 (`why:`, no run dir) |
-| `write-implementation-prompt` | 6 | 2 | 1 | trees 1–4 | published matrix: #2 separator 5/5 vs **0/5** clean control (`2026-11-06T13-59-48--write-implementation-prompt`, `2026-11-06T15-30-39--write-implementation-prompt--without-skill`); #1 **unresolved** — four control attempts, no five-draw clean run, clean subsets 0/3 (`2026-11-06T15-15-52--write-implementation-prompt--without-skill`), 0/4 (`2026-11-06T15-18-26--write-implementation-prompt--without-skill`), 0/3 (`2026-11-06T15-20-43--write-implementation-prompt--without-skill`) and the older 0/4 (`2026-11-06T14-28-07--write-implementation-prompt--without-skill`), all failing `spec_sha:`; every attempt has leak findings; #4 non-discriminator 5/5 in both arms (`2026-11-06T14-04-25--write-implementation-prompt`, `2026-11-06T14-37-23--write-implementation-prompt--without-skill`); #3 ran five draws at `8e26cf6`, split 4/5 on `nodir docs/prompts`, and is back to `manual` with a `why:` (`2026-11-06T14-01-54--write-implementation-prompt`; control `2026-11-06T14-32-58--write-implementation-prompt--without-skill`, 0/4 clean, 1 contaminated); triggers: #5 3/3 clean scored draws loaded in `2026-11-06T16-02-56--write-implementation-prompt` (2 contaminated), no #5 run with five scored draws; #6 failed 2/5 in the first run (`notskill` red in r1/r2, `2026-11-06T14-07-04--write-implementation-prompt`) and read 5/5, 5/5, 3/5, 4/5 in the four later runs; the skill is the first action where it loads; canary 12/12 at `2026-11-06T13-51-35--write-implementation-prompt`, and the 8-draw `2026-11-06T13-46-05--write-implementation-prompt` is discarded because `r8` read the worktree `.lane/trees` outside the detector; see `write-implementation-prompt-matrix.md` |
+| `write-implementation-prompt` | 6 | 2 | 1 | trees 1–4 | published matrix: #2 separator 5/5 vs **0/5** clean control under v1 — **0/4 replay-clean** under v2: `2026-11-06T15-30-39` r1 globbed the checkout root (denied) and is `dirty(host)`, so the clean five-draw measurement is **pending SPEC-0031** (`2026-11-06T13-59-48--write-implementation-prompt`, `2026-11-06T15-30-39--write-implementation-prompt--without-skill`); #1 **unresolved** — four control attempts, no five-draw clean run, clean subsets 0/3 (`2026-11-06T15-15-52--write-implementation-prompt--without-skill`), 0/4 (`2026-11-06T15-18-26--write-implementation-prompt--without-skill`), 0/3 (`2026-11-06T15-20-43--write-implementation-prompt--without-skill`) and the older 0/4 (`2026-11-06T14-28-07--write-implementation-prompt--without-skill`), all failing `spec_sha:`; every attempt has leak findings; #4 non-discriminator 5/5 in both arms under v1 — control **4/5 draws clean (4/4 passed)** under v2, r5 read the checkout root (denied) and is `dirty(host)`, so the clean five-draw measurement is **pending SPEC-0031** (`2026-11-06T14-04-25--write-implementation-prompt`, `2026-11-06T14-37-23--write-implementation-prompt--without-skill`); #3 ran five draws at `8e26cf6`, split 4/5 on `nodir docs/prompts`, and is back to `manual` with a `why:` (`2026-11-06T14-01-54--write-implementation-prompt`; control `2026-11-06T14-32-58--write-implementation-prompt--without-skill`, 0/4 clean, 1 contaminated); triggers: #5 3/3 clean scored draws loaded in `2026-11-06T16-02-56--write-implementation-prompt` (2 contaminated), no #5 run with five scored draws; #6 failed 2/5 in the first run (`notskill` red in r1/r2, `2026-11-06T14-07-04--write-implementation-prompt`) and read 5/5, 5/5, 3/5, 4/5 in the four later runs; the skill is the first action where it loads; canary 12/12 at `2026-11-06T13-51-35--write-implementation-prompt`, and the 8-draw `2026-11-06T13-46-05--write-implementation-prompt` is discarded because `r8` read the worktree `.lane/trees` outside the detector; see `write-implementation-prompt-matrix.md` |
 | **total** | **76** | **26** | **2** | | |
 
 ## Evidence rules
 
-- A run directory cited **as a clean measurement or a pass rate** takes one of
-  two explicit paths:
+- A run directory cited **as evidence** takes one of two explicit paths:
   - **v2** (`detectorVersion` `71bfb85a91cd68ab`): `node
     scripts/check-eval-run.mjs <run-dir>` reports `findings=0 warnings=0
     skillLeaks=0 hostReads=0 isolated=yes`. That means no skill or host read, no
     contaminated draw, no lost gate, no missing provenance, no unfinished run,
     and the manifest records an isolated run (`params.isolate: true`).
-  - **v1** (`a31d58f79a6c7038` and earlier): history, not a clean measurement.
-    It is citable only when `node scripts/replay-evals.mjs --leaks <run-dir>`
-    prints `clean`, and the citation names that replay. A v1 run never prints
-    `isolated=yes`; with no read detected it prints `isolated=unknown`, because
-    v1 did not look for host reads.
+  - **v1** (`a31d58f79a6c7038` and earlier): history, never a clean measurement.
+    It is citable as replay-verified history only when
+    `node scripts/replay-evals.mjs --leaks <run-dir>` prints `clean`, and the
+    citation names that replay. A v1 run never prints `isolated=yes`; with no
+    read detected it prints `isolated=unknown`, because v1 did not look for host
+    reads.
   A directory that fails may still be cited **as the record of the failure
   itself**, with the finding named; it cannot supply a clean pass rate.
   `isolated=no` means the checker saw a skill or host read; `unknown` is neither
   a dirty verdict nor a clean one.
+- The two paths above apply to runs with stored transcripts (the 0.5.0 wave and
+  later). Rows whose runs predate that replay — the pre-detector
+  `implement-from-prompt` 12/12 vs 0/12 cells (`warnings=12`) are the example —
+  are **history**: their numbers are cited as historical direction, not as a
+  clean measurement, and cannot underwrite a v2 claim.
 - `stoppedEarly: true` is a complete run, not an unfinished one: the stop rule
   fired between waves and `reps` is the number of draws actually run. Cite
   `reps`/`passed` (e.g. "8/8, stopped early"), never the requested `--repeat`.
