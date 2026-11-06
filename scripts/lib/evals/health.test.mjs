@@ -346,7 +346,7 @@ test("--until is inclusive and filters both eval runs and pdlc records", () => {
   assert.equal(window.pdlc.runs, 1)
   assert.equal(window.pdlc.byStatus.merged, 1)
 
-  for (const value of ["2026-13-01", "nope"]) {
+  for (const value of ["2026-13-01", "2026-02-30", "nope", "2026-11-06T25:00:00Z", "2026-11-06T16:12:50"]) {
     const bad = cli(["--runs", store, "--pdlc", pdlc, "--until", value])
     assert.equal(bad.code, 2, value)
     assert.match(bad.err, /--until expects/)

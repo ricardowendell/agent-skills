@@ -82,10 +82,10 @@ for (let i = 0; i < argv.length; i++) {
     if (opt.sinceMs === null) fail(`--since expects YYYY-MM-DD (got ${value})`)
   } else if (arg === "--until") {
     const value = argv[++i]
-    if (value === undefined || value.startsWith("--")) fail("--until needs a date or an ISO timestamp")
+    if (value === undefined || value.startsWith("--")) fail("--until needs a date or an ISO timestamp with Z or ±hh:mm")
     opt.until = value
     opt.untilMs = parseUntil(value)
-    if (opt.untilMs === null) fail(`--until expects YYYY-MM-DD or an ISO timestamp (got ${value})`)
+    if (opt.untilMs === null) fail(`--until expects YYYY-MM-DD or an ISO timestamp with Z or ±hh:mm (got ${value})`)
   } else if (arg === "--json") {
     opt.json = true
   } else {

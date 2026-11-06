@@ -85,8 +85,8 @@ are the same when the simple command runs from the main checkout.
   `manifest.status` other than `completed` are counted under `Unfinished runs`;
   their draws are counted under `Unfinished draws` and kept out of both rates.
   Their `finishedAt` is null, so their wall time is not summed. Contaminated and
-  infrastructure are counted over completed draws; an unfinished draw is counted
-  only under `Unfinished draws`.
+  infrastructure are counted over completed draws; an unfinished draw never
+  enters the `passed`/`failed`/`unscored`/`staged` partitions or either rate.
 - **Usage is raw over the whole store.** Tokens, steps, tool calls, the sum of
   draw durations and judge counts include unfinished runs: the spend happened.
   Only the rates, the dirty-draw counts and wall time exclude unfinished runs.
