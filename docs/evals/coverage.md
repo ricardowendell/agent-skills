@@ -73,7 +73,8 @@ directories; they are not estimates.
   revised #4 fixture (SPEC-0009), `ignore-spec-sha` is a **survivor**: the rule
   is redundant there because the prompt's `spec_sha` supplies the cue.
 - **`implement-from-prompt` is measured but two cases remain defective**: #1
-  and #8 separate (12/12 vs 0/12 on the default model); #7 is a
+  and #8 separate (12/12 vs 0/12 on the default model, pre-detector history —
+  `warnings=12`, the rates stand); #7 is a
   non-discriminator (5/5 both arms); #2 is contaminated by a skill-load defect
   (gate 2/5 with the skill, pre-detector), and its control re-read under the
   detector is 0/3 draws with 1 contaminated (0/2 clean) at
