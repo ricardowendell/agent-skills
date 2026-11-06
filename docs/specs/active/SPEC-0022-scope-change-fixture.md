@@ -157,3 +157,72 @@ the fixture.
   already holds `trim`, and the case is about a *scope* correction, not a new-file
   style. If the convention block and the test disagree with `text.js`, the
   fixture is wrong, not the case.
+
+## Results
+
+### F0 — the fixture proof (2026-11-06, node v24.15.0)
+
+Copied `skills/implement-from-prompt/references/evals/3/` to a `mktemp -d` tree
+for each command (nothing committed from the temp dirs).
+
+Baseline:
+
+```sh
+T=$(mktemp -d)
+cp -R skills/implement-from-prompt/references/evals/3/. "$T/"
+(cd "$T" && node --test)
+```
+
+Exit 0 — 1 test, 1 pass (`src/index.js is the generated barrel`).
+
+With `export function slugify(...)` appended to `src/index.js`:
+
+```sh
+T=$(mktemp -d)
+cp -R skills/implement-from-prompt/references/evals/3/. "$T/"
+printf '\nexport function slugify(text) { ... }\n' >> "$T/src/index.js"
+(cd "$T" && node --test)
+```
+
+Exit 1 — 1 test, 0 pass, 1 fail; the assertion names the extra implementation
+line.
+
+With the same `slugify` appended to `src/text.js` instead:
+
+```sh
+T=$(mktemp -d)
+cp -R skills/implement-from-prompt/references/evals/3/. "$T/"
+printf '\nexport function slugify(text) { ... }\n' >> "$T/src/text.js"
+(cd "$T" && node --test)
+```
+
+Exit 0 — 1 test, 1 pass.
+
+### F2 — the sanity draw
+
+Manual cases are excluded from a run, so `status: manual` was cleared for the
+draw; the decision below kept it cleared.
+
+```sh
+node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 3 --repeat 1 --run
+```
+
+Run directory: `2026-11-06T11-28-49--implement-from-prompt` (default model,
+with-skill, no judge). `result.json`: `passed`, **1/1 rep**, both assertions
+pass — `changed docs/prompts/SPEC-0010-slugify.prompt.md` and
+`filematch src/text.js slugify`; `skillGate` loaded `implement-from-prompt`,
+`leak: []`, `contaminated: false`, not infrastructure. `check-eval-run.mjs`:
+`cases=1 reps=1 findings=0 warnings=0`.
+
+The transcript shows the mechanism: the agent read `AGENTS.md`,
+`tests/generated.test.js` and the barrel, changed the prompt to name
+`src/text.js`, implemented `slugify` there, and left `src/index.js` untouched.
+
+### Decision
+
+The draw passed both assertions. Case #3 is no longer `manual`; the `why:` names
+the generated barrel and the convention, and cites the run directory. It is a
+**regression case with one readable with-skill draw**, not a separator: no
+control arm was measured (the spec's non-goal). Coverage lost one manual case
+(3 → 2) and the `implement-from-prompt` row, the two-holes note and the matrix's
+classification/Follow-ups were updated in the same commit.

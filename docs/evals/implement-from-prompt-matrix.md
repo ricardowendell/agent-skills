@@ -243,8 +243,13 @@ control re-run produces a denominator worth quoting.
   reading). The skill now creates the file the prompt names and reports the
   missing gate, which is the behaviour the case wants; the control does the same
   often enough that the case does not separate. Keep as a regression case.
-- **#3 — manual.** The fixture only suggests `src/text.js`; it does not force
-  the scope change, so the sanity draw failed and the case stays manual.
+- **#3 — regression after SPEC-0022.** The fixture now forces the scope change:
+  `src/index.js` is a generated barrel, `tests/generated.test.js` rejects any
+  implementation line there, and `AGENTS.md` says text helpers live in
+  `src/text.js`. The 2026-11-06 sanity draw passed both assertions, 1/1 with the
+  skill (`2026-11-06T11-28-49--implement-from-prompt`; the agent corrected the
+  prompt, then moved `slugify` to `src/text.js`). One readable with-skill draw,
+  no control: regression case, not a separator.
 - **#5 and #6 — triggers.** #5 routed 4/5 (one miss), #6 routed 5/5. Routing
   only; no control comparison.
 
@@ -317,8 +322,9 @@ and is also clean; it is a precondition, not a measurement.
 - **#4 — closed by SPEC-0016.** The rule now separates a write target from a read
   dependency, and the fixture carries `package.json`. The case is a regression
   case, not a separator; see *Re-measurement*.
-- **#3** — the fixture must force `src/text.js` instead of suggesting it before
-  the case can leave `manual`.
+- **#3 — closed by SPEC-0022.** The generated barrel plus the `AGENTS.md`
+  convention force `src/text.js`; the case is no longer `manual` after one
+  readable with-skill draw, with no control measured.
 - **#2** — re-diagnose the load defect in light of the canary: #1 loaded 12/12
   while #2 lost 3/5 and #8 lost 1/5, so TASK-10's aggregate ~23% is case-specific
   here, not a universal miss.

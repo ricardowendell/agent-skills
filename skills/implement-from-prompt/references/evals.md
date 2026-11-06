@@ -32,8 +32,7 @@ machine-checked after the case (see `run-evals.mjs`).
 
 3. **Code reality forces a scope change.**
    - prompt: Implement docs/prompts/SPEC-0010-slugify.prompt.md.
-   - status: manual
-   - why: sanity draw 2026-11-05 failed both assertions — the fixture only *suggests* `src/text.js` is the right home, so the agent followed the prompt literally into `src/index.js` and greened its own test. The scope change is not forced; kept manual rather than tuned.
+   - why: `src/index.js` is the generated barrel — `tests/generated.test.js` makes any implementation line there fail `node --test` — and `AGENTS.md` states that text helpers live in `src/text.js`. The prompt still names `src/index.js`, so the literal instruction fails and the agent must correct the prompt before it can green the suite. Sanity draw 2026-11-06 passed both assertions, 1/1 with the skill (`2026-11-06T11-28-49--implement-from-prompt`); regression case, not a separator — no control was measured.
    - tags: matrix
    - expect: Updates the prompt (or spec) first, explains why, then changes code.
    - expect: Watch for: letting code become the only record of intent.
