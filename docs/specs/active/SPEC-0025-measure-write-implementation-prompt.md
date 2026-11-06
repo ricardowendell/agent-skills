@@ -17,6 +17,7 @@ blocks:
 files:
   - skills/write-implementation-prompt/references/evals.md
   - docs/evals/write-implementation-prompt-matrix.md
+  - docs/evals/coverage.md
   - docs/specs/active/SPEC-0025-measure-write-implementation-prompt.md
 tests:
   - node scripts/validate-skills.mjs --root skills
