@@ -9,6 +9,7 @@ import { spawnSync } from "node:child_process"
 import { existsSync, readdirSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
+import { findPython, formatTried } from "./lib/evals/interpreter.mjs"
 
 const here = dirname(fileURLToPath(import.meta.url))
 const skill = join(here, "..", "skills", "bootstrap-project-harness")
@@ -16,9 +17,16 @@ const fixturesRoot = join(skill, "references", "sensor-parity")
 const js = join(skill, "templates", "ts", "docs-check.mjs")
 const py = join(skill, "templates", "python", "docs_check.py")
 
+// A spawn failure is a result, not a missing string: formatting `r.stderr` when
+// `spawnSync` failed printed `undefinedundefined` and looked like a diverging
+// sensor. Keep stdout/stderr as strings so the comparison stays byte-exact.
 function run(cmd, args, cwd) {
   const r = spawnSync(cmd, args, { cwd, encoding: "utf8" })
-  return { code: r.status, stdout: r.stdout, stderr: r.stderr }
+  if (r.error) {
+    return { code: null, stdout: "", stderr: `${cmd}: ${r.error.message}` }
+  }
+  const text = (value) => (typeof value === "string" ? value : "")
+  return { code: r.status, stdout: text(r.stdout), stderr: text(r.stderr) }
 }
 
 if (!existsSync(fixturesRoot)) {
@@ -36,11 +44,29 @@ if (fixtures.length === 0) {
   process.exit(1)
 }
 
+// Resolve once, before the fixture loop, so a missing interpreter is one
+// diagnosis and not one false parity failure per fixture. The default stays
+// closed: a silent skip would hide exactly the drift this check exists for.
+const python = findPython({ env: process.env })
+if (!python.command) {
+  const tried = formatTried(python.tried)
+  if (process.env.PDLC_ALLOW_MISSING_PYTHON === "1") {
+    console.log(`skip python: no interpreter found (tried: ${tried}); parity not checked`)
+    process.exit(0)
+  }
+  console.error(
+    `cannot check sensor parity: no Python 3 interpreter found (tried: ${tried}); set PDLC_PYTHON=/path/to/python3`,
+  )
+  process.exit(1)
+}
+
+console.log(`python ${python.version} (${python.command})`)
+
 let failed = 0
 for (const name of fixtures) {
   const cwd = join(fixturesRoot, name)
   const a = run("node", [js], cwd)
-  const b = run("python3", [py], cwd)
+  const b = run(python.command, [py], cwd)
   const same = a.code === b.code && a.stdout === b.stdout && a.stderr === b.stderr
   if (same) {
     console.log(`ok   ${name} (exit ${a.code})`)
