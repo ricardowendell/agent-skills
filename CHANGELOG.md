@@ -9,6 +9,52 @@ skills, which cases, and which published measurements.
 
 ## [Unreleased]
 
+## [0.4.1] — 2026-11-06
+
+The per-release retro stopped being a promise and got a number.
+
+### Added
+
+- **`harness-health`** — a read-only report over the eval store and
+  `.pdlc/runs.json`: draws and outcomes, wall time, tokens, judge disagreements,
+  provenance, pdlc retries and red gates. `--json`, `--since`, `--until`; the
+  output is deterministic over a bounded snapshot.
+- **The 0.4.0 baseline** in `docs/evals/harness-health.md` (173 runs, 844 draws),
+  reproducible with `--until 2026-11-06T16:12:50Z`.
+- **The loop** in `CONTRIBUTING.md`: per release, before the CHANGELOG, at most
+  three findings and one spec.
+
+### Changed
+
+- **"Clean" is split.** `Eligible` means completed runs without contamination or
+  infrastructure; `Strict` adds a `checkRun` finding-free draw and full
+  provenance. The strict rate is per draw; `coverage.md`'s rule is per run
+  directory, so it is the closest comparable trend, not a substitute.
+- Usage and judge counts are raw over the whole store; the rates, the dirty
+  partitions and wall time exclude unfinished runs.
+
+### Fixed
+
+- The report reuses `runcheck.infrastructureOf`, so eight pre-SPEC-0020 timeouts
+  count as infrastructure (9 total), not as eligible failures.
+- The baseline is reproducible: the store only grows, and `--until` closes the
+  upper end. A record with no parseable start is kept, not dropped.
+
+### Measured
+
+- **173 runs, 844 draws**: eligible 827, denominator 814, **67.2%**; strict 90
+  draws, 87 passed / 3 failed, **96.7%**; infrastructure 9; provenance 95
+  complete / 745 partial; wall 12h 10m 14s.
+- **pdlc**: 10 runs (9 merged, 1 active), 0 retries, 0 red gates, median 43m 11s.
+- `pdlc audit` still reports no durable fact after ten runs. The generic signal
+  is queued as PDLC-83; the loop reads the record directly and does not wait.
+
+### Known gaps
+
+- The eligible rate mixes partial provenance. Use the strict rate for a clean
+  comparison, and name the run directory before calling a delta a regression.
+- The report is evidence, not a gate: no number in it fails CI.
+
 ## [0.4.0] — 2026-11-06
 
 The evidence got a better instrument and a written disposition; two published
