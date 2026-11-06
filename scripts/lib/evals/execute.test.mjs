@@ -299,6 +299,49 @@ test("a draw records the fixture, prompt and detector provenance", async () => {
   }
 })
 
+test("the judge prompt and the evidence check share the tool-call ledger", async () => {
+  const { skill, scratch, c, inside, cleanup } = setup()
+  const expected = { ...c, expect: ["Runs the test suite and reports the red gate."] }
+  const agentOut = [
+    JSON.stringify({ type: "tool_use", part: { tool: "skill", state: { status: "completed", input: { id: "demo" }, metadata: { metadata: { directory: inside } } } } }),
+    JSON.stringify({ type: "tool_use", part: { tool: "read", state: { status: "completed", input: { path: "src/index.js" }, output: "SECRET READ BODY" } } }),
+    JSON.stringify({
+      type: "tool_use",
+      part: { tool: "shell", state: { status: "completed", input: { command: "node --test" }, output: "# tests 1\n# fail 1\n", metadata: { metadata: { exit: 1 } } } },
+    }),
+    JSON.stringify({ type: "text", part: { text: "done" } }),
+  ].join("\n")
+  const judgeOut = JSON.stringify({
+    type: "text",
+    part: { text: JSON.stringify({ expectations: [{ i: 1, verdict: "met", evidence: "$ node --test  [exit 1]" }], score: 1 }) },
+  })
+  const prompts = []
+  const spawn = async ({ args }) => {
+    const prompt = args[args.length - 1]
+    prompts.push(prompt)
+    if (prompt.startsWith("You grade")) return { out: judgeOut, err: "", code: 0 }
+    return { out: agentOut, err: "", code: 0 }
+  }
+  try {
+    const { result } = await executeCase({ skill, c: expected, scratch, judge: { model: "stub", threshold: 0.8 }, spawnAgent: spawn })
+    const judgePrompt = prompts.find((p) => p.startsWith("You grade"))
+    assert.ok(judgePrompt, "the judge was never called")
+    assert.match(judgePrompt, /## Tool calls/)
+    assert.match(judgePrompt, /read: src\/index\.js/)
+    assert.match(judgePrompt, /^\$ node --test {2}\[exit 1\]$/m)
+    assert.ok(!judgePrompt.includes("SECRET READ BODY"), "a read body leaked into the judge prompt")
+    // The shell line exists in the ledger, so the quote verifies and the case
+    // stays passed. If the prompt and the corpus had drifted, this would be
+    // `unverifiable` and the case would fail.
+    assert.equal(result.status, "passed")
+    assert.equal(result.semantic.score, 1)
+    assert.equal(result.semantic.expectations[0].verdict, "met")
+    assert.equal(result.semantic.reason, "")
+  } finally {
+    cleanup()
+  }
+})
+
 test("the fixture is staged before the agent runs and the skill is pinned", async () => {
   const skill = skillDir()
   const scratch = makeScratch(skill.id, 2)

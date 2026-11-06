@@ -12,7 +12,7 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 import { spawnSync } from "node:child_process"
-import { mkdtempSync } from "node:fs"
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -87,4 +87,45 @@ test("valid input still filters and lists", () => {
 test("replay rejects a non-numeric --case", () => {
   const dir = mkdtempSync(join(tmpdir(), "replay-cli-"))
   rejects(["--dir", dir, "--case", "abc"], /--case/, { script: REPLAY, code: 2 })
+})
+
+test("replay --judge refuses to swallow the next flag as a model", () => {
+  const dir = mkdtempSync(join(tmpdir(), "replay-cli-"))
+  rejects(["--dir", dir, "--judge"], /--judge needs a model/, { script: REPLAY, code: 2 })
+})
+
+// The CLI branch is exercised with a draw that failed deterministically: it is
+// skipped before the judge, so this test proves the wiring without a model call.
+test("replay --judge --json reports a skipped deterministic failure", () => {
+  const dir = mkdtempSync(join(tmpdir(), "replay-judge-cli-"))
+  const caseDir = join(dir, "runs", "2026-01-01T00-00-00--demo", "cases", "implement-from-prompt--01")
+  mkdirSync(caseDir, { recursive: true })
+  writeFileSync(
+    join(caseDir, "result.json"),
+    JSON.stringify({
+      skill: "implement-from-prompt",
+      case: 1,
+      status: "failed",
+      repetitions: [
+        {
+          rep: 1,
+          status: "failed",
+          assertions: [{ kind: "reply", arg: "must exist", pass: false }],
+          skillGate: { ok: true },
+          execution: { exit: 0 },
+        },
+      ],
+    }),
+  )
+  writeFileSync(
+    join(caseDir, "transcript.r1.md"),
+    "# Eval: implement-from-prompt case 1\n\n**Scratch:** /tmp/x\n**Exit:** 0\n**Status:** failed\n\n## Transcript\n\n```\n{}\n```\n",
+  )
+  const r = cli(REPLAY, ["--dir", dir, "--judge", "default", "--json"])
+  assert.equal(r.code, 0, r.err)
+  const report = JSON.parse(r.out)
+  assert.equal(report.length, 1)
+  assert.equal(report[0].draws[0].outcome, "skipped")
+  assert.match(report[0].draws[0].reason, /deterministic/)
+  assert.deepEqual(report[0].tally, { total: 1, judged: 0, passed: 0, failed: 0, skipped: 1 })
 })

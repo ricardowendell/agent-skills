@@ -3,7 +3,7 @@ import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import { join, dirname } from "node:path"
 import { fileURLToPath } from "node:url"
-import { events, replyText, toolCalls, skillLoads, usageStats } from "./events.mjs"
+import { events, evidenceLedger, replyText, toolCalls, skillLoads, usageStats } from "./events.mjs"
 import { evaluateAssertions } from "./assertions.mjs"
 
 // A real stream, not a hand-written one. The parser only matters if it matches
@@ -70,4 +70,77 @@ test("tokens, cost and steps come from the step-finish events", () => {
   assert.equal(usage.steps, 3)
   assert.equal(usage.tokens.input, 13903)
   assert.equal(usage.tokens.cacheRead, 22272)
+})
+
+// The judge used to see only shell first lines, so reads and edits were
+// invisible. Each shape below is one fact the expectations can point at.
+const ledgerStream = [
+  {
+    type: "tool_use",
+    part: {
+      tool: "skill",
+      state: { status: "completed", input: { id: "demo" }, metadata: { metadata: { name: "demo", directory: "/tmp/skills/demo" } } },
+    },
+  },
+  { type: "tool_use", part: { tool: "read", state: { status: "completed", input: { path: "src/cart.js" }, output: "SECRET BODY that must never reach the judge" } } },
+  { type: "tool_use", part: { tool: "glob", state: { status: "completed", input: { pattern: "**/*.js" } } } },
+  { type: "tool_use", part: { tool: "grep", state: { status: "completed", input: { pattern: "total", path: "src" } } } },
+  {
+    type: "tool_use",
+    part: {
+      tool: "edit",
+      state: { status: "completed", input: { path: "src/cart.js", oldString: "return total", newString: "return total * 1", output: "SECRET BODY" } },
+    },
+  },
+  {
+    type: "tool_use",
+    part: {
+      tool: "write",
+      state: { status: "completed", input: { path: "tests/cart.test.js", content: 'test("doubles", () => expect(double(3)).toBe(6))\n' } },
+    },
+  },
+  {
+    type: "tool_use",
+    part: {
+      tool: "shell",
+      state: {
+        status: "completed",
+        input: { command: "node --test" },
+        output: "# tests 1\n# pass 0\n# fail 1\n",
+        metadata: { metadata: { exit: 1 } },
+      },
+    },
+  },
+  { type: "tool_use", part: { tool: "webfetch", state: { status: "completed", input: { url: "https://example.com/spec" } } } },
+]
+  .map((e) => JSON.stringify(e))
+  .join("\n")
+
+test("the ledger shows every tool shape in compact, stable lines", () => {
+  const ledger = evidenceLedger(ledgerStream)
+  assert.match(ledger, /^skill: demo \(dir: \/tmp\/skills\/demo\)$/m)
+  assert.match(ledger, /^read: src\/cart\.js$/m)
+  assert.match(ledger, /^glob: \*\*\/\*\.js$/m)
+  assert.match(ledger, /^grep: total in src$/m)
+  assert.match(ledger, /^edit: src\/cart\.js$/m)
+  assert.match(ledger, /^- return total$/m)
+  assert.match(ledger, /^\+ return total \* 1$/m)
+  assert.match(ledger, /^write: tests\/cart\.test\.js$/m)
+  assert.match(ledger, /expect\(double\(3\)\)\.toBe\(6\)/)
+  assert.match(ledger, /^\$ node --test {2}\[exit 1\]$/m)
+  assert.match(ledger, /# fail 1/)
+  assert.match(ledger, /^webfetch: url=https:\/\/example\.com\/spec$/m)
+})
+
+test("the ledger never carries the body of a read", () => {
+  const ledger = evidenceLedger(ledgerStream)
+  assert.ok(!ledger.includes("SECRET BODY"), "a read body leaked into the ledger")
+})
+
+test("the ledger is deterministic and honours one total budget", () => {
+  assert.equal(evidenceLedger(ledgerStream), evidenceLedger(ledgerStream))
+  const small = evidenceLedger(ledgerStream, { budget: 120 })
+  assert.ok(small.length <= 120, `ledger length ${small.length} exceeded the budget`)
+  assert.match(small, /\[ledger truncated\]$/)
+  assert.equal(small, evidenceLedger(ledgerStream, { budget: 120 }), "truncation moved between calls")
 })

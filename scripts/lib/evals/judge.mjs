@@ -8,8 +8,9 @@
 //   - opt-in: it costs a model call per case, so it never runs by default;
 //   - advisory in one direction only: it can fail a case that passed
 //     deterministically, never rescue a case that failed;
-//   - it sees expectations, the reply and the command log — never `why`, which
-//     describes the scenario and would hand over the answer;
+//   - it sees expectations, the reply, the command log and the tool-call
+//     ledger — never `why`, which describes the scenario and would hand over the
+//     answer;
 //   - it runs in an empty scratch dir with the skill tool denied, so it cannot
 //     wander into the fixture and grade the code instead of the behaviour.
 
@@ -22,13 +23,17 @@ import { replyText } from "./events.mjs"
 const SYSTEM = `You grade one agent run against a case's expectations.
 
 For each expectation decide, from the evidence only:
-- "met": the reply or the command log shows it happened.
+- "met": the reply, the command log or the tool calls show it happened.
 - "not-met": it clearly did not happen, or the opposite happened.
 - "unverifiable": the evidence does not say either way. Use this freely; do not
   guess from what a good run would look like.
 
-Evidence must be one contiguous passage copied verbatim from the reply or the
-command log. Never join two quotes with an ellipsis.
+Evidence must be one contiguous passage copied verbatim from the reply, the
+command log or the tool calls. Never join two quotes with an ellipsis.
+
+The "Tool calls" section is the run's own log: the tools it called and what they
+changed. It is evidence of what the run did, not text the agent wrote. A read
+line shows a file was opened, not what the file said.
 
 A line marked [NEGATIVE] describes a failure mode to avoid, not a requirement.
 Mark it "met" when the reply shows the agent did not fall into it, and "not-met"
@@ -38,16 +43,23 @@ Answer with one JSON object and nothing else:
 {"expectations":[{"i":1,"verdict":"met|not-met|unverifiable","evidence":"short quote or command"}],"score":0.0}
 score is met / (met + not-met), ignoring unverifiable.`
 
+// One corpus, built once by the caller: the reply and the ledger, never a
+// second rendering of the stream. `execute` and `rejudge` both use this, so a
+// judge prompt and the evidence check cannot be handed different halves again.
+export function evidenceCorpus(reply, ledger) {
+  return [reply, ledger].join("\n")
+}
+
 // "Watch for:" lines name the failure the case exists to catch; requiring them
 // to appear would score every good run as broken.
 const isNegative = (text) => /^(watch for|avoid)\b/i.test(text.trim())
 
-export function judgePrompt(c, { reply, shell = [] }) {
+export function judgePrompt(c, { reply, shell = [], ledger = "" }) {
   const expectations = c.expect
     .map((e, i) => `${i + 1}. ${isNegative(e) ? "[NEGATIVE] " : ""}${e}`)
     .join("\n")
   const commands = shell.length ? shell.map((cmd) => `$ ${cmd}`).join("\n") : "(no shell commands)"
-  return [
+  const sections = [
     SYSTEM,
     "",
     "## Expectations",
@@ -58,11 +70,15 @@ export function judgePrompt(c, { reply, shell = [] }) {
     commands,
     "```",
     "",
-    "## Reply",
-    "```",
-    reply.trim() || "(empty reply)",
-    "```",
-  ].join("\n")
+  ]
+  // Its own heading on purpose: a `read:` line is something the run did, not a
+  // sentence the agent wrote, and merging the two made the judge quote tool
+  // output as if it were the reply.
+  if (String(ledger ?? "").trim()) {
+    sections.push("## Tool calls", "```", String(ledger).trim(), "```", "")
+  }
+  sections.push("## Reply", "```", reply.trim() || "(empty reply)", "```")
+  return sections.join("\n")
 }
 
 // Every top-level JSON object in the text, balanced and string-aware — a nested
@@ -128,17 +144,32 @@ export function parseJudge(text) {
 // unverifiable, which removes it from the score instead of counting for it.
 export function verifyEvidence(parsed, source) {
   if (!parsed) return parsed
-  const norm = (s) => String(s ?? "").replace(/\s+/g, " ").trim().toLowerCase()
+  // Normalise the presentation both sides may disagree on: the `$ ` prompt a
+  // command log carries, code fences, inline backticks and run-of-whitespace.
+  // #7 quoted `$ node --test  [exit 1]` while the corpus has no `$ `, and that
+  // alone downgraded a correct `met`.
+  const norm = (s) =>
+    String(s ?? "")
+      .replace(/^\s*(```|~~~)[^\n]*$/gm, " ")
+      .split("\n")
+      .map((line) => line.replace(/^\s*\$\s+/, ""))
+      .join("\n")
+      .replace(/`/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase()
   const hay = norm(source)
   // Judges often cite several passages joined by "..." anyway, so the check is
   // per segment and forgiving: one short unquoted aside must not sink a verdict
   // whose other half is right there. Most of the evidence has to be findable.
+  // A short literal quote (`exit 1`) is still evidence when it is in the corpus;
+  // the old eight-character floor threw it away and left zero segments.
   const segments = (evidence) =>
     String(evidence ?? "")
       .split(/\.\.\.|…|\s\|\s|;\s/)
       .map(norm)
       .map((part) => part.replace(/^[a-z ]{0,12}:\s*/, "").replace(/^[`"']+/, "").replace(/[`"']+$/, ""))
-      .filter((s) => s.length >= 8)
+      .filter((s) => s.length >= 4)
   const verdicts = parsed.verdicts.map((v) => {
     if (v.verdict !== "met") return v
     const parts = segments(v.evidence)

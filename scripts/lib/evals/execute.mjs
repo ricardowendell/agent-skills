@@ -8,11 +8,11 @@
 // measuring.
 
 import { evaluateAssertions, skillGate } from "./assertions.mjs"
-import { replyText, skillLoads, toolCalls, usageStats } from "./events.mjs"
+import { evidenceLedger, replyText, skillLoads, toolCalls, usageStats } from "./events.mjs"
 import { stageFixture, stageSkill, denySkillTool, snapshotTree, textHash, makeScratch } from "./fixture.mjs"
 import { agentArgs, runAgent } from "./agent.mjs"
 import { classify } from "./result.mjs"
-import { judgePrompt, runJudge, judgeOutcome } from "./judge.mjs"
+import { evidenceCorpus, judgePrompt, runJudge, judgeOutcome } from "./judge.mjs"
 import { DETECTOR_VERSION } from "./leak.mjs"
 
 // The exact exits the harness produces, not the model. A retry is capped at one
@@ -137,12 +137,17 @@ export async function executeCase({
   // Same rule in every front end: the judge can fail a case that passed, never
   // rescue one that did not.
   if (judge && result.status === "passed") {
+    // One corpus, built once: the ledger's shell lines are byte-identical to the
+    // command-log lines, so every block the prompt shows lives in this string.
+    // The prompt and `verifyEvidence` must never be handed different halves.
     const reply = replyText(out)
+    const ledger = evidenceLedger(out)
+    const corpus = evidenceCorpus(reply, ledger)
     const shell = toolCalls(out)
       .filter((t) => t.tool === "shell")
       .map((t) => `${String(t.input.command ?? "").split("\n")[0]}  [exit ${t.exit ?? "?"}]`)
     const threshold = judge.threshold ?? 0.8
-    const run = await runJudge({ model: judge.model, prompt: judgePrompt(c, { reply, shell }), source: [reply, ...shell].join("\n"), env, timeout: Math.min(Math.round(timeoutMs / 1000), 300) })
+    const run = await runJudge({ model: judge.model, prompt: judgePrompt(c, { reply, shell, ledger }), source: corpus, env, timeout: Math.min(Math.round(timeoutMs / 1000), 300), spawnAgent })
     const outcome = judgeOutcome(run.parsed, threshold)
     judged = { outcome, parsed: run.parsed, threshold, model: judge.model }
     result = {
