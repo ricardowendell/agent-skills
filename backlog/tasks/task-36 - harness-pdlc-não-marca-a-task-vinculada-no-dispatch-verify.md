@@ -4,7 +4,7 @@ title: 'harness: pdlc não marca a task vinculada no dispatch/verify'
 status: To Do
 assignee: []
 created_date: '2026-11-05T20:55:00Z'
-updated_date: '2026-11-05T20:55:00Z'
+updated_date: '2026-11-06T11:25:00Z'
 labels: []
 dependencies: []
 references:
@@ -26,3 +26,15 @@ Em dois ciclos seguidos o pdlc disse 'não foi possível marcar SPEC-0016 como I
 - [ ] #2 Um ciclo de teste marca a task certa sem edicao manual.
 - [ ] #3 Se a correcao for upstream, o workaround local fica documentado no AGENTS.md.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-11-06T11:25:00Z
+
+---
+
+Segunda ocorrencia (SPEC-0017): o run record c791585e grava spec_sha d6d91033 (pin do dispatch), mas a spec merged tem 8c4a425b. A spec mudou durante o ciclo (files: + secao Results) e o record ficou com o sha antigo. Mesmo padrao da SPEC-0015 (b8115ea vs 7e180704). Investigar junto com o vinculo de task.
+
+---
+<!-- COMMENTS:END -->
