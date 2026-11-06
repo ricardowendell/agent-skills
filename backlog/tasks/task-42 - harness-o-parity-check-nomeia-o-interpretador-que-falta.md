@@ -1,9 +1,10 @@
 ---
 id: TASK-42
 title: 'harness: o parity check nomeia o interpretador que falta'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-06T16:37:00Z'
+updated_date: '2026-11-06T19:30:00Z'
 labels: []
 dependencies: []
 references:
@@ -21,9 +22,21 @@ Num PATH sem python3, check-sensor-parity.mjs sai 1 com 'FAIL clean / py exit=nu
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Sem interpretador no PATH, o check sai 1 com uma linha que nomeia a dependencia e os candidatos tentados; nenhum 'undefined' no stdout.
-- [ ] #2 Com interpretador, a saida nomeia comando e versao e o veredito nao muda (2/2 fixtures, exit 0).
-- [ ] #3 Candidato que existe mas falha e pulado com o stderr dele, nao contado como divergencia de paridade.
-- [ ] #4 PDLC_ALLOW_MISSING_PYTHON=1 imprime skip nomeado e sai 0; o default continua fechado.
-- [ ] #5 Testes unitarios cobrem: nenhum candidato, primeiro funciona, shim quebrado pulado, mensagem do CLI com PATH limpo; rodam no glob scripts/lib/evals/*.test.mjs.
+- [x] #1 Sem interpretador no PATH, o check sai 1 com uma linha que nomeia a dependencia e os candidatos tentados; nenhum 'undefined' no stdout.
+- [x] #2 Com interpretador, a saida nomeia comando e versao e o veredito nao muda (2/2 fixtures, exit 0).
+- [x] #3 Candidato que existe mas falha e pulado com o stderr dele, nao contado como divergencia de paridade.
+- [x] #4 PDLC_ALLOW_MISSING_PYTHON=1 imprime skip nomeado e sai 0; o default continua fechado.
+- [x] #5 Testes unitarios cobrem: nenhum candidato, primeiro funciona, shim quebrado pulado, mensagem do CLI com PATH limpo; rodam no glob scripts/lib/evals/*.test.mjs.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-11-06T19:30:00Z
+
+---
+
+Fechada pela SPEC-0027 (merge db7c49a). AC-1: o AC original dizia 'sem interpretador no PATH'; a revisao mostrou que a premissa estava errada e a spec passou a dizer 'nenhum candidato roda' — com PATH limpo sozinho o resolvedor acha /opt/homebrew/bin/python3 (exit 0), e o caminho fechado (todos missing/broken) sai 1 com uma linha e sem undefined. AC-2: imprime comando e versao, 2/2 exit 0, comparacao byte-exata intacta. AC-3: candidato quebrado e pulado com stderr e o proximo e tentado. AC-4: PDLC_ALLOW_MISSING_PYTHON=1 imprime skip nomeado e sai 0; default fechado. AC-5: 11 testes no glob, incluindo os quatro cenarios.
+
+---
+<!-- COMMENTS:END -->
