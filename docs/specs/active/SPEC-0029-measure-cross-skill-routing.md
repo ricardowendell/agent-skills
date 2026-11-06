@@ -14,10 +14,12 @@ depends_on:
   - SPEC-0028-detector-host-corpus
 blocks: []
 files:
-  - scripts/lib/evals/fixture.mjs
+  - scripts/lib/evals/parse.mjs
   - scripts/lib/evals/execute.mjs
+  - scripts/lib/evals/runs.mjs
   - scripts/run-evals.mjs
   - scripts/lib/evals/fixture.test.mjs
+  - scripts/lib/evals/execute.test.mjs
   - skills/capture-idea/references/evals.md
   - skills/process-inbox/references/evals.md
   - docs/evals/pipeline-bookends-matrix.md
