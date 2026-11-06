@@ -86,10 +86,10 @@ stances it had missed: `no blockers`, `hold the merge`, and the unlabeled
 `**Hold the merge**` line under a `### Verdict` heading. Re-measured on fresh
 draws: **5/5 with the skill on each model, and 1/5 on deepseek against 0/5 on
 luna without it** — 1/10 against 10/10. The single control pass is
-`2026-11-03T09-56-47--review-code--without-skill` r1: it described the diff and
-emitted no verdict, which is the silent behaviour this section already names, not
-a confident approval. Replaying every recorded #3 transcript under the new
-assertions keeps all
+`2026-11-03T09-56-47--review-code--without-skill` r1: it ended under a
+`### Verdict` heading with `**Hold the merge**`, a stance the guard did not name
+at the time — not a confident approval. Replaying every recorded #3 transcript
+under the new assertions keeps all
 skill runs passing and flips only control runs, which is the check that the
 tightening asks for a behaviour the skill actually produces rather than one the
 case invented.
