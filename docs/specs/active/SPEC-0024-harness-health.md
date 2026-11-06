@@ -65,8 +65,8 @@ abstract.
     (default `.pdlc/runs.json`), `--since <YYYY-MM-DD>` and
     `--until <YYYY-MM-DD|ISO timestamp>` on the eval run's `startedAt` and the
     pdlc record's `started_at`; the window is closed and inclusive, and a record
-    with no parseable start falls outside the bound. Output: markdown by default,
-    `--json` for an artifact.
+    with no parseable start is kept regardless of the bound. Output: markdown by
+    default, `--json` for an artifact.
   - Deterministic: runs sorted by id, durations rounded to seconds, no clock
     inside the report. Two invocations over the same store print identical text.
   - Metrics, per section:

@@ -92,7 +92,9 @@ are the same when the simple command runs from the main checkout.
   Only the rates, the dirty-draw counts and wall time exclude unfinished runs.
 - **The store is the history.** A release appends runs; compare the same section
   with the previous release's table. Use that release's `--until` bound to
-  reconstruct its snapshot; the report is deterministic over that window.
+  reconstruct its snapshot; the report is deterministic over that window. The
+  bound applies to the eval run's `startedAt` and the pdlc record's
+  `started_at`; a record with no parseable start is kept, not dropped.
 - **A regression is a move against a comparable number.** Same case shape, same
   arm and model. A new matrix, a control arm, or a draw with partial provenance
   changes the mix: that is variance, not a regression. Name the run directory
