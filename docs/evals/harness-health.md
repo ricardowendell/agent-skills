@@ -7,41 +7,42 @@ no model and writes nothing.
 
 | Metric | Value |
 | --- | --- |
-| Runs | 170 |
-| Unfinished runs | 5 |
-| Cases | 243 |
-| Shapes | 106 single, 137 repeated |
-| Draws | 842 |
+| Runs | 173 |
+| Unfinished runs | 6 |
+| Cases | 245 |
+| Shapes | 108 single, 137 repeated |
+| Draws | 844 |
 | Unfinished draws | 4 |
-| Passed (eligible) | 546 |
-| Failed (eligible) | 274 |
+| Passed (eligible) | 547 |
+| Failed (eligible) | 267 |
 | Unscored (eligible) | 0 |
 | Staged (eligible) | 13 |
 | Contaminated | 4 |
-| Infrastructure | 1 |
-| Eligible draws (not contaminated, not infrastructure) | 833 |
-| Rate denominator (eligible, non-staged) | 820 |
-| Pass rate (eligible, non-staged) | 66.6% |
-| Gate misses (eligible) | 24 |
-| Strict clean draws | 88 |
-| Strict passed / failed | 86 / 2 |
-| Strict pass rate | 97.7% |
-| Wall time | 12h 5m 19s |
-| Sum of draw durations | 16h 11m 49s |
-| Tokens (in / out / reasoning) | 13,958,800 / 1,485,390 / 1,548,139 |
-| Cache (read / write) | 85,452,962 / 1,574,993 |
-| Steps | 6,455 |
-| Tool calls | 10,748 |
+| Infrastructure | 9 |
+| Eligible draws (not contaminated, not infrastructure) | 827 |
+| Rate denominator (eligible, non-staged) | 814 |
+| Pass rate (eligible, non-staged) | 67.2% |
+| Gate misses (eligible) | 21 |
+| Strict clean draws | 90 |
+| Strict passed / failed | 87 / 3 |
+| Strict pass rate | 96.7% |
+| Wall time | 12h 10m 14s |
+| Sum of draw durations | 16h 14m 43s |
+| Tokens (in / out / reasoning) | 13,996,752 / 1,486,071 / 1,549,673 |
+| Cache (read / write) | 85,654,482 / 1,574,993 |
+| Steps | 6,475 |
+| Tool calls | 10,766 |
 | Judge runs | 26 |
 | Judge failures | 12 |
 | Deterministic pass, judge fail | 12 |
-| Provenance (completed draws) | 93 complete, 745 partial |
+| Provenance (completed draws) | 95 complete, 745 partial |
 
 ### Unreadable eval artefacts
 
 - `2026-11-03T09-52-59--review-code--without-skill/review-code--03`: missing result.json
 - `2026-11-05T07-55-46--review-code/review-code--07`: missing result.json
 - `2026-11-06T07-09-52--implement-from-prompt--without-skill/implement-from-prompt--02`: missing result.json
+- `2026-11-06T13-11-35--review-code--agentworks-gpt-oss-120b--without-skill/review-code--01`: missing result.json
 
 ## pdlc
 
@@ -56,8 +57,9 @@ no model and writes nothing.
 
 ---
 
-Published baseline for release **0.4.0** on **2026-11-06**. Regenerate from the
-main checkout with:
+Published baseline for release **0.4.0** on **2026-11-06**. Snapshot:
+`2026-11-06T16:12:50Z` UTC over the local store. Regenerate from the main
+checkout with:
 
 ```sh
 node scripts/harness-health.mjs
@@ -73,16 +75,19 @@ the simple command runs from the main checkout.
   trend: draws in completed runs that are not contaminated and not
   infrastructure, with staged smoke draws out of the denominator. It includes
   partial provenance and gate misses, so it answers whether the whole store is
-  moving. `Strict pass rate` is the number `coverage.md` can compare: completed
-  run, full provenance (`fixtureHash` + `promptHash` + `detectorVersion`), and no
-  `checkRun` finding. Strict is smaller, but comparable; use it for a published
-  case and the eligible rate for the trend.
-- **Unfinished runs are not evidence.** Runs with `manifest.status` other than
-  `completed` are counted under `Unfinished runs`; their draws are counted under
-  `Unfinished draws` and kept out of both rates. Their `finishedAt` is null, so
-  their wall time is not summed. Contaminated and infrastructure are counted
-  over completed draws; an unfinished draw is counted only under `Unfinished
-  draws`.
+  moving. `Strict pass rate` is a per-draw strict rate: completed run, full
+  provenance (`fixtureHash` + `promptHash` + `detectorVersion`), and no
+  `checkRun` finding for that draw. `coverage.md`'s rule is per run directory,
+  so strict is the closest comparable trend, not a substitute.
+- **Unfinished runs are not evidence for the rates.** Runs with
+  `manifest.status` other than `completed` are counted under `Unfinished runs`;
+  their draws are counted under `Unfinished draws` and kept out of both rates.
+  Their `finishedAt` is null, so their wall time is not summed. Contaminated and
+  infrastructure are counted over completed draws; an unfinished draw is counted
+  only under `Unfinished draws`.
+- **Usage is raw over the whole store.** Tokens, steps, tool calls, the sum of
+  draw durations and judge counts include unfinished runs: the spend happened.
+  Only the rates, the dirty-draw counts and wall time exclude unfinished runs.
 - **The store is the history.** A release appends runs; compare the same section
   with the previous release's table. The report is deterministic over a fixed
   store, so a diff is a change in artefacts, not in the reader.
@@ -103,7 +108,7 @@ the simple command runs from the main checkout.
   is history, not strict evidence, and never enters the strict rate.
 - **Wall time is work, not elapsed time.** It sums each completed run's
   `startedAt`→`finishedAt`; overlapping runs add up. `Sum of draw durations` is
-  the agent time inside those runs.
+  the agent time inside every draw, including unfinished ones.
 - **Judge failures are advisory evidence.** A judge can only fail a draw that
   passed every deterministic assertion. `Deterministic pass, judge fail` is that
   subset; it is the list to read when the number moves.

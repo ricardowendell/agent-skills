@@ -517,6 +517,59 @@ test("eligible and strict separate unfinished, gate-miss and partial provenance"
   assert.equal(report.wallSeconds, 20)
 })
 
+test("a finding in rep 1 of a case does not exclude rep 2 from strict", () => {
+  const provenance = { fixtureHash: "fixture", promptHash: "prompt", detectorVersion: "1" }
+  const rep = (overrides = {}) => ({
+    skill: "demo",
+    case: 1,
+    status: "passed",
+    leak: [],
+    contaminated: false,
+    skillGate: { ok: true, loaded: ["demo"], reason: "loaded demo" },
+    execution: { durationMs: 10 },
+    ...provenance,
+    ...overrides,
+  })
+
+  const report = evalHealth({
+    runs: [
+      {
+        id: "same-case",
+        dir: "/tmp/same-case",
+        manifest: {
+          status: "completed",
+          arm: "with-skill",
+          startedAt: "2026-01-01T00:00:00Z",
+          finishedAt: "2026-01-01T00:00:01Z",
+        },
+        cases: [
+          {
+            id: "one",
+            dir: "/tmp/same-case/one",
+            result: {
+              skill: "demo",
+              case: 1,
+              status: "passed",
+              ...provenance,
+              repetitions: [
+                rep({ rep: 1, skillGate: { ok: false, loaded: [], reason: "skill not loaded" } }),
+                rep({ rep: 2 }),
+              ],
+            },
+          },
+        ],
+      },
+    ],
+  })
+
+  assert.equal(report.eligibleDraws, 2)
+  assert.equal(report.gateMisses, 1)
+  assert.equal(report.strict.draws, 1)
+  assert.equal(report.strict.passed, 1)
+  assert.equal(report.strict.failed, 0)
+  assert.equal(report.strict.rate, 1)
+})
+
 test("the pure aggregator names unreadable objects and falls back to timestamps for pdlc duration", () => {
   const evals = evalHealth({
     runs: [

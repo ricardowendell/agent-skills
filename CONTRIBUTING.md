@@ -186,11 +186,12 @@ It reads the eval store and `.pdlc/runs.json`, spends no model and writes
 nothing. A dispatched worktree does not carry `.pdlc/`; there, pass
 `--pdlc /path/to/.pdlc/runs.json`. Compare like with like: a number moves the
 trend only when the artefacts are comparable (same fixture/prompt/detector
-hashes, same case shape); a different mix of runs is variance. Use the strict
-rate when comparing with `coverage.md` and the eligible rate for the broad
-trend. Paste the new table into the baseline doc, then open at most three
-findings and at most one spec. The report is evidence, not a CI gate: a red
-number does not fail a build.
+hashes, same case shape); a different mix of runs is variance. The strict rate
+is per draw; `coverage.md`'s rule is per run directory, so use strict as the
+closest comparable trend and the eligible rate for the broad trend. Paste the
+new table into the baseline doc, then open at most three findings and at most
+one spec. The report is evidence, not a CI gate: a red number does not fail a
+build.
 
 ## What CI enforces
 

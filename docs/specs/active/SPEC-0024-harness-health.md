@@ -16,6 +16,7 @@ blocks: []
 files:
   - scripts/harness-health.mjs
   - scripts/lib/evals/health.mjs
+  - scripts/lib/evals/runcheck.mjs
   - scripts/lib/evals/health.test.mjs
   - docs/evals/harness-health.md
   - docs/README.md
@@ -150,24 +151,35 @@ behavior changes.
 ## Results
 
 Baseline published in `docs/evals/harness-health.md` for 0.4.0 on 2026-11-06,
-generated from the real store (170 runs, 243 readable cases, 842 draws).
+snapshot `2026-11-06T16:12:50Z` UTC: 173 runs, 245 readable cases, 844 draws.
 
-- **Eligible rate:** 833 eligible draws (completed runs, no contamination, no
-  infrastructure) and an 820 non-staged denominator: 546 passed, 274 failed,
-  0 unscored, 13 staged → **66.6%**. The five unfinished runs (four draws) are
-  excluded from both rates; the earlier 66.7% included those four clean draws
-  and is not used.
-- **Strict rate:** 88 draws in completed runs with full provenance
-  (`fixtureHash` + `promptHash` + `detectorVersion`) and no `checkRun` finding:
-  86 passed / 2 failed → **97.7%**. This is the number comparable to
-  `coverage.md`; the eligible rate is the broad trend and includes partial
-  provenance.
-- **Gate misses:** 24 eligible `with-skill` draws have `skillGate.ok !== true`;
-  they stay eligible but are not strict.
-- **Provenance:** 93 complete / 745 partial of 838 completed draws. The strict
+- **Eligible rate:** 827 eligible draws (completed runs, no contamination, no
+  infrastructure) and an 814 non-staged denominator: 547 passed, 267 failed,
+  0 unscored, 13 staged → **67.2%**. The six unfinished runs (four draws) are
+  excluded from both rates. Reusing `infrastructureOf` from the checker moved
+  eight pre-SPEC-0020 `execution.exit` timeouts from eligible failures to
+  infrastructure: `Infrastructure` is now 9, up from 1.
+- **Strict rate:** 90 draws in completed runs with full provenance
+  (`fixtureHash` + `promptHash` + `detectorVersion`) and no `checkRun` finding
+  for that draw: 87 passed / 3 failed → **96.7%**. This is a per-draw strict
+  rate; `coverage.md`'s rule is per run directory, so it is the closest
+  comparable trend, not a substitute. The eligible rate is the broad trend and
+  includes partial provenance.
+- **Gate misses:** 21 eligible `with-skill` draws have `skillGate.ok !== true`;
+  they stay eligible but are not strict. The infrastructure reclassification
+  drops the eligible gate-miss count from 24 to 21.
+- **Provenance:** 95 complete / 745 partial of 840 completed draws. The strict
   rate is the only one that requires full provenance.
+- **Usage is raw.** Tokens, steps, tool calls, draw durations and judge counts
+  include unfinished runs; only the rates, the dirty counts and wall time
+  exclude them.
 - **pdlc:** 10 runs (9 merged, 1 active), 0 retries, 0 red gates, median
   duration 43m 11s.
+
+Two completed `agentworks/gpt-oss-120b` runs landed during the review (one
+`capture-idea` pass and one `review-code` failure); they add two eligible draws
+and keep the eligible rate at 67.2%. The strict rate rose from 97.7% (88 draws)
+to 96.7% (90 draws) because the new failure is strict evidence.
 
 ## Stop Conditions
 

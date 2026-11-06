@@ -41,7 +41,7 @@ const INFRASTRUCTURE_EXITS = new Set(["timeout", "stalled"])
 // harness carries `execution.exit: "timeout"` even when it is marked `failed`
 // and its reason was never rewritten. Without this a historical timeout reads as
 // a clean run, which is exactly what the README says the checker prevents.
-function infrastructureOf(result) {
+export function infrastructureOf(result) {
   if (result.infrastructure === true) return result.infrastructureReason ?? "timeout"
   if (typeof result.infrastructure === "number" && result.infrastructure > 0) return "unscored"
   const exit = result.execution?.exit

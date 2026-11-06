@@ -14,7 +14,7 @@
 // it is named, never skipped in silence and never allowed to abort the report.
 
 import { contaminatedReps, infrastructureReps } from "./result.mjs"
-import { checkRun } from "./runcheck.mjs"
+import { checkRun, infrastructureOf } from "./runcheck.mjs"
 
 const isObject = (value) => Boolean(value) && typeof value === "object" && !Array.isArray(value)
 
@@ -24,14 +24,13 @@ const compare = (a, b) => (a < b ? -1 : a > b ? 1 : 0)
 
 const byId = (a, b) => compare(String(a?.id ?? ""), String(b?.id ?? ""))
 
-// Infrastructure first, the same precedence `result.mjs` uses: a draw that
-// stalled and leaked is counted once, as infrastructure, because the kill
-// happened before any behaviour could be attributed to it.
+// Infrastructure first, the same rule the checker applies: a draw that stalled
+// and leaked is counted once, as infrastructure, because the kill happened
+// before any behaviour could be attributed to it. `infrastructureOf` also
+// carries the pre-SPEC-0020 `execution.exit` fallback, so the report and
+// `check-eval-run` cannot disagree about a timeout.
 function isInfrastructure(draw) {
-  if (!isObject(draw)) return false
-  if (draw.infrastructure === true) return true
-  if (count(draw.infrastructure) > 0) return true
-  return draw.status === "unscored" && /^infrastructure:/.test(String(draw.reason ?? ""))
+  return isObject(draw) && Boolean(infrastructureOf(draw))
 }
 
 function isContaminated(draw) {
@@ -188,6 +187,9 @@ export function evalHealth({ runs = [], unreadable = [] } = {}) {
           continue
         }
 
+        // Usage and judge counts are raw over the whole store: the spend
+        // happened even when the run never closed. Only the rates, the dirty
+        // counts and wall time exclude unfinished runs.
         const execution = isObject(draw.execution) ? draw.execution : {}
         drawMs += count(execution.durationMs)
         report.steps += count(execution.steps)
