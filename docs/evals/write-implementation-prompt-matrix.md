@@ -2,11 +2,14 @@
 
 Measured on `opencode-go/deepseek-v4.1-flash`, the config default, with
 deterministic assertions only and no judge. The with-skill cells were taken at
-`8e26cf6`; the control and trigger re-runs were taken at `fff5b96`, which changed
-only the spec document (`docs/specs/active/SPEC-0025-...md`) and no skill, fixture
-or runner file. The hashes below prove the two commits are the same measurement
-surface: every re-run repeats the `8e26cf6` `fixtureHash`, `promptHash`,
-`detectorVersion` and — for the trigger arm — `skillHash`.
+`8e26cf6`; the control and trigger re-runs were taken at `fff5b96`. Between
+those commits the only change under `skills/` is case #3's `prompt:`/`why:` in
+`references/evals.md`; the rest is this matrix, the coverage row and the spec.
+`stageSkill` excludes `references/evals.md` from `skillHash` and `promptHash`
+covers only the prompt text, so every re-run repeats the `8e26cf6`
+`fixtureHash`, `promptHash`, `detectorVersion` and — for the trigger arm —
+`skillHash`. The assertion sets for #1/#2/#4/#5/#6 are unchanged by that same
+skills diff.
 
 The skill is six cases: `#1`–`#4` are behavioural, `#5`/`#6` are routing
 triggers. Everything below runs under `node scripts/run-evals.mjs --root skills
@@ -33,7 +36,8 @@ of a `references/evals.md` answer key** outside the scratch. It does **not** mea
 the draw was isolated. `scripts/lib/evals/leak.mjs` classifies only skill roots
 and `references/evals.md$`; a draw can read the host's `docs/` corpus or the
 global `AGENTS.md` and still score `findings=0`. That gap is real and open
-(TASK-43), and it applies to **every** control cell here, including the new ones.
+(TASK-43), and it applies to **every** control cell here and to the #5 trigger
+cells whose clean scored draws read host `docs/`, `scripts/` and `Projects/`.
 The canary's discarded eight-draw run below is one concrete instance.
 
 ## Load canary
@@ -63,8 +67,9 @@ node scripts/run-evals.mjs --root skills --skill write-implementation-prompt --c
 node scripts/run-evals.mjs --root skills --skill write-implementation-prompt --tag trigger --repeat 5 --run
 ```
 
-Control arm, the same four cases and no triggers, re-run at `fff5b96` until a
-clean run appeared or three attempts were spent:
+Control arm, the same four cases and no triggers, re-run at `fff5b96` for up to
+three attempts — a budget cap, not a spec rule; #1 never produced a clean
+five-draw run and stayed `unresolved`:
 
 ```sh
 node scripts/run-evals.mjs --root skills --skill write-implementation-prompt --case 1 --repeat 5 --run --no-skill
@@ -87,7 +92,9 @@ node scripts/run-evals.mjs --root skills --skill write-implementation-prompt --c
 The control draws carry the same `fixtureHash`, `promptHash` and
 `detectorVersion`; they have no `skillHash` because no skill is staged. The
 trigger draws carry the same `skillHash`. The only difference between the two
-commits is `repoSha`.
+commits is `repoSha`. The hashes do not cover the assertion set — `skillHash`
+excludes `references/evals.md` — so the evidence for an unchanged case is the
+skills diff cited at the top, not the table alone.
 
 ### Behavioural run directories
 
@@ -157,7 +164,8 @@ The red cells, by assertion or gate reason:
 - **#2 control** — the clean run `15-30-39` failed `nodir docs/prompts` in **5/5**:
   the control generated a prompt from a `draft` spec. The two rejected attempts
   (`15-25-06`, `15-27-30`) failed the same assertion in their three clean draws
-  each; their two contaminated draws read the real install.
+  each; one read the real install, the other a stale copy under
+  `/private/tmp/as-remote/...`.
 - **#3 with skill** — `nodir docs/prompts` failed in `r3`: the draw treated both
   open questions as non-blocking, turned them into non-goals, and wrote
   `docs/prompts/SPEC-0009-audit-log.prompt.md`. The other four stopped.
@@ -210,7 +218,7 @@ were stable; it is not, and five draws cannot promote it.
   existing prompt and records `spec_sha` as often as the skill does. Keep as a
   regression case.
 - **#5 and #6 — triggers, not rates.** `#5` loaded in 3/3 clean scored draws in
-  the latest run (`16-02-56`), with two contaminated draws; no trigger run has
+  the latest run (`16-02-56`), with two contaminated draws; no #5 run has
   five scored draws. `#6` is not deterministic: 5/5 in `15-33-16`, 3/5 in
   `15-49-43` (`r1`,`r2` loaded), 4/5 in `16-02-56` (`r2` loaded), and 3/5 in
   `14-07-04`. The failing draws load the skill as their first action, so the

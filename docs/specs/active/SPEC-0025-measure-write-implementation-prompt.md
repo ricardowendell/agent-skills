@@ -77,6 +77,9 @@ evidence, so a reader can tell what the skill actually buys over not loading it.
   - `separator` — with the skill ≥ 4/5 and the control ≤ 1/5;
   - `non-discriminator` — both arms ≥ 4/5, or the gap is smaller than 3/5;
   - `broken` — with the skill ≤ 3/5: the skill fails its own case.
+  - `unresolved` — no run gives five clean control draws and the skill cell is
+    not clean either; the case keeps its raw clean counts and says so, the way
+    `groom-backlog` #2 is recorded.
   - A with-skill draw whose `skillGate.ok !== true` is not a pass and not a pass
     rate. More than one miss in five makes the cell unreadable: diagnose and
     re-run before classifying.
@@ -230,7 +233,8 @@ Every clean #1 draw failed `filematch ... spec_sha:`. The #2 clean cell is
 
 The quoted #5 reading is `16-02-56`: 3/3 clean scored draws loaded, two
 contaminated, no stall. The two earlier re-runs each lost one draw to a stall;
-no trigger run reached five scored draws. #6 is not deterministic: 5/5, 3/5 and
+no #5 run reached five scored draws (#6 reached 5/5 in two runs). #6 is not
+deterministic: 5/5, 3/5 and
 4/5 in the three re-runs. In every failing #6 draw the **first action is the
 `skill` call** — `14-07-04 r1` says "I'll load the skill first, then find the
 spec"; `r2` says "this looks like a spec-related request"; `15-49-43 r2` says
@@ -246,9 +250,9 @@ a `why:` after the 4/5 split). Triggers are routing evidence, not rates.
 
 **Budget.** 145 draws against the ~62 estimated, because cells were re-run: 20
 canary (8 under the default stop rule, then 12 with `--stop 12/0`), 20 with-skill
-Gate A, 50 triggers (five runs), and 55 control (three #1 attempts, three #2
-attempts, plus the earlier #3/#4 runs). No single command exceeded its planned
-repeat count.
+Gate A, 50 triggers (five runs), and 55 control (four #1 attempts, five #2
+attempts, one #3 and one #4, 11 runs × 5 draws). No single command exceeded its
+planned repeat count; the overrun is re-runs, not longer cells.
 
 **Gates.** All five pass: `validate-skills` (13 SKILL.md, all clear),
 `--list --check` (exit 0, 76/74/2), `scripts/lib/evals/*.test.mjs` (252/252),
@@ -274,8 +278,9 @@ repeat count.
 - **Entities**: case number, arm (`with-skill`/`without-skill`), run directory,
   draw, assertion, gate reason, classification.
 - **Approach**: canary → Gate A with the skill → Gate A control → checker → doc.
-  Run the two arms at the same commit; a control from an earlier commit is not
-  citable.
+  Run the two arms on one measurement surface: `fixtureHash`, `promptHash`,
+  `skillHash` and `detectorVersion` equal, with the assertion set unchanged; a
+  `repoSha` that moved only docs is citable with that evidence.
 - **Structure**: one new doc under `docs/evals/`; the case line in the skill's
   `references/evals.md`; one row in the inventory. Nothing under `scripts/`.
 - **Operations**: the exact command per step is in `CONTRIBUTING.md > Measuring`;
