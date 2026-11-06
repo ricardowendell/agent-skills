@@ -38,8 +38,7 @@ and `references/evals.md$`; a draw can read the host's `docs/` corpus or the
 global `AGENTS.md` and still score `findings=0`. That gap is real and open
 (TASK-43), and it applies to **every** control cell here and to the trigger
 cells, whose clean scored draws also read host `docs/`, `scripts/` and
-`Projects/` — the #5 reading below is one concrete instance.
-The canary's discarded eight-draw run below is one concrete instance.
+`Projects/` (the #5 reading below), and the discarded canary below is another.
 
 ## Load canary
 

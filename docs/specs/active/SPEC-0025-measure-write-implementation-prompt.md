@@ -77,10 +77,10 @@ evidence, so a reader can tell what the skill actually buys over not loading it.
   - `separator` — with the skill ≥ 4/5 and the control ≤ 1/5;
   - `non-discriminator` — both arms ≥ 4/5, or the gap is smaller than 3/5;
   - `broken` — with the skill ≤ 3/5: the skill fails its own case.
-  - `unresolved` — no run brings the control arm to five clean draws, so the
-    case cannot be classed as a separator or a non-discriminator on clean
-    evidence; it keeps its raw clean counts and says so, the way
-    `groom-backlog` #2 is recorded.
+  - `unresolved` — the with-skill cell is at least 4/5 but no run brings the
+    control arm to five clean draws, so the case cannot be classed as a
+    separator or a non-discriminator on clean evidence; it keeps its raw clean
+    counts and says so, the way `groom-backlog` #2 is recorded.
   - A with-skill draw whose `skillGate.ok !== true` is not a pass and not a pass
     rate. More than one miss in five makes the cell unreadable: diagnose and
     re-run before classifying.
