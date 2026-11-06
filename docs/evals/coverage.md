@@ -12,7 +12,7 @@ directories; they are not estimates.
 | `capture-idea` | 3 | 2 | 0 | trees 1–3 | none |
 | `find-blind-spots` | 4 | 2 | 0 | tree 4 | case 4: 3/3, skill loaded 3/3 (`why:`, no run dir) |
 | `groom-backlog` | 7 | 2 | 0 | trees 1, 3, 4, 5 | ablation on 4 fixture cases, 2026-11-05: both arms 4/4; index-first not promoted (tokens +65% on the adversarial case) (`09-32-51`, `09-34-43`, `09-39-15`, `09-43-45`); #2 re-run at `3d38b31` after the `nodir docs/specs` → `reply` swap: 3/3 with skill and 3/3 without (`2026-11-05T17-09-40--groom-backlog`, `2026-11-05T17-13-34--groom-backlog--without-skill`; one control draw read the installed `SKILL.md`), so #2 is a regression case, not a matrix case |
-| `implement-from-prompt` | 8 | 2 | 1 | trees 1, 2, 3, 4, 7, 8 | published matrix: #1 and #8 separate 12/12 vs 0/12 on the default (`2026-11-05T12-35-30--implement-from-prompt`, `2026-11-05T12-42-05--implement-from-prompt--without-skill`, `2026-11-05T12-48-46--implement-from-prompt`, `2026-11-05T12-56-03--implement-from-prompt--without-skill`); on `gpt-6-luna` both are 5/5 vs 1/5 (`2026-11-05T13-18-27--implement-from-prompt--opencode-go-gpt-6-luna`, `2026-11-05T13-22-08--implement-from-prompt--opencode-go-gpt-6-luna--without-skill`, `2026-11-05T13-25-10--implement-from-prompt--opencode-go-gpt-6-luna`, `2026-11-05T13-28-38--implement-from-prompt--opencode-go-gpt-6-luna--without-skill`; the one #1 control pass read the real `SKILL.md`); #7 non-discriminator 5/5 both arms; #2 broken-with-skill (skill-load; gate 2/5); #4 re-measured after SPEC-0016 (write target vs read dependency + fixture `package.json`): 5/5 with vs 3/5 without at `6dd38aa` (`2026-11-05T15-00-48--implement-from-prompt`, `2026-11-05T15-06-58--implement-from-prompt--without-skill`; two control reds are 600 s provider timeouts), so #4 is a non-discriminator and stays as a regression case; #1/#7/#8 kept 5/5 with skill (`2026-11-05T15-30-10--implement-from-prompt`, `2026-11-05T15-36-40--implement-from-prompt`, `2026-11-05T15-44-35--implement-from-prompt`); #3 manual; trigger #5 4/5, #6 5/5 (`2026-11-05T11-52-43--implement-from-prompt`) |
+| `implement-from-prompt` | 8 | 2 | 1 | trees 1, 2, 3, 4, 7, 8 | published matrix: #1 and #8 separate 12/12 vs 0/12 on the default (`2026-11-05T12-35-30--implement-from-prompt`, `2026-11-05T12-42-05--implement-from-prompt--without-skill`, `2026-11-05T12-48-46--implement-from-prompt`, `2026-11-05T12-56-03--implement-from-prompt--without-skill`); on `gpt-6-luna` #1 is 5/5 vs **0/5** (the old 1/5 control pass read the installed `SKILL.md`; re-measured at `2026-11-06T07-05-38--implement-from-prompt--opencode-go-gpt-6-luna--without-skill`) and #8 is 5/5 vs 1/5 (`2026-11-05T13-18-27--implement-from-prompt--opencode-go-gpt-6-luna`, `2026-11-05T13-22-08--implement-from-prompt--opencode-go-gpt-6-luna--without-skill`, `2026-11-05T13-25-10--implement-from-prompt--opencode-go-gpt-6-luna`, `2026-11-05T13-28-38--implement-from-prompt--opencode-go-gpt-6-luna--without-skill`; the one #1 control pass read the real `SKILL.md`); #7 non-discriminator 5/5 both arms; #2 broken-with-skill (skill-load; gate 2/5); #4 re-measured after SPEC-0016 (write target vs read dependency + fixture `package.json`): 5/5 with vs 3/5 without at `6dd38aa` (`2026-11-05T15-00-48--implement-from-prompt`, `2026-11-05T15-06-58--implement-from-prompt--without-skill`; two control reds are 600 s provider timeouts), so #4 is a non-discriminator and stays as a regression case; #1/#7/#8 kept 5/5 with skill (`2026-11-05T15-30-10--implement-from-prompt`, `2026-11-05T15-36-40--implement-from-prompt`, `2026-11-05T15-44-35--implement-from-prompt`); #3 manual; trigger #5 4/5, #6 5/5 (`2026-11-05T11-52-43--implement-from-prompt`) |
 | `process-inbox` | 3 | 2 | 0 | tree 1 | none |
 | `record-decision` | 5 | 2 | 0 | trees 1–5 | none |
 | `review-code` | 7 | 2 | 0 | trees 1–7 plus `base/` and `base-red/`; 1–4 and 7 via `git.json` | published matrix; #4 fixture revised 2026-11-05: 5/5 with, 3/5 without (`2026-11-05T07-34-32--review-code`, `…07-47-21--review-code--without-skill`); #7 red gate: 3/3 with, 0/3 without (`…09-05-36`, `…09-32-10--without-skill`) |
@@ -37,11 +37,15 @@ directories; they are not estimates.
 
 ## Known holes
 
-- **`groom-backlog` #2 left the matrix**: with the `reply` assertion it measures
-  3/3 with the skill and 3/3 without it, so it cannot tell skill behaviour from a
-  bare model that splits the item on its own (one control draw also read the
-  installed `SKILL.md`). The case stays as a regression guard for the split
-  wording; treating it as a discriminator needs a fixture and a stronger signal.
+- **`groom-backlog` #2 is unresolved, not a non-discriminator.** The earlier
+  reading — 3/3 in both arms — was measured before the runner detected external
+  reads. Re-run at `8777e0b` with the detector: with the skill 3/3 clean
+  (`2026-11-06T07-53-16--groom-backlog`); without it, 0/3, of which **2/3 were
+  contaminated** by the installed `SKILL.md`/`evals.md`
+  (`2026-11-06T07-47-34--groom-backlog--without-skill`). The one clean control
+  draw failed the split assertion, so the case may separate, but one draw cannot
+  carry the claim. Re-measure after the control arm can no longer read the
+  install, then classify.
 - **Four skills have no recorded measurement of their cases**: `capture-idea`,
   `process-inbox`, `record-decision` and `write-implementation-prompt`. Their
   cases parse and gate the shape of the output; nobody has published whether they

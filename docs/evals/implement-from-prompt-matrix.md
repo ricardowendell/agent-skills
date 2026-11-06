@@ -111,7 +111,7 @@ node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 8 
 | --- | --- | --- | --- | --- | --- |
 | `deepseek-v4.1-flash` | #1 | 12 | 12/12 | 0/12 | `filematch docs/specs/SPEC-0007-demo.md status: implemented` (12) |
 | `deepseek-v4.1-flash` | #8 | 12 | 12/12 | 0/12 | `nofile src/format.js` (12) |
-| `gpt-6-luna` | #1 | 5 | 5/5 | 1/5 | `filematch docs/specs/SPEC-0007-demo.md status: implemented` (4) |
+| `gpt-6-luna` | #1 | 5 | 5/5 | 0/5 | `filematch docs/specs/SPEC-0007-demo.md status: implemented` (5) |
 | `gpt-6-luna` | #8 | 5 | 5/5 | 1/5 | `nofile src/format.js` (4) |
 
 Default-model runs: #1 with `2026-11-05T12-35-30--implement-from-prompt`, #1
@@ -123,12 +123,19 @@ control `2026-11-05T12-42-05--implement-from-prompt--without-skill`; #8 with
 #8 with `2026-11-05T13-25-10--implement-from-prompt--opencode-go-gpt-6-luna`, #8
 control `2026-11-05T13-28-38--implement-from-prompt--opencode-go-gpt-6-luna--without-skill`.
 
-The luna #1 control's single pass is not a clean control: transcript
+The luna #1 control's single pass was not a clean control: transcript
 `transcript.r1.md` searched `/Users/wendell/.agents/skills` and read the real
 `implement-from-prompt/SKILL.md`, then followed it. The skill gate cannot see a
-file read, so the run scored as a control pass. The other four runs never found
-the file and failed the status assertion. The default-model control had no such
-read in its 12 draws.
+file read, so the run scored as a control pass. The runner now detects that read
+as contamination, so the cell was re-measured at `8777e0b`:
+
+```sh
+node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 1 --repeat 5 --model opencode-go/gpt-6-luna --no-skill --run
+```
+
+`2026-11-06T07-05-38--implement-from-prompt--opencode-go-gpt-6-luna--without-skill`:
+**0/5**, zero contaminated. The separator is 5/5 against 0/5 on both models. The
+default-model control had no such read in its 12 draws.
 
 ## Re-measurement — #4 after the rule fix (SPEC-0016)
 
@@ -172,8 +179,8 @@ regression case; no assertion was changed to restore the split.
 - **#1 — separator.** 12/12 with the skill against 0/12 without it on the
   default model. The control writes the code and leaves the spec `ready`; the
   skill closes the spec. Gate B confirms it on the default model; on
-  `gpt-6-luna` it is 5/5 against 1/5, and that one control pass read the real
-  skill file from `/Users/wendell/.agents/skills` (see *Integrity*).
+  `gpt-6-luna` it is 5/5 against **0/5** after the contaminated control pass was
+  re-measured at `8777e0b` (see *Integrity*).
 - **#8 — separator.** 12/12 against 0/12 on the default model. The control
   invents `src/format.js`; the skill stops and reports the missing prerequisite.
   On `gpt-6-luna` it is 5/5 against 1/5: one control run also stopped, with no
@@ -228,9 +235,19 @@ grep -rl "/Users/wendell/.agents/skills/implement-from-prompt/SKILL.md" <cited r
 ```
 
 The isolation scrubs the child's home and stages the skill in the scratch, but it
-does not hide `/Users/wendell/.agents` or `/private/var/folders`. Both are
-recorded as follow-ups; the default-model Gate B control runs that carry the
-#1/#8 separation contain zero of either read.
+does not hide `/Users/wendell/.agents` or `/private/var/folders`. Since SPEC-0017
+the runner **detects** those reads and marks the repetition contaminated, so the
+raw grep above is now a build artefact (`leak` in `result.json`) instead of a
+manual check. It also means the old absolute claim is retired: a run is clean
+because the detector says so, not because nobody looked. The default-model Gate B
+control runs that carry the #1/#8 separation contain zero of either read, and they
+remain clean under the detector.
+
+The permission attempt in SPEC-0017 did **not** block the read: the `#2` control
+below read `/Users/wendell/.agents/skills/...` with
+`permission.external_directory: "deny"` in the child config. Detection is the
+guarantee; denial is not. Closing the filesystem path stays open (TASK-29's
+follow-up in SPEC-0018's scope).
 
 The five run directories of the SPEC-0016 re-measurement contain zero reads of a
 `references/evals.md` and zero reads of `/Users/wendell/.agents/skills`, and no
