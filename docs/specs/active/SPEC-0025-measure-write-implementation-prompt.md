@@ -77,8 +77,9 @@ evidence, so a reader can tell what the skill actually buys over not loading it.
   - `separator` — with the skill ≥ 4/5 and the control ≤ 1/5;
   - `non-discriminator` — both arms ≥ 4/5, or the gap is smaller than 3/5;
   - `broken` — with the skill ≤ 3/5: the skill fails its own case.
-  - `unresolved` — no run gives five clean control draws and the skill cell is
-    not clean either; the case keeps its raw clean counts and says so, the way
+  - `unresolved` — no run brings the control arm to five clean draws, so the
+    case cannot be classed as a separator or a non-discriminator on clean
+    evidence; it keeps its raw clean counts and says so, the way
     `groom-backlog` #2 is recorded.
   - A with-skill draw whose `skillGate.ok !== true` is not a pass and not a pass
     rate. More than one miss in five makes the cell unreadable: diagnose and
@@ -280,7 +281,8 @@ planned repeat count; the overrun is re-runs, not longer cells.
 - **Approach**: canary → Gate A with the skill → Gate A control → checker → doc.
   Run the two arms on one measurement surface: `fixtureHash`, `promptHash`,
   `skillHash` and `detectorVersion` equal, with the assertion set unchanged; a
-  `repoSha` that moved only docs is citable with that evidence.
+  `repoSha` that moved no measured case (docs and the manual #3 line are fine)
+  is citable with that evidence.
 - **Structure**: one new doc under `docs/evals/`; the case line in the skill's
   `references/evals.md`; one row in the inventory. Nothing under `scripts/`.
 - **Operations**: the exact command per step is in `CONTRIBUTING.md > Measuring`;

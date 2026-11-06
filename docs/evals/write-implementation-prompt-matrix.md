@@ -36,8 +36,9 @@ of a `references/evals.md` answer key** outside the scratch. It does **not** mea
 the draw was isolated. `scripts/lib/evals/leak.mjs` classifies only skill roots
 and `references/evals.md$`; a draw can read the host's `docs/` corpus or the
 global `AGENTS.md` and still score `findings=0`. That gap is real and open
-(TASK-43), and it applies to **every** control cell here and to the #5 trigger
-cells whose clean scored draws read host `docs/`, `scripts/` and `Projects/`.
+(TASK-43), and it applies to **every** control cell here and to the trigger
+cells, whose clean scored draws also read host `docs/`, `scripts/` and
+`Projects/` — the #5 reading below is one concrete instance.
 The canary's discarded eight-draw run below is one concrete instance.
 
 ## Load canary
@@ -164,8 +165,8 @@ The red cells, by assertion or gate reason:
 - **#2 control** — the clean run `15-30-39` failed `nodir docs/prompts` in **5/5**:
   the control generated a prompt from a `draft` spec. The two rejected attempts
   (`15-25-06`, `15-27-30`) failed the same assertion in their three clean draws
-  each; one read the real install, the other a stale copy under
-  `/private/tmp/as-remote/...`.
+  each; three of the four contaminated draws read the real install and one
+  (`15-27-30 r3`) a stale copy under `/private/tmp/as-remote/...`.
 - **#3 with skill** — `nodir docs/prompts` failed in `r3`: the draw treated both
   open questions as non-blocking, turned them into non-goals, and wrote
   `docs/prompts/SPEC-0009-audit-log.prompt.md`. The other four stopped.
