@@ -138,6 +138,22 @@ This is three draws per arm, not the five the table above uses, so it is
 recorded as a preliminary cell: the case separates, and the control's failure is
 `verdict REJECT` in all three runs.
 
+## Audit note — SPEC-0023
+
+The #1 and #3 separator claims were re-checked against controls on the same
+fixture and prompt. #1's pair is `2026-11-02T20-26-40--matrix` /
+`2026-11-02T20-34-11--matrix--without-skill` at `61978f1`, and on luna
+`2026-11-02T20-43-48--matrix--opencode-go-gpt-6-luna` /
+`20-48-34--matrix--opencode-go-gpt-6-luna--without-skill` at `81cba18`. #3's
+re-measured pair is `2026-11-03T10-06-33--review-code` /
+`2026-11-03T09-56-47--review-code--without-skill` at `8b74222`, and on luna
+`10-10-09--review-code--opencode-go-gpt-6-luna` /
+`10-02-34--review-code--opencode-go-gpt-6-luna--without-skill`. The #4 and #7
+pairs above were re-checked the same way: both arms of each pair share
+`repoSha 7a44564` and the same case prompt. All of these runs predate the leak
+detector and are cited as history, not as clean rates; `coverage.md` carries the
+`warnings` counts.
+
 ## Case #2 left the matrix
 
 `#2` was the fourth matrix case: a branch that misses AC-2 and deletes a test.

@@ -40,9 +40,10 @@ measured separation.
 
 The evidence is already recorded; no new draw is needed:
 
-- `audit-code-quality` #4 — control passed once (`2026-11-04T21-57-53`) and
-  failed once on the contract assertions (`…21-59-17`), so it separates only
-  when the control drops the output contract.
+- `audit-code-quality` #4 — the `2026-11-04T21-57-53` control ran the earlier
+  5-assertion version, before the contract rules existed. On the final
+  8-assertion version the pair separated once: `2026-11-04T21-59-17` 1/1 with
+  the skill against `…--without-skill` 0/1, one draw per arm.
 - `review-code` #2 — 5/5 in **both** arms on the replaced fixture
   (`2026-11-02T10-27-26--review-code`,
   `2026-11-02T10-31-40--review-code--without-skill`); both arms found the spec and
@@ -61,10 +62,11 @@ decision a later wave can cite.
   case: case, decision (`regression` or `removed`), the one-line reason, the run
   directories, and the date. Start with the two cases above; add any other case
   the audit reclassifies.
-- **Decision: keep both as regression cases.** Neither is removed: #4 fails a
-  control that drops the output contract, and `review-code` #2 fails a reviewer
-  that misses an obvious AC violation or approves on a green suite. Removal would
-  shrink the corpus without adding evidence.
+- **Decision: keep both as regression cases.** Neither is removed: the final #4
+  pair separated once on the contract assertions but one draw per arm cannot
+  carry a discriminator claim, and `review-code` #2 fails a reviewer that misses
+  an obvious AC violation or approves on a green suite. Removal would shrink the
+  corpus without adding evidence.
 - **Name the run directories in the prose**, not only in the matrix. The
   `review-code` #2 line currently says "kept as a regression case" with no
   directory; the matrix has them, coverage does not.
@@ -161,37 +163,46 @@ Zero draws. Documentation only; `check-eval-run` is local and free.
 **Dispositions (2026-11-06, TASK-34).** Both cases stay in the corpus as
 `regression`; neither is removed.
 
-- **`audit-code-quality` #4 — `regression`.** The control passed
-  `2026-11-04T21-57-53--audit-code-quality--without-skill` and failed
-  `2026-11-04T21-59-17--audit-code-quality--without-skill` on `SCOPE:`,
-  `rule`/`judgement` and `CAPTURE OPTIONS`. It separates only when the control
-  drops the output contract, so it guards the contract, not model separation.
+- **`audit-code-quality` #4 — `regression`.** The earlier
+  `2026-11-04T21-57-53--audit-code-quality--without-skill` ran the 5-assertion
+  version, before `SCOPE:`, `rule`/`judgement` and `CAPTURE OPTIONS` existed, so
+  its pass says nothing about the contract. On the final 8-assertion version the
+  case separated once: `2026-11-04T21-59-17--audit-code-quality` 1/1 with the
+  skill against `2026-11-04T21-59-17--audit-code-quality--without-skill` 0/1 on
+  those assertions. One draw per arm cannot carry a discriminator claim, so it
+  stays `regression`; re-measure with n≥5 before promoting it.
 - **`review-code` #2 — `regression`.** 5/5 in both arms on the replaced fixture
   (`2026-11-02T10-27-26--review-code`,
   `2026-11-02T10-31-40--review-code--without-skill`); the control finds the spec
   and cites AC-2, so the diff-reading case cannot discriminate.
 
-Both pairs are pre-detector (`review-code` `warnings=5`, `audit-code-quality`
-`warnings=1`); the numbers are cited as history, and the decision does not rest
-on a clean rate. `docs/evals/coverage.md` carries a `Dispositions` table with
-the reasons, directories and date; `docs/evals/review-code-matrix.md` carries
-the dated decision in *Case #2 left the matrix*.
+The cited pairs are pre-detector (`review-code` `warnings=5`,
+`audit-code-quality` `warnings=1`); the numbers are cited as history, and the
+decision does not rest on a clean rate. `docs/evals/coverage.md` carries a
+`Dispositions` table with the reasons, directories and date;
+`docs/evals/review-code-matrix.md` carries the dated decision in *Case #2 left
+the matrix*.
 
 **Discrimination audit.** Every separator claim the audit walked has a control on
 the same fixture and prompt, so nothing was reclassified:
-`implement-from-prompt` #1/#8 (default, both arms at `3779a20`; luna #1 pairs
-`2026-11-05T13-18-27` with the contamination re-measure
-`2026-11-06T07-05-38`, and `evals/1/` plus the case-1 assertions are unchanged
-across `3779a20..8777e0b`; luna #8 runs both arms at `3779a20`), `review-code`
-#4/#7 (both arms at `7a44564`), and `survey-inflight-work` #1/#2 plus
-`audit-code-quality` #1 (both arms at `3784ae7`). No run carries
-`fixtureHash`/`promptHash` — all predate SPEC-0020 — so sameness is established
+`implement-from-prompt` #1/#8 (default, both arms at `3779a20`; the with-skill
+cells `2026-11-05T12-35-30` and `12-48-46` predate SPEC-0016, so that pairing is
+historical for the with-skill arm while the control does not load the skill; luna
+#1 pairs `2026-11-05T13-18-27` at `3779a20` — pre-fix `SKILL.md` — with the
+`2026-11-06T07-05-38` control at `8777e0b`, with `references/evals/1/` and the
+case-1 assertions unchanged but no post-fix with-skill luna #1; luna #8 runs both
+arms at `3779a20`, also pre-fix on the with-skill side), `review-code` #1 at
+`61978f1`/`81cba18`, #3 at `8b74222`, #4/#7 at `7a44564`, and
+`survey-inflight-work` #1/#2 plus `audit-code-quality` #1 at `3784ae7`. None of
+the runs cited here carries `fixtureHash`/`promptHash`, so sameness is established
 by `repoSha` plus the identical case prompt. Caveats recorded in coverage: the
 default `implement-from-prompt` cells are pre-detector (`warnings=12`); the luna
 with-skill and #8 cells and `review-code` #4/#7 are pre-detector too
 (`warnings=5`; #7 `warnings=3`), with the luna #1 control the one clean
-re-measure (`warnings=0`); and the `survey` and `audit-code-quality` #1 cells are
-one draw per case, directional only.
+re-measure (`warnings=0`); `review-code` #1/#3 are pre-detector as well; and the
+`survey` and `audit-code-quality` #1 cells are one draw per case, directional
+only. A post-SPEC-0016 with-skill re-measure of `implement-from-prompt` #1/#8
+would close the skill-version gap; it is not opened as a task here.
 
 **Sibling reconciliation.** The `implement-from-prompt` judge sentence no longer
 says tool-call evidence is `unverifiable`: it records that the judge sees the
@@ -202,10 +213,10 @@ SPEC-0022 (1/1 with skill, no control), and the `Manual`/total columns already
 read 2 manual out of 76. Re-running `--list` prints
 `Parsed 76 case(s): 74 runnable, 2 manual`.
 
-**Citations.** `node scripts/check-eval-run.mjs` on the four disposition
+**Citations.** `node scripts/check-eval-run.mjs` on the five disposition
 directories: `findings=0 warnings=5` each for the `review-code` pair and
-`findings=0 warnings=1` each for the `audit-code-quality` pair. No post-detector
-directory is cited as a clean rate.
+`findings=0 warnings=1` each for the three `audit-code-quality` directories. No
+post-detector directory is cited as a clean rate.
 
 **Files.** The diff is the three `files:` entries:
 `docs/evals/coverage.md`, `docs/evals/review-code-matrix.md`,

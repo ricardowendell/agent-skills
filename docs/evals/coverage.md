@@ -17,7 +17,7 @@ directories; they are not estimates.
 | `record-decision` | 5 | 2 | 0 | trees 1–5 | none |
 | `review-code` | 7 | 2 | 0 | trees 1–7 plus `base/` and `base-red/`; 1–4 and 7 via `git.json` | published matrix; #4 fixture revised 2026-11-05: 5/5 with, 3/5 without (`2026-11-05T07-34-32--review-code`, `…07-47-21--review-code--without-skill`); #7 red gate: 3/3 with, 0/3 without (`…09-05-36`, `…09-32-10--without-skill`) |
 | `survey-inflight-work` | 4 | 2 | 0 | tree 1 via `git.json` with a local bare `origin`; tree 2 without a remote | iteration 1, 1 draw/case: with-skill 4/4 (`2026-11-04T21-49-16`); control case 1 0/1, only the `unknown` PR state separated (`…21-45-26`); control case 2 0/1, only the no-remote line separated (`…21-57-53`) |
-| `audit-code-quality` | 4 | 2 | 0 | trees 1 and 4 via `git.json` | iteration 1: with-skill 4/4 (`2026-11-04T21-55-53`); control case 1 0/1, only coverage `unknown` separated (`…21-47-51`); control case 4 passed once (`…21-57-53`) and failed once (`…21-59-17`, `SCOPE:`/`rule`/`CAPTURE OPTIONS`), so it does not separate reliably |
+| `audit-code-quality` | 4 | 2 | 0 | trees 1 and 4 via `git.json` | iteration 1: with-skill 4/4 (`2026-11-04T21-55-53`); control case 1 0/1, only coverage `unknown` separated (`…21-47-51`); case 4 on the final 8-assertion version 1/1 with skill (`2026-11-04T21-59-17`) against 0/1 without (`2026-11-04T21-59-17--without-skill`) on `SCOPE:`/`rule`/`CAPTURE OPTIONS` — one draw per arm, so it does not separate reliably (`…21-57-53` is the pre-contract 5-assertion version) |
 | `tighten-harness` | 6 | 2 | 0 | trees 1, 2, 3, 5, 6 | case 5: 3/3 passed, skill loaded 0/3 (`why:`, no run dir) |
 | `write-implementation-prompt` | 6 | 2 | 1 | trees 1–4 | none |
 | **total** | **76** | **26** | **2** | | |
@@ -102,14 +102,16 @@ directories; they are not estimates.
   `warnings=5`), so it is kept as a regression case — regression, not a
   discriminator; decision recorded 2026-11-06 (TASK-34). See
   `review-code-matrix.md`.
-- **`audit-code-quality` #4 does not separate reliably**: its control arm passed
-  on the first draw (`2026-11-04T21-57-53--audit-code-quality--without-skill`)
-  and failed on the second
-  (`2026-11-04T21-59-17--audit-code-quality--without-skill`) on the contract
-  assertions (`SCOPE:`, `rule`/`judgement`, `CAPTURE OPTIONS`). It separates
-  only when the control drops the output contract, so it is kept as a regression
-  case — regression, not a discriminator; decision recorded 2026-11-06
-  (TASK-34).
+- **`audit-code-quality` #4 does not separate reliably**: the pre-contract
+  version (`2026-11-04T21-57-53--audit-code-quality--without-skill`, five
+  assertions) had no `SCOPE:`, `rule`/`judgement` or `CAPTURE OPTIONS` rule to
+  fail, so its pass says nothing about the contract. On the final version (eight
+  assertions) the case separated once —
+  `2026-11-04T21-59-17--audit-code-quality` 1/1 with the skill against
+  `2026-11-04T21-59-17--audit-code-quality--without-skill` 0/1 on those three
+  assertions — but one draw per arm cannot carry a discriminator claim. It stays
+  a regression case — regression, not a discriminator; decision recorded
+  2026-11-06 (TASK-34). Re-measure with n≥5 before promoting it.
 - **Two cases are `manual`**: `bootstrap-project-harness` #8 and
   `write-implementation-prompt` #3. They run nowhere today.
 
@@ -121,7 +123,7 @@ rows below were decided on existing runs, not a new draw.
 
 | case | decision | reason | run directories | date |
 | --- | --- | --- | --- | --- |
-| `audit-code-quality` #4 | `regression` | One control draw held the output contract and the next dropped `SCOPE:`, `rule`/`judgement` and `CAPTURE OPTIONS`; the case guards the contract, not model separation. | `2026-11-04T21-57-53--audit-code-quality--without-skill`, `2026-11-04T21-59-17--audit-code-quality--without-skill` (`warnings=1` each, pre-detector) | 2026-11-06 |
+| `audit-code-quality` #4 | `regression` | On the final 8-assertion case it separated once (1/1 with the skill vs 0/1 without), but one draw per arm cannot carry a discriminator claim; the earlier 5-assertion run predates the contract. | `2026-11-04T21-57-53--audit-code-quality--without-skill` (pre-contract 5-assertion version), `2026-11-04T21-59-17--audit-code-quality` and `2026-11-04T21-59-17--audit-code-quality--without-skill` (final 8-assertion pair; `warnings=1` each) | 2026-11-06 |
 | `review-code` #2 | `regression` | 5/5 in both arms on the replaced fixture: the control finds the spec and cites AC-2, so a diff-reading case cannot discriminate. | `2026-11-02T10-27-26--review-code`, `2026-11-02T10-31-40--review-code--without-skill` (`warnings=5` each, pre-detector) | 2026-11-06 |
 
 Neither case is removed: each fails a control that breaks the contract or
@@ -130,18 +132,35 @@ ignores an acceptance criterion, which is evidence a later wave can cite.
 ### Discrimination audit
 
 Every separator claim the audit walked has a control on the same fixture and
-prompt, so none is reclassified: `implement-from-prompt` #1/#8 (default, both
-arms at `3779a20`), luna #1 (with `13-18-27` at `3779a20` against the
-`2026-11-06T07-05-38` control at `8777e0b`; only case #4's `why:` changed in
-between, so `evals/1/` is unchanged) and luna #8 (both at `3779a20`),
-`review-code` #4/#7 (both arms at `7a44564`), and `survey-inflight-work` #1/#2
-plus `audit-code-quality` #1 (both arms at `3784ae7`). No run carries
-`fixtureHash`/`promptHash` (all predate SPEC-0020), so matching is by `repoSha`
-plus the identical case prompt. Caveats: the default `implement-from-prompt`
-cells are pre-detector (`warnings=12`); the luna with-skill and #8 cells and
-`review-code` #4/#7 are pre-detector too (`warnings=5`; #7 `warnings=3`), with
-the luna #1 control the one clean re-measure (`warnings=0`); and the `survey` and
-`audit-code-quality` #1 cells are one draw per case — directional, not rates.
+prompt, so none is reclassified. `implement-from-prompt` #1 and #8 use the same
+`repoSha 3779a20` in both arms on the default model
+(`2026-11-05T12-35-30`/`12-42-05` and `12-48-46`/`12-56-03`); the with-skill
+cells predate SPEC-0016, so the pairing is historical for that arm while the
+control does not load the skill. Luna #1 pairs `2026-11-05T13-18-27` at `3779a20`
+(pre-fix `SKILL.md`) with the `2026-11-06T07-05-38` control at `8777e0b`:
+`references/evals/1/` and the case-1 assertions are unchanged, but `SKILL.md`
+changed in SPEC-0016 and there is no post-fix with-skill luna #1; luna #8 pairs
+`13-25-10`/`13-28-38` at `3779a20` (also pre-fix on the with-skill side).
+`review-code` #1 was re-measured at `61978f1`
+(`20-26-40--matrix`/`20-34-11--matrix--without-skill`) and on luna at `81cba18`
+(`20-43-48`/`20-48-34`); #3 at `8b74222`
+(`10-06-33--review-code`/`09-56-47--review-code--without-skill`, luna
+`10-10-09`/`10-02-34`); #4 and #7 at `7a44564`
+(`07-34-32`/`07-47-21`, `09-05-36`/`09-32-10`). `survey-inflight-work` #1/#2 and
+`audit-code-quality` #1 share `3784ae7` (`21-49-16`/`21-45-26`,
+`21-49-16`/`21-57-53`, `21-55-53`/`21-47-51`). None of the runs cited here
+carries `fixtureHash`/`promptHash`, so matching is by `repoSha` plus the
+identical case prompt.
+
+Caveats: the default `implement-from-prompt` cells are pre-detector
+(`warnings=12`); the luna with-skill and #8 cells and `review-code` #4/#7 are
+pre-detector too (`warnings=5`; #7 `warnings=3`), with the luna #1 control the
+one clean re-measure (`warnings=0`); the `review-code` #1/#3 runs are pre-detector
+as well (`warnings=15` on the matrix dirs, `warnings=5` on the #3 re-measures);
+and the `survey` and `audit-code-quality` #1 cells are one draw per case —
+directional, not rates. A post-SPEC-0016 with-skill re-measure of
+`implement-from-prompt` #1/#8 would close the skill-version gap; it is not opened
+as a task here.
 
 ## How to update
 
