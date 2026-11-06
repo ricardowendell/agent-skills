@@ -192,9 +192,10 @@ No assertion, fixture, gate or case prompt changes.
 4. **No agent draw is spent.** The measurement uses `replay-evals --judge` over
    the two stored directories, and the stored `result.json` files are
    byte-identical afterwards (`git status` clean is not enough: compare hashes).
-5. **No rescue.** A draw that failed a deterministic assertion is still failed
-   after re-judging, and `run-evals --judge` still evaluates the judge only when
-   the deterministic result passed. Unit test plus code path.
+5. **No rescue.** A draw that failed a deterministic assertion is reported as
+   `skipped` after re-judging — never sent to the model, never passed — and
+   `run-evals --judge` still evaluates the judge only when the deterministic
+   result passed. Unit test plus code path.
 6. **`unverifiable` is still a failure, and the docs say why.** The matrix's
    *Judge calibration* states that the judge now sees tool calls, that
    `unverifiable` still fails, and that re-judging requires the same
@@ -231,7 +232,8 @@ The final artifacts are `~/.local/share/opencode/evals/rejudge/spec-0021-case-01
 `…/spec-0021-case-07-r02.json` (sha256
 `d6e0ebaec458c33b06b7814ea5f2e885d85461b13b9f2f60d8bd5be9884e4b56`). The
 earlier `r01` files (`aa3255ac…8facc9` and `6eb0bc8d…99fef5`) stay cited as the
-old-prompt reading, not deleted.
+old-prompt reading (an empty `## Command log` block beside the ledger), not
+deleted.
 
 Both reports carry `provenance: "partial"`: these runs predate SPEC-0020, so the
 three reuse hashes do not exist. Case 01 records `repoSha 3779a20` and

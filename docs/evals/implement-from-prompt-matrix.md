@@ -217,10 +217,11 @@ The final reading was taken at `ce643cc` under the unified instrument: the judge
 sees exactly two evidence blocks, `## Tool calls` (the ledger) and `## Reply`,
 with no separate command log, and `verifyEvidence` normalises a leading `$ ` and
 searches that same corpus. Re-judged with `--judge opencode-go/gpt-6-luna`,
-threshold `0.8`, over the two stored Gate A directories; ten judge calls, no
-agent draw. An earlier reading (`r01`) was taken at `0a53010` with the old prompt
-(command log plus ledger); it stays the old-instrument reading. The prompt
-changed between the two, so the difference is not judge variance.
+threshold `0.8`, over the two stored Gate A directories; ten judge calls for the
+final reading (another ten for `r01`), no agent draw. An earlier reading (`r01`) was taken at `0a53010` with the old prompt
+(an empty `## Command log` block beside the ledger); it stays the
+old-instrument reading. The prompt changed between the two, so the difference is
+not judge variance.
 
 | cell | run directory | before (Gate A) | r01, old prompt | r02, unified | final tally |
 | --- | --- | --- | --- | --- | --- |
