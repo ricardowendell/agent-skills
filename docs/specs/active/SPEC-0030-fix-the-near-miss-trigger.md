@@ -128,7 +128,161 @@ change. **Budget: ~30 draws** (four with-skill cells + two triggers).
 
 ## Results
 
-_Filled during implementation._
+### F0 — the cue is the description, not the fixture
+
+The failing `#6` draws in `14-07-04`, `15-49-43` and `16-02-56` all call the
+`skill` tool as their **first action**, before any `glob`/`grep`/`read`:
+
+- `2026-11-06T14-07-04` `r1`: "I'll load the skill first, then find the spec."
+  Then `skill write-implementation-prompt`, then `glob **/*0012*` (no files).
+- `2026-11-06T14-07-04` `r2`: "I'll load the implementation-prompt skill since
+  this looks like a spec-related request." Then `skill`.
+- `2026-11-06T15-49-43` `r1`/`r2`: the `skill` call precedes the `glob`; `r2`
+  says "I'll load the skill that handles spec-to-prompt work, then find the
+  spec."
+- `2026-11-06T16-02-56` `r2`: "I'll load the implementation-prompt skill since
+  it owns spec handling, then find SPEC-0012." Then `skill`.
+
+The trigger fixture is an **empty scratch** (`fixtureHash e3b0c442…`): it
+contains no `SPEC-0012`, and the failing draws discover that *after* loading the
+skill. The cue is therefore the advertised description matching "spec handling",
+not the fixture. The passing draws in the same runs search first and never load.
+That is why the fix is the description plus an explicit boundary, not a case
+rewrite.
+
+### F1 — the edit
+
+`skills/write-implementation-prompt/SKILL.md` now advertises:
+
+> Create or update an implementation prompt file that a coding agent can execute
+> from a ready feature spec. Use when the user asks to write, generate, or update
+> that executable prompt, or to make a ready spec implementable. Does not
+> summarise, explain, or review a spec. Stops if the spec is not `ready`.
+
+and its Purpose carries the boundary line: the skill produces an **executable
+prompt file**; summarising, explaining, or reviewing a spec is not this work.
+The case `#6` prompt and its `notskill` assertion are byte-identical to the
+published case. The new staged `skillHash` is
+`046369c29a8383dbca48e0437201a229c5686375db6c01cbff8a9a0bf26af8e0` (old
+`ab314e2ceb8f793f…`).
+
+### F3 — re-measure at `dcf5177` (detector v2)
+
+All cited dirs are under `~/.local/share/opencode/evals/runs/` and print
+`isolated=yes` unless a finding is named.
+
+| cell | run directory | result | checker |
+| --- | --- | --- | --- |
+| #1 with skill | `2026-11-06T19-25-26--write-implementation-prompt` | 5/5 | `findings=0 warnings=0 isolated=yes` |
+| #2 with skill | `2026-11-06T19-28-47--write-implementation-prompt` | 5/5 | `findings=0 warnings=0 isolated=yes` |
+| #3 | — | 0 draws (`status: manual`) | history `14-01-54` split 4/5 |
+| #4 with skill | `2026-11-06T19-30-26--write-implementation-prompt` | 5/5 | `findings=0 warnings=0 isolated=yes` |
+| #5 trigger | `2026-11-06T19-32-45--write-implementation-prompt` | 5/5 loaded; 1/1 clean scored, 2 contaminated, 2 stalled | `findings=6 isolated=no` |
+| #5 trigger | `2026-11-06T19-53-34--write-implementation-prompt` | 5/5 loaded; 2/2 clean scored, 1 contaminated, 2 stalled | `findings=3 isolated=no` |
+| #6 near-miss | `2026-11-06T20-12-15--write-implementation-prompt` | **5/5 not loaded** | `findings=0 warnings=0 isolated=yes` |
+| #6 near-miss | `2026-11-06T19-32-45--write-implementation-prompt` | 5/5 not loaded | run has #5 findings |
+| #6 near-miss | `2026-11-06T19-53-34--write-implementation-prompt` | 4/5 (`r3` loaded) | run has #5 findings |
+
+The #6 split is 5/5, 5/5, 4/5 of five. The clean cell `20-12-15` meets AC-1
+(five draws, `findings=0 warnings=0`, `isolated=yes`). It is not deterministic:
+`19-53-34 r3` still says "I'll start by loading the skill that governs this kind
+of request", calls `skill`, and only then reads the boundary and declines. The
+near-miss is materially improved but not proven stable at five draws.
+
+**#5 is not fixed.** It loaded in all ten draws across the two trigger runs, but
+no stall-free five-draw cell exists. The stalls are provider silence after the
+load, named by the last event before the watchdog's 120 s gap:
+
+- `19-32-45 r1`: last event at 161.6 s, then 120 s of silence; retried once.
+- `19-32-45 r4`: last event at 27.2 s; retried once.
+- `19-32-45 r2`: first attempt stalled (attempts 2, retries 1), retry passed.
+- `19-53-34 r3`: last event at 355.0 s; retried once.
+- `19-53-34 r5`: last event at 145.0 s; retried once.
+
+The contamination is separate: `19-32-45 r3`/`r5` read the installed skill and
+host corpus; `19-53-34 r4` read a stale copy under
+`/private/var/folders/.../opencode/agent-skills-pr`. These are excluded, not
+scored. The best clean subsets are 1/1 and 2/2; AC-2's stall-free five-draw
+requirement is **not met** and is not claimed.
+
+### Controls — superseded by detector v2
+
+The controls were **not re-run**. They stage no skill, so the description edit
+cannot move `fixtureHash`/`promptHash`; the old control artefacts remain
+readable. But the sentence in the spec that "the controls stay citable" is
+superseded by the v2 replay:
+
+- `#1` is **unresolved**: four attempts, no five-draw clean run (clean subsets
+  0/3, 0/4, 0/3, 0/4; every clean draw failed `spec_sha:`).
+- `#2` is **0/4 replay-clean** (`15-30-39 r1` is `dirty(host)`) and is **pending
+  SPEC-0031**.
+- `#3` is manual; its control is a leak-verified 0/4 clean history.
+- `#4` is **4/5 draws clean (4/4 passed)** (`14-37-23 r5` is `dirty(host)`) and
+  is **pending SPEC-0031**.
+
+The matrix states the same status in its control rows and says why.
+
+### F2 — the validator rule
+
+`assert: skill <id>` and `assert: notskill <id>` are now rejected when `<id>` is
+neither the skill under review nor a `stage:` declared by the same case. A
+`stage:` that no `skill`/`notskill` assertion uses is a warning. The rule lives
+in `scripts/lib/evals/parse.mjs` and is reached by both authoring-time paths:
+
+- `run-evals --check` calls `readEvals`, which derives the skill id from
+  `<skill>/references/evals.md`;
+- `validate-skills --root skills` imports the same parser and runs it for each
+  skill's `references/evals.md`.
+
+This is a deliberate divergence from the spec's `files:` line naming only
+`scripts/validate-skills.mjs`: `--check` is defined by `run-evals`, and a rule
+that lives only in `validate-skills` would not satisfy AC-4. No new test file
+was created; the cases were added to the existing `scripts/lib/evals/parse.test.mjs`
+(inside the selftest glob).
+
+Temporary-fixture proof (siblings `other-skill` and `unused-skill` exist so the
+`stage:` ids resolve; case 1 is the undeclared assertion, case 2 is valid, case
+3 is the unused stage):
+
+```text
+### run-evals --check (fixture root)
+warn: demo: case 3: stage 'unused-skill' has no skill/notskill assertion
+error: demo: case 1: assert 'skill other-skill' names a skill the run will not stage (assert 'demo' or add "- stage: other-skill")
+
+1 validation error(s); refusing to run.
+exit=1
+
+### validate-skills (fixture root)
+Scanned 3 SKILL.md across 1 roots.
+
+ERRORS (1):
+  - .../demo/references/evals.md: case 1: assert 'skill other-skill' names a skill the run will not stage (assert 'demo' or add "- stage: other-skill")
+
+WARNINGS (1):
+  - .../demo/references/evals.md: case 3: stage 'unused-skill' has no skill/notskill assertion
+exit=1
+```
+
+### Deviations, budget and gates
+
+- **Trigger-overlap lint dropped** (the spec's Non-Goal). A deterministic
+  overlap check either fires on legitimate pairs (`record-decision` #5 watches
+  the artefact on purpose) or catches nothing; the stage/assert rule is the
+  same defect class from the authoring side and is the replacement. This is the
+  deviation AC-5 asks to record.
+- **Budget:** 40 draws (5 #1 + 5 #2 + 0 #3 + 5 #4 + 10 trigger + 10 trigger
+  repeat + 5 #6-only). The spec budget was ~30; the extra 10 are the mandatory
+  repeat after the first trigger run was dirty(host) and the #6-only run that
+  produced the `findings=0` AC-1 cell. No further draws were spent after two
+  consecutive dirty trigger runs; #5 is reported, not chased.
+- **No drift:** no assertion or fixture changed. The case #6 prompt and
+  `notskill` line are unchanged.
+- **Gates:** `lint`, `selftest` (`--list --check`, harness tests, bootstrap
+  tests, sensor parity) all pass; see the report.
+- **Left out:** AC-2 (stall-free #5 5/5) is not met; #3 is manual and was not
+  re-measured; the #2/#4 controls remain pending SPEC-0031. The #6 result is
+  5/5 clean in one run but 4/5 in another, so the near-miss is improved, not
+  proven deterministic.
 
 ## Open Questions
 
