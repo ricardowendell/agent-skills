@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "8c71d822-2265-44da-9eba-aa5975b58ca1",
+  "started_at": "2026-11-06T15:38:44.000Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.1.0"
+  },
+  "base_commit": "08d2d4bf662e24b3d4a34efa555e328a8d929958",
+  "head_commit": "edc6b548423a45b1e430e3941b0ef7e9130cae9f",
+  "task": "SPEC-0024",
+  "spec_sha": "c7fee947402f4cd476a7d0b32853db1c91b6fa62c1fc7454852c642dc5485405",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0024-harness-health.json",
+      "sha256": "48c7391bd939cb8247775284cfdb553e4e515bbe018eae63efc4760bbc944b48"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0024-harness-health.json",
+      "sha256": "651b6e1b00a72674e89ef4cc7c3d42bf765c3a49654227713b246fd9c209827f"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "d22430c1c3a9308c0da04ad65df876f0d15408cfae84be3a3b18105f5eca4451"
+    }
+  ],
+  "attempts": 1,
+  "duration": 2875,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "edc6b548423a45b1e430e3941b0ef7e9130cae9f"
+}
