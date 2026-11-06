@@ -9,10 +9,29 @@ const c = {
 }
 
 test("the judge prompt carries the expectations but never the scenario note", () => {
-  const p = judgePrompt(c, { reply: "VERDICT: APPROVE", shell: ["npm test"] })
+  const p = judgePrompt(c, { reply: "VERDICT: APPROVE", ledger: "$ npm test  [exit 0]" })
   assert.match(p, /Walks AC-1 through AC-3\./)
   assert.match(p, /npm test/)
   assert.ok(!p.includes("the diff satisfies every AC"), "the why line leaked into the judge prompt")
+})
+
+test("the prompt has exactly two evidence blocks: the ledger and the reply", () => {
+  const ledger = "read: src/cart.js\n$ node --test  [exit 1]\n  # fail 1"
+  const p = judgePrompt(c, { reply: "done", ledger })
+  assert.match(p, /## Tool calls\n```\nread: src\/cart\.js/)
+  assert.match(p, /\$ node --test {2}\[exit 1\]/)
+  // No second, unbudgeted rendering of the stream: the command log used to show
+  // lines the ledger's budget had cut, and the judge could quote one of them.
+  assert.ok(!p.includes("## Command log"), "the command log section came back")
+  assert.equal(p.match(/## (Tool calls|Reply)/g).length, 2)
+  assert.ok(p.indexOf("## Tool calls") < p.indexOf("## Reply"))
+  assert.match(p, /A read\nline shows a file was opened, not what the file said/)
+})
+
+test("an empty ledger still renders its block, not a missing section", () => {
+  const p = judgePrompt({ expect: ["Runs the gate."] }, { reply: "ok" })
+  assert.match(p, /## Tool calls\n```\n\(no tool calls\)\n```/)
+  assert.match(p, /## Reply\n```\nok\n```/)
 })
 
 test("watch-for lines are marked negative so the judge does not require them", () => {
@@ -97,6 +116,68 @@ test("compound evidence counts when most of its segments are real", () => {
   const out = verifyEvidence(parsed, reply)
   assert.equal(out.verdicts[0].verdict, "met")
   assert.equal(out.verdicts[1].verdict, "unverifiable")
+})
+
+test("a quote from the ledger verifies, including the #7 `$ node --test  [exit 1]` shape", () => {
+  const ledger = "$ node --test  [exit 1]\n  # fail 1"
+  const parsed = {
+    verdicts: [{ i: 1, verdict: "met", evidence: "$ node --test  [exit 1]" }],
+    met: 1,
+    unmet: 0,
+    score: 1,
+  }
+  const out = verifyEvidence(parsed, ["the agent reported the red gate", ledger].join("\n"))
+  assert.equal(out.verdicts[0].verdict, "met")
+  assert.equal(out.unverified, 0)
+})
+
+test("code fences, a `$ ` prompt and whitespace do not sink a literal quote", () => {
+  const parsed = {
+    verdicts: [{ i: 1, verdict: "met", evidence: "```sh\n$ node --test\n```" }],
+    met: 1,
+    unmet: 0,
+    score: 1,
+  }
+  const out = verifyEvidence(parsed, "$ node --test  [exit 1]")
+  assert.equal(out.verdicts[0].verdict, "met")
+})
+
+test("a short but literal quote is evidence, not a missing quote", () => {
+  for (const evidence of ["exit 1", "exit 1]", "fail 1"]) {
+    const parsed = { verdicts: [{ i: 1, verdict: "met", evidence }], met: 1, unmet: 0, score: 1 }
+    const out = verifyEvidence(parsed, "$ node --test  [exit 1]\n  # fail 1")
+    assert.equal(out.verdicts[0].verdict, "met", `short quote '${evidence}' was discarded`)
+  }
+})
+
+test("a quote that is in neither the reply nor the ledger is unverifiable", () => {
+  const parsed = {
+    verdicts: [{ i: 1, verdict: "met", evidence: "the suite was green and all checks passed" }],
+    met: 1,
+    unmet: 0,
+    score: 1,
+  }
+  const out = verifyEvidence(parsed, ["done", "$ node --test  [exit 1]\n  # fail 1"].join("\n"))
+  assert.equal(out.verdicts[0].verdict, "unverifiable")
+  assert.equal(out.unverified, 1)
+})
+
+test("empty evidence stays unverifiable even when the corpus is rich", () => {
+  const parsed = {
+    verdicts: [
+      { i: 1, verdict: "met", evidence: "" },
+      { i: 2, verdict: "met", evidence: '""' },
+    ],
+    met: 2,
+    unmet: 0,
+    score: 1,
+  }
+  const out = verifyEvidence(parsed, "a rich reply\n$ node --test  [exit 1]")
+  assert.deepEqual(
+    out.verdicts.map((v) => v.verdict),
+    ["unverifiable", "unverifiable"],
+  )
+  assert.equal(out.score, 0)
 })
 
 test("an expectation the evidence cannot settle does not pass the case", () => {

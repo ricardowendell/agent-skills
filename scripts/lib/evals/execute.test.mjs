@@ -6,6 +6,7 @@ import { join } from "node:path"
 import { executeCase } from "./execute.mjs"
 import { makeScratch } from "./fixture.mjs"
 import { DETECTOR_VERSION } from "./leak.mjs"
+import { rejudge } from "./rejudge.mjs"
 
 // The run path is the contract every measurement goes through, and it used to
 // call `runAgent` directly, which meant it could only be exercised by running a
@@ -296,6 +297,122 @@ test("a draw records the fixture, prompt and detector provenance", async () => {
     assert.equal(otherFixture.promptHash, first.promptHash, "a fixture edit does not move the prompt hash")
   } finally {
     rmSync(skill.dir, { recursive: true, force: true })
+  }
+})
+
+test("the judge prompt and the evidence check share the tool-call ledger", async () => {
+  const { skill, scratch, c, inside, cleanup } = setup()
+  const expected = { ...c, expect: ["Runs the test suite and reports the red gate."] }
+  const agentOut = [
+    JSON.stringify({ type: "tool_use", part: { tool: "skill", state: { status: "completed", input: { id: "demo" }, metadata: { metadata: { directory: inside } } } } }),
+    JSON.stringify({ type: "tool_use", part: { tool: "read", state: { status: "completed", input: { path: "src/index.js" }, output: "SECRET READ BODY" } } }),
+    JSON.stringify({
+      type: "tool_use",
+      part: { tool: "shell", state: { status: "completed", input: { command: "node --test" }, output: "# tests 1\n# fail 1\n", metadata: { metadata: { exit: 1 } } } },
+    }),
+    JSON.stringify({ type: "text", part: { text: "done" } }),
+  ].join("\n")
+  const judgeOut = JSON.stringify({
+    type: "text",
+    part: { text: JSON.stringify({ expectations: [{ i: 1, verdict: "met", evidence: "$ node --test  [exit 1]" }], score: 1 }) },
+  })
+  const prompts = []
+  const spawn = async ({ args }) => {
+    const prompt = args[args.length - 1]
+    prompts.push(prompt)
+    if (prompt.startsWith("You grade")) return { out: judgeOut, err: "", code: 0 }
+    return { out: agentOut, err: "", code: 0 }
+  }
+  try {
+    const { result } = await executeCase({ skill, c: expected, scratch, judge: { model: "stub", threshold: 0.8 }, spawnAgent: spawn })
+    const judgePrompt = prompts.find((p) => p.startsWith("You grade"))
+    assert.ok(judgePrompt, "the judge was never called")
+    assert.match(judgePrompt, /## Tool calls/)
+    assert.match(judgePrompt, /read: src\/index\.js/)
+    assert.match(judgePrompt, /^\$ node --test {2}\[exit 1\]$/m)
+    assert.ok(!judgePrompt.includes("SECRET READ BODY"), "a read body leaked into the judge prompt")
+    // The shell line exists in the ledger, so the quote verifies and the case
+    // stays passed. If the prompt and the corpus had drifted, this would be
+    // `unverifiable` and the case would fail.
+    assert.equal(result.status, "passed")
+    assert.equal(result.semantic.score, 1)
+    assert.equal(result.semantic.expectations[0].verdict, "met")
+    assert.equal(result.semantic.reason, "")
+  } finally {
+    cleanup()
+  }
+})
+
+// The two front ends must not drift again: a live run and a re-judge over the
+// same stream have to produce the same prompt, byte for byte. If rejudge forgot
+// a block the live path sends, the stored measurement would grade a different
+// instrument than the runner.
+test("execute and rejudge render the same judge prompt from the same stream", async () => {
+  const { skill, scratch, c, inside, cleanup } = setup()
+  const expected = { ...c, expect: ["Runs the test suite and reports the red gate."] }
+  const streamText = [
+    JSON.stringify({ type: "tool_use", part: { tool: "skill", state: { status: "completed", input: { id: "demo" }, metadata: { metadata: { directory: inside } } } } }),
+    JSON.stringify({ type: "tool_use", part: { tool: "read", state: { status: "completed", input: { path: "src/index.js" }, output: "SECRET READ BODY" } } }),
+    JSON.stringify({
+      type: "tool_use",
+      part: { tool: "shell", state: { status: "completed", input: { command: "node --test" }, output: "# tests 1\n# fail 1\n", metadata: { metadata: { exit: 1 } } } },
+    }),
+    JSON.stringify({ type: "text", part: { text: "done" } }),
+  ].join("\n")
+  const judgeOut = JSON.stringify({
+    type: "text",
+    part: { text: JSON.stringify({ expectations: [{ i: 1, verdict: "met", evidence: "$ node --test  [exit 1]" }], score: 1 }) },
+  })
+  const dir = mkdtempSync(join(tmpdir(), "rejudge-parity-"))
+  try {
+    let execPrompt = null
+    const execSpawn = async ({ args }) => {
+      const prompt = args[args.length - 1]
+      if (prompt.startsWith("You grade")) {
+        execPrompt = prompt
+        return { out: judgeOut, err: "", code: 0 }
+      }
+      return { out: streamText, err: "", code: 0 }
+    }
+    const { result } = await executeCase({ skill, c: expected, scratch, judge: { model: "stub", threshold: 0.8 }, spawnAgent: execSpawn })
+    assert.equal(result.status, "passed")
+
+    writeFileSync(
+      join(dir, "result.json"),
+      JSON.stringify({
+        skill: "demo",
+        case: 1,
+        status: "passed",
+        repetitions: [
+          {
+            skill: "demo",
+            case: 1,
+            rep: 1,
+            status: "passed",
+            assertions: [{ kind: "reply", arg: "done", pass: true }],
+            skillGate: { ok: true },
+            execution: { exit: 0 },
+          },
+        ],
+      }),
+    )
+    writeFileSync(
+      join(dir, "transcript.r1.md"),
+      `# Eval: demo case 1\n\n**Scratch:** /tmp/x\n**Exit:** 0\n**Status:** passed\n\n## Transcript\n\n\`\`\`\n${streamText}\n\`\`\`\n`,
+    )
+
+    let replayPrompt = null
+    const replaySpawn = async ({ args }) => {
+      replayPrompt = args[args.length - 1]
+      return { out: judgeOut, err: "", code: 0 }
+    }
+    await rejudge({ dir, c: expected, model: "stub", spawnAgent: replaySpawn })
+    assert.ok(execPrompt, "the live path never called the judge")
+    assert.ok(replayPrompt, "the replay path never called the judge")
+    assert.equal(replayPrompt, execPrompt, "the re-judge prompt differs from the live one")
+  } finally {
+    cleanup()
+    rmSync(dir, { recursive: true, force: true })
   }
 })
 

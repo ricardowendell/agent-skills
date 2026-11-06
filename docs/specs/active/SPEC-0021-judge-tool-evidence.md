@@ -1,7 +1,7 @@
 ---
 id: SPEC-0021
 title: Give the judge the tool calls it is already being asked about
-status: ready
+status: implemented
 priority: P1
 task: TASK-27
 created_at: 2026-11-06
@@ -23,6 +23,7 @@ files:
   - scripts/lib/evals/rejudge.mjs
   - scripts/lib/evals/rejudge.test.mjs
   - scripts/replay-evals.mjs
+  - scripts/lib/evals/cli.test.mjs
   - docs/evals/implement-from-prompt-matrix.md
   - docs/specs/active/SPEC-0021-judge-tool-evidence.md
 tests:
@@ -83,8 +84,17 @@ judge can fail a deterministic pass, never rescue a deterministic failure.
   drifting apart again.
 - **Judge prompt.** The system prompt may cite the reply or the tool log, with
   the same verbatim-quote rule. The ledger is labelled as the run's own tool
-  calls, distinct from the command log, so a judge does not read a `read` line as
-  something the agent said.
+  calls, so a judge does not read a `read` line as something the agent said. The
+  prompt renders **exactly two evidence blocks**: `## Tool calls` (the ledger)
+  and `## Reply`. The earlier draft kept `## Command log` beside them; that was
+  wrong. The command log was a second rendering of the same stream, showing every
+  command unbudgeted while the ledger cuts at 6000 chars. In a long run the judge
+  could quote a command the ledger had dropped; `verifyEvidence` searched the
+  corpus the prompt no longer contained, and a correct `met` was downgraded — the
+  #7 bug reintroduced. One rendering means the prompt and the corpus are the
+  same string by construction. The accepted consequence: when a run's ledger
+  exceeds the budget its tail is cut and the judge cannot cite what it cannot
+  see. That is a limit of the budget, not of the corpus.
 - **Evidence verification.** `verifyEvidence` searches the corpus the judge was
   given, normalises a leading `$ ` and code fences, and accepts a short but
   literal quote. Empty evidence stays `unverifiable`: a `met` with nothing to
@@ -95,11 +105,21 @@ judge can fail a deterministic pass, never rescue a deterministic failure.
 - **Re-judge without new draws.** A `scripts/lib/evals/rejudge.mjs` module that
   rebuilds the judge prompt from a stored transcript, calls the judge, and returns
   per-draw verdicts plus a per-case tally; `scripts/replay-evals.mjs` exposes it
-  as `--judge <model>` and `--json`. The module is what the tests drive with a
-  stub spawn, so the CLI stays thin. It writes nothing into the immutable run
-  directory; the JSON goes to stdout so it can be saved under
-  `~/.local/share/opencode/evals/rejudge/`. No agent draw is spent, and a stored
-  `result.json` is never rewritten.
+  as `--judge <model>` and `--json`. `--run <id>` narrows the scan to one stored
+  run by **prefix** match (`startsWith`) on the directory name; it exists because
+  `--judge` without it re-judges every stored run of a case, and the measurement
+  must select two directories out of a growing history. The module is what the
+  tests drive with a stub spawn, so the CLI stays thin. It writes nothing into the
+  immutable run directory; the JSON goes to stdout so it can be saved under
+  `~/.local/share/opencode/evals/rejudge/`. `--json` without `--judge` is a
+  usage error, not a silently ignored flag. Each report carries the provenance it
+  measured — `repoSha` and `skillHash` from the stored `result.json`, and
+  `fixtureHash` / `promptHash` / `detectorVersion` when they exist — with a
+  `provenance: "complete" | "partial"` and the list of missing fields. A pre-
+  SPEC-0020 run has none of the three hashes; the report says `partial` instead of
+  inventing them. A deterministic failure is counted as `skipped` and named as
+  such (`deterministicFailed`), not hidden behind a `0/0 judged` headline. No
+  agent draw is spent, and a stored `result.json` is never rewritten.
 - **Publication.** Update the *Judge calibration* text in
   `docs/evals/implement-from-prompt-matrix.md` with the measured before/after and
   the rule that re-judging needs the same three provenance hashes.
@@ -124,9 +144,11 @@ No assertion, fixture, gate or case prompt changes.
    that a stream containing `read`, `edit` (with `oldString`/`newString`), `write`
    and `shell` (with output) yields the expected compact lines, and that the
    ledger does not contain the body of a `read` target.
-2. **F1 — feed it to the judge.** `judgePrompt(c, { reply, ledger })`; the prompt
-   shows the ledger under its own heading. `verifyEvidence` receives
-   `[reply, ledger].join("\n")`.
+2. **F1 — feed it to the judge.** `judgePrompt(c, { reply, ledger })` renders
+   exactly the two evidence blocks, `## Tool calls` and `## Reply`.
+   `verifyEvidence` receives `[reply, ledger].join("\n")`, so the corpus is
+   exactly what the prompt shows. A test asserts that the live `executeCase` path
+   and the `rejudge` path render the same text from the same stream.
 3. **F2 — fix the matcher.** Normalise `$ `, code fences and whitespace; accept a
    literal short quote; keep empty evidence unverifiable. Tests for each case,
    including the exact `$ node --test  [exit 1]` shape from #7.
@@ -170,15 +192,104 @@ No assertion, fixture, gate or case prompt changes.
 4. **No agent draw is spent.** The measurement uses `replay-evals --judge` over
    the two stored directories, and the stored `result.json` files are
    byte-identical afterwards (`git status` clean is not enough: compare hashes).
-5. **No rescue.** A draw that failed a deterministic assertion is still failed
-   after re-judging, and `run-evals --judge` still evaluates the judge only when
-   the deterministic result passed. Unit test plus code path.
+5. **No rescue.** A draw that failed a deterministic assertion is reported as
+   `skipped` after re-judging — never sent to the model, never passed — and
+   `run-evals --judge` still evaluates the judge only when the deterministic
+   result passed. Unit test plus code path.
 6. **`unverifiable` is still a failure, and the docs say why.** The matrix's
    *Judge calibration* states that the judge now sees tool calls, that
    `unverifiable` still fails, and that re-judging requires the same
    `fixtureHash` / `promptHash` / `detectorVersion`.
 7. **Gates.** The five policy gates pass; no `assert:`, fixture, gate or case
    prompt is touched (`git diff -- skills/` empty).
+
+## Results
+
+### Final reading — the unified prompt
+
+Measured on 2026-11-06 at `ce643cc`, judge `opencode-go/gpt-6-luna`, threshold
+`0.8`. Ten judge calls (5 + 5), zero agent draws. Both commands were run from
+this worktree:
+
+```sh
+node scripts/replay-evals.mjs --dir "$HOME/.local/share/opencode/evals" --skill implement-from-prompt --case 1 --run 2026-11-05T11-45-57 --judge opencode-go/gpt-6-luna --json
+node scripts/replay-evals.mjs --dir "$HOME/.local/share/opencode/evals" --skill implement-from-prompt --case 7 --run 2026-11-05T12-00-00 --judge opencode-go/gpt-6-luna --json
+```
+
+`--run` selects exactly the two stored directories; without it `--judge` would
+re-judge every stored run of the case, and the measurement would grow with the
+history instead of naming its two cells.
+
+This is the reading under the unified instrument (`## Tool calls` + `## Reply`).
+The previous reading (`r01`) was taken at `0a53010` under the prompt that still
+carried a separate `## Command log`; it is kept below as the before-reading. The
+two are **not draws from the same instrument** — the prompt changed — so the
+difference is not judge variance.
+
+The raw `--json` output is kept beside the other local evidence, not in the repo.
+The final artifacts are `~/.local/share/opencode/evals/rejudge/spec-0021-case-01-r02.json`
+(sha256 `d27fccb7a62fbd28b0fa7a1635824f8f4a04d6b115f301af8f535fe06febe4c6`) and
+`…/spec-0021-case-07-r02.json` (sha256
+`d6e0ebaec458c33b06b7814ea5f2e885d85461b13b9f2f60d8bd5be9884e4b56`). The
+earlier `r01` files (`aa3255ac…8facc9` and `6eb0bc8d…99fef5`) stay cited as the
+old-prompt reading (an empty `## Command log` block beside the ledger), not
+deleted.
+
+Both reports carry `provenance: "partial"`: these runs predate SPEC-0020, so the
+three reuse hashes do not exist. Case 01 records `repoSha 3779a20` and
+`skillHash a58c5074…`; case 07 records `repoSha 3779a20` and `skillHash null`
+(the control run wrote no skill hash). Both are missing `fixtureHash`,
+`promptHash` and `detectorVersion`. The reuse rule lives in the matrix doc; it is
+not a gate on the re-judge.
+
+### AC-3 — the measured cells (final)
+
+| cell | run directory | before (Gate A) | r01, old prompt | r02, unified | final tally |
+| --- | --- | --- | --- | --- | --- |
+| #7 control | `2026-11-05T12-00-00--implement-from-prompt--without-skill`, `implement-from-prompt--07` | 1/5 | 5/5 | **5/5** | `total=5 judged=5 passed=5 failed=0 skipped=0 deterministicFailed=0` |
+| #1 with skill | `2026-11-05T11-45-57--implement-from-prompt`, `implement-from-prompt--01` | 0/5 | 0/5 | 0/5 | `total=5 judged=5 passed=0 failed=5 skipped=0 deterministicFailed=0` |
+
+**#7 — 5/5.** All four expectations are `met` in every draw. The four original
+failures were `met` downgraded by `verifyEvidence`: the judge quoted
+`$ node --test  [exit 1]` and the corpus had the same line without the `$ `.
+Normalising the leading prompt and searching the ledger verifies all five.
+Nothing else about the draw changed.
+
+**#1 — still 0/5.** Per expectation, under the unified prompt:
+
+| exp | final | reading |
+| --- | --- | --- |
+| 1 | `not-met` 4/5 (r1–r4); `met` r5 | r5 read `AGENTS.md` before editing; r1–r4 did not. Real behaviour, not missing evidence. |
+| 2 | `unverifiable` 5/5 | "applies Norms"; the judge does not see the skill text, by design. |
+| 3 | `met` 4/5; `unverifiable` r4 | the two spec edits (`ready → in_progress → implemented`, `tests:`) are in the ledger. Was `unverifiable`. |
+| 4 | `met` r3 only; `unverifiable` r1, r2, r4, r5 | composite "creates a test **and** runs verification" against the one-contiguous-passage rule; the ledger has `write: tests/demo.test.ts` and `$ bun test  [exit 0]`, but the judge returns one quote. |
+| 5 | `met` 5/5 | unchanged. |
+| 6 | `met` 4/5 (r2–r5); `unverifiable` r1 | the remaining spread is the run, not the evidence path. |
+
+The instrument worked: tool-call evidence enters the corpus, the `$ ` quote
+matches, and the spec edit is visible. #7 is the clean gain; #1 is an honest
+failure.
+
+**AC-3 is partially met.** The criterion asked for 5/5 on both cells; #7 reaches
+it, #1 does not. Per the criterion's fallback, the observed tally, the failing
+expectation and the transcript evidence are published above. **No tuning was
+done**: no `expect:`, `assert:`, fixture or case prompt changed (`git diff --
+skills/` empty); the residual is TASK-40 (expectation 1's ambiguous "first" and
+the skill's reading order), opened at close, not here.
+
+### AC-4 — no draw spent, no stored file written
+
+`sha256` of each `result.json`, measured before the first judge call and after
+the last; the values now on disk are the same ones:
+
+```text
+9c6f43f9d6a7767406e0b77344e4a92522b461877851d7b8bbbbcf7cb405e30a  .../implement-from-prompt--01/result.json
+8ae34b5a0471da4171a0f888f9e45b60efb39f1d8178c58838bbd52445f48bbd  .../implement-from-prompt--07/result.json
+```
+
+Both are byte-identical across the measurement. The stored `status` still reads
+`failed` in all five #1 draws and one `passed` + four `failed` in #7 — the old
+judge verdict, untouched: the re-judge printed to stdout and wrote nothing.
 
 ## Stop Conditions
 

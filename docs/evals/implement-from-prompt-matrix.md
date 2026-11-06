@@ -211,6 +211,43 @@ infrastructure path. Neither is a behavioural failure.
 separator: its control has 0/2 clean draws. It stays a regression case until a
 control re-run produces a denominator worth quoting.
 
+## Judge re-measurement — SPEC-0021
+
+The final reading was taken at `ce643cc` under the unified instrument: the judge
+sees exactly two evidence blocks, `## Tool calls` (the ledger) and `## Reply`,
+with no separate command log, and `verifyEvidence` normalises a leading `$ ` and
+searches that same corpus. Re-judged with `--judge opencode-go/gpt-6-luna`,
+threshold `0.8`, over the two stored Gate A directories; ten judge calls for the
+final reading (another ten for `r01`), no agent draw. An earlier reading (`r01`) was taken at `0a53010` with the old prompt
+(an empty `## Command log` block beside the ledger); it stays the
+old-instrument reading. The prompt changed between the two, so the difference is
+not judge variance.
+
+| cell | run directory | before (Gate A) | r01, old prompt | r02, unified | final tally |
+| --- | --- | --- | --- | --- | --- |
+| #7 control | `2026-11-05T12-00-00--implement-from-prompt--without-skill` / `implement-from-prompt--07` | 1/5 | 5/5 | **5/5** | `total=5 judged=5 passed=5 failed=0 skipped=0 deterministicFailed=0` |
+| #1 with skill | `2026-11-05T11-45-57--implement-from-prompt` / `implement-from-prompt--01` | 0/5 | 0/5 | 0/5 | `total=5 judged=5 passed=0 failed=5 skipped=0 deterministicFailed=0` |
+
+The #7 cell is the clean gain: all four expectations are `met` in every draw and
+the instrument no longer downgrades a correct quote over presentation. The #1
+cell stays red for a reason the instrument cannot fix. Under the unified prompt:
+expectation 1 is `not-met` in r1–r4 and `met` in r5 (r5 read `AGENTS.md` before
+editing); expectation 2 is `unverifiable` 5/5 by design (the judge is not shown
+the skill text); expectation 3 is `met` in four draws and `unverifiable` in r4;
+expectation 4 is composite ("creates a test **and** runs verification") against
+the one-contiguous-passage rule and is `met` only in r3; expectation 5 is `met`
+5/5; expectation 6 is `met` in r2–r5 and `unverifiable` in r1. Expectation 1's
+"first" plus the skill's reading order remains the residual (TASK-40), not the
+evidence path.
+
+Both final reports carry `provenance: "partial"`: the runs predate SPEC-0020, so
+they have no `fixtureHash` / `promptHash` / `detectorVersion`. Case 01 records
+`repoSha 3779a20` and `skillHash a58c5074…`; case 07 records `repoSha 3779a20`
+and `skillHash null`, missing the same three hashes. The re-judge artifact does
+not gate on provenance; the reuse rule is clause 3 in *Judge calibration*.
+
+No `expect:`, `assert:`, fixture or case prompt changed for this reading.
+
 ## Classification
 
 - **#1 — separator.** 12/12 with the skill against 0/12 without it on the
@@ -328,9 +365,25 @@ and is also clean; it is a precondition, not a measurement.
 - **#2** — re-diagnose the load defect in light of the canary: #1 loaded 12/12
   while #2 lost 3/5 and #8 lost 1/5, so TASK-10's aggregate ~23% is case-specific
   here, not a universal miss.
-- **Judge calibration** — the judge calls an expectation `unverifiable` when the
-  evidence sits in a tool call; #1 with and #7 control are the clearest cases.
-  Either give the judge the evidence or stop it from failing those runs.
+- **Judge calibration** — done by SPEC-0021, with three clauses that must stay
+  true together:
+  1. **The judge sees the tool calls.** `judgePrompt` renders exactly two
+     evidence blocks, `## Tool calls` (the ledger: `read`/`edit`/`write`/`skill`
+     and `$ cmd  [exit]` with output) and `## Reply`; `verifyEvidence` searches
+     that same corpus, so the `$ node --test  [exit 1]` quote matches. In the
+     before-reading, #7 control moved 1/5 → 5/5.
+  2. **`unverifiable` still fails the case.** Supplying the evidence fixed the
+     instrument, not the bar: absence of evidence remains a finding, and the
+     judge can only fail a deterministic pass, never rescue a deterministic
+     failure.
+  3. **Re-judging requires the same provenance.** A re-judge is comparable only
+     when the stored run carries the same `fixtureHash`, `promptHash` and
+     `detectorVersion`; the re-judge report labels a run without them `partial`
+     and lists what is missing.
+
+  The residual is not the evidence path: expectation 1's "first" plus the
+  skill's reading order, expectation 2 by design, and expectation 4's composite
+  form. Tracked as TASK-40; see *Judge re-measurement — SPEC-0021*.
 - **Control-arm isolation** — `--no-skill` denies the skill tool and stages
   nothing, but the child can still read `/Users/wendell/.agents/skills/…` and
   stale copies under `/private/var/folders/…/T/opencode`. Two control transcripts
