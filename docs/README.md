@@ -15,7 +15,7 @@ templates.
 | `specs/` | `SPEC-NNNN-*.md` — the durable record of why the harness changed |
 | `specs/active/` | the pdlc work queue; `plan`, `prompt`, `verify` and `merge` read here |
 | `prompts/` | implementation prompts generated from `ready` specs |
-| `evals/` | the `review-code` and `implement-from-prompt` matrices, the `harness-health.md` baseline, experiment records, and `coverage.md` |
+| `evals/` | the `review-code`, `implement-from-prompt`, `write-implementation-prompt` and `pipeline-bookends` matrices, the `harness-health.md` baseline, experiment records, and `coverage.md` |
 | `../runs/` | pdlc run records, one per verified cycle |
 
 `evals/coverage.md` is the inventory: cases per skill, how each is staged, and
@@ -45,6 +45,8 @@ to `specs/` as the durable record, untouched by the cycle.
    measure it.
 3. [`evals/coverage.md`](evals/coverage.md) — which cases exist and which have
    evidence.
-4. [`evals/review-code-matrix.md`](evals/review-code-matrix.md) and
-   [`evals/implement-from-prompt-matrix.md`](evals/implement-from-prompt-matrix.md)
+4. [`evals/review-code-matrix.md`](evals/review-code-matrix.md),
+   [`evals/implement-from-prompt-matrix.md`](evals/implement-from-prompt-matrix.md),
+   [`evals/write-implementation-prompt-matrix.md`](evals/write-implementation-prompt-matrix.md)
+   and [`evals/pipeline-bookends-matrix.md`](evals/pipeline-bookends-matrix.md)
    — the published matrices.
