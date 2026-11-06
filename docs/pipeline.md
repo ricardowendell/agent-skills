@@ -9,7 +9,7 @@ run_records_dir: runs
 agents_dir: .opencode/agents
 lint: node scripts/validate-skills.mjs --root skills
 selftest: node scripts/run-evals.mjs --root skills --list --check && node --test scripts/lib/evals/*.test.mjs && node --test skills/bootstrap-project-harness/scripts/*.test.mjs && node scripts/check-sensor-parity.mjs
-pdlc_version: 0.4.7
+pdlc_version: ">=0.4.9"
 ---
 
 # Pipeline
@@ -75,6 +75,11 @@ declara `task:` e `files:`.
   adoção do pdlc). O `pdlc release` cria tag **leve**; todo corte converte para
   anotada (`git tag -d <v>` + `git tag -a <v> -m "<resumo>"`) antes do push —
   enquanto o harness não criar anotada, a conversão é passo manual do release.
+- O `pdlc_version` é um **piso** (`>=0.4.9`), não um build exato: o harness é
+  privado e corta várias versões por dia, e o pin exato fazia o `preflight`
+  falhar a cada corte sem dizer nada sobre compatibilidade. O piso nomeia o
+  harness mais antigo contra o qual a policy foi escrita; subir o piso é parte de
+  adotar uma capacidade nova do harness, não de acompanhar releases.
 
 ## Ways of working
 
