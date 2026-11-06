@@ -141,6 +141,20 @@ node scripts/run-evals.mjs --skill review-code --case 3 --repeat 3 --run --judge
   only as history, with its `warnings=N` stated; it is never a
   `findings=0 warnings=0` claim. `leak` is mandatory from SPEC-0017 onwards, so
   a run that carries it anywhere must carry it everywhere.
+- A stopped run is complete evidence, not an unfinished one. `stoppedEarly:
+  true` says the stop rule fired between waves, and `reps`/`passed` are the
+  draws actually run. Publish those (e.g. "8/8, stopped early"), never the
+  requested `--repeat`; use `--stop <n>/0` when a rate claim needs the full
+  count. The default is `5/3` for `--repeat` above 5, evaluated between waves, so
+  a clean `--concurrency 4` cell can stop at 8 rather than at 5.
+- Draws share one lane pool; `--concurrency` (default 4) is the number of draws
+  in flight, even within one case. Six and eight were measured clean (zero 429s)
+  but bought no wall time over four, so the default stays 4; raise it for a
+  specific run, not in the default.
+- Reuse a control from an earlier wave only when `fixtureHash`, `promptHash` and
+  `detectorVersion` all match the new run. Any difference — one fixture byte, a
+  prompt edit, a change to the leak detector — re-runs the control. Cite the
+  three fields together with the reused run directory.
 - Before building a matrix, run the load canary by hand:
 
   ```sh

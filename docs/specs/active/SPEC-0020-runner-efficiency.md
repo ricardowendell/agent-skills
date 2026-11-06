@@ -1,7 +1,7 @@
 ---
 id: SPEC-0020
 title: Spend fewer draws and less wall time for the same evidence
-status: ready
+status: implemented
 priority: P1
 task: TASK-37
 created_at: 2026-11-06
@@ -19,10 +19,17 @@ files:
   - scripts/lib/evals/result.mjs
   - scripts/lib/evals/report.mjs
   - scripts/lib/evals/runcheck.mjs
+  - scripts/lib/evals/execute.mjs
+  - scripts/lib/evals/fixture.mjs
+  - scripts/lib/evals/leak.mjs
+  - scripts/lib/evals/schedule.mjs
   - scripts/lib/evals/agent.test.mjs
   - scripts/lib/evals/result.test.mjs
   - scripts/lib/evals/report.test.mjs
   - scripts/lib/evals/runcheck.test.mjs
+  - scripts/lib/evals/execute.test.mjs
+  - scripts/lib/evals/cli.test.mjs
+  - scripts/lib/evals/schedule.test.mjs
   - CONTRIBUTING.md
   - docs/evals/coverage.md
   - README.md
@@ -124,6 +131,21 @@ one before accepting any default.
    the runs are clean.
 7. **F6 — document.** README flags, `CONTRIBUTING.md` reuse rule, coverage note.
 
+### Where the change lives
+
+- **`scripts/lib/evals/schedule.mjs`** owns the draw pool, the index-ordered
+  artifact and the stop decision. It is a separate module because the mandatory
+  test has to prove "parallelism does not change the artifact" and the stop rule
+  without spending a model draw. `run-evals.mjs` keeps argv, scrubbing, staging
+  calls, transcripts and the single write of `result.json`.
+- **`scripts/lib/evals/execute.mjs`** owns the process that can exit `timeout` or
+  `stalled`, so the one-retry rule and the per-draw provenance sit there rather
+  than in the CLI. Both front ends (CLI and Promptfoo) then measure the same
+  thing, and a retry is attached to the exit it retried.
+- **`fixture.mjs`** returns the hash of the staged fixture (reusing `treeHash`)
+  and hashes the prompt text; **`leak.mjs`** exports `DETECTOR_VERSION`, so the
+  three provenance fields come from the modules that know what they mean.
+
 ## Data
 
 - Stored run directories: durations, step counts, pass/fail sequences, token
@@ -155,6 +177,68 @@ one before accepting any default.
   changes if neither produced a 429, and the result is recorded either way.
 - **AC-7** — No `assert:` line, case prompt, fixture or gate changed; `lint` and
   `selftest` are green; no behavioural run was added to CI or to the hook.
+
+## Results
+
+Measured on the default model (`opencode-go/deepseek-v4.1-flash`) on 2026-11-06.
+No stored run was overwritten; the pre-change directories still carry the
+comparison numbers.
+
+### AC-1 — parallel draws, same verdict
+
+| Run | Draws | Verdict | Sum of draw durations | Wall time |
+| --- | --- | --- | --- | --- |
+| `2026-11-05T12-35-30--implement-from-prompt` (stored, serial) | 12 | 12/12 | 387 s | 387 s |
+| `2026-11-06T10-03-23--implement-from-prompt` (`--repeat 12 --stop 12/0 --concurrency 4`) | 12 | 12/12 | 691 s | **181 s** |
+
+The new cell ran **2.1× faster in wall time** with the same verdict. The sum of
+draw durations rose because four draws compete for the provider; that is the
+resource trade the spec names, not a regression. `stoppedEarly: false` in the
+artifact: the run was asked for twelve draws and ran twelve. `--stop 12/0`
+against `--repeat 12` disables both arms of the stop rule (the passes target is
+the full count, the failure ceiling is zero).
+
+### AC-2 — the 5/3 default stops between waves
+
+`2026-11-06T10-00-46--implement-from-prompt` (`--repeat 12`, default stop)
+reports **8/8, `stoppedEarly: true`**, `sequence` = eight `pass`, wall time
+**2:26**.
+
+The target is five clean passes, but the rule is evaluated **between waves**: at
+`--concurrency 4`, the first wave is 4 draws and the second wave can complete
+before the decision is applied, so a clean cell stops at **5 + 3 = 8** rather
+than at 5. This is the intended behaviour, not a bug to fix in this spec: it
+keeps the lane full while the evidence is still clean, and `reps` always names
+what actually ran. A cell that needs a full `n` uses `--stop 12/0` (or another
+explicit target at or above `n`).
+
+### AC-6 — concurrency 6 and 8, no 429s
+
+| Run | Cases | Result | Wall time |
+| --- | --- | --- | --- |
+| `2026-11-06T10-06-36--matrix` (`--tag matrix --repeat 1 --concurrency 6`) | 11 | 10 passed / 1 failed | 3:04 |
+| `2026-11-06T10-09-44--matrix` (`--concurrency 8`) | 11 | 11 passed | 3:00 |
+
+The 429 scan over both transcripts found only hex fragments inside objects and
+token counts; **zero rate-limit responses**. There is no wall-time gain from 6 to
+8, so **the default stays 4**. The one failure at 6 is recorded as measured, not
+attributed to concurrency; the 8-lane rerun passed 11/11.
+
+### AC-3, AC-4, AC-5 — verified by unit tests
+
+The provenance mutation test (one fixture byte moves `fixtureHash`, one prompt
+edit moves `promptHash`, neither moves the other), the two watchdog tests (no
+events → `stalled` quickly; a slow but live stream survives) and the
+infrastructure tests (unscored, one retry, its own finding in the checker) run in
+`node --test scripts/lib/evals/*.test.mjs`. No behavioural run was added to CI or
+the hook.
+
+### AC-7 — blast radius
+
+No `assert:` line, case prompt, fixture or gate changed. `lint` and the four
+non-behavioural `selftest` commands are green; the checker already treats a
+stopped-early run as complete (it reads `reps` and the repetitions, not a
+required count), so no checker change was needed.
 
 ## Stop Conditions
 

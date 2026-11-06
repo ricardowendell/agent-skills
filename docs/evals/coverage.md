@@ -30,6 +30,12 @@ directories; they are not estimates.
   and no unfinished run. A directory that fails may still be cited **as the
   record of the failure itself**, with the finding named; it cannot supply a
   clean pass rate.
+- `stoppedEarly: true` is a complete run, not an unfinished one: the stop rule
+  fired between waves and `reps` is the number of draws actually run. Cite
+  `reps`/`passed` (e.g. "8/8, stopped early"), never the requested `--repeat`.
+- A control from an earlier wave is citable only when `fixtureHash`, `promptHash`
+  and `detectorVersion` match the new run. Any divergence — one fixture byte, a
+  prompt edit, a detector change — re-runs the control (SPEC-0020).
 - A pre-SPEC-0017 run that started before the detector landed and has no `leak`
   field at all is `not checkable`: the checker emits `warn leak-missing`, and a
   citation must state its `warnings=N`. It is history, not a clean measurement.

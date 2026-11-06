@@ -350,6 +350,24 @@ therefore visible as a pass rate (`[4/5]` in the console, `passRate` and
 land; it is never the default. Staging is deterministic, so `--level smoke`
 ignores `--repeat`.
 
+`--stop <passes>/<fails>` bounds a repeated cell. It defaults to `5/3` when
+`--repeat` is above 5 and is off at or below it: stop after five clean passes
+with zero failures, or after three failures. The rule is evaluated **between
+waves**, so `--concurrency 4` can overshoot the pass target by up to one wave —
+a clean 12-draw cell stops at 8, not 5. `reps` and `passed` name the draws that
+actually ran; publish "8/8, stopped early", never "12/12" for a cell that
+stopped. `--stop 12/0` (or any pass target at or above `n`) runs the full count:
+the zero failure ceiling disables the failure arm.
+
+`--stall-seconds <n>` (default 120) kills a draw whose event stream produced no
+new chunk for that long and records `exit: "stalled"`; the hard `--timeout`
+remains the ceiling and records `timeout`. Neither is behaviour: both become
+`unscored` with `reason: "infrastructure: <kind>"`, get at most one automatic
+retry, and are counted under `infrastructure` instead of as passes or
+behavioural failures. `check-eval-run` reports the draw as `infrastructure`
+(incomplete evidence) and the run is not clean; the case verdict comes from the
+clean draws only, and a case with no clean draw is `unscored`.
+
 ### Triggers
 
 A trigger case pairs a prompt that should reach a skill with a near-miss that
@@ -419,7 +437,9 @@ Every invocation writes its own directory,
 - `manifest.json` — repo sha, agent, model, arm, level, start and finish, the
   skill hash pinned for each case, and the run's counts.
 - `cases/<skill>--<n>/result.json` — status, per-assertion results, token and
-  cost totals, duration and tool-call count.
+  cost totals, duration, tool-call count, `infrastructure`/`execution.retries`,
+  `stoppedEarly` and the observed `sequence` for a repeated case, and the
+  provenance triple `fixtureHash`, `promptHash` and `detectorVersion`.
 - `cases/<skill>--<n>/transcript.md` (or `transcript.r<i>.md` per repetition).
 
 No two runs share a directory, so a staging failure cannot be read as the
