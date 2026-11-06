@@ -9,6 +9,58 @@ skills, which cases, and which published measurements.
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-11-06
+
+Coverage closes: every skill in the repo now has evidence or a written reason.
+
+### Added
+
+- **The `write-implementation-prompt` matrix** (`SPEC-0025`) and **the
+  `pipeline-bookends` matrix** (`SPEC-0026`) — the last four unmeasured skills.
+- **`unresolved` as a published classification**: a case whose control arm never
+  produced five clean draws in one run. The raw counts are published; no rate is
+  taken from a rejected run.
+
+### Changed
+
+- **`check-sensor-parity` names the interpreter it used** (`python 3.15
+  (/opt/homebrew/bin/python3)`), resolved from `PDLC_PYTHON`, `python3`,
+  `python` and the absolute fallbacks, with a version floor of 3.8.
+
+### Fixed
+
+- **A missing interpreter no longer reads as a sensor divergence.** The check
+  says `no usable Python 3 interpreter found`, lists the candidates and exits 1,
+  instead of printing `FAIL clean` and `undefinedundefined`.
+  `PDLC_ALLOW_MISSING_PYTHON=1` turns it into a named skip; the default stays
+  closed, and the verdict on a machine with Python is byte-identical.
+
+### Measured
+
+- **286 draws, no judge.** Of nine behavioural cells: three separators, two
+  non-discriminators, three unresolved and one manual (a 4/5 split).
+  - `write-implementation-prompt` #2 separates 5/5 vs **0/5** clean.
+  - `record-decision` #1 separates 4/5 vs 1/5; #2 separates 4/5 vs **0/5**.
+  - `write-implementation-prompt` #4 (5/5 both arms) and `record-decision` #3
+    (4/5 vs 5/5) do not separate.
+- **Six routing triggers**: four routed cleanly, #6 is unstable, and the two
+  cross-skill cases cannot pass by construction.
+- **Health pass** at `2026-11-06T20:52:31Z`: the eligible rate is unchanged at
+  **67.2%**. The strict base went from 90 to 338 draws and its rate from 96.7% to
+  75.7%: this is the first wave with full provenance, and its control arms fail
+  by design. That is a mix change, not a regression.
+
+### Known gaps
+
+- **Three cells are `unresolved`, not separated.** The control arm can still read
+  the host install and, in one case, the host `docs/` corpus, which the leak
+  detector does not classify (TASK-43).
+- **`capture-idea` #3 and `process-inbox` #3 cannot pass** until staging can copy
+  a sibling skill (TASK-44).
+- **`write-implementation-prompt` #6 loads the skill on a summary request**, and
+  #5 stalls in three of five trigger runs (TASK-45).
+- **Cost is still unmeasured**: `cost` is 0 in 829 of 848 draws.
+
 ## [0.4.1] — 2026-11-06
 
 The per-release retro stopped being a promise and got a number.

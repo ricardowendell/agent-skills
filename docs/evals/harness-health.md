@@ -71,6 +71,54 @@ no `.pdlc/`, so this baseline was produced there with `--until
 2026-11-06T16:12:50Z --pdlc /Users/wendell/.agents/.pdlc/runs.json`; the numbers
 are the same when the simple command runs from the main checkout.
 
+## 0.5.0 delta — 2026-11-06T20:52:31Z
+
+```sh
+node scripts/harness-health.mjs --until 2026-11-06T20:52:31Z
+```
+
+| Metric | 0.4.0 (16:12:50Z) | 0.5.0 (20:52:31Z) |
+| --- | --- | --- |
+| Runs | 173 | 234 |
+| Unfinished runs | 6 | 7 |
+| Cases | 245 | 313 |
+| Draws | 844 | 1,147 |
+| Eligible draws | 827 | 1,079 |
+| Rate denominator | 814 | 1,066 |
+| Pass rate (eligible, non-staged) | 67.2% | 67.2% |
+| Gate misses (eligible) | 21 | 25 |
+| Strict clean draws | 90 | 338 |
+| Strict passed / failed | 87 / 3 | 256 / 82 |
+| Strict pass rate | 96.7% | 75.7% |
+| Contaminated | 4 | 47 |
+| Infrastructure | 9 | 17 |
+| Provenance (completed draws) | 95 complete, 745 partial | 398 complete, 745 partial |
+| Wall time | 12h 10m 14s | 15h 55m 56s |
+| Sum of draw durations | 16h 14m 43s | 24h 31m 15s |
+| pdlc runs | 10 | 13 |
+| pdlc retries / red gates | 0 / 0 | 0 / 0 |
+| pdlc median | 43m 11s | 47m 55s |
+
+The eligible rate did not move. The strict rate fell because its base more than
+tripled: the 0.5.0 measurement wave is the first with full provenance, and its
+control arms fail by design. That is the mix change the rule below already
+describes, not a regression — the 82 strict failures are control draws.
+
+### Findings (three)
+
+1. **Control contamination.** Contaminated draws went from 4 to 47. The controls
+   read the host install, and at least one read the host `docs/` corpus, which
+   `leak.mjs` does not classify. Three cells could not be classified and are
+   published as `unresolved`. TASK-43.
+2. **Cross-skill routing cannot be measured.** `capture-idea #3` and
+   `process-inbox #3` assert that the sibling skill loads, but staging copies
+   only the skill under review; both are 0/N by construction. TASK-44.
+3. **`write-implementation-prompt` #6 leaks.** The "summarise this spec" prompt
+   loads the skill in 2–4 of 5 draws, and #5 stalled in three of five trigger
+   runs. TASK-45.
+
+No fix shipped for any of them; this release publishes the evidence.
+
 ## How to read it
 
 - **Two rates, two questions.** `Pass rate (eligible, non-staged)` is the broad
