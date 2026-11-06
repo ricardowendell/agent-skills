@@ -211,6 +211,35 @@ infrastructure path. Neither is a behavioural failure.
 separator: its control has 0/2 clean draws. It stays a regression case until a
 control re-run produces a denominator worth quoting.
 
+## Judge re-measurement — SPEC-0021
+
+The judge now sees a rebuilt tool-call ledger alongside the reply and the command
+log, and `verifyEvidence` normalises a leading `$ `. Re-judged at `0a53010` with
+`--judge opencode-go/gpt-6-luna`, threshold `0.8`, over the two stored Gate A
+directories; ten judge calls, no agent draw. The *Gate A* numbers above are the
+pre-fix reading and are not rewritten.
+
+| cell | run directory | before | after | why |
+| --- | --- | --- | --- | --- |
+| #7 control | `2026-11-05T12-00-00--implement-from-prompt--without-skill` / `implement-from-prompt--07` | 1/5 | **5/5** | four `met` were downgraded because the judge quoted `$ node --test  [exit 1]` and the corpus had no `$ `; normalisation verifies them. |
+| #1 with skill | `2026-11-05T11-45-57--implement-from-prompt` / `implement-from-prompt--01` | 0/5 | 0/5 | the evidence gap closed (expectation 3 is `met` 5/5), but expectation 1 is `not-met` 5/5: the run did not read `AGENTS.md` first. |
+
+The #7 cell is the clean gain: the instrument no longer downgrades a correct
+quote over presentation. The #1 cell stays red for a reason the instrument cannot
+fix. The judge now sees the two spec edits and the `write`/`$ bun test` lines,
+but expectation 1 ("Reads `AGENTS.md`, the prompt, and its source spec first")
+fails on the behaviour: `transcript.r1`–`r4` never read `AGENTS.md` at all, and
+`r5` read it only after the prompt, spec and index. Expectation 4 is composite
+("creates a test **and** runs verification") while the judging rule allows one
+contiguous passage; the ledger has both `write: tests/demo.test.ts` and
+`$ bun test  [exit 0]`, but the judge returns one quote, so it reads as
+`unverifiable` in four of five draws. Expectation 2 is `unverifiable` by design:
+the judge is not shown the skill text.
+
+No `expect:`, `assert:`, fixture or case prompt changed for this reading; the
+residual is TASK-40 (expectation 1's ambiguous "first" and the skill's reading
+order).
+
 ## Classification
 
 - **#1 — separator.** 12/12 with the skill against 0/12 without it on the
@@ -328,9 +357,11 @@ and is also clean; it is a precondition, not a measurement.
 - **#2** — re-diagnose the load defect in light of the canary: #1 loaded 12/12
   while #2 lost 3/5 and #8 lost 1/5, so TASK-10's aggregate ~23% is case-specific
   here, not a universal miss.
-- **Judge calibration** — the judge calls an expectation `unverifiable` when the
-  evidence sits in a tool call; #1 with and #7 control are the clearest cases.
-  Either give the judge the evidence or stop it from failing those runs.
+- **Judge calibration** — done by SPEC-0021: the judge now sees the tool-call
+  ledger, the `$ ` quote matches, and #7 control moved 1/5 → 5/5. The residual is
+  not the evidence path: expectation 1's "first" plus the skill's reading order,
+  expectation 2 by design, and expectation 4's composite form. Tracked as
+  TASK-40; see *Judge re-measurement — SPEC-0021*.
 - **Control-arm isolation** — `--no-skill` denies the skill tool and stages
   nothing, but the child can still read `/Users/wendell/.agents/skills/…` and
   stale copies under `/private/var/folders/…/T/opencode`. Two control transcripts
