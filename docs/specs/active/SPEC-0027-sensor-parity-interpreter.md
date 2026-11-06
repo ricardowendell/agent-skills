@@ -76,13 +76,13 @@ which one it used, and the verdict is exactly what it was before.
   - Interpreter found: print `python <version> (<command>)` once, before the
     fixtures, and compare as today. The comparison stays byte-exact on exit
     code, stdout and stderr.
-  - No interpreter found, default: exit 1 with one line on stderr —
+  - No candidate can run, default: exit 1 with one line on stderr —
     `cannot check sensor parity: no usable Python 3 interpreter found (tried: …); set PDLC_PYTHON=/path/to/python3`
     — and no fixture is reported as `FAIL`. A candidate that exists but fails to
     run is named with its first stderr line; a candidate that does not exist is
     not spammed.
   - `PDLC_ALLOW_MISSING_PYTHON=1`: print
-    `skip python: no interpreter found (tried: …); parity not checked` and exit
+    `skip python: no usable interpreter found (tried: …); parity not checked` and exit
     0. The skip is explicit, never silent, and the default stays closed.
   - `run()` stops losing `r.error`: a spawn failure prints the error message.
     The `undefinedundefined` in the current output comes from formatting a
