@@ -1,9 +1,10 @@
 ---
 id: TASK-43
 title: 'harness: o detector de leak não vê docs/ e AGENTS.md do host'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-06T18:15:00Z'
+updated_date: '2026-11-06T22:03:00Z'
 labels: []
 dependencies: []
 references:
@@ -21,8 +22,20 @@ Medido na SPEC-0025: um draw de controle leu /Users/wendell/.agents/docs/specs/S
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Um draw que lê docs/specs/*.md, AGENTS.md ou .lane/trees do host produz finding nomeado, não findings=0.
-- [ ] #2 O checker distingue 'sem leitura de skill' de 'isolado'; o resumo diz qual dos dois foi verificado.
-- [ ] #3 Testes com fixture sintética cobrem cada raiz nova e o caso limpo.
-- [ ] #4 Os runs já publicados não são reescritos; a mudança vale para runs novos e o coverage.md diz a partir de quando.
+- [x] #1 Um draw que lê docs/specs/*.md, AGENTS.md ou .lane/trees do host produz finding nomeado, não findings=0.
+- [x] #2 O checker distingue 'sem leitura de skill' de 'isolado'; o resumo diz qual dos dois foi verificado.
+- [x] #3 Testes com fixture sintética cobrem cada raiz nova e o caso limpo.
+- [x] #4 Os runs já publicados não são reescritos; a mudança vale para runs novos e o coverage.md diz a partir de quando.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-11-06T22:03:00Z
+
+---
+
+Fechada pela SPEC-0028 (merge). AC-1: leitura da raiz do checkout, docs/, AGENTS.md, scripts/, skills/, runs/ e .lane/trees produz finding host nomeado; scratch e home descartavel continuam limpos. AC-2: check-eval-run imprime skillLeaks, hostReads e isolated=yes|no|unknown; v1 nunca sai yes. AC-3: fixtures por raiz, dois negativos e o digest dourado (a31d58f7 -> 71bfb85a). AC-4: os 49 run dirs da onda 0.5.0 foram replayados sem reescrever nada; 26 celulas dirty publicadas em coverage.md, incluindo as 5 novas que a raiz do checkout revelou; #2 e #4 marcados pendentes da SPEC-0031.
+
+---
+<!-- COMMENTS:END -->
