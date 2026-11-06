@@ -1,11 +1,11 @@
 ---
 id: SPEC-0018
 title: Make the leak and load invariants fail loudly
-status: ready
+status: implemented
 priority: P1
 task: TASK-33
 created_at: 2026-11-05
-updated_at: 2026-11-05
+updated_at: 2026-11-06
 source_docs:
   - backlog/tasks/task-33 - harness-transformar-carga-e-isolamento-em-invariantes-testadas.md
   - docs/evals/coverage.md
@@ -127,6 +127,23 @@ draws SPEC-0017 names, which is the point.
   cited, and records the load canary as a manual pre-matrix step with the reason.
 - **AC-5** — `lint` and `selftest` are green; no behavioural run was added to CI
   or to the hook.
+
+## Results
+
+Model-free checker run against the existing directories (no behavioural run was
+started):
+
+| Verdict | Run directory | Output |
+| --- | --- | --- |
+| **fail** (exit 1) | `2026-11-06T07-47-34--groom-backlog--without-skill` | 2 leaks: `groom-backlog#2` r1 and r2 read the installed `SKILL.md`/`evals.md` |
+| **fail** (exit 1) | `2026-11-06T07-31-00--implement-from-prompt--without-skill` | 1 leak: `implement-from-prompt#2` r3 read the installed corpus |
+| **pass** (exit 0) | `2026-11-05T12-35-30--implement-from-prompt` | 12/12 clean; pre-SPEC-0017 artifact, so 12 `warn leak-missing` lines, `findings=0` |
+| **pass** (exit 0) | `2026-11-06T07-05-38--implement-from-prompt--opencode-go-gpt-6-luna--without-skill` | 0/5 control clean, `findings=0` |
+
+The clean 12/12 predates the leak detector: its `result.json` has no `leak`
+field at all. The checker warns per draw and keeps the historical run citable;
+it never treats those draws as clean. A repetition without `leak` in a run that
+carries the field anywhere is a `leak-missing` finding.
 
 ## Stop Conditions
 

@@ -24,6 +24,12 @@ directories; they are not estimates.
 
 ## Evidence rules
 
+- A run directory is cited only after
+  `node scripts/check-eval-run.mjs <run-dir>` passes it: no leaked read, no
+  contaminated draw, no lost skill gate, and no missing provenance. A
+  pre-SPEC-0017 run that started before the detector landed and has no `leak`
+  field at all is cited with its `warn leak-missing` lines, not as a clean
+  measurement.
 - A cell names a measurement only when it names the run directory or cites a
   `why:` note that records the number. A note without a run directory is marked
   `no run dir`: the count is honest, the provenance is not. Anything else reads

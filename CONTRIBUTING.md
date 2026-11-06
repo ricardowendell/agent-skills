@@ -115,8 +115,33 @@ node scripts/run-evals.mjs --skill review-code --case 3 --repeat 3 --run --judge
   more) before claiming a rate.
 - Artefacts land in
   `~/.local/share/opencode/evals/runs/<timestamp>--<label>/`. A new measurement
-  must name the run directory it came from; the coverage table marks older
-  `why:` notes that predate that rule as `no run dir`.
+  must name the run directory it came from and pass the checker below; the
+  coverage table marks older `why:` notes that predate that rule as `no run dir`.
+- Before citing a run directory, run the model-free checker over it:
+
+  ```sh
+  node scripts/check-eval-run.mjs ~/.local/share/opencode/evals/runs/<timestamp>--<label>
+  ```
+
+  It reads `manifest.json` and `cases/*/result.json` and exits non-zero on a
+  leaked read, a contaminated draw, a lost skill gate, or a repetition with
+  missing provenance. A cited run directory must pass it. Unknown provenance is
+  not clean: a repetition without `skillGate` fails as `provenance unknown`, and
+  a repetition without `leak` in a run that otherwise records it fails as
+  `leak field missing`. The one exception is a whole run that started before
+  SPEC-0017 landed, where no draw has `leak` at all: the checker prints
+  `warn leak-missing` for each draw and exits 0 so the historical artefact stays
+  citable, but it never reports those draws as clean. `leak` is mandatory from
+  SPEC-0017 onwards, so a run that carries it anywhere must carry it everywhere.
+- Before building a matrix, run the load canary by hand:
+
+  ```sh
+  node scripts/run-evals.mjs --skill <id> --case 1 --repeat 12 --run
+  ```
+
+  It answers "does the skill load at all?" before a multi-case matrix spends
+  money. It stays manual because behavioural runs call a model and the policy
+  keeps them out of CI.
 - `--save-baseline` stores a run; the next full run compares against it and
   fails on a case that moved `passed` → `failed`, or disappeared.
 - Publish a measured set in `docs/evals/review-code-matrix.md` (or a new doc
@@ -161,5 +186,6 @@ imperative subject ≤ 72 characters. The body explains why, not what.
       can fail.
 - [ ] No new measurement without a run directory (historical notes are marked
       `no run dir` in the coverage table).
+- [ ] Every cited run directory passes `node scripts/check-eval-run.mjs <dir>`.
 - [ ] `docs/evals/coverage.md` is updated.
 - [ ] No third-party skill is tracked.
