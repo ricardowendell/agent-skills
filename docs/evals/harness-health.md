@@ -8,18 +8,24 @@ no model and writes nothing.
 | Metric | Value |
 | --- | --- |
 | Runs | 170 |
+| Unfinished runs | 5 |
 | Cases | 243 |
 | Shapes | 106 single, 137 repeated |
 | Draws | 842 |
-| Passed (clean) | 550 |
-| Failed (clean) | 274 |
-| Unscored (clean) | 0 |
-| Staged (clean) | 13 |
+| Unfinished draws | 4 |
+| Passed (eligible) | 546 |
+| Failed (eligible) | 274 |
+| Unscored (eligible) | 0 |
+| Staged (eligible) | 13 |
 | Contaminated | 4 |
 | Infrastructure | 1 |
-| Clean draws | 837 |
-| Scored clean draws | 824 |
-| Pass rate (clean, scored) | 66.7% |
+| Eligible draws (not contaminated, not infrastructure) | 833 |
+| Rate denominator (eligible, non-staged) | 820 |
+| Pass rate (eligible, non-staged) | 66.6% |
+| Gate misses (eligible) | 24 |
+| Strict clean draws | 88 |
+| Strict passed / failed | 86 / 2 |
+| Strict pass rate | 97.7% |
 | Wall time | 12h 5m 19s |
 | Sum of draw durations | 16h 11m 49s |
 | Tokens (in / out / reasoning) | 13,958,800 / 1,485,390 / 1,548,139 |
@@ -29,7 +35,7 @@ no model and writes nothing.
 | Judge runs | 26 |
 | Judge failures | 12 |
 | Deterministic pass, judge fail | 12 |
-| Provenance | 93 complete, 749 partial |
+| Provenance (completed draws) | 93 complete, 745 partial |
 
 ### Unreadable eval artefacts
 
@@ -50,38 +56,57 @@ no model and writes nothing.
 
 ---
 
-Published baseline for release **0.4.0** on **2026-11-06**. Regenerate with:
+Published baseline for release **0.4.0** on **2026-11-06**. Regenerate from the
+main checkout with:
 
 ```sh
-node scripts/harness-health.mjs --pdlc /Users/wendell/.agents/.pdlc/runs.json
+node scripts/harness-health.mjs
 ```
+
+A dispatched worktree has no `.pdlc/`, so this baseline was produced there with
+`--pdlc /Users/wendell/.agents/.pdlc/runs.json`; the numbers are the same when
+the simple command runs from the main checkout.
 
 ## How to read it
 
+- **Two rates, two questions.** `Pass rate (eligible, non-staged)` is the broad
+  trend: draws in completed runs that are not contaminated and not
+  infrastructure, with staged smoke draws out of the denominator. It includes
+  partial provenance and gate misses, so it answers whether the whole store is
+  moving. `Strict pass rate` is the number `coverage.md` can compare: completed
+  run, full provenance (`fixtureHash` + `promptHash` + `detectorVersion`), and no
+  `checkRun` finding. Strict is smaller, but comparable; use it for a published
+  case and the eligible rate for the trend.
+- **Unfinished runs are not evidence.** Runs with `manifest.status` other than
+  `completed` are counted under `Unfinished runs`; their draws are counted under
+  `Unfinished draws` and kept out of both rates. Their `finishedAt` is null, so
+  their wall time is not summed. Contaminated and infrastructure are counted
+  over completed draws; an unfinished draw is counted only under `Unfinished
+  draws`.
 - **The store is the history.** A release appends runs; compare the same section
   with the previous release's table. The report is deterministic over a fixed
   store, so a diff is a change in artefacts, not in the reader.
 - **A regression is a move against a comparable number.** Same case shape, same
-  `fixtureHash`/`promptHash`/`detectorVersion`, same arm and model. A new matrix,
-  a smoke run, a control arm, or a partial-provenance draw changes the mix:
-  that is variance, not a regression. Name the run directory before calling a
-  delta either one.
-- **The rate is per clean draw.** `Pass rate (clean, scored)` is `passed /
-  (passed + failed + unscored)`; contaminated and infrastructure draws are
-  excluded from both numerator and denominator, and staged smoke draws are never
-  scored. A case that stops early contributes the draws it actually ran.
-- **Wall time is work, not elapsed time.** It sums each run's
+  arm and model. A new matrix, a control arm, or a draw with partial provenance
+  changes the mix: that is variance, not a regression. Name the run directory
+  before calling a delta either one.
+- **The rate denominator.** `Rate denominator (eligible, non-staged)` is
+  `passed + failed + unscored` over eligible draws; unscored is not a pass and
+  stays in the denominator, while staged smoke draws do not. `Eligible draws`
+  includes staged, so it is larger than the denominator.
+- **Gate misses are eligible but not strict.** `Gate misses (eligible)` counts
+  `with-skill` draws whose `skillGate.ok` is not true. They have no leak and no
+  infrastructure, so the broad rate includes them; `checkRun` keeps them out of
+  the strict rate.
+- **Provenance is counted over completed draws.** Complete means all three of
+  `fixtureHash`, `promptHash` and `detectorVersion` are present. A partial draw
+  is history, not strict evidence, and never enters the strict rate.
+- **Wall time is work, not elapsed time.** It sums each completed run's
   `startedAt`→`finishedAt`; overlapping runs add up. `Sum of draw durations` is
   the agent time inside those runs.
 - **Judge failures are advisory evidence.** A judge can only fail a draw that
   passed every deterministic assertion. `Deterministic pass, judge fail` is that
   subset; it is the list to read when the number moves.
-- **Provenance says what is comparable.** Complete means all three of
-  `fixtureHash`, `promptHash` and `detectorVersion` are on the draw. A partial
-  draw is history, not a clean measurement.
-- **Unreadable artefacts are named.** A run without `manifest.json` or a case
-  without a readable `result.json` is listed under `Unreadable`, never skipped.
-  They are excluded from the counts; check them before trusting a delta.
 - **pdlc retries are `attempts > 1`.** A red gate is any `gates[].ok === false`.
   The median duration falls back to `started_at`→`finished_at` when the record
   has no `duration`.

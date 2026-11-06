@@ -14,6 +14,7 @@
 // it is named, never skipped in silence and never allowed to abort the report.
 
 import { contaminatedReps, infrastructureReps } from "./result.mjs"
+import { checkRun } from "./runcheck.mjs"
 
 const isObject = (value) => Boolean(value) && typeof value === "object" && !Array.isArray(value)
 
@@ -77,6 +78,8 @@ function median(values) {
 export function evalHealth({ runs = [], unreadable = [] } = {}) {
   const report = {
     runs: 0,
+    unfinishedRuns: 0,
+    unfinishedDraws: 0,
     cases: 0,
     draws: 0,
     shapes: { single: 0, repeated: 0 },
@@ -86,9 +89,11 @@ export function evalHealth({ runs = [], unreadable = [] } = {}) {
     staged: 0,
     contaminated: 0,
     infrastructure: 0,
-    cleanDraws: 0,
-    scoredDraws: 0,
+    eligibleDraws: 0,
+    rateDenominator: 0,
     rate: null,
+    gateMisses: 0,
+    strict: { draws: 0, passed: 0, failed: 0, unscored: 0, staged: 0, rate: null },
     wallSeconds: 0,
     drawSeconds: 0,
     tokens: { input: 0, output: 0, reasoning: 0, cacheRead: 0, cacheWrite: 0 },
@@ -113,10 +118,30 @@ export function evalHealth({ runs = [], unreadable = [] } = {}) {
     }
 
     report.runs++
-    const started = Date.parse(run.manifest.startedAt)
-    const finished = Date.parse(run.manifest.finishedAt)
-    if (Number.isFinite(started) && Number.isFinite(finished) && finished >= started) {
-      wallMs += finished - started
+    const completed = run.manifest.status === "completed"
+    if (!completed) {
+      // An unfinished run is work in flight, not evidence: it is named and its
+      // draws stay out of both rates, and its (zero) wall time is not summed as
+      // if the run had closed.
+      report.unfinishedRuns++
+    } else {
+      const started = Date.parse(run.manifest.startedAt)
+      const finished = Date.parse(run.manifest.finishedAt)
+      if (Number.isFinite(started) && Number.isFinite(finished) && finished >= started) {
+        wallMs += finished - started
+      }
+    }
+
+    // One `checkRun` per completed run, as the checker does. Strictness is a
+    // property of the draw, not of the whole run: a single gate miss must not
+    // throw away every other draw in the same matrix.
+    const findings = new Map()
+    if (completed) {
+      const readable = (run.cases ?? []).filter((c) => isObject(c) && isObject(c.result)).map((c) => c.result)
+      for (const finding of checkRun({ arm: run.manifest.arm ?? null, cases: readable }).findings) {
+        const key = `${finding.case}#${finding.rep}`
+        findings.set(key, [...(findings.get(key) ?? []), finding.kind])
+      }
     }
 
     for (const c of [...(run.cases ?? [])].sort(byId)) {
@@ -145,11 +170,15 @@ export function evalHealth({ runs = [], unreadable = [] } = {}) {
       else report.shapes.single++
 
       const draws = repeated ? result.repetitions : [result]
+      report.draws += draws.length
+      if (!completed) report.unfinishedDraws += draws.length
+
       const buckets = { passed: 0, failed: 0, unscored: 0, staged: 0 }
       let perContaminated = 0
       let perInfrastructure = 0
 
-      for (const draw of draws) {
+      for (let i = 0; i < draws.length; i++) {
+        const draw = draws[i]
         if (!isObject(draw)) {
           report.unreadable.push({
             id: `${run.id}/${c.id}`,
@@ -158,12 +187,6 @@ export function evalHealth({ runs = [], unreadable = [] } = {}) {
           })
           continue
         }
-
-        // A dirty draw is excluded from the outcome buckets and counted apart.
-        // Infrastructure wins over contamination, as in `result.mjs`.
-        if (isInfrastructure(draw)) perInfrastructure++
-        else if (isContaminated(draw)) perContaminated++
-        else buckets[outcome(draw.status)]++
 
         const execution = isObject(draw.execution) ? draw.execution : {}
         drawMs += count(execution.durationMs)
@@ -174,9 +197,6 @@ export function evalHealth({ runs = [], unreadable = [] } = {}) {
             report.tokens[key] += count(execution.tokens[key])
           }
         }
-
-        if (hasFullProvenance(draw)) report.provenance.complete++
-        else report.provenance.partial++
 
         if (isObject(draw.semantic)) {
           report.judge.runs++
@@ -191,12 +211,45 @@ export function evalHealth({ runs = [], unreadable = [] } = {}) {
             if (deterministicPass && draw.status === "failed") report.judge.deterministicPassJudgeFail++
           }
         }
+
+        // Everything below is evidence about a completed run. Usage and judge
+        // counts stay raw; eligibility and strictness do not.
+        if (!completed) continue
+
+        if (hasFullProvenance(draw)) report.provenance.complete++
+        else report.provenance.partial++
+
+        const key = `${result.skill ?? "unknown"}#${result.case ?? "?"}#${draw.rep ?? draw.index ?? i + 1}`
+        const drawFindings = findings.get(key) ?? []
+        if (hasFullProvenance(draw) && drawFindings.length === 0) {
+          report.strict.draws++
+          if (draw.status === "passed") report.strict.passed++
+          else if (draw.status === "failed") report.strict.failed++
+          else if (draw.status === "unscored") report.strict.unscored++
+          else if (draw.status === "staged") report.strict.staged++
+        }
+
+        // A dirty draw is excluded from the eligible buckets and counted apart.
+        // Infrastructure wins over contamination, as in `result.mjs`.
+        if (isInfrastructure(draw)) {
+          perInfrastructure++
+        } else if (isContaminated(draw)) {
+          perContaminated++
+        } else {
+          buckets[outcome(draw.status)]++
+          const arm = run.manifest.arm ?? draw.arm ?? null
+          if (arm === "with-skill" && isObject(draw.skillGate) && draw.skillGate.ok !== true) {
+            report.gateMisses++
+          }
+        }
       }
+
+      if (!completed) continue
 
       // The case aggregate is authoritative for repeated cases. Older artefacts
       // (and hand-built fixtures) may carry only the counts and not the
-      // per-draw flags; the excess is removed from the clean buckets, preferring
-      // the statuses a dirty draw is written with.
+      // per-draw flags; the excess is removed from the eligible buckets,
+      // preferring the statuses a dirty draw is written with.
       const contaminated = Math.max(perContaminated, contaminatedReps(result))
       const infrastructure = Math.max(perInfrastructure, infrastructureReps(result))
       const excess = [
@@ -213,21 +266,24 @@ export function evalHealth({ runs = [], unreadable = [] } = {}) {
         }
       }
 
-      report.draws += draws.length
+      report.contaminated += contaminated
+      report.infrastructure += infrastructure
+      report.eligibleDraws += Math.max(0, draws.length - contaminated - infrastructure)
       report.passed += buckets.passed
       report.failed += buckets.failed
       report.unscored += buckets.unscored
       report.staged += buckets.staged
-      report.contaminated += contaminated
-      report.infrastructure += infrastructure
-      report.cleanDraws += Math.max(0, draws.length - contaminated - infrastructure)
+      report.rateDenominator += buckets.passed + buckets.failed + buckets.unscored
     }
   }
 
-  report.scoredDraws = report.passed + report.failed + report.unscored
-  // Keep the raw ratio: rounding here and again in the table would turn 66.75%
-  // into 66.8% instead of 66.7%.
-  report.rate = report.scoredDraws ? report.passed / report.scoredDraws : null
+  // The eligible rate is the broad trend: clean of leaks and infrastructure,
+  // including draws whose provenance is partial. Staged smoke draws are never
+  // scored, so they stay out of the denominator. The strict rate is the one
+  // `coverage.md` can compare: completed run, full provenance, no finding.
+  report.rate = report.rateDenominator ? report.passed / report.rateDenominator : null
+  const strictDenominator = report.strict.passed + report.strict.failed + report.strict.unscored
+  report.strict.rate = strictDenominator ? report.strict.passed / strictDenominator : null
   report.wallSeconds = Math.round(wallMs / 1000)
   report.drawSeconds = Math.round(drawMs / 1000)
   report.unreadable.sort((a, b) => byId(a, b) || compare(String(a.path), String(b.path)))
@@ -332,18 +388,24 @@ export function renderMarkdown(report) {
     "",
     ...table([
       ["Runs", formatCount(evals.runs)],
+      ["Unfinished runs", formatCount(evals.unfinishedRuns)],
       ["Cases", formatCount(evals.cases)],
       ["Shapes", `${formatCount(evals.shapes.single)} single, ${formatCount(evals.shapes.repeated)} repeated`],
       ["Draws", formatCount(evals.draws)],
-      ["Passed (clean)", formatCount(evals.passed)],
-      ["Failed (clean)", formatCount(evals.failed)],
-      ["Unscored (clean)", formatCount(evals.unscored)],
-      ["Staged (clean)", formatCount(evals.staged)],
+      ["Unfinished draws", formatCount(evals.unfinishedDraws)],
+      ["Passed (eligible)", formatCount(evals.passed)],
+      ["Failed (eligible)", formatCount(evals.failed)],
+      ["Unscored (eligible)", formatCount(evals.unscored)],
+      ["Staged (eligible)", formatCount(evals.staged)],
       ["Contaminated", formatCount(evals.contaminated)],
       ["Infrastructure", formatCount(evals.infrastructure)],
-      ["Clean draws", formatCount(evals.cleanDraws)],
-      ["Scored clean draws", formatCount(evals.scoredDraws)],
-      ["Pass rate (clean, scored)", formatRate(evals.rate)],
+      ["Eligible draws (not contaminated, not infrastructure)", formatCount(evals.eligibleDraws)],
+      ["Rate denominator (eligible, non-staged)", formatCount(evals.rateDenominator)],
+      ["Pass rate (eligible, non-staged)", formatRate(evals.rate)],
+      ["Gate misses (eligible)", formatCount(evals.gateMisses)],
+      ["Strict clean draws", formatCount(evals.strict.draws)],
+      ["Strict passed / failed", `${formatCount(evals.strict.passed)} / ${formatCount(evals.strict.failed)}`],
+      ["Strict pass rate", formatRate(evals.strict.rate)],
       ["Wall time", formatSeconds(evals.wallSeconds)],
       ["Sum of draw durations", formatSeconds(evals.drawSeconds)],
       [
@@ -357,7 +419,7 @@ export function renderMarkdown(report) {
       ["Judge failures", formatCount(evals.judge.failures)],
       ["Deterministic pass, judge fail", formatCount(evals.judge.deterministicPassJudgeFail)],
       [
-        "Provenance",
+        "Provenance (completed draws)",
         `${formatCount(evals.provenance.complete)} complete, ${formatCount(evals.provenance.partial)} partial`,
       ],
     ]),

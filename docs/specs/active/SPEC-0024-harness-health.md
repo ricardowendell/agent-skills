@@ -1,7 +1,7 @@
 ---
 id: SPEC-0024
 title: Give every release a harness-health baseline
-status: ready
+status: implemented
 priority: P2
 task: TASK-41
 created_at: 2026-11-06
@@ -18,6 +18,7 @@ files:
   - scripts/lib/evals/health.mjs
   - scripts/lib/evals/health.test.mjs
   - docs/evals/harness-health.md
+  - docs/README.md
   - CONTRIBUTING.md
   - docs/specs/active/SPEC-0024-harness-health.md
 tests:
@@ -145,6 +146,28 @@ behavior changes.
    CHANGELOG, at most three findings, one spec.
 6. **No draws, no model, no behavior change.** `git diff -- skills/` empty; the
    five policy gates pass.
+
+## Results
+
+Baseline published in `docs/evals/harness-health.md` for 0.4.0 on 2026-11-06,
+generated from the real store (170 runs, 243 readable cases, 842 draws).
+
+- **Eligible rate:** 833 eligible draws (completed runs, no contamination, no
+  infrastructure) and an 820 non-staged denominator: 546 passed, 274 failed,
+  0 unscored, 13 staged → **66.6%**. The five unfinished runs (four draws) are
+  excluded from both rates; the earlier 66.7% included those four clean draws
+  and is not used.
+- **Strict rate:** 88 draws in completed runs with full provenance
+  (`fixtureHash` + `promptHash` + `detectorVersion`) and no `checkRun` finding:
+  86 passed / 2 failed → **97.7%**. This is the number comparable to
+  `coverage.md`; the eligible rate is the broad trend and includes partial
+  provenance.
+- **Gate misses:** 24 eligible `with-skill` draws have `skillGate.ok !== true`;
+  they stay eligible but are not strict.
+- **Provenance:** 93 complete / 745 partial of 838 completed draws. The strict
+  rate is the only one that requires full provenance.
+- **pdlc:** 10 runs (9 merged, 1 active), 0 retries, 0 red gates, median
+  duration 43m 11s.
 
 ## Stop Conditions
 

@@ -63,6 +63,7 @@ function draw({
     status,
     reason,
     skillGate,
+    leak: [],
     assertions,
     execution,
     arm: "with-skill",
@@ -155,6 +156,7 @@ function makeStore() {
     promptHash: "prompt",
     detectorVersion: "1",
     skillGate: { ok: true },
+    leak: [],
     meta: {},
     arm: "with-skill",
   })
@@ -217,9 +219,16 @@ test("the report counts both case shapes, clean outcomes, dirty draws, judge fai
   assert.equal(e.staged, 0)
   assert.equal(e.contaminated, 1)
   assert.equal(e.infrastructure, 1)
-  assert.equal(e.cleanDraws, 11)
-  assert.equal(e.scoredDraws, 11)
+  assert.equal(e.unfinishedRuns, 0)
+  assert.equal(e.unfinishedDraws, 0)
+  assert.equal(e.eligibleDraws, 11)
+  assert.equal(e.rateDenominator, 11)
   assert.equal(e.rate, 10 / 11)
+  assert.equal(e.gateMisses, 0)
+
+  // Only the single draw has full provenance and a clean checkRun; the repeated
+  // case is partial provenance, so it stays eligible but not strict.
+  assert.deepEqual(e.strict, { draws: 1, passed: 1, failed: 0, unscored: 0, staged: 0, rate: 1 })
 
   // 60 s + 120 s of wall time and 12 + 2 s of draw time.
   assert.equal(e.wallSeconds, 180)
@@ -268,7 +277,11 @@ test("--since filters runs by manifest.startedAt and leaves pdlc alone", () => {
   assert.equal(report.evals.cases, 1)
   assert.equal(report.evals.draws, 1)
   assert.equal(report.evals.passed, 1)
+  assert.equal(report.evals.eligibleDraws, 1)
+  assert.equal(report.evals.rateDenominator, 1)
   assert.equal(report.evals.rate, 1)
+  assert.equal(report.evals.strict.draws, 1)
+  assert.equal(report.evals.strict.rate, 1)
   assert.equal(report.evals.wallSeconds, 120)
   assert.equal(report.evals.provenance.complete, 1)
   assert.equal(report.evals.provenance.partial, 0)
@@ -368,7 +381,12 @@ test("a clean unscored draw and a staged smoke draw stay out of the pass rate", 
       {
         id: "run",
         dir: "/tmp/run",
-        manifest: { startedAt: "2026-01-01T00:00:00Z", finishedAt: "2026-01-01T00:00:01Z" },
+        manifest: {
+          status: "completed",
+          arm: "with-skill",
+          startedAt: "2026-01-01T00:00:00Z",
+          finishedAt: "2026-01-01T00:00:01Z",
+        },
         cases: [
           {
             id: "unscored",
@@ -407,9 +425,96 @@ test("a clean unscored draw and a staged smoke draw stay out of the pass rate", 
   assert.equal(report.failed, 0)
   assert.equal(report.unscored, 1)
   assert.equal(report.staged, 1)
-  assert.equal(report.cleanDraws, 2)
-  assert.equal(report.scoredDraws, 1)
+  assert.equal(report.eligibleDraws, 2)
+  assert.equal(report.rateDenominator, 1)
   assert.equal(report.rate, 0)
+  assert.equal(report.strict.draws, 0)
+})
+
+test("eligible and strict separate unfinished, gate-miss and partial provenance", () => {
+  const provenance = { fixtureHash: "fixture", promptHash: "prompt", detectorVersion: "1" }
+  const draw = (overrides = {}) => ({
+    skill: "demo",
+    case: 1,
+    status: "passed",
+    leak: [],
+    contaminated: false,
+    skillGate: { ok: true, loaded: ["demo"], reason: "loaded demo" },
+    execution: { durationMs: 1000 },
+    ...provenance,
+    ...overrides,
+  })
+  const run = (id, status, cases) => ({
+    id,
+    dir: `/tmp/${id}`,
+    manifest: {
+      status,
+      arm: "with-skill",
+      startedAt: "2026-01-01T00:00:00Z",
+      finishedAt: status === "completed" ? "2026-01-01T00:00:10Z" : null,
+    },
+    cases,
+  })
+
+  const report = evalHealth({
+    runs: [
+      run("a", "completed", [
+        {
+          id: "one",
+          dir: "/tmp/a/one",
+          result: {
+            skill: "demo",
+            case: 1,
+            status: "passed",
+            ...provenance,
+            repetitions: [draw({ rep: 1 }), draw({ rep: 2, detectorVersion: undefined })],
+          },
+        },
+      ]),
+      run("b", "completed", [
+        {
+          id: "gate",
+          dir: "/tmp/b/gate",
+          result: {
+            skill: "demo",
+            case: 2,
+            status: "failed",
+            ...provenance,
+            repetitions: [
+              draw({ case: 2, rep: 1, status: "failed", skillGate: { ok: false, loaded: [], reason: "skill not loaded" } }),
+            ],
+          },
+        },
+      ]),
+      run("c", "running", [
+        {
+          id: "unfinished",
+          dir: "/tmp/c/unfinished",
+          result: { skill: "demo", case: 3, status: "passed", ...provenance, execution: { durationMs: 1000 } },
+        },
+      ]),
+    ],
+  })
+
+  assert.equal(report.runs, 3)
+  assert.equal(report.unfinishedRuns, 1)
+  assert.equal(report.unfinishedDraws, 1)
+  assert.equal(report.draws, 4)
+  assert.equal(report.cases, 3)
+  assert.deepEqual(report.shapes, { single: 1, repeated: 2 })
+
+  // The unfinished draw is not eligible. The partial and gate-miss draws are
+  // eligible (no leak, no infrastructure) but not strict.
+  assert.equal(report.eligibleDraws, 3)
+  assert.equal(report.passed, 2)
+  assert.equal(report.failed, 1)
+  assert.equal(report.rateDenominator, 3)
+  assert.equal(report.rate, 2 / 3)
+  assert.equal(report.gateMisses, 1)
+  assert.deepEqual(report.strict, { draws: 1, passed: 1, failed: 0, unscored: 0, staged: 0, rate: 1 })
+
+  assert.deepEqual(report.provenance, { complete: 2, partial: 1 })
+  assert.equal(report.wallSeconds, 20)
 })
 
 test("the pure aggregator names unreadable objects and falls back to timestamps for pdlc duration", () => {
@@ -419,7 +524,12 @@ test("the pure aggregator names unreadable objects and falls back to timestamps 
       {
         id: "with-case",
         dir: "/tmp/with-case",
-        manifest: { startedAt: "2026-01-01T00:00:00Z", finishedAt: "2026-01-01T00:00:05Z" },
+        manifest: {
+          status: "completed",
+          arm: "with-skill",
+          startedAt: "2026-01-01T00:00:00Z",
+          finishedAt: "2026-01-01T00:00:05Z",
+        },
         cases: [{ id: "bad", dir: "/tmp/with-case/cases/bad", result: null, error: "unreadable result.json" }],
       },
     ],

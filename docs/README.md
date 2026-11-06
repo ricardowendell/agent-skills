@@ -15,7 +15,7 @@ templates.
 | `specs/` | `SPEC-NNNN-*.md` — the durable record of why the harness changed |
 | `specs/active/` | the pdlc work queue; `plan`, `prompt`, `verify` and `merge` read here |
 | `prompts/` | implementation prompts generated from `ready` specs |
-| `evals/` | the `review-code` and `implement-from-prompt` matrices, experiment records, and `coverage.md` |
+| `evals/` | the `review-code` and `implement-from-prompt` matrices, the `harness-health.md` baseline, experiment records, and `coverage.md` |
 | `../runs/` | pdlc run records, one per verified cycle |
 
 `evals/coverage.md` is the inventory: cases per skill, how each is staged, and
