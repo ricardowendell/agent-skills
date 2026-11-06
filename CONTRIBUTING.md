@@ -149,7 +149,7 @@ node scripts/run-evals.mjs --skill review-code --case 3 --repeat 3 --run --judge
   a clean `--concurrency 4` cell can stop at 8 rather than at 5.
 - Draws share one lane pool; `--concurrency` (default 4) is the number of draws
   in flight, even within one case. Six and eight produced no rate limits — 6
-  lanes ran 10/11, 8 lanes 11/11 — but bought no wall time over four, so the
+  lanes ran 10/11, 8 lanes 11/11 — but there was no gain from 6 to 8, so the
   default stays 4; raise it for a specific run, not in the default.
 - Reuse a control from an earlier wave only when `fixtureHash`, `promptHash` and
   `detectorVersion` all match the new run. Any difference — one fixture byte, a

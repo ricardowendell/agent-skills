@@ -31,6 +31,7 @@ files:
   - scripts/lib/evals/execute.test.mjs
   - scripts/lib/evals/cli.test.mjs
   - scripts/lib/evals/schedule.test.mjs
+  - scripts/lib/evals/leak.test.mjs
   - scripts/lib/evals/runs.test.mjs
   - CONTRIBUTING.md
   - docs/evals/coverage.md
@@ -194,6 +195,12 @@ comparison numbers.
 | --- | --- | --- | --- | --- | --- |
 | `2026-11-05T12-35-30--implement-from-prompt` (stored, serial) | 12 | 12/12 | `3779a20` / `a58c5074` | 387 s | 386.8 s |
 | `2026-11-06T10-03-23--implement-from-prompt` (`--repeat 12 --stop 12/0 --concurrency 4`) | 12 | 12/12 | `63ed5f5` / `0389466e` | 691 s | **176.6 s** |
+
+Both runs recorded `detectorVersion: "leak-v1"` (the pre-change identifier).
+After this change the same rules produce `a31d58f79a6c7038`, so **neither run is
+reusable as a control under the new rule** — the conservative outcome the reuse
+rule asks for. That does not weaken the scheduling evidence, which is internal to
+the new run's own artifact.
 
 The stored run predates SPEC-0020 and was staged from a different skill copy
 (`a58c5074` vs `0389466e`), so it is **sanity for the verdict only**, not a
