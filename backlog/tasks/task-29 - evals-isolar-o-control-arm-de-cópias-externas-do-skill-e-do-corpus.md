@@ -1,10 +1,10 @@
 ---
 id: TASK-29
 title: 'evals: isolar o control arm de cópias externas do skill e do corpus'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-11-05T16:51:00Z'
-updated_date: '2026-11-05T21:37:00Z'
+updated_date: '2026-11-06T09:47:00Z'
 labels: []
 dependencies: []
 priority: high
