@@ -52,7 +52,10 @@ function leakPaths(result) {
 
 // `{ arm, cases }` → `{ findings, counts }`. `arm` comes from `manifest.json`
 // when the caller has it; each repetition may still carry its own `arm` (older
-// runs, or a case moved between runs), which is the fallback.
+// runs, or a case moved between runs), which is the fallback. Structural
+// incompleteness (manifest status, a missing `result.json`) is a filesystem
+// fact, so the CLI records it as an `incomplete` finding; this module assumes
+// the cases it was given were actually read.
 export function checkRun({ arm = null, cases = [] } = {}) {
   const findings = []
   let reps = 0
@@ -72,7 +75,7 @@ export function checkRun({ arm = null, cases = [] } = {}) {
       // it means this draw cannot be checked, so it fails loudly.
       const paths = leakPaths(r)
       if (r.leak === undefined) {
-        add("leak-missing", "leak field missing — provenance unknown (pre-SPEC-0017 artefact)")
+        add("leak-missing", "leak field missing — provenance unknown")
       } else if (paths.length) {
         add("leak", `read ${paths.join(", ")}`)
       }

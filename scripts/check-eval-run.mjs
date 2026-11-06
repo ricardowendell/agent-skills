@@ -13,11 +13,11 @@ import { checkRun, isPreDetector } from "./lib/evals/runcheck.mjs"
 const USAGE = `Usage: node scripts/check-eval-run.mjs <run-dir>...
 
 Check one or more eval run directories for leaked reads, contamination, a lost
-skill gate, or missing provenance. The checker reads what the runner already
-wrote; it does not call a model.
+skill gate, missing provenance, or a run that never completed. The checker reads
+what the runner already wrote; it does not call a model.
 
 Exit codes:
-  0  every repetition is clean
+  0  every repetition is clean (pre-detector warnings may still be printed)
   1  at least one finding
   2  a path is not a readable eval run directory (no manifest.json and no cases/)
 `
@@ -35,17 +35,24 @@ function readRun(dir) {
 
   let arm = null
   let startedAt = null
+  const structural = []
+  const incomplete = (name, detail) => structural.push({ case: name, rep: 0, kind: "incomplete", detail })
+
   if (hasManifest) {
     try {
       const manifest = readJson(manifestPath)
       arm = manifest.arm ?? null
       startedAt = manifest.startedAt ?? null
+      if (manifest.status !== "completed") {
+        incomplete("manifest", `status ${manifest.status ?? "missing"}; run did not complete`)
+      }
     } catch (e) {
       return { ok: false, reason: `manifest.json is not valid JSON: ${e.message}` }
     }
   }
 
   const cases = []
+  let missing = 0
   if (hasCases) {
     let entries
     try {
@@ -56,7 +63,11 @@ function readRun(dir) {
     for (const entry of entries) {
       if (!entry.isDirectory()) continue
       const file = join(casesDir, entry.name, "result.json")
-      if (!existsSync(file)) continue
+      if (!existsSync(file)) {
+        missing++
+        incomplete(entry.name, "case directory has no result.json")
+        continue
+      }
       try {
         cases.push(readJson(file))
       } catch (e) {
@@ -64,8 +75,10 @@ function readRun(dir) {
       }
     }
   }
+  // A manifest with no cases, or an empty cases/, is not evidence about anything.
+  if (cases.length === 0 && missing === 0) incomplete("cases", "run contains no case results")
 
-  return { ok: true, arm, startedAt, cases }
+  return { ok: true, arm, startedAt, cases, structural }
 }
 
 function main(argv) {
@@ -87,12 +100,16 @@ function main(argv) {
     }
 
     const preDetector = isPreDetector(run.cases, run.startedAt)
-    let { findings, counts } = checkRun({ arm: run.arm, cases: run.cases })
+    const checked = checkRun({ arm: run.arm, cases: run.cases })
+    let findings = [...run.structural, ...checked.findings]
+    let counts = { ...checked.counts, findings: findings.length }
     // A run with no `leak` field at all predates SPEC-0017. Warn per draw
     // instead of failing: the historical artefact is citable, not clean.
     let warnings = []
     if (preDetector) {
-      warnings = findings.filter((f) => f.kind === "leak-missing")
+      warnings = findings
+        .filter((f) => f.kind === "leak-missing")
+        .map((f) => ({ ...f, detail: `${f.detail} (pre-SPEC-0017 artefact; run started before the detector)` }))
       findings = findings.filter((f) => f.kind !== "leak-missing")
       counts = { ...counts, findings: findings.length }
     }
@@ -102,7 +119,9 @@ function main(argv) {
     for (const f of findings) {
       process.stdout.write(`${f.kind} ${f.case} r${f.rep} — ${f.detail}\n`)
     }
-    process.stdout.write(`cases=${counts.cases} reps=${counts.reps} findings=${counts.findings} (${dir})\n`)
+    process.stdout.write(
+      `cases=${counts.cases} reps=${counts.reps} findings=${counts.findings} warnings=${warnings.length} (${dir})\n`,
+    )
     if (findings.length) dirty = true
   }
 

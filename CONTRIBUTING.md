@@ -115,24 +115,32 @@ node scripts/run-evals.mjs --skill review-code --case 3 --repeat 3 --run --judge
   more) before claiming a rate.
 - Artefacts land in
   `~/.local/share/opencode/evals/runs/<timestamp>--<label>/`. A new measurement
-  must name the run directory it came from and pass the checker below; the
-  coverage table marks older `why:` notes that predate that rule as `no run dir`.
-- Before citing a run directory, run the model-free checker over it:
+  must name the run directory it came from; a clean measurement must also pass
+  the checker below. The coverage table marks older `why:` notes that predate
+  that rule as `no run dir`.
+- Before citing a run directory **as a clean measurement or a pass rate**, run
+  the model-free checker over it:
 
   ```sh
   node scripts/check-eval-run.mjs ~/.local/share/opencode/evals/runs/<timestamp>--<label>
   ```
 
   It reads `manifest.json` and `cases/*/result.json` and exits non-zero on a
-  leaked read, a contaminated draw, a lost skill gate, or a repetition with
-  missing provenance. A cited run directory must pass it. Unknown provenance is
-  not clean: a repetition without `skillGate` fails as `provenance unknown`, and
-  a repetition without `leak` in a run that otherwise records it fails as
-  `leak field missing`. The one exception is a whole run that started before
-  SPEC-0017 landed, where no draw has `leak` at all: the checker prints
-  `warn leak-missing` for each draw and exits 0 so the historical artefact stays
-  citable, but it never reports those draws as clean. `leak` is mandatory from
-  SPEC-0017 onwards, so a run that carries it anywhere must carry it everywhere.
+  leaked read, a contaminated draw, a lost skill gate, missing provenance, or an
+  unfinished run (`manifest.status` is not `completed`, or a case directory has
+  no `result.json`). A clean claim requires `findings=0 warnings=0` in the
+  summary. A directory that fails may still be cited as the record of the
+  failure itself, with the finding named (the contaminated control draws are
+  cited that way); it cannot supply a clean pass rate.
+
+  Unknown provenance is not clean: a repetition without `skillGate` fails as
+  `provenance unknown`, and a repetition without `leak` in a run that otherwise
+  records it fails as `leak field missing`. The one exception is a whole run that
+  started before SPEC-0017 landed, where no draw has `leak` at all: the checker
+  prints `warn leak-missing` for each draw and exits 0. Such a run is citable
+  only as history, with its `warnings=N` stated; it is never a
+  `findings=0 warnings=0` claim. `leak` is mandatory from SPEC-0017 onwards, so
+  a run that carries it anywhere must carry it everywhere.
 - Before building a matrix, run the load canary by hand:
 
   ```sh
@@ -186,6 +194,7 @@ imperative subject ≤ 72 characters. The body explains why, not what.
       can fail.
 - [ ] No new measurement without a run directory (historical notes are marked
       `no run dir` in the coverage table).
-- [ ] Every cited run directory passes `node scripts/check-eval-run.mjs <dir>`.
+- [ ] A run directory cited as a clean measurement passes
+      `node scripts/check-eval-run.mjs <dir>` with `findings=0 warnings=0`.
 - [ ] `docs/evals/coverage.md` is updated.
 - [ ] No third-party skill is tracked.

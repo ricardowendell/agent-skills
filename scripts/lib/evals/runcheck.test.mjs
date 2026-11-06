@@ -1,5 +1,10 @@
 import test from "node:test"
 import assert from "node:assert/strict"
+import { spawnSync } from "node:child_process"
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+import { fileURLToPath } from "node:url"
 import { checkRun, isPreDetector } from "./runcheck.mjs"
 
 const gate = ({ ok = true, loaded = ["implement-from-prompt"], reason = "loaded implement-from-prompt" } = {}) => ({
@@ -162,4 +167,102 @@ test("a single-draw result is the repetition at the root", () => {
   assert.deepEqual(counts, { cases: 1, reps: 1, findings: 1 })
   assert.deepEqual(kinds(findings), ["gate-miss"])
   assert.equal(findings[0].rep, 1)
+})
+
+// The CLI is the part that touches the filesystem; the tests above cover the
+// pure rule. These run the real script against synthetic run directories in
+// $TMPDIR so the exit codes and the summary cannot drift.
+const CLI = fileURLToPath(new URL("../../check-eval-run.mjs", import.meta.url))
+
+function makeRun(t, { manifest, cases = [] } = {}) {
+  const dir = mkdtempSync(join(tmpdir(), "pdlc-runcheck-"))
+  t.after(() => rmSync(dir, { recursive: true, force: true }))
+  if (manifest !== undefined) writeFileSync(join(dir, "manifest.json"), JSON.stringify(manifest))
+  for (const c of cases) {
+    const caseDir = join(dir, "cases", c.name)
+    mkdirSync(caseDir, { recursive: true })
+    if (c.result !== undefined) writeFileSync(join(caseDir, "result.json"), JSON.stringify(c.result))
+  }
+  return dir
+}
+
+const runCli = (dir) => spawnSync(process.execPath, [CLI, dir], { encoding: "utf8" })
+const modern = (overrides = {}) => ({ arm: "with-skill", status: "completed", startedAt: "2026-11-06T12:00:00.000Z", ...overrides })
+
+test("CLI exits 0 for a clean completed run", (t) => {
+  const dir = makeRun(t, { manifest: modern(), cases: [{ name: "x--01", result: aggregate([rep({ rep: 1 })]) }] })
+  const r = runCli(dir)
+  assert.equal(r.status, 0)
+  assert.match(r.stdout, /findings=0 warnings=0/)
+})
+
+test("CLI exits 1 and names a leaking draw", (t) => {
+  const leak = [{ tool: "shell", path: "/Users/me/.agents/skills/x/SKILL.md" }]
+  const dir = makeRun(t, {
+    manifest: modern(),
+    cases: [{ name: "x--01", result: aggregate([rep({ rep: 2, leak })]) }],
+  })
+  const r = runCli(dir)
+  assert.equal(r.status, 1)
+  assert.match(r.stdout, /leak implement-from-prompt#1 r2/)
+  assert.match(r.stdout, /SKILL\.md/)
+})
+
+test("CLI exits 2 for a path that is not a run dir", () => {
+  const dir = mkdtempSync(join(tmpdir(), "pdlc-runcheck-missing-"))
+  rmSync(dir, { recursive: true, force: true })
+  const r = runCli(dir)
+  assert.equal(r.status, 2)
+  assert.match(r.stderr, /not a readable run dir/)
+})
+
+test("CLI downgrades a pre-detector run to warnings and reports them", (t) => {
+  const old = rep({ rep: 1 })
+  delete old.leak
+  const dir = makeRun(t, {
+    manifest: modern({ startedAt: "2026-11-05T15:35:30.459Z" }),
+    cases: [{ name: "x--01", result: aggregate([old]) }],
+  })
+  const r = runCli(dir)
+  assert.equal(r.status, 0)
+  assert.match(r.stdout, /warn leak-missing implement-from-prompt#1 r1/)
+  assert.match(r.stdout, /pre-SPEC-0017 artefact/)
+  assert.match(r.stdout, /findings=0 warnings=1/)
+})
+
+test("CLI falls back to the repetition's arm without manifest.json", (t) => {
+  const control = rep({
+    rep: 1,
+    arm: "without-skill",
+    status: "failed",
+    skillGate: { ok: true, loaded: [], reason: "no skill loaded (control arm)" },
+  })
+  const dir = makeRun(t, { cases: [{ name: "x--01", result: control }] })
+  const r = runCli(dir)
+  assert.equal(r.status, 0)
+  assert.match(r.stdout, /findings=0 warnings=0/)
+})
+
+test("CLI fails a manifest-only run as incomplete", (t) => {
+  const dir = makeRun(t, { manifest: modern() })
+  const r = runCli(dir)
+  assert.equal(r.status, 1)
+  assert.match(r.stdout, /incomplete cases r0 — run contains no case results/)
+})
+
+test("CLI fails a run whose manifest never completed", (t) => {
+  const dir = makeRun(t, {
+    manifest: modern({ status: "running" }),
+    cases: [{ name: "x--01", result: aggregate([rep({ rep: 1 })]) }],
+  })
+  const r = runCli(dir)
+  assert.equal(r.status, 1)
+  assert.match(r.stdout, /incomplete manifest r0 — status running; run did not complete/)
+})
+
+test("CLI fails a case directory without result.json", (t) => {
+  const dir = makeRun(t, { manifest: modern(), cases: [{ name: "x--01" }] })
+  const r = runCli(dir)
+  assert.equal(r.status, 1)
+  assert.match(r.stdout, /incomplete x--01 r0 — case directory has no result\.json/)
 })

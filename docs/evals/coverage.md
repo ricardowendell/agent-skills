@@ -24,12 +24,15 @@ directories; they are not estimates.
 
 ## Evidence rules
 
-- A run directory is cited only after
-  `node scripts/check-eval-run.mjs <run-dir>` passes it: no leaked read, no
-  contaminated draw, no lost skill gate, and no missing provenance. A
-  pre-SPEC-0017 run that started before the detector landed and has no `leak`
-  field at all is cited with its `warn leak-missing` lines, not as a clean
-  measurement.
+- A run directory cited **as a clean measurement or a pass rate** must pass
+  `node scripts/check-eval-run.mjs <run-dir>` with `findings=0 warnings=0`: no
+  leaked read, no contaminated draw, no lost skill gate, no missing provenance,
+  and no unfinished run. A directory that fails may still be cited **as the
+  record of the failure itself**, with the finding named; it cannot supply a
+  clean pass rate.
+- A pre-SPEC-0017 run that started before the detector landed and has no `leak`
+  field at all is `not checkable`: the checker emits `warn leak-missing`, and a
+  citation must state its `warnings=N`. It is history, not a clean measurement.
 - A cell names a measurement only when it names the run directory or cites a
   `why:` note that records the number. A note without a run directory is marked
   `no run dir`: the count is honest, the provenance is not. Anything else reads
@@ -43,6 +46,12 @@ directories; they are not estimates.
 
 ## Known holes
 
+- **Three SPEC-0017 draws are not checkable, not invalid.** The
+  `2026-11-05T13-22-08--implement-from-prompt--opencode-go-gpt-6-luna`,
+  `2026-11-05T12-00-00--implement-from-prompt--without-skill` and
+  `2026-11-05T17-13-34--groom-backlog--without-skill` artefacts predate the
+  `leak` field. The checker cannot re-judge them; it reports `warn leak-missing`.
+  Their published numbers stay as historical evidence, not as a clean rate.
 - **`groom-backlog` #2 is unresolved, not a non-discriminator.** The earlier
   reading — 3/3 in both arms — was measured before the runner detected external
   reads. Re-run at `8777e0b` with the detector: with the skill 3/3 clean
