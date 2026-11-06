@@ -155,7 +155,92 @@ is roughly 15–25 minutes of wall time. No judge.
 
 ## Results
 
-_Filled during implementation._
+Measured at `8e26cf6` on `opencode-go/deepseek-v4.1-flash` (config default), no
+judge. All run directories live under
+`~/.local/share/opencode/evals/runs/`. The published reading is
+[`docs/evals/write-implementation-prompt-matrix.md`](../../evals/write-implementation-prompt-matrix.md).
+
+**F0 — repro.** `node scripts/run-evals.mjs --root skills --list --check`
+exits 0: 76 cases, 74 runnable, 2 manual. This skill is six cases, five
+runnable, one manual — the same counts before and after the work, because #3
+went back to `manual` (below).
+
+**F1/F2 — case #3.** The case was given
+`prompt: Create the implementation prompt for SPEC-0009.` and ran five draws:
+`2026-11-06T14-01-54--write-implementation-prompt` **4/5**, gate 5/5,
+`findings=0 warnings=0`. Four draws stopped and listed the open questions;
+`r3` treated both as non-blocking, turned them into non-goals, and wrote
+`docs/prompts/SPEC-0009-audit-log.prompt.md`. Five draws did not produce a
+deterministic verdict, so the case is back to `status: manual` with a `why:`
+naming that run. The fixture is confirmed runnable and stages cleanly.
+
+**Canary.** `2026-11-06T13-51-35--write-implementation-prompt`: **12/12**
+passed, **12/12** skill-gate holds, `findings=0 warnings=0`. The first
+invocation without `--stop 12/0` stopped at 8/8 under the default `5/3` rule
+(`2026-11-06T13-46-05--write-implementation-prompt`, also
+`findings=0 warnings=0`); it is not the 12-draw canary.
+
+**Gate A — with skill (five draws each, no judge).**
+
+| case | run directory | passed | gate |
+| --- | --- | --- | --- |
+| #1 | `2026-11-06T13-56-14--write-implementation-prompt` | 5/5 | 5/5 |
+| #2 | `2026-11-06T13-59-48--write-implementation-prompt` | 5/5 | 5/5 |
+| #3 | `2026-11-06T14-01-54--write-implementation-prompt` | 4/5 | 5/5 |
+| #4 | `2026-11-06T14-04-25--write-implementation-prompt` | 5/5 | 5/5 |
+
+All four pass `check-eval-run` with `findings=0 warnings=0`.
+
+**Gate A — control (five draws each, no judge, no triggers).** None of these
+four runs is a clean five-draw cell except #4; the contaminated draws are
+excluded and named.
+
+| case | run directory | clean draws | passed clean | checker |
+| --- | --- | --- | --- | --- |
+| #1 | `2026-11-06T14-28-07--write-implementation-prompt--without-skill` | 4/5 | 0/4 | `findings=1` (leak `r3`) |
+| #2 | `2026-11-06T14-30-42--write-implementation-prompt--without-skill` | 2/5 | 0/2 | `findings=3` (leaks `r2`,`r3`,`r4`) |
+| #2 | `2026-11-06T14-40-36--write-implementation-prompt--without-skill` | 4/5 | 1/4 | `findings=1` (leak `r2`) |
+| #3 | `2026-11-06T14-32-58--write-implementation-prompt--without-skill` | 4/5 | 0/4 | `findings=1` (leak `r3`) |
+| #4 | `2026-11-06T14-37-23--write-implementation-prompt--without-skill` | 5/5 | 5/5 | `findings=0 warnings=0` |
+
+The leaked draws read `/Users/wendell/.agents/skills/write-implementation-prompt`
+(and, for #1, the real `spec-sha.mjs`); they are cited as the failure record, not
+as clean rates.
+
+**Triggers — skill arm only.**
+
+| trigger | run directory | result |
+| --- | --- | --- |
+| #5 | `2026-11-06T14-07-04--write-implementation-prompt` | 4/5, `r5` stalled (infrastructure) |
+| #6 | `2026-11-06T14-07-04--write-implementation-prompt` | 3/5; `r1`,`r2` loaded the skill |
+| #5 | `2026-11-06T14-43-01--write-implementation-prompt` | 2/5; `r1`,`r4` stalled, `r3` contaminated |
+| #6 | `2026-11-06T14-43-01--write-implementation-prompt` | 5/5 |
+
+Across both runs #5 loaded in **6/6 clean scored draws**; three stalls and one
+contaminated draw make both trigger directories failure records
+(`findings=1` and `findings=3`), not clean cells. #6 did not load in **8/10**
+draws; the two loads are `14-07-04 r1`/`r2`, both after a filesystem search for
+the missing `SPEC-0012` and then a load of the staged skill. #6's near-miss
+therefore holds at 5/5 only in `14-43-01`, not in the first run; it is recorded
+as the finding and not fixed here.
+
+**Classification.** #1 **separator** (5/5 vs 0/4 clean), #2 **separator**
+(5/5 vs 1/6 clean across two contaminated runs), #4 **non-discriminator**
+(5/5 vs 5/5), #3 **manual** (reverted with a `why:` after the 4/5 split). The
+triggers are routing evidence, not rates.
+
+**Budget.** 85 draws, against the ~62 estimated: 20 canary (8 under the default
+stop rule, then 12 with `--stop 12/0`), 20 with-skill Gate A, 20 triggers (two
+runs; the first had a stall and the second was needed for #6), and 25 control
+(the #2 cell was re-run after a contaminated first attempt). No single command
+exceeded its planned repeat count.
+
+**Gates.** All five pass: `validate-skills` (13 SKILL.md, all clear),
+`--list --check` (exit 0, 76/74/2), `scripts/lib/evals/*.test.mjs` (252/252),
+`skills/bootstrap-project-harness/scripts/*.test.mjs` (17/17), and
+`check-sensor-parity` (2/2 fixtures). `git diff` under `skills/` touches only
+`skills/write-implementation-prompt/references/evals.md` (the #3 `prompt:` and
+`why:` lines).
 
 ## Open Questions
 
