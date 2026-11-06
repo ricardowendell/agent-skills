@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "f93aea86-0df9-415d-8549-1f61d074f3f9",
+  "started_at": "2026-11-06T14:26:12.713Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.0.0"
+  },
+  "base_commit": "8c042be996edf39794acb016e81d84bd9f043bad",
+  "head_commit": "75e278428df965f239788c7965ba3343267643a4",
+  "task": "SPEC-0022",
+  "spec_sha": "6044d47b425763c435210a303df15d0a070208417ff465a32fd0b38df493cff7",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0022-scope-change-fixture.json",
+      "sha256": "a381e7439c2793273ceedfc4821a4dac210a08ecc313a4e897d639035e72c8f7"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0022-scope-change-fixture.json",
+      "sha256": "6eff4363424ef9c83f361c3a64136ac65c169a457c3d39caad9c59c470f5d438"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "aab549581080c4a0107c6f9b6a9d846eed5a6ffa254a247236cae0e477c70d54"
+    }
+  ],
+  "attempts": 1,
+  "duration": 1204,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "75e278428df965f239788c7965ba3343267643a4"
+}
