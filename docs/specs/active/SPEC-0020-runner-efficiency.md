@@ -23,6 +23,7 @@ files:
   - scripts/lib/evals/fixture.mjs
   - scripts/lib/evals/leak.mjs
   - scripts/lib/evals/schedule.mjs
+  - scripts/lib/evals/runs.mjs
   - scripts/lib/evals/agent.test.mjs
   - scripts/lib/evals/result.test.mjs
   - scripts/lib/evals/report.test.mjs
@@ -30,6 +31,7 @@ files:
   - scripts/lib/evals/execute.test.mjs
   - scripts/lib/evals/cli.test.mjs
   - scripts/lib/evals/schedule.test.mjs
+  - scripts/lib/evals/runs.test.mjs
   - CONTRIBUTING.md
   - docs/evals/coverage.md
   - README.md
@@ -127,8 +129,8 @@ one before accepting any default.
 5. **F4 — infra exits.** Classify `timeout`/`stalled` as `unscored`; add the
    single retry; update the checker so an infrastructure-unscored does not read
    as a clean run but does not read as a behavioural failure either.
-6. **F5 — concurrency.** Run a 3-case cell at 6 and 8; record 429s. Keep 4 unless
-   the runs are clean.
+6. **F5 — concurrency.** Run the 11-case `matrix` tag once at 6 and once at 8;
+   record 429s. Keep 4 unless the runs are clean.
 7. **F6 — document.** README flags, `CONTRIBUTING.md` reuse rule, coverage note.
 
 ### Where the change lives
@@ -143,8 +145,10 @@ one before accepting any default.
   than in the CLI. Both front ends (CLI and Promptfoo) then measure the same
   thing, and a retry is attached to the exit it retried.
 - **`fixture.mjs`** returns the hash of the staged fixture (reusing `treeHash`)
-  and hashes the prompt text; **`leak.mjs`** exports `DETECTOR_VERSION`, so the
-  three provenance fields come from the modules that know what they mean.
+  and hashes the prompt text; **`leak.mjs`** derives `DETECTOR_VERSION` from the
+  list of rules that decide what counts as a leak, so changing the detector moves
+  the identifier; **`runs.mjs`** records `concurrency`, `repeat`, `stop` and
+  `stallMs` in `manifest.json` instead of leaving them to be inferred.
 
 ## Data
 
@@ -186,23 +190,29 @@ comparison numbers.
 
 ### AC-1 — parallel draws, same verdict
 
-| Run | Draws | Verdict | Sum of draw durations | Wall time |
-| --- | --- | --- | --- | --- |
-| `2026-11-05T12-35-30--implement-from-prompt` (stored, serial) | 12 | 12/12 | 387 s | 387 s |
-| `2026-11-06T10-03-23--implement-from-prompt` (`--repeat 12 --stop 12/0 --concurrency 4`) | 12 | 12/12 | 691 s | **181 s** |
+| Run | Draws | Verdict | Repo / skill hash | Sum of draw durations | Artifact interval |
+| --- | --- | --- | --- | --- | --- |
+| `2026-11-05T12-35-30--implement-from-prompt` (stored, serial) | 12 | 12/12 | `3779a20` / `a58c5074` | 387 s | 386.8 s |
+| `2026-11-06T10-03-23--implement-from-prompt` (`--repeat 12 --stop 12/0 --concurrency 4`) | 12 | 12/12 | `63ed5f5` / `0389466e` | 691 s | **176.6 s** |
 
-The new cell ran **2.1× faster in wall time** with the same verdict. The sum of
-draw durations rose because four draws compete for the provider; that is the
-resource trade the spec names, not a regression. `stoppedEarly: false` in the
-artifact: the run was asked for twelve draws and ran twelve. `--stop 12/0`
-against `--repeat 12` disables both arms of the stop rule (the passes target is
-the full count, the failure ceiling is zero).
+The stored run predates SPEC-0020 and was staged from a different skill copy
+(`a58c5074` vs `0389466e`), so it is **sanity for the verdict only**, not a
+controlled speed comparison. The scheduling claim comes from the new run's own
+artifact: twelve draws summed 691 s of draw time, but the `startedAt` →
+`finishedAt` interval was 176.6 s at `--concurrency 4`, a **3.9× overlap**. The
+sum rose because four draws compete for the provider; that is the resource trade
+the spec names, not a regression. `stoppedEarly: false`: twelve were asked for
+and twelve ran. `--stop 12/0` against `--repeat 12` disables both arms of the
+stop rule (the passes target is the full count, the failure ceiling is zero).
+
+Wall numbers in this section are the artifact interval
+(`finishedAt − startedAt` in `manifest.json`), not `time` around the process.
 
 ### AC-2 — the 5/3 default stops between waves
 
 `2026-11-06T10-00-46--implement-from-prompt` (`--repeat 12`, default stop)
-reports **8/8, `stoppedEarly: true`**, `sequence` = eight `pass`, wall time
-**2:26**.
+reports **8/8, `stoppedEarly: true`**, `sequence` = eight `pass`, artifact
+interval **142.8 s (2:23)**.
 
 The target is five clean passes, but the rule is evaluated **between waves**: at
 `--concurrency 4`, the first wave is 4 draws and the second wave can complete
@@ -214,14 +224,15 @@ explicit target at or above `n`).
 
 ### AC-6 — concurrency 6 and 8, no 429s
 
-| Run | Cases | Result | Wall time |
+| Run | Cases | Result | Artifact interval |
 | --- | --- | --- | --- |
-| `2026-11-06T10-06-36--matrix` (`--tag matrix --repeat 1 --concurrency 6`) | 11 | 10 passed / 1 failed | 3:04 |
-| `2026-11-06T10-09-44--matrix` (`--concurrency 8`) | 11 | 11 passed | 3:00 |
+| `2026-11-06T10-06-36--matrix` (`--tag matrix --repeat 1 --concurrency 6`) | 11 | 10 passed / 1 failed | 181.3 s (3:01) |
+| `2026-11-06T10-09-44--matrix` (`--concurrency 8`) | 11 | 11 passed | 176.6 s (2:57) |
 
 The 429 scan over both transcripts found only hex fragments inside objects and
 token counts; **zero rate-limit responses**. There is no wall-time gain from 6 to
-8, so **the default stays 4**. The one failure at 6 is recorded as measured, not
+8, so **the default stays 4**. The one failure at 6 is a gate miss
+(`implement-from-prompt` #2 did not load the skill), recorded as measured, not
 attributed to concurrency; the 8-lane rerun passed 11/11.
 
 ### AC-3, AC-4, AC-5 — verified by unit tests
@@ -230,8 +241,15 @@ The provenance mutation test (one fixture byte moves `fixtureHash`, one prompt
 edit moves `promptHash`, neither moves the other), the two watchdog tests (no
 events → `stalled` quickly; a slow but live stream survives) and the
 infrastructure tests (unscored, one retry, its own finding in the checker) run in
-`node --test scripts/lib/evals/*.test.mjs`. No behavioural run was added to CI or
-the hook.
+`node --test scripts/lib/evals/*.test.mjs`. The retry re-stages the fixture and
+the skill in a fresh scratch, so a dead draw's writes cannot satisfy
+`unchanged`/`changed`; `execution.durationMs` is the final attempt, with
+`attempts`/`retries` alongside. The checker also reads the older
+`execution.exit` field, so pre-SPEC-0020 timeouts are no longer clean:
+`2026-11-05T15-06-58--implement-from-prompt--without-skill` reports two
+`infrastructure: timeout` findings (exit 1) and
+`2026-11-05T08-35-22--review-code` reports one (exit 1). No behavioural run was
+added to CI or the hook.
 
 ### AC-7 — blast radius
 

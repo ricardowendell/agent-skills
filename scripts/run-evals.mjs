@@ -240,6 +240,12 @@ const run = () =>
     agent: opt.agent,
     level: opt.level,
     repoSha: repoSha(),
+    params: {
+      concurrency: opt.concurrency,
+      repeat: opt.repeat,
+      stop: STOP,
+      stallMs: opt.stallSeconds * 1000,
+    },
   }))
 
 // Without --model the child inherits the config's `model`, so the artifact would
@@ -470,11 +476,13 @@ async function runCase(skill, c, rep = null) {
     })
   }
 
-  const { result: core, out, err, code, pinned: staged, gate, asserts, judged, durationMs } = exec
+  // A retry re-stages in a fresh scratch, so the leak check and the transcript
+  // header must point at the attempt that actually produced this result.
+  const { result: core, out, err, code, pinned: staged, gate, asserts, judged, durationMs, scratch: finalScratch } = exec
   // The leak is a property of this repetition's transcript and scratch, so it is
   // recorded here, per draw, not inferred later from a run summary. A single draw
   // is the whole case, so its reason says "every repetition contaminated".
-  const clean = contaminate(core, leaksIn(out, scratch), { all: !rep })
+  const clean = contaminate(core, leaksIn(out, finalScratch ?? scratch), { all: !rep })
   const skillLabel = opt.noSkill
     ? `**Skill:** ${gate.ok ? "not loaded (control arm)" : "LOADED — the control arm is broken"} (${gate.reason})`
     : `**Skill:** ${gate.ok ? "loaded" : "MISSING"} (${gate.reason})`
@@ -497,7 +505,7 @@ async function runCase(skill, c, rep = null) {
       skill: skill.id,
       n: c.n,
       prompt: c.prompt,
-      scratch,
+      scratch: finalScratch ?? scratch,
       exit: code,
       status: result.status,
       reason: result.reason,

@@ -184,6 +184,29 @@ test("summarize counts contaminated repetitions apart and never as failed", () =
   assert.deepEqual(totals, { passed: 1, failed: 1, unscored: 1, contaminated: 3, infrastructure: 0, total: 3 })
 })
 
+test("a draw that is both infrastructure and contaminated is counted once", () => {
+  const agg = aggregateReps([
+    { status: PASSED },
+    { status: UNSCORED, infrastructure: true, contaminated: true, leak: [{ tool: "read", path: "/Users/me/.agents/skills/x/SKILL.md" }] },
+  ])
+  assert.equal(agg.infrastructure, 1)
+  assert.equal(agg.contaminated, 0)
+  assert.equal(agg.passed, 1)
+  assert.equal(agg.passRate, 1)
+
+  const totals = summarize([
+    { status: UNSCORED, infrastructure: true, contaminated: true, leak: [] },
+    {
+      status: PASSED,
+      infrastructure: 1,
+      contaminated: 0,
+      repetitions: [{ status: UNSCORED, infrastructure: true, contaminated: true, leak: [] }],
+    },
+  ])
+  assert.equal(totals.infrastructure, 2)
+  assert.equal(totals.contaminated, 0)
+})
+
 test("summarize counts infrastructure draws apart, never as failed", () => {
   const totals = summarize([
     { status: PASSED },

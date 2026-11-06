@@ -57,11 +57,14 @@ export function contaminate(result, leak = [], { all = false } = {}) {
 }
 
 // A case artifact carries either a boolean (single draw) or the count of its
-// contaminated repetitions (a repeated case), so the summary reads both.
+// contaminated repetitions (a repeated case), so the summary reads both. A draw
+// that is both infrastructure and contaminated is counted once, as
+// infrastructure: the kill happened first and the leak cannot be attributed to a
+// behavioural attempt that never finished.
 export function contaminatedReps(result) {
   if (typeof result.contaminated === "number") return result.contaminated
-  if (result.contaminated === true) return 1
-  return (result.repetitions ?? []).filter((r) => r.contaminated).length
+  if (result.contaminated === true) return isInfrastructure(result) ? 0 : 1
+  return (result.repetitions ?? []).filter((r) => r.contaminated && !isInfrastructure(r)).length
 }
 
 // Infrastructure draws are counted like contaminated ones: on the case artifact
@@ -116,9 +119,12 @@ export function caseResult(skill, c, fields = {}) {
 // still named.
 export function aggregateReps(reps, minPass = 1) {
   const total = reps.length
-  const contaminated = reps.filter((r) => r.contaminated).length
-  const infrastructure = reps.filter((r) => isInfrastructure(r)).length
-  const cleanReps = reps.filter((r) => !r.contaminated && !isInfrastructure(r))
+  const isInfraRep = (r) => isInfrastructure(r)
+  const infrastructure = reps.filter(isInfraRep).length
+  // Same precedence as `contaminatedReps`: infrastructure first, so a draw that
+  // both stalled and leaked is counted once.
+  const contaminated = reps.filter((r) => !isInfraRep(r) && r.contaminated).length
+  const cleanReps = reps.filter((r) => !r.contaminated && !isInfraRep(r))
   const clean = cleanReps.length
   const passed = cleanReps.filter((r) => r.status === PASSED).length
   const unscored = cleanReps.filter((r) => r.status === UNSCORED).length

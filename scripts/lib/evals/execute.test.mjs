@@ -1,6 +1,6 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { executeCase } from "./execute.mjs"
@@ -181,20 +181,25 @@ test("the infrastructure retry is capped at one", async () => {
 })
 
 test("a retry that succeeds keeps the behavioural verdict and records the retry", async () => {
-  const { skill, scratch, c, inside, cleanup } = setup()
+  const { skill, scratch, c, cleanup } = setup()
+  let retryScratch = null
   try {
     let call = 0
-    const spawn = async () => {
+    const spawn = async ({ cwd }) => {
       call++
       if (call === 1) return { out: "", err: "", code: "stalled" }
-      return { out: stream({ reply: "done", loads: [{ id: "demo", directory: inside }] }), err: "", code: 0 }
+      retryScratch = cwd
+      return { out: stream({ reply: "done", loads: [{ id: "demo", directory: join(cwd, ".opencode/skills/demo") }] }), err: "", code: 0 }
     }
-    const { result } = await executeCase({ skill, c, scratch, spawnAgent: spawn })
+    const { result, scratch: finalScratch } = await executeCase({ skill, c, scratch, spawnAgent: spawn })
     assert.equal(result.status, "passed")
     assert.equal(result.infrastructure, false)
     assert.equal(result.execution.retries, 1)
+    assert.equal(result.execution.attempts, 2)
+    assert.equal(finalScratch, retryScratch)
   } finally {
     cleanup()
+    if (retryScratch) rmSync(retryScratch, { recursive: true, force: true })
   }
 })
 
@@ -220,6 +225,40 @@ test("a failing assertion is named in the reason", async () => {
     assert.match(result.reason, /nothing here/)
   } finally {
     cleanup()
+  }
+})
+
+test("an infrastructure retry re-stages a fresh scratch and does not inherit the dead draw", async () => {
+  const { skill, scratch, c, cleanup } = setup()
+  const fixtureDir = join(skill.dir, "references/evals/1")
+  mkdirSync(fixtureDir, { recursive: true })
+  writeFileSync(join(fixtureDir, "RULES.md"), "fresh\n")
+  const scratches = []
+  const spawn = async ({ cwd }) => {
+    scratches.push(cwd)
+    if (scratches.length === 1) {
+      // The dead draw pollutes its fixture; the retry must not see this file.
+      writeFileSync(join(cwd, "SIDE_EFFECT.md"), "from the stalled attempt\n")
+      await new Promise((resolve) => setTimeout(resolve, 120))
+      return { out: "", err: "", code: "stalled" }
+    }
+    assert.equal(existsSync(join(cwd, "SIDE_EFFECT.md")), false, "the retry got a clean fixture")
+    assert.equal(existsSync(join(cwd, "RULES.md")), true, "the retry staged the fixture again")
+    return { out: stream({ reply: "done", loads: [{ id: "demo", directory: join(cwd, ".opencode/skills/demo") }] }), err: "", code: 0 }
+  }
+  try {
+    const exec = await executeCase({ skill, c, scratch, spawnAgent: spawn })
+    assert.equal(scratches.length, 2)
+    assert.notEqual(scratches[0], scratches[1], "the retry did not reuse the dead scratch")
+    assert.equal(exec.scratch, scratches[1])
+    assert.equal(exec.result.status, "passed")
+    assert.equal(exec.result.execution.attempts, 2)
+    assert.equal(exec.result.execution.retries, 1)
+    // The final attempt owns the duration; the 120ms dead draw is not added to it.
+    assert.ok(exec.result.execution.durationMs < 100, `duration ${exec.result.execution.durationMs}ms summed the attempts`)
+  } finally {
+    cleanup()
+    for (const dir of scratches) rmSync(dir, { recursive: true, force: true })
   }
 })
 

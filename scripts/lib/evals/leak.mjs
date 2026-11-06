@@ -19,12 +19,41 @@
 // restores the real home for replaying pre-isolation runs, and those are not
 // measurements.)
 
+import { createHash } from "node:crypto"
 import { toolCalls } from "./events.mjs"
 
+// The detector's identity is derived, not typed by hand. These strings are the
+// rules that decide "clean"; changing one changes `DETECTOR_VERSION`, so a later
+// wave cannot reuse an earlier control across a semantic change by accident.
+// `leak.test.mjs` pins the digest as a golden: editing a rule without consciously
+// updating the identifier fails the suite.
+const RULES = {
+  absoluteOnly: "absolute-path-only",
+  scratchExcluded: "inside-scratch-excluded",
+  isolatedHome: "(?:^|/)opencode-eval-home-[^/]+(?:/|$)",
+  skillRoots: [
+    "(?:^|/)(?:\\.agents|\\.claude|\\.codex)/skills(?:/|$)",
+    "(?:^|/)\\.config/opencode/skills(?:/|$)",
+    "(?:^|/)T/opencode/(?:[^/]+/)*skills(?:/|$)",
+  ],
+  corpus: "/references/evals\\.md$",
+}
+
+export const DETECTOR_RULES = Object.freeze([
+  RULES.absoluteOnly,
+  RULES.scratchExcluded,
+  RULES.isolatedHome,
+  ...RULES.skillRoots,
+  RULES.corpus,
+])
+
+export function detectorVersion(rules = DETECTOR_RULES) {
+  return createHash("sha256").update(rules.join("\n")).digest("hex").slice(0, 16)
+}
+
 // Recorded in every draw's artifact. A later wave may cite an earlier control
-// run only when this matches (SPEC-0020 AC-3): a change to what counts as a leak
-// changes the meaning of "clean".
-export const DETECTOR_VERSION = "leak-v1"
+// run only when this matches (SPEC-0020 AC-3).
+export const DETECTOR_VERSION = detectorVersion()
 
 // macOS reports the same tmp dir as both `/var/…` and `/private/var/…`; the
 // scratch header usually records one and the tool the other.
@@ -39,23 +68,23 @@ function inside(path, scratch) {
 
 // `mkdtempSync(join(base, "opencode-eval-home-"))` in isolation.mjs. A path under
 // it is the child's throwaway home, not the user's install.
-const ISOLATED_HOME = /(?:^|\/)opencode-eval-home-[^/]+(?:\/|$)/
+const ISOLATED_HOME = new RegExp(RULES.isolatedHome)
 
 // The roots that mean "an installed skill": the four discovery dirs the runner
 // knows, plus a stale copy under the OS tmp dir (`…/T/opencode/**/skills`). The
 // bare root counts too — `ls …/.agents/skills` reads the skill menu even without
 // naming an id. A new install path is a detector change, backed by a test.
+const SKILL_ROOTS = RULES.skillRoots.map((source) => new RegExp(source))
+
 function isSkillRoot(path) {
-  return (
-    /(?:^|\/)(?:\.agents|\.claude|\.codex)\/skills(?:\/|$)/.test(path) ||
-    /(?:^|\/)\.config\/opencode\/skills(?:\/|$)/.test(path) ||
-    /(?:^|\/)T\/opencode\/(?:[^/]+\/)*skills(?:\/|$)/.test(path)
-  )
+  return SKILL_ROOTS.some((re) => re.test(path))
 }
 
 // `references/evals.md` is the answer key, wherever it is outside the scratch.
+const CORPUS = new RegExp(RULES.corpus)
+
 function isCorpus(path) {
-  return /\/references\/evals\.md$/.test(path)
+  return CORPUS.test(path)
 }
 
 function classifies(path, scratch) {

@@ -36,7 +36,7 @@ function writeAtomic(file, text) {
   renameSync(`${file}.tmp`, file)
 }
 
-export function createRun({ root, label, arm = "with-skill", model = null, agent, level, repoSha, at = new Date() }) {
+export function createRun({ root, label, arm = "with-skill", model = null, agent, level, repoSha, params = null, at = new Date() }) {
   const id = runId({ label, arm, model, at })
   const runsRoot = join(root, "runs")
   mkdirSync(runsRoot, { recursive: true })
@@ -55,6 +55,9 @@ export function createRun({ root, label, arm = "with-skill", model = null, agent
     agent,
     level,
     repoSha,
+    // The runner's scheduling knobs, recorded so a later reader does not have to
+    // infer them from the number of draws: concurrency, repeat, stop, stallMs.
+    params: params ? { ...params } : null,
     startedAt: at.toISOString(),
     finishedAt: null,
     status: "running",

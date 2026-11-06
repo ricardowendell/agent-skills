@@ -61,6 +61,14 @@ test("the manifest is closed with counts and keeps the skill hash per case", () 
   assert.ok(manifest.finishedAt)
 })
 
+test("the manifest records the scheduling parameters instead of leaving them inferred", () => {
+  const root = mkdtempSync(join(tmpdir(), "runs-"))
+  const params = { concurrency: 4, repeat: 12, stop: { passes: 5, fails: 3 }, stallMs: 120000 }
+  const run = createRun({ ...base, root, label: "review-code", params })
+  const manifest = JSON.parse(readFileSync(join(run.dir, "manifest.json"), "utf8"))
+  assert.deepEqual(manifest.params, params)
+})
+
 test("a run that did not finish keeps that status", () => {
   const root = mkdtempSync(join(tmpdir(), "runs-"))
   const run = createRun({ ...base, root, label: "review-code" })

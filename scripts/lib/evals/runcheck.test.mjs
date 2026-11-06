@@ -163,6 +163,28 @@ test("an unscored reason naming infrastructure is recognised without the flag", 
   assert.equal(counts.infrastructure, 1)
 })
 
+test("an old timeout is found through execution.exit, not only the new fields", () => {
+  const cases = [
+    aggregate([
+      rep({ rep: 1 }),
+      rep({ rep: 2, status: "failed", reason: "exit timeout", execution: { exit: "timeout" } }),
+      rep({ rep: 3, status: "failed", reason: "exit stalled", execution: { exit: "stalled" } }),
+    ]),
+  ]
+  const { findings, counts } = checkRun({ arm: "with-skill", cases })
+  assert.deepEqual(kinds(findings), ["infrastructure", "infrastructure"])
+  assert.match(findings[0].detail, /infrastructure: timeout/)
+  assert.match(findings[1].detail, /infrastructure: stalled/)
+  assert.equal(counts.infrastructure, 2)
+})
+
+test("the execution.exit fallback does not turn an ordinary failure into infrastructure", () => {
+  const cases = [aggregate([rep({ rep: 1, status: "failed", reason: "verdict REJECT", execution: { exit: 0 } })])]
+  const { findings, counts } = checkRun({ arm: "with-skill", cases })
+  assert.deepEqual(findings, [])
+  assert.equal(counts.infrastructure, 0)
+})
+
 test("a run without manifest.json falls back to each repetition's arm", () => {
   const cases = [
     aggregate([
@@ -262,6 +284,22 @@ test("CLI treats an infrastructure draw as incomplete evidence, not clean", (t) 
   const r = runCli(dir)
   assert.equal(r.status, 1)
   assert.match(r.stdout, /infrastructure implement-from-prompt#1 r2/)
+  assert.doesNotMatch(r.stdout, /gate-miss/)
+})
+
+test("CLI fails an old timeout draw that predates the leak and infrastructure fields", (t) => {
+  const old = rep({ rep: 1, status: "failed", reason: "exit timeout", execution: { exit: "timeout" } })
+  delete old.leak
+  delete old.contaminated
+  delete old.infrastructure
+  const dir = makeRun(t, {
+    manifest: modern({ startedAt: "2026-11-05T11:35:22.934Z" }),
+    cases: [{ name: "x--07", result: aggregate([old], { contaminated: 0 }) }],
+  })
+  const r = runCli(dir)
+  assert.equal(r.status, 1)
+  assert.match(r.stdout, /infrastructure implement-from-prompt#1 r1/)
+  assert.match(r.stdout, /infrastructure: timeout/)
   assert.doesNotMatch(r.stdout, /gate-miss/)
 })
 

@@ -30,12 +30,22 @@ const isContaminated = (result) =>
 
 const isControl = (arm) => arm === "without-skill" || arm === "control"
 
+const INFRASTRUCTURE_EXITS = new Set(["timeout", "stalled"])
+
 // A timeout or a stall is a harness event, not a draw of behaviour. It is never
 // clean evidence — the run is incomplete — but it is not a `gate-miss` either:
 // the skill simply never got a chance to load. Infrastructure gets its own kind.
+//
+// The first two checks read the fields SPEC-0020 added. The `execution.exit`
+// fallback is for artefacts written before them: a draw that was killed by the
+// harness carries `execution.exit: "timeout"` even when it is marked `failed`
+// and its reason was never rewritten. Without this a historical timeout reads as
+// a clean run, which is exactly what the README says the checker prevents.
 function infrastructureOf(result) {
   if (result.infrastructure === true) return result.infrastructureReason ?? "timeout"
   if (typeof result.infrastructure === "number" && result.infrastructure > 0) return "unscored"
+  const exit = result.execution?.exit
+  if (INFRASTRUCTURE_EXITS.has(exit)) return exit
   const reason = result.reason ?? ""
   if (result.status === "unscored" && /^infrastructure:/.test(reason)) return reason.slice("infrastructure: ".length)
   return null

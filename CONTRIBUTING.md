@@ -148,9 +148,9 @@ node scripts/run-evals.mjs --skill review-code --case 3 --repeat 3 --run --judge
   count. The default is `5/3` for `--repeat` above 5, evaluated between waves, so
   a clean `--concurrency 4` cell can stop at 8 rather than at 5.
 - Draws share one lane pool; `--concurrency` (default 4) is the number of draws
-  in flight, even within one case. Six and eight were measured clean (zero 429s)
-  but bought no wall time over four, so the default stays 4; raise it for a
-  specific run, not in the default.
+  in flight, even within one case. Six and eight produced no rate limits — 6
+  lanes ran 10/11, 8 lanes 11/11 — but bought no wall time over four, so the
+  default stays 4; raise it for a specific run, not in the default.
 - Reuse a control from an earlier wave only when `fixtureHash`, `promptHash` and
   `detectorVersion` all match the new run. Any difference — one fixture byte, a
   prompt edit, a change to the leak detector — re-runs the control. Cite the

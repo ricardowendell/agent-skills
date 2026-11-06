@@ -1,6 +1,16 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { findLeaks, leaksIn } from "./leak.mjs"
+import { DETECTOR_RULES, DETECTOR_VERSION, detectorVersion, findLeaks, leaksIn } from "./leak.mjs"
+
+test("the detector version is derived from the rule list and pinned", () => {
+  assert.match(DETECTOR_VERSION, /^[0-9a-f]{16}$/)
+  assert.equal(DETECTOR_VERSION, detectorVersion(), "the version is the digest of the current rules")
+  assert.notEqual(detectorVersion([...DETECTOR_RULES, "a-new-rule"]), DETECTOR_VERSION, "a changed rule moves the version")
+  // Golden: if a rule changes, the digest changes and this fails until the new
+  // value is written here — the signal that an earlier control is no longer
+  // citable. Recompute with `detectorVersion()`.
+  assert.equal(DETECTOR_VERSION, "a31d58f79a6c7038")
+})
 
 const SCRATCH = "/var/folders/aa/T/eval-review-code-1-abc123"
 const call = (tool, input = {}, meta = {}) => ({ tool, input, meta })

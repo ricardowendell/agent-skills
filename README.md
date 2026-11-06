@@ -364,9 +364,12 @@ new chunk for that long and records `exit: "stalled"`; the hard `--timeout`
 remains the ceiling and records `timeout`. Neither is behaviour: both become
 `unscored` with `reason: "infrastructure: <kind>"`, get at most one automatic
 retry, and are counted under `infrastructure` instead of as passes or
-behavioural failures. `check-eval-run` reports the draw as `infrastructure`
-(incomplete evidence) and the run is not clean; the case verdict comes from the
-clean draws only, and a case with no clean draw is `unscored`.
+behavioural failures. A retry re-stages the fixture and the skill in a fresh
+scratch, so it cannot inherit a dead draw's writes, and `execution.durationMs`
+is the final attempt only (`attempts`/`retries` record the rest).
+`check-eval-run` reports the draw as `infrastructure` (incomplete evidence) and
+the run is not clean; the case verdict comes from the clean draws only, and a
+case with no clean draw is `unscored`.
 
 ### Triggers
 
@@ -435,10 +438,12 @@ Every invocation writes its own directory,
 `~/.local/share/opencode/evals/runs/<timestamp>--<label>[--<model>][--without-skill]/`:
 
 - `manifest.json` — repo sha, agent, model, arm, level, start and finish, the
-  skill hash pinned for each case, and the run's counts.
+  scheduling parameters (`concurrency`, `repeat`, `stop`, `stallMs`), the skill
+  hash pinned for each case, and the run's counts.
 - `cases/<skill>--<n>/result.json` — status, per-assertion results, token and
-  cost totals, duration, tool-call count, `infrastructure`/`execution.retries`,
-  `stoppedEarly` and the observed `sequence` for a repeated case, and the
+  cost totals, duration, tool-call count, `infrastructure` and
+  `execution.attempts`/`execution.retries`, `stoppedEarly` and the observed
+  `sequence` for a repeated case, and the
   provenance triple `fixtureHash`, `promptHash` and `detectorVersion`.
 - `cases/<skill>--<n>/transcript.md` (or `transcript.r<i>.md` per repetition).
 
