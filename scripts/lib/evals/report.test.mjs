@@ -43,18 +43,18 @@ test("summarizeRun counts outcomes and drops nothing but the transcript", () => 
   assert.ok(s.finishedAt)
 })
 
-test("summarizeRun reports contaminated repetitions apart from pass and fail", () => {
+test("summarizeRun reports contaminated repetitions apart and never as failed", () => {
   const s = run([
     r(1, "passed"),
-    { ...r(2, "failed", "contaminated"), contaminated: true },
-    { ...r(3, "failed", "1/2 contaminated"), contaminated: 1, repetitions: [{ status: "failed", contaminated: true }, { status: "passed" }] },
+    { ...r(2, "unscored", "every repetition contaminated"), contaminated: true },
+    { ...r(3, "failed", "0/1 clean repetitions passed"), contaminated: 2 },
   ])
-  assert.deepEqual(s.counts, { passed: 1, failed: 2, contaminated: 2 })
+  assert.deepEqual(s.counts, { passed: 1, failed: 1, unscored: 1, contaminated: 3 })
 })
 
-test("a contaminated pass becoming a failure is a regression, not a neutral drop", () => {
-  const c = compareRuns(run([r(1, "passed")]), run([r(1, "failed", "contaminated — read …/skills/x/SKILL.md")]))
+test("a contaminated pass becoming unscored is a regression, not a neutral drop", () => {
+  const c = compareRuns(run([r(1, "passed")]), run([r(1, "unscored", "every repetition contaminated — read …/skills/x/SKILL.md")]))
   assert.equal(c.ok, false)
-  assert.equal(c.regressions[0].to, "failed")
+  assert.equal(c.regressions[0].to, "unscored")
   assert.match(c.regressions[0].reason, /contaminated/)
 })

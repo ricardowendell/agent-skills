@@ -444,8 +444,9 @@ async function runCase(skill, c, rep = null) {
 
   const { result: core, out, err, code, pinned: staged, gate, asserts, judged, durationMs } = exec
   // The leak is a property of this repetition's transcript and scratch, so it is
-  // recorded here, per draw, not inferred later from a run summary.
-  const clean = contaminate(core, leaksIn(out, scratch))
+  // recorded here, per draw, not inferred later from a run summary. A single draw
+  // is the whole case, so its reason says "every repetition contaminated".
+  const clean = contaminate(core, leaksIn(out, scratch), { all: !rep })
   const skillLabel = opt.noSkill
     ? `**Skill:** ${gate.ok ? "not loaded (control arm)" : "LOADED — the control arm is broken"} (${gate.reason})`
     : `**Skill:** ${gate.ok ? "loaded" : "MISSING"} (${gate.reason})`
@@ -553,7 +554,10 @@ async function lane() {
     if (r.status === PASSED) ok++
     else if (r.status === UNSCORED) unscored++
     else fail++
-    const rate = r.reps ? ` [${r.passed}/${r.reps}]` : ""
+    // The published rate excludes contaminated draws: show the clean denominator
+    // when it differs from the raw repetition count.
+    const clean = r.reps !== undefined ? r.reps - (r.contaminated ?? 0) : null
+    const rate = r.reps ? (r.contaminated ? ` [${r.passed}/${clean} clean, ${r.contaminated} contaminated]` : ` [${r.passed}/${r.reps}]`) : ""
     console.log(`${skill.id} #${c.n}: ${r.status}${rate}${r.reason ? ` (${r.reason})` : ""} — ${r.transcript}` + (r.repLine ? `\n     ${r.repLine}` : ""))
   }
 }

@@ -59,6 +59,9 @@ Run directories: with skill `2026-11-05T11-45-57--implement-from-prompt`, trigge
 Trigger cases run in the skill arm only: **#5 4/5** (one run did not load the
 skill: `skill implement-from-prompt`), **#6 5/5**; both gates held 5/5.
 
+The `#2` control reading (`2/5`) is the pre-detector number; the detector re-read
+is in *Classification*.
+
 The red cells, by assertion or gate reason:
 
 - **#1 control** — `filematch docs/specs/SPEC-0007-demo.md status: implemented`
@@ -190,11 +193,14 @@ regression case; no assertion was changed to restore the split.
   judge failed four control runs as `unverifiable`, but the assertions that
   decide the case pass in both arms. Keep as a regression case.
 - **#2 — broken with the skill (skill-load).** The with-skill arm lost its gate
-  in 3 of 5 runs, so the cell cannot be read as skill behaviour; the control
-  scored 2/5, but one of those passes read a stale `references/evals.md` outside
-  the scratch and another run read the real `SKILL.md`; neither is a clean
-  control. The cell is contaminated, not a reading of the case. Re-run after the
-  load and isolation defects are fixed.
+  in 3 of 5 runs, so the cell cannot be read as skill behaviour. The old control
+  was 2/5, but one of those passes read a stale `references/evals.md` outside the
+  scratch and another run read the real `SKILL.md`; neither is a clean control.
+  The re-read under the detector is **0/3 draws**, 1 contaminated (`r3`) and the
+  two clean draws (`r1`, `r2`) failed the reply assertion — **0/2 clean** — at
+  `2026-11-06T07-31-00--implement-from-prompt--without-skill`. The cell is
+  contaminated, not a reading of the case. Re-run after the load and isolation
+  defects are fixed.
 - **#4 — non-discriminator after the SPEC-0016 fix.** 5/5 with the skill against
   3/5 without it at `6dd38aa` (the Gate A row, 1/5 against 1/5, is the pre-fix
   reading). The skill now creates the file the prompt names and reports the
@@ -244,7 +250,8 @@ control runs that carry the #1/#8 separation contain zero of either read, and th
 remain clean under the detector.
 
 The permission attempt in SPEC-0017 did **not** block the read: the `#2` control
-below read `/Users/wendell/.agents/skills/...` with
+(`2026-11-06T07-31-00--implement-from-prompt--without-skill`, see
+*Classification*) read `/Users/wendell/.agents/skills/...` with
 `permission.external_directory: "deny"` in the child config. Detection is the
 guarantee; denial is not. Closing the filesystem path stays open (TASK-29's
 follow-up in SPEC-0018's scope).

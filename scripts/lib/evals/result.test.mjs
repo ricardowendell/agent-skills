@@ -66,14 +66,24 @@ test("caseResult fills the case identity once and lets the caller override", () 
   assert.deepEqual(r, { skill: "review-code", case: 3, title: "Review", prompt: "Do it", status: "failed" })
 })
 
-test("a leak turns a green result into a failed, contaminated one", () => {
+test("a leak turns a green result into an unscored, contaminated one", () => {
   const leak = [{ tool: "read", path: "/Users/me/.agents/skills/review-code/SKILL.md" }]
   const r = contaminate({ status: PASSED, reason: "" }, leak)
-  assert.equal(r.status, FAILED)
+  assert.equal(r.status, UNSCORED)
   assert.equal(r.contaminated, true)
   assert.deepEqual(r.leak, leak)
   assert.match(r.reason, /contaminated/)
   assert.match(r.reason, /\.agents\/skills\/review-code/)
+})
+
+test("a single-draw contamination says every repetition was contaminated", () => {
+  const r = contaminate(
+    { status: PASSED, reason: "" },
+    [{ tool: "read", path: "/Users/me/.agents/skills/review-code/SKILL.md" }],
+    { all: true },
+  )
+  assert.equal(r.status, UNSCORED)
+  assert.match(r.reason, /^every repetition contaminated/)
 })
 
 test("a clean result records an empty leak and stays as it was", () => {
@@ -87,26 +97,54 @@ test("a contaminated repetition never counts as a pass, even when its assertions
   const agg = aggregateReps([
     { status: PASSED, contaminated: true, leak: [{ tool: "read", path: "/Users/me/.agents/skills/review-code/SKILL.md" }] },
   ])
-  assert.equal(agg.status, FAILED)
+  assert.equal(agg.status, UNSCORED)
   assert.equal(agg.passed, 0)
   assert.equal(agg.contaminated, 1)
-  assert.match(agg.reason, /1\/1 repetition\(s\) contaminated/)
+  assert.match(agg.reason, /^every repetition contaminated/)
   assert.match(agg.reason, /\.agents\/skills\/review-code/)
 })
 
-test("a contaminated draw stays in the denominator instead of shrinking it", () => {
+test("a contaminated draw is removed from the denominator", () => {
   const agg = aggregateReps([{ status: PASSED }, { status: PASSED, contaminated: true, leak: [] }])
+  assert.equal(agg.passed, 1)
+  assert.equal(agg.passRate, 1)
+  assert.equal(agg.contaminated, 1)
+  assert.equal(agg.status, PASSED)
+})
+
+test("the case status comes only from the clean draws", () => {
+  const agg = aggregateReps([
+    { status: FAILED, reason: "verdict APPROVE" },
+    { status: PASSED, contaminated: true, leak: [] },
+    { status: PASSED },
+  ])
   assert.equal(agg.passed, 1)
   assert.equal(agg.passRate, 0.5)
   assert.equal(agg.contaminated, 1)
-  assert.equal(agg.status, FAILED, "one of two draws was not evidence")
+  assert.equal(agg.status, FAILED)
+  assert.match(agg.reason, /verdict/)
 })
 
-test("summarize counts contaminated repetitions apart from pass and fail", () => {
+test("a case with no clean draw is unscored, never failed", () => {
+  const agg = aggregateReps([{ status: FAILED, contaminated: true, leak: [] }, { status: PASSED, contaminated: true, leak: [] }])
+  assert.equal(agg.status, UNSCORED)
+  assert.equal(agg.passRate, 0)
+  assert.equal(agg.reason, "every repetition contaminated")
+})
+
+test("summarize counts contaminated repetitions apart and never as failed", () => {
   const totals = summarize([
     { status: PASSED },
-    { status: FAILED, contaminated: true, leak: [] },
-    { status: FAILED, repetitions: [{ status: FAILED, contaminated: true }, { status: PASSED }], contaminated: 1 },
+    { status: UNSCORED, contaminated: true, leak: [] },
+    {
+      status: FAILED,
+      contaminated: 2,
+      repetitions: [
+        { status: UNSCORED, contaminated: true },
+        { status: UNSCORED, contaminated: true },
+        { status: FAILED, reason: "reply" },
+      ],
+    },
   ])
-  assert.deepEqual(totals, { passed: 1, failed: 2, unscored: 0, contaminated: 2, total: 3 })
+  assert.deepEqual(totals, { passed: 1, failed: 1, unscored: 1, contaminated: 3, total: 3 })
 })

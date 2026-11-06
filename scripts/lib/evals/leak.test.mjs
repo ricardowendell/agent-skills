@@ -16,6 +16,7 @@ test("the staged skill lives inside the scratch and is not a leak", () => {
     [
       call("read", { path: `${SCRATCH}/.opencode/skills/review-code/SKILL.md` }),
       call("glob", { pattern: "**/*.md", path: `${SCRATCH}/.opencode/skills/review-code` }),
+      call("shell", { command: `ls ${SCRATCH}/skills` }),
     ],
     SCRATCH,
   )
@@ -30,6 +31,41 @@ test("the same scratch reached through /private is still inside it", () => {
 test("reading an installed skill is a leak", () => {
   const hits = findLeaks([call("read", { path: "/Users/me/.agents/skills/review-code/SKILL.md" })], SCRATCH)
   assert.deepEqual(hits, [{ tool: "read", path: "/Users/me/.agents/skills/review-code/SKILL.md" }])
+})
+
+test("the bare skills root is a leak, even without an id", () => {
+  const hits = findLeaks([call("shell", { command: "ls /Users/me/.agents/skills" })], SCRATCH)
+  assert.deepEqual(paths(hits), ["/Users/me/.agents/skills"])
+  assert.equal(hits[0].tool, "shell")
+})
+
+test("the bare root counts in every install location", () => {
+  const roots = [
+    "/Users/me/.claude/skills",
+    "/Users/me/.config/opencode/skills",
+    "/var/folders/aa/T/opencode/agent-skills-pr/skills",
+  ]
+  for (const root of roots) assert.deepEqual(paths(findLeaks([call("shell", { command: `ls ${root}` })], SCRATCH)), [root])
+})
+
+test("a ~ path resolves inside the throwaway home, not the real install", () => {
+  const hits = findLeaks(
+    [
+      call("glob", { pattern: "~/.agents/skills/*" }, { output: "No files found" }),
+      call("shell", { command: "ls ~/.agents/skills" }),
+    ],
+    SCRATCH,
+  )
+  assert.deepEqual(hits, [])
+})
+
+test("an absolute path under the throwaway home is not the install", () => {
+  const home = "/var/folders/aa/T/opencode-eval-home-PJWuQN"
+  const hits = findLeaks(
+    [call("shell", { command: `ls ${home}/.agents/skills`, workdir: SCRATCH }, { output: `${home}/.agents/skills: No such file or directory` })],
+    SCRATCH,
+  )
+  assert.deepEqual(hits, [])
 })
 
 test("a shell call that cats an installed skill is a leak", () => {
@@ -71,13 +107,19 @@ test("a path that only resembles a skill root is benign", () => {
 test("metadata is scanned too, so a glob's listing is caught", () => {
   const hits = findLeaks(
     [
-      call("glob", { pattern: "**/SKILL.md", path: "/Users/me/.codex/skills" }, {
+      call("glob", { pattern: "**/SKILL.md", path: "/Users/me/work" }, {
         output: "/Users/me/.codex/skills/review-code/SKILL.md\n/Users/me/.codex/skills/audit/SKILL.md",
       }),
     ],
     SCRATCH,
   )
   assert.deepEqual(paths(hits), ["/Users/me/.codex/skills/review-code/SKILL.md", "/Users/me/.codex/skills/audit/SKILL.md"])
+})
+
+test("an empty or missing transcript is not a leak and does not throw", () => {
+  assert.deepEqual(leaksIn("", SCRATCH), [])
+  assert.deepEqual(leaksIn(undefined, SCRATCH), [])
+  assert.deepEqual(leaksIn(null, SCRATCH), [])
 })
 
 test("duplicates collapse and the transcript stream is read through events", () => {

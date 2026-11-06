@@ -25,20 +25,21 @@ export function classify({ exit, asserts, skillGate = null }) {
 
 // A repetition that read an installed skill or the eval corpus is not evidence
 // about the skill under test, whichever arm it ran in. It keeps its assertions
-// (so the run is still readable) but its status becomes `failed` — never a new
-// status, because every aggregator, baseline and comparison already knows what
-// `failed` means, and the contamination is the field that names the reason.
-export function contaminate(result, leak = []) {
+// (so the run is still readable) but is excluded from scoring: `unscored` is the
+// harness's existing "not a pass, not a fail" bucket, and no new status is
+// invented. `contaminated: true` names the reason; the aggregate reads only the
+// clean draws.
+export function contaminate(result, leak = [], { all = false } = {}) {
   const paths = [...new Set(leak.map((l) => l.path))]
   const contaminated = paths.length > 0
   const reason = contaminated
-    ? `contaminated — read ${paths.join(", ")}${result.reason ? `; ${result.reason}` : ""}`
+    ? `${all ? "every repetition contaminated" : "contaminated"} — read ${paths.join(", ")}${result.reason ? `; ${result.reason}` : ""}`
     : result.reason
   return {
     ...result,
     leak: leak.map(({ tool, path }) => ({ tool, path })),
     contaminated,
-    status: contaminated ? FAILED : result.status,
+    status: contaminated ? UNSCORED : result.status,
     reason,
   }
 }
@@ -51,13 +52,16 @@ export function contaminatedReps(result) {
   return (result.repetitions ?? []).filter((r) => r.contaminated).length
 }
 
+// A case whose only draws were contaminated is `unscored`, never `failed`; the
+// contaminated count is reported apart from the status counts. A mixed case takes
+// the status of its clean draws (see `aggregateReps`), so `failed` always means
+// the clean evidence failed.
 export function summarize(results) {
   const count = { passed: 0, failed: 0, unscored: 0, contaminated: 0 }
   for (const r of results) count[r.status] = (count[r.status] ?? 0) + 1
   count.contaminated = results.reduce((n, r) => n + contaminatedReps(r), 0)
   return { ...count, total: results.length }
 }
-
 // The per-case artifact the console, the JSON file and the replay tool read.
 // Built here once: three hand-built copies in the runner had already drifted.
 export function caseResult(skill, c, fields = {}) {
@@ -72,26 +76,45 @@ export function caseResult(skill, c, fields = {}) {
 
 // A single run of a non-deterministic agent is one draw, not a measurement.
 // Repetitions turn it into a pass rate; the case still passes by default only
-// when every repetition passed, so a flake is visible instead of averaged away.
-// A contaminated repetition never counts as a pass: it stays in the denominator
-// (the published rate is `passed/total`, not `passed/clean`) and is reported
-// apart from failures, with the path that leaked.
+// when every clean repetition passed, so a flake is visible instead of averaged
+// away. A contaminated repetition is not evidence either way: it is removed from
+// both the numerator and the denominator (`passed / (total − contaminated)`), and
+// a case with no clean draw is `unscored`, never `failed`. The path that leaked
+// is still named.
 export function aggregateReps(reps, minPass = 1) {
   const total = reps.length
   const contaminated = reps.filter((r) => r.contaminated).length
-  const passed = reps.filter((r) => r.status === PASSED && !r.contaminated).length
-  const unscored = reps.filter((r) => r.status === UNSCORED).length
-  const passRate = total ? passed / total : 0
-  const failedReason = reps.find((r) => r.status === FAILED && !r.contaminated)?.reason ?? ""
+  const cleanReps = reps.filter((r) => !r.contaminated)
+  const clean = cleanReps.length
+  const passed = cleanReps.filter((r) => r.status === PASSED).length
+  const unscored = cleanReps.filter((r) => r.status === UNSCORED).length
+  const passRate = clean ? passed / clean : 0
+  const failedReason = cleanReps.find((r) => r.status === FAILED)?.reason ?? ""
   const leaked = [...new Set(reps.flatMap((r) => (r.leak ?? []).map((l) => l.path)))]
   const contamination = contaminated
     ? `${contaminated}/${total} repetition(s) contaminated${leaked.length ? ` (${leaked.join(", ")})` : ""}`
     : ""
 
-  if (total && contaminated === total) {
-    return { status: FAILED, passRate, passed, total, contaminated, reason: contamination }
+  if (total && clean === 0) {
+    return {
+      status: UNSCORED,
+      passRate: 0,
+      passed: 0,
+      total,
+      contaminated,
+      reason: `every repetition contaminated${leaked.length ? ` (${leaked.join(", ")})` : ""}`,
+    }
   }
-  if (total && unscored === total) return { status: UNSCORED, passRate, passed, total, contaminated, reason: "no repetition was scored" }
+  if (clean && unscored === clean) {
+    return {
+      status: UNSCORED,
+      passRate,
+      passed,
+      total,
+      contaminated,
+      reason: ["no repetition was scored", contamination].filter(Boolean).join("; "),
+    }
+  }
   if (passRate >= minPass) {
     return {
       status: PASSED,
@@ -99,7 +122,7 @@ export function aggregateReps(reps, minPass = 1) {
       passed,
       total,
       contaminated,
-      reason: [passed === total ? "" : `${passed}/${total} repetitions passed (min ${minPass})`, contamination].filter(Boolean).join("; "),
+      reason: [passed === clean ? "" : `${passed}/${clean} repetitions passed (min ${minPass})`, contamination].filter(Boolean).join("; "),
     }
   }
   return {
@@ -108,7 +131,7 @@ export function aggregateReps(reps, minPass = 1) {
     passed,
     total,
     contaminated,
-    reason: [`${passed}/${total} repetitions passed (min ${minPass})${failedReason ? `: ${failedReason}` : ""}`, contamination]
+    reason: [`${passed}/${clean} repetitions passed (min ${minPass})${failedReason ? `: ${failedReason}` : ""}`, contamination]
       .filter(Boolean)
       .join("; "),
   }

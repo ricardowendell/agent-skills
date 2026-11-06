@@ -9,6 +9,15 @@
 // This is the detector the runner records per repetition and the replay tool
 // reads. Pure: it takes the tool calls and the scratch path, and never touches
 // the filesystem, so a transcript can be re-read without the run that made it.
+//
+// Two paths deliberately do not count. `~/…` does not reach the real install:
+// `isolateHome` gives the child a throwaway `HOME`, so `~/.agents/skills` is a
+// directory that does not exist — a `glob` there finds nothing, and flagging it
+// is a false positive. An absolute path under `opencode-eval-home-*` is that same
+// throwaway home, already expanded by the shell. Neither can reach the machine's
+// installed copy; only an absolute path outside both is evidence. (`--no-isolate`
+// restores the real home for replaying pre-isolation runs, and those are not
+// measurements.)
 
 import { toolCalls } from "./events.mjs"
 
@@ -23,14 +32,19 @@ function inside(path, scratch) {
   return a === b || a.startsWith(`${b}/`)
 }
 
+// `mkdtempSync(join(base, "opencode-eval-home-"))` in isolation.mjs. A path under
+// it is the child's throwaway home, not the user's install.
+const ISOLATED_HOME = /(?:^|\/)opencode-eval-home-[^/]+(?:\/|$)/
+
 // The roots that mean "an installed skill": the four discovery dirs the runner
-// knows, plus a stale copy under the OS tmp dir (`…/T/opencode/**/skills`). A
-// new install path is a detector change, backed by a test — not a guess.
+// knows, plus a stale copy under the OS tmp dir (`…/T/opencode/**/skills`). The
+// bare root counts too — `ls …/.agents/skills` reads the skill menu even without
+// naming an id. A new install path is a detector change, backed by a test.
 function isSkillRoot(path) {
   return (
-    /(?:^|\/)(?:\.agents|\.claude|\.codex)\/skills\/[^/]+/.test(path) ||
-    /(?:^|\/)\.config\/opencode\/skills\/[^/]+/.test(path) ||
-    /(?:^|\/)T\/opencode\/(?:[^/]+\/)*skills\/[^/]+/.test(path)
+    /(?:^|\/)(?:\.agents|\.claude|\.codex)\/skills(?:\/|$)/.test(path) ||
+    /(?:^|\/)\.config\/opencode\/skills(?:\/|$)/.test(path) ||
+    /(?:^|\/)T\/opencode\/(?:[^/]+\/)*skills(?:\/|$)/.test(path)
   )
 }
 
@@ -40,9 +54,11 @@ function isCorpus(path) {
 }
 
 function classifies(path, scratch) {
-  // Only absolute paths can be outside the scratch: a relative
-  // `references/evals.md` resolves inside it, where reading it is legitimate.
-  if (!(path.startsWith("/") || path.startsWith("~"))) return false
+  // Only an absolute path can be outside the scratch *and* outside the throwaway
+  // home. A relative `references/evals.md` resolves inside the scratch, where
+  // reading it is legitimate; `~/…` resolves inside the isolated home.
+  if (!path.startsWith("/")) return false
+  if (ISOLATED_HOME.test(path)) return false
   if (inside(path, scratch)) return false
   return isSkillRoot(path) || isCorpus(path)
 }
@@ -79,6 +95,10 @@ export function findLeaks(calls, scratch) {
 }
 
 // Convenience for callers holding the raw JSONL stream instead of parsed calls.
+// A missing or non-string stream is an empty transcript, not a crash: a run that
+// never produced output still has to be scored (and must not be called clean by
+// accident).
 export function leaksIn(out, scratch) {
+  if (typeof out !== "string" || out === "") return []
   return findLeaks(toolCalls(out), scratch)
 }
