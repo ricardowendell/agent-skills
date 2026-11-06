@@ -204,15 +204,9 @@ No assertion, fixture, gate or case prompt changes.
 
 ## Results
 
-**These numbers predate the unified prompt.** They were measured at `0a53010`
-with the old instrument: a `## Command log` plus the ledger, where the shell lines
-existed twice (once unbudgeted, once inside the ledger). The review found that
-the extra block reintroduced #7 on long runs, so the final reading must be taken
-again under the unified prompt (`## Tool calls` + `## Reply`). The numbers below
-are kept as the before-reading; **no new numbers are invented here**, and the
-re-measurement follows this fix.
+### Final reading — the unified prompt
 
-Measured on 2026-11-06 at `0a53010`, judge `opencode-go/gpt-6-luna`, threshold
+Measured on 2026-11-06 at `ce643cc`, judge `opencode-go/gpt-6-luna`, threshold
 `0.8`. Ten judge calls (5 + 5), zero agent draws. Both commands were run from
 this worktree:
 
@@ -225,32 +219,50 @@ node scripts/replay-evals.mjs --dir "$HOME/.local/share/opencode/evals" --skill 
 re-judge every stored run of the case, and the measurement would grow with the
 history instead of naming its two cells.
 
-The raw `--json` output is kept beside the other local evidence, not in the repo:
-`~/.local/share/opencode/evals/rejudge/spec-0021-case-01-r01.json` (sha256
-`aa3255ac…8facc9`) and `…/spec-0021-case-07-r01.json` (sha256 `6eb0bc8d…99fef5`).
+This is the reading under the unified instrument (`## Tool calls` + `## Reply`).
+The previous reading (`r01`) was taken at `0a53010` under the prompt that still
+carried a separate `## Command log`; it is kept below as the before-reading. The
+two are **not draws from the same instrument** — the prompt changed — so the
+difference is not judge variance.
 
-### AC-3 — the measured cells
+The raw `--json` output is kept beside the other local evidence, not in the repo.
+The final artifacts are `~/.local/share/opencode/evals/rejudge/spec-0021-case-01-r02.json`
+(sha256 `d27fccb7a62fbd28b0fa7a1635824f8f4a04d6b115f301af8f535fe06febe4c6`) and
+`…/spec-0021-case-07-r02.json` (sha256
+`d6e0ebaec458c33b06b7814ea5f2e885d85461b13b9f2f60d8bd5be9884e4b56`). The
+earlier `r01` files (`aa3255ac…8facc9` and `6eb0bc8d…99fef5`) stay cited as the
+old-prompt reading, not deleted.
 
-| cell | run directory | before | after | tally |
-| --- | --- | --- | --- | --- |
-| #7 control | `2026-11-05T12-00-00--implement-from-prompt--without-skill`, `implement-from-prompt--07` | 1/5 | **5/5** | `total=5 judged=5 passed=5 failed=0 skipped=0` |
-| #1 with skill | `2026-11-05T11-45-57--implement-from-prompt`, `implement-from-prompt--01` | 0/5 | 0/5 | `total=5 judged=5 passed=0 failed=5 skipped=0` |
+Both reports carry `provenance: "partial"`: these runs predate SPEC-0020, so the
+three reuse hashes do not exist. Case 01 records `repoSha 3779a20` and
+`skillHash a58c5074…`; case 07 records `repoSha 3779a20` and `skillHash null`
+(the control run wrote no skill hash). Both are missing `fixtureHash`,
+`promptHash` and `detectorVersion`. The reuse rule lives in the matrix doc; it is
+not a gate on the re-judge.
 
-**#7 — the clean gain.** The four old failures were `met` downgraded by
-`verifyEvidence`: the judge quoted `$ node --test  [exit 1]` and the corpus had
-the same line without the `$ `. Normalising the leading prompt and searching the
-ledger verifies all five. Nothing else about the draw changed.
+### AC-3 — the measured cells (final)
 
-**#1 — still 0/5, for a new reason.** Per expectation, after the re-judge:
+| cell | run directory | before (Gate A) | r01, old prompt | r02, unified | final tally |
+| --- | --- | --- | --- | --- | --- |
+| #7 control | `2026-11-05T12-00-00--implement-from-prompt--without-skill`, `implement-from-prompt--07` | 1/5 | 5/5 | **5/5** | `total=5 judged=5 passed=5 failed=0 skipped=0 deterministicFailed=0` |
+| #1 with skill | `2026-11-05T11-45-57--implement-from-prompt`, `implement-from-prompt--01` | 0/5 | 0/5 | 0/5 | `total=5 judged=5 passed=0 failed=5 skipped=0 deterministicFailed=0` |
 
-| exp | after | reading |
+**#7 — 5/5.** All four expectations are `met` in every draw. The four original
+failures were `met` downgraded by `verifyEvidence`: the judge quoted
+`$ node --test  [exit 1]` and the corpus had the same line without the `$ `.
+Normalising the leading prompt and searching the ledger verifies all five.
+Nothing else about the draw changed.
+
+**#1 — still 0/5.** Per expectation, under the unified prompt:
+
+| exp | final | reading |
 | --- | --- | --- |
-| 1 | `not-met` 5/5 | r1–r4 never read `AGENTS.md`; r5 read it but after the prompt, spec and index. Real behaviour, not missing evidence. |
+| 1 | `not-met` 4/5 (r1–r4); `met` r5 | r5 read `AGENTS.md` before editing; r1–r4 did not. Real behaviour, not missing evidence. |
 | 2 | `unverifiable` 5/5 | "applies Norms"; the judge does not see the skill text, by design. |
-| 3 | `met` 5/5 | the two spec edits (`ready → in_progress → implemented`, `tests:`) are in the ledger. Was `unverifiable`. |
-| 4 | `met` r2; `unverifiable` r1, r3, r4, r5 | composite "creates a test **and** runs verification" against the one-contiguous-passage rule; the ledger has `write: tests/demo.test.ts` and `$ bun test  [exit 0]`, but the judge returns one quote. |
+| 3 | `met` 4/5; `unverifiable` r4 | the two spec edits (`ready → in_progress → implemented`, `tests:`) are in the ledger. Was `unverifiable`. |
+| 4 | `met` r3 only; `unverifiable` r1, r2, r4, r5 | composite "creates a test **and** runs verification" against the one-contiguous-passage rule; the ledger has `write: tests/demo.test.ts` and `$ bun test  [exit 0]`, but the judge returns one quote. |
 | 5 | `met` 5/5 | unchanged. |
-| 6 | `met` r2/r3/r5; `unverifiable` r4; `not-met` r1 | the remaining spread is the run, not the evidence path. |
+| 6 | `met` 4/5 (r2–r5); `unverifiable` r1 | the remaining spread is the run, not the evidence path. |
 
 The instrument worked: tool-call evidence enters the corpus, the `$ ` quote
 matches, and the spec edit is visible. #7 is the clean gain; #1 is an honest

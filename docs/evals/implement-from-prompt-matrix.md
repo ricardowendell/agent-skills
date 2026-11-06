@@ -213,37 +213,39 @@ control re-run produces a denominator worth quoting.
 
 ## Judge re-measurement — SPEC-0021
 
-The judge now sees a rebuilt tool-call ledger and the reply — exactly those two
-evidence blocks, with no separate command log — and `verifyEvidence` normalises a
-leading `$ `. Re-judged at `0a53010` with `--judge opencode-go/gpt-6-luna`,
-threshold `0.8`, over the two stored Gate A directories; ten judge calls, no agent
-draw. **That reading used the old prompt** (command log plus ledger); the review
-found the extra, unbudgeted command log could show lines the budgeted ledger cut,
-reintroducing the #7 downgrade on long runs. The rows below are therefore the
-before-reading under the old instrument; the final reading under the unified
-prompt follows separately and is not backfilled here. The *Gate A* numbers above
-are the pre-fix reading and are not rewritten.
+The final reading was taken at `ce643cc` under the unified instrument: the judge
+sees exactly two evidence blocks, `## Tool calls` (the ledger) and `## Reply`,
+with no separate command log, and `verifyEvidence` normalises a leading `$ ` and
+searches that same corpus. Re-judged with `--judge opencode-go/gpt-6-luna`,
+threshold `0.8`, over the two stored Gate A directories; ten judge calls, no
+agent draw. An earlier reading (`r01`) was taken at `0a53010` with the old prompt
+(command log plus ledger); it stays the old-instrument reading. The prompt
+changed between the two, so the difference is not judge variance.
 
-| cell | run directory | before | after | why |
-| --- | --- | --- | --- | --- |
-| #7 control | `2026-11-05T12-00-00--implement-from-prompt--without-skill` / `implement-from-prompt--07` | 1/5 | **5/5** | four `met` were downgraded because the judge quoted `$ node --test  [exit 1]` and the corpus had no `$ `; normalisation verifies them. |
-| #1 with skill | `2026-11-05T11-45-57--implement-from-prompt` / `implement-from-prompt--01` | 0/5 | 0/5 | the evidence gap closed (expectation 3 is `met` 5/5), but expectation 1 is `not-met` 5/5: the run did not read `AGENTS.md` first. |
+| cell | run directory | before (Gate A) | r01, old prompt | r02, unified | final tally |
+| --- | --- | --- | --- | --- | --- |
+| #7 control | `2026-11-05T12-00-00--implement-from-prompt--without-skill` / `implement-from-prompt--07` | 1/5 | 5/5 | **5/5** | `total=5 judged=5 passed=5 failed=0 skipped=0 deterministicFailed=0` |
+| #1 with skill | `2026-11-05T11-45-57--implement-from-prompt` / `implement-from-prompt--01` | 0/5 | 0/5 | 0/5 | `total=5 judged=5 passed=0 failed=5 skipped=0 deterministicFailed=0` |
 
-The #7 cell is the clean gain: the instrument no longer downgrades a correct
-quote over presentation. The #1 cell stays red for a reason the instrument cannot
-fix. The judge now sees the two spec edits and the `write`/`$ bun test` lines,
-but expectation 1 ("Reads `AGENTS.md`, the prompt, and its source spec first")
-fails on the behaviour: `transcript.r1`–`r4` never read `AGENTS.md` at all, and
-`r5` read it only after the prompt, spec and index. Expectation 4 is composite
-("creates a test **and** runs verification") while the judging rule allows one
-contiguous passage; the ledger has both `write: tests/demo.test.ts` and
-`$ bun test  [exit 0]`, but the judge returns one quote, so it reads as
-`unverifiable` in four of five draws. Expectation 2 is `unverifiable` by design:
-the judge is not shown the skill text.
+The #7 cell is the clean gain: all four expectations are `met` in every draw and
+the instrument no longer downgrades a correct quote over presentation. The #1
+cell stays red for a reason the instrument cannot fix. Under the unified prompt:
+expectation 1 is `not-met` in r1–r4 and `met` in r5 (r5 read `AGENTS.md` before
+editing); expectation 2 is `unverifiable` 5/5 by design (the judge is not shown
+the skill text); expectation 3 is `met` in four draws and `unverifiable` in r4;
+expectation 4 is composite ("creates a test **and** runs verification") against
+the one-contiguous-passage rule and is `met` only in r3; expectation 5 is `met`
+5/5; expectation 6 is `met` in r2–r5 and `unverifiable` in r1. Expectation 1's
+"first" plus the skill's reading order remains the residual (TASK-40), not the
+evidence path.
 
-No `expect:`, `assert:`, fixture or case prompt changed for this reading; the
-residual is TASK-40 (expectation 1's ambiguous "first" and the skill's reading
-order).
+Both final reports carry `provenance: "partial"`: the runs predate SPEC-0020, so
+they have no `fixtureHash` / `promptHash` / `detectorVersion`. Case 01 records
+`repoSha 3779a20` and `skillHash a58c5074…`; case 07 records `repoSha 3779a20`
+and `skillHash null`, missing the same three hashes. The re-judge artifact does
+not gate on provenance; the reuse rule is clause 3 in *Judge calibration*.
+
+No `expect:`, `assert:`, fixture or case prompt changed for this reading.
 
 ## Classification
 
