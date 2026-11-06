@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "e5239dec-28dc-491a-b7f7-6f91c20a96d7",
+  "started_at": "2026-11-06T11:25:28.347Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "0.4.7"
+  },
+  "base_commit": "189a8e9c8c407aba04271ba1dbe129cd8d86227c",
+  "head_commit": "1320c27e0d28ab8fa25f4755fabce2d611fad771",
+  "task": "SPEC-0018",
+  "spec_sha": "717a8f6b79deb8b44bf458b6b23999d8e765ba685c101c291e0758a098570873",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0018-eval-invariants.json",
+      "sha256": "0384aa18cd8870557a6bee5a1442eb217be57e926069c5c2ad51676f59f41953"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0018-eval-invariants.json",
+      "sha256": "16290d123febd719474c2e952c00ad62c40e80ce2d4184fc6986395786ed5522"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "b56e1f06a81c1379474519392fe212db14b2c7100586d312bb207d21c498e32c"
+    }
+  ],
+  "attempts": 1,
+  "duration": 1223,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "1320c27e0d28ab8fa25f4755fabce2d611fad771"
+}
