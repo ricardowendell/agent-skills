@@ -39,7 +39,7 @@ unreadable, and the matrix cannot say whether that is a prompt problem, a
 description problem, or variance.
 
 The misses all load **nothing** — `skillGate.loaded` is `[]`, not another skill —
-so this is not "the model picked a different skill". The tool-call record cannot
+so this is not "the model picked a different skill". `skillGate.loaded` cannot
 tell whether it read the staged `SKILL.md` directly, which is why that is now one
 of the shapes F1 diagnoses. That is the behaviour to explain.
 
@@ -121,10 +121,11 @@ prompted the change.
 ## Results
 
 Measured at `07f4fe6`, default model, `--stop 12/0` (stop rule disabled so the
-denominator is the full twelve), no judge. The full table is in
+denominator is the full twelve), no judge. *Clean* means "not excluded by the
+runner"; a clean draw may still fail an assertion. The full table is in
 `docs/evals/implement-from-prompt-matrix.md` under *Load re-measurement*.
 
-| case | run directory | gate | clean | outcome |
+| case | run directory | gate | clean (not excluded) | outcome |
 | --- | --- | --- | --- | --- |
 | `#1` | `2026-11-06T10-34-26--implement-from-prompt` | 12/12 | 12 | 12/12 |
 | `#2` | `2026-11-06T10-38-39--implement-from-prompt` | 12/12 | 12 | 11/12 (reply) |
