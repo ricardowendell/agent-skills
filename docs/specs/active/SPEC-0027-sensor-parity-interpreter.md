@@ -76,13 +76,13 @@ which one it used, and the verdict is exactly what it was before.
   - Interpreter found: print `python <version> (<command>)` once, before the
     fixtures, and compare as today. The comparison stays byte-exact on exit
     code, stdout and stderr.
-  - No interpreter found, default: exit 1 with one line on stderr —
-    `cannot check sensor parity: no Python 3 interpreter found (tried: …); set PDLC_PYTHON=/path/to/python3`
+  - No candidate can run, default: exit 1 with one line on stderr —
+    `cannot check sensor parity: no usable Python 3 interpreter found (tried: …); set PDLC_PYTHON=/path/to/python3`
     — and no fixture is reported as `FAIL`. A candidate that exists but fails to
     run is named with its first stderr line; a candidate that does not exist is
     not spammed.
   - `PDLC_ALLOW_MISSING_PYTHON=1`: print
-    `skip python: no interpreter found (tried: …); parity not checked` and exit
+    `skip python: no usable interpreter found (tried: …); parity not checked` and exit
     0. The skip is explicit, never silent, and the default stays closed.
   - `run()` stops losing `r.error`: a spawn failure prints the error message.
     The `undefinedundefined` in the current output comes from formatting a
@@ -129,10 +129,11 @@ machine with `python3` is unchanged, and no fixture or sensor changes.
 
 ## Acceptance Criteria
 
-1. **A missing interpreter is named.** With no `python3`/`python` on `PATH` and no
-   `PDLC_PYTHON`, the script exits 1, prints one line naming the candidates tried
-   and the variable to set, and reports no fixture as `FAIL`. Its output contains
-   no `undefined`.
+1. **A missing interpreter is named.** When no candidate can run — absent from
+   `PATH` and from the absolute fallbacks, or present but broken — the script
+   exits 1, prints one line naming the candidates tried and the variable to set,
+   and reports no fixture as `FAIL`. A candidate found by absolute path counts as
+   present. Its output contains no `undefined`.
 2. **A present interpreter is named and unchanged.** The check prints the
    command and version it used and still reports `2/2 fixtures in parity`, exit
    0, with the same byte-exact comparison as today.
@@ -151,7 +152,30 @@ machine with `python3` is unchanged, and no fixture or sensor changes.
 
 ## Results
 
-_Filled during implementation._
+- **F0 — repro.** Before the change, with `PATH` stripped:
+  `FAIL clean`, `py exit=null`, `undefinedundefined`, exit 1. Reproduced.
+- **F1 — resolver.** `scripts/lib/evals/interpreter.mjs` exports
+  `defaultCandidates`, `probePython` (5 s timeout, injectable `spawn`) and
+  `findPython` (injectable `probe`). Each attempt is `missing`, `broken` (with
+  the first stderr line) or `old` (version below 3.8).
+- **F2 — CLI.** `check-sensor-parity.mjs` resolves once before the fixture loop
+  and prints `python 3.15 (python3)`. The comparison is unchanged (exit, stdout,
+  stderr byte-exact). `run()` treats `r.error` as a result and keeps
+  stdout/stderr as strings.
+- **Observed on this host.** A stripped `PATH` still resolves
+  `/opt/homebrew/bin/python3` (then `/usr/bin/python3`) from the spec's absolute
+  candidates, so the check exits 0 and names the interpreter instead of producing
+  the old false failure: `2/2 fixtures in parity`. The closed path is observed
+  with no *usable* interpreter (`PYTHONHOME=/nonexistent`, the same control the
+  test uses): exit 1, one stderr line, no `FAIL`, no `undefined`. With
+  `PDLC_ALLOW_MISSING_PYTHON=1`: `skip python: … parity not checked`, exit 0.
+- **F3 — tests.** `interpreter.test.mjs` covers no candidate, first works, a
+  broken shim skipped and the next used, an old candidate skipped, the CLI's
+  one-line diagnosis, the explicit skip, and the host's interpreter naming
+  itself. The host-dependent "works" tests skip when the host has no Python.
+  `node --test scripts/lib/evals/*.test.mjs`: 263 pass, 0 fail.
+- **F4 — gates.** All five policy commands green; `lint` all clear,
+  `selftest` exit 0, parity `2/2`. Zero model draws.
 
 ## Open Questions
 
