@@ -9,6 +9,64 @@ skills, which cases, and which published measurements.
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-11-06
+
+The evidence got a better instrument and a written disposition; two published
+numbers were corrected along the way.
+
+### Added
+
+- **The judge sees the run's tool calls.** A derived ledger (`skill`, `read`
+  path, `edit` diff, `write` content, `shell` command/exit/output) is the single
+  evidence block, and `verifyEvidence` searches exactly the text the prompt
+  shows. The separate command log was removed: it was unmetered, so a judge could
+  cite a line that was not in the corpus.
+- **`replay-evals --judge`.** Re-judges stored draws without an agent run;
+  `--run` selects one directory, and each report carries the stored
+  `repoSha`/`skillHash` plus `provenance: complete|partial`.
+- **`Dispositions` in `coverage.md`.** Every decided case names the decision, the
+  reason, the run directories and the date.
+
+### Changed
+
+- `pdlc_version` floor is `>=1.0.0`; v1.0.0 is published and the run records
+  already store it.
+- **Case #3 left `manual`.** Its fixture now makes the prompt's literal path fail
+  (a generated barrel with a test, plus the convention that text helpers live in
+  `src/text.js`), and one sanity draw proved the scope change. It is a regression
+  case, not a separator: no control was measured. 76 cases, 74 runnable, 2 manual.
+
+### Fixed
+
+- **The judge's evidence matcher** normalises a leading `$ ` and accepts a short
+  literal quote. Re-judging the #7 control moved **1/5 → 5/5**.
+- **`--run` is a prefix match**, `--json` requires `--judge`, and a draw that
+  failed deterministically is reported as `skipped` rather than `0/0 judged`.
+- **Two published numbers corrected by the audit.** `review-code` #3 is **1/10**
+  against 10/10, not 0/10 (the pass is a `Hold the merge` stance the guard did not
+  name); `audit-code-quality` #4's earlier "passed once / failed once" compared
+  two different case versions — the final 8-assertion pair is 1/1 vs 0/1, one
+  draw per arm.
+
+### Measured
+
+- **#1 with skill stayed 0/5, for a new reason.** Expectation 1 is `not-met` in
+  4/5 (no draw read `AGENTS.md` first; r5 did and was `met`), and expectations 2/4
+  are unverifiable by construction. The residual is TASK-40; the instrument was
+  not tuned to reach a number.
+- The re-judged draws are byte-identical before and after (`result.json` sha256),
+  and the ten judge calls spent no agent draw.
+
+### Known gaps
+
+- **#1's with-skill cell predates the SPEC-0016 skill rewrite** (default 12/12 and
+  luna 5/5 were measured on the old `SKILL.md`); refreshing that arm needs a
+  current-skill re-run.
+- **`audit-code-quality` #4 needs n≥5** on the final 8-assertion version before it
+  can be called a discriminator.
+- **Both re-judged cells are `provenance: partial`** (they predate SPEC-0020), so
+  the reuse rule cannot certify them.
+
 ## [0.3.0] — 2026-11-06
 
 The runner stopped paying for evidence it does not need, and the load question
