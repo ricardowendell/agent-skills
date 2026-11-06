@@ -148,7 +148,67 @@ concurrency 4. No judge.
 
 ## Results
 
-_Filled during implementation._
+Measured at `db7c49a` on `opencode-go/deepseek-v4.1-flash`, the config default,
+with deterministic assertions only and no judge. Every arm ran at that commit;
+the tree stayed clean, so the two arms share `fixtureHash`, `promptHash` and
+`detectorVersion` for every case. Published in
+[`docs/evals/pipeline-bookends-matrix.md`](../evals/pipeline-bookends-matrix.md).
+
+**F0** — `--list --check`: 76 cases, 74 runnable, 2 manual, 26 triggers; the
+eleven cases below all parse and stage.
+
+**F1 — canaries**, 12/12 with the gate held, `findings=0 warnings=0` each:
+`2026-11-06T16-30-55--capture-idea`,
+`2026-11-06T16-33-51--process-inbox`,
+`2026-11-06T16-37-00--record-decision`.
+
+**F2/F3 — behavioural cases** (five draws per arm):
+
+| case | with skill | control | classification | run directories |
+| --- | --- | --- | --- | --- |
+| `capture-idea` #1 | 5/5 | no clean run (0/2, 0/2, 0/0) | **unresolved** | `2026-11-06T16-40-32--capture-idea`; `2026-11-06T17-07-09--capture-idea--without-skill`, `…17-23-44…`, `…17-32-50…` |
+| `process-inbox` #1 | 5/5 | no clean run (0/1, 0/1, 0/1) | **unresolved** | `2026-11-06T16-41-50--process-inbox`; `2026-11-06T17-08-43--process-inbox--without-skill`, `…17-25-52…`, `…17-34-41…` |
+| `record-decision` #1 | 4/5 | **1/5** | **separator** | `2026-11-06T16-43-33--record-decision`, `2026-11-06T17-11-37--record-decision--without-skill` |
+| `record-decision` #2 | 4/5 | **0/5** | **separator** | `2026-11-06T16-45-46--record-decision`, `2026-11-06T17-28-10--record-decision--without-skill` |
+| `record-decision` #3 | 4/5 | **5/5** | **non-discriminator** | `2026-11-06T16-48-00--record-decision`, `2026-11-06T17-20-53--record-decision--without-skill` |
+
+The three `record-decision` skill misses are behavioural, not infrastructure:
+one draw asked for a missing consequence (`#1 r3`), one filed an ADR for an
+incomplete decision after the `question` tool was refused (`#2 r1`), and one
+asked for the queue level (`#3 r3`). One miss in five keeps the cell readable;
+`skillGate.ok` was true in every draw.
+
+**Triggers (skill arm only)**:
+`capture-idea` #2 5/5, `#3` 0/4 clean (`skill process-inbox`, one contaminated
+draw) in `2026-11-06T16-50-30--capture-idea` (`findings=1`);
+`process-inbox` #2 4/4 clean scored draws, `#3` 0/5 (`skill capture-idea`, with
+`notskill process-inbox` also red in two draws) in
+`2026-11-06T16-55-11--process-inbox` (`findings=1`); `record-decision` #4 and #5
+5/5 in `2026-11-06T17-04-07--record-decision` (`findings=0 warnings=0`). The
+cross-skill pair cannot pass in the clean environment: only the skill under
+review is staged, so the named target is absent; that is a construction defect,
+recorded in the matrix and the Known holes, not fixed here.
+
+**F4 — checker**: every behavioural run cited as clean passes
+`findings=0 warnings=0`; the contaminated/stalled ones are cited as failure
+records with the finding named. The full checker output is in the matrix.
+
+**Honest deviation from the expectation.** `process-inbox` #1 measured
+**unresolved**, not the predicted `non-discriminator`: the control never had
+five clean draws, and every clean control draw marked the note processed and
+created `docs/backlog`, failing `unchanged` and `nodir`. The case was recorded,
+not redesigned. `capture-idea` #1 is also `unresolved` for the same
+contamination reason; its clean control draws all failed `status: unprocessed`.
+
+**Budget** — 141 draws: 36 canary, 25 with-skill behavioural, 30 trigger, and
+50 control (25 first attempt, 15 second, 10 third). The estimate was about 116;
+the overrun is the control re-runs made necessary by contamination. No run drew
+on a second model and no judge ran.
+
+**TASK-43 caveat** — `findings=0 warnings=0` means no read of an installed skill
+or a `references/evals.md` answer key; it does not mean the draw was isolated,
+because `scripts/lib/evals/leak.mjs` does not classify the host's `docs/`, the
+global `AGENTS.md`, or this worktree.
 
 ## Open Questions
 
