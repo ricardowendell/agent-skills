@@ -1,7 +1,7 @@
 ---
 id: SPEC-0019
 title: Measure the load rate per case and remove the unreadable cell
-status: ready
+status: implemented
 priority: P1
 task: TASK-30
 created_at: 2026-11-06
@@ -114,6 +114,27 @@ prompted the change.
 - `…/transcript.r<i>.md` — the miss analysis.
 - `docs/evals/implement-from-prompt-matrix.md`, `docs/evals/coverage.md` — the
   published rates.
+
+## Results
+
+Measured at `701657d`, default model, `--stop 12/0` (stop rule disabled so the
+denominator is the full twelve), no judge. The full table is in
+`docs/evals/implement-from-prompt-matrix.md` under *Load re-measurement*.
+
+| case | run directory | gate | clean | outcome |
+| --- | --- | --- | --- | --- |
+| `#1` | `2026-11-06T10-34-26--implement-from-prompt` | 12/12 | 12 | 12/12 |
+| `#2` | `2026-11-06T10-38-39--implement-from-prompt` | 12/12 | 12 | 11/12 (reply) |
+| `#5` | `2026-11-06T10-45-29--implement-from-prompt` | 12/12 (gate off) | 10 | 9/10 loaded; 1 contaminated, 1 stalled |
+| `#8` | `2026-11-06T10-53-13--implement-from-prompt` | 12/12 | 12 | 12/12 |
+
+The load defect did not reproduce: 45 of 45 draws that ran to completion loaded
+the skill. `#5`'s single miss (`r9`) is one clean draw in ten — variance by the
+spec's stop condition, not a cue. The `description` was **not** changed, because
+there was no repeated miss to attribute to it (AC-3's negative branch).
+
+`#2` is readable at 11/12 but not a separator: its control has 0/2 clean draws.
+It stays a regression case until a control re-run gives a denominator.
 
 ## Acceptance Criteria
 

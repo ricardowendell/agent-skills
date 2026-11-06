@@ -177,6 +177,34 @@ creates the file and reports the missing gate about as often as the skill does.
 Per SPEC-0016 AC-2 the case is published as a **non-discriminator** and kept as a
 regression case; no assertion was changed to restore the split.
 
+## Load re-measurement — SPEC-0019
+
+The Gate A rows above show `#2` losing the skill gate in 3 of 5 runs and `#8` in 1
+of 5. SPEC-0019 re-measured the load at `n=12` per case at `701657d`, with the
+runner's stop rule disabled (`--stop 12/0`) so the denominator is the full twelve.
+
+| case | run directory | gate | clean draws | outcome |
+| --- | --- | --- | --- | --- |
+| `#1` | `2026-11-06T10-34-26--implement-from-prompt` | 12/12 | 12 | 12/12 passed |
+| `#2` | `2026-11-06T10-38-39--implement-from-prompt` | 12/12 | 12 | 11/12; `r12` failed the reply assertion |
+| `#5` | `2026-11-06T10-45-29--implement-from-prompt` | 12/12 (trigger gate is off) | 10 | 9/10 loaded; `r4` contaminated, `r6` stalled (infrastructure) |
+| `#8` | `2026-11-06T10-53-13--implement-from-prompt` | 12/12 | 12 | 12/12 passed |
+
+**The load defect did not reproduce.** Across 48 draws the skill under review
+loaded every time it ran to completion; `#2`'s Gate A misses are gone. The one
+`#5` miss is a single clean draw (`r9`) that answered without the skill — one in
+ten, which is the variance branch of SPEC-0019, not a repeated cue. The
+description was **not** changed; there was no repeated miss to attribute to it.
+
+Two draws were excluded by the runner, not by hand: `r4` read a stale copy under
+`/private/var/folders/…/T/opencode` (contaminated) and `r6` stalled and was killed
+by the watchdog (infrastructure). Both are new behaviour from SPEC-0020 and
+neither is a behavioural failure.
+
+`#2` is therefore readable as a `with-skill` cell (11/12) but still not a
+separator: its control has 0/2 clean draws. It stays a regression case until a
+control re-run produces a denominator worth quoting.
+
 ## Classification
 
 - **#1 — separator.** 12/12 with the skill against 0/12 without it on the
@@ -192,15 +220,15 @@ regression case; no assertion was changed to restore the split.
 - **#7 — non-discriminator.** 5/5 in both arms on the deterministic reading. The
   judge failed four control runs as `unverifiable`, but the assertions that
   decide the case pass in both arms. Keep as a regression case.
-- **#2 — broken with the skill (skill-load).** The with-skill arm lost its gate
-  in 3 of 5 runs, so the cell cannot be read as skill behaviour. The old control
-  was 2/5, but one of those passes read a stale `references/evals.md` outside the
-  scratch and another run read the real `SKILL.md`; neither is a clean control.
-  The re-read under the detector is **0/3 draws**, 1 contaminated (`r3`) and the
-  two clean draws (`r1`, `r2`) failed the reply assertion — **0/2 clean** — at
-  `2026-11-06T07-31-00--implement-from-prompt--without-skill`. The cell is
-  contaminated, not a reading of the case. Re-run after the load and isolation
-  defects are fixed.
+- **#2 — readable after the load re-measurement (SPEC-0019).** At `701657d` the
+  gate held 12/12 in the `n=12` re-run (`2026-11-06T10-38-39--implement-from-prompt`),
+  so the Gate A 2/5 is a pre-fix reading. 11/12 passed; the one red is the reply
+  assertion (`r12`), not the load. The control re-read under the detector is **0/3
+  draws**, 1 contaminated (`r3`) and the two clean draws (`r1`, `r2`) failed the
+  reply assertion — **0/2 clean** — at
+  `2026-11-06T07-31-00--implement-from-prompt--without-skill`. The case is
+  readable, but a two-draw control is not a denominator; it stays a regression
+  case until the control is re-run.
 - **#4 — non-discriminator after the SPEC-0016 fix.** 5/5 with the skill against
   3/5 without it at `6dd38aa` (the Gate A row, 1/5 against 1/5, is the pre-fix
   reading). The skill now creates the file the prompt names and reports the
