@@ -20,6 +20,8 @@ files:
   - scripts/lib/evals/events.test.mjs
   - scripts/lib/evals/execute.mjs
   - scripts/lib/evals/execute.test.mjs
+  - scripts/lib/evals/rejudge.mjs
+  - scripts/lib/evals/rejudge.test.mjs
   - scripts/replay-evals.mjs
   - docs/evals/implement-from-prompt-matrix.md
   - docs/specs/active/SPEC-0021-judge-tool-evidence.md
@@ -90,12 +92,14 @@ judge can fail a deterministic pass, never rescue a deterministic failure.
 - **`unverifiable` keeps failing the case.** With the evidence now supplied, the
   honest rule stands: absence of evidence is a finding, not a pass. The spec
   fixes the instrument rather than lowering the bar.
-- **Re-judge without new draws.** Extend `scripts/replay-evals.mjs` with
-  `--judge <model>`: rebuild the judge prompt from a stored transcript, call the
-  judge, and print per-draw verdicts plus a per-case tally. It writes nothing
-  into the immutable run directory; `--json` emits the artifact to stdout so it
-  can be saved under `~/.local/share/opencode/evals/rejudge/`. No agent draw is
-  spent, and a stored `result.json` is never rewritten.
+- **Re-judge without new draws.** A `scripts/lib/evals/rejudge.mjs` module that
+  rebuilds the judge prompt from a stored transcript, calls the judge, and returns
+  per-draw verdicts plus a per-case tally; `scripts/replay-evals.mjs` exposes it
+  as `--judge <model>` and `--json`. The module is what the tests drive with a
+  stub spawn, so the CLI stays thin. It writes nothing into the immutable run
+  directory; the JSON goes to stdout so it can be saved under
+  `~/.local/share/opencode/evals/rejudge/`. No agent draw is spent, and a stored
+  `result.json` is never rewritten.
 - **Publication.** Update the *Judge calibration* text in
   `docs/evals/implement-from-prompt-matrix.md` with the measured before/after and
   the rule that re-judging needs the same three provenance hashes.
@@ -126,11 +130,12 @@ No assertion, fixture, gate or case prompt changes.
 3. **F2 — fix the matcher.** Normalise `$ `, code fences and whitespace; accept a
    literal short quote; keep empty evidence unverifiable. Tests for each case,
    including the exact `$ node --test  [exit 1]` shape from #7.
-4. **F3 — replay judge.** `--judge <model>` on `replay-evals.mjs`, reusing
-   `judgePrompt`, `runJudge`, `judgeOutcome` and the case's `expect` lines. Test
-   with a stub spawn so CI spends no model call: a judge reply that cites a tool
-   line keeps `met`, one that cites nothing stays `unverifiable`, and a draw that
-   failed deterministically is never turned into a pass.
+4. **F3 — replay judge.** `--judge <model>` on `replay-evals.mjs`, delegating to
+   `rejudge.mjs`, which reuses `judgePrompt`, `runJudge`, `judgeOutcome` and the
+   case's `expect` lines. Test with a stub spawn so CI spends no model call: a
+   judge reply that cites a tool line keeps `met`, one that cites nothing stays
+   `unverifiable`, and a draw that failed deterministically is never turned into a
+   pass.
 5. **F4 — measure.** Re-judge the stored draws below at
    `opencode-go/gpt-6-luna`, threshold `0.8`, and publish the per-case tally. No
    agent draw.

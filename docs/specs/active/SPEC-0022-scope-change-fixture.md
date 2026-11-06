@@ -20,6 +20,7 @@ files:
   - skills/implement-from-prompt/references/evals/3/tests/generated.test.js
   - skills/implement-from-prompt/references/evals.md
   - docs/evals/coverage.md
+  - docs/evals/implement-from-prompt-matrix.md
   - docs/specs/active/SPEC-0022-scope-change-fixture.md
 tests:
   - node scripts/validate-skills.mjs --root skills
