@@ -180,26 +180,32 @@ regression case; no assertion was changed to restore the split.
 ## Load re-measurement — SPEC-0019
 
 The Gate A rows above show `#2` losing the skill gate in 3 of 5 runs and `#8` in 1
-of 5. SPEC-0019 re-measured the load at `n=12` per case at `701657d`, with the
+of 5. SPEC-0019 re-measured the load at `n=12` per case at `07f4fe6`, with the
 runner's stop rule disabled (`--stop 12/0`) so the denominator is the full twelve.
+*Clean* below means "not excluded by the runner" — a clean draw may still fail an
+assertion.
 
-| case | run directory | gate | clean draws | outcome |
+| case | run directory | gate | clean draws (not excluded) | outcome |
 | --- | --- | --- | --- | --- |
 | `#1` | `2026-11-06T10-34-26--implement-from-prompt` | 12/12 | 12 | 12/12 passed |
 | `#2` | `2026-11-06T10-38-39--implement-from-prompt` | 12/12 | 12 | 11/12; `r12` failed the reply assertion |
 | `#5` | `2026-11-06T10-45-29--implement-from-prompt` | 12/12 (trigger gate is off) | 10 | 9/10 loaded; `r4` contaminated, `r6` stalled (infrastructure) |
 | `#8` | `2026-11-06T10-53-13--implement-from-prompt` | 12/12 | 12 | 12/12 passed |
 
-**The load defect did not reproduce.** Across 48 draws the skill under review
-loaded every time it ran to completion; `#2`'s Gate A misses are gone. The one
-`#5` miss is a single clean draw (`r9`) that answered without the skill — one in
-ten, which is the variance branch of SPEC-0019, not a repeated cue. The
-description was **not** changed; there was no repeated miss to attribute to it.
+**The load defect did not reproduce.** Of the 48 draws, two were excluded by the
+runner (`#5 r4` contaminated, `#5 r6` stalled), leaving **46 clean draws; 45 of
+those 46 loaded the skill** (46 of 47 among draws that completed). The one miss is
+`#5 r9`: it never called the `skill` tool (`loaded: []`), but `transcript.r9.md`
+shows it read the staged `SKILL.md` directly and cited its rules, so the skill
+informed the answer without the tool call the case asserts. That is a fourth
+shape, not "answered from its own knowledge" — and one occurrence in ten is the
+variance branch of SPEC-0019, not a repeated cue. The description was **not**
+changed; there was no repeated miss to attribute to it.
 
-Two draws were excluded by the runner, not by hand: `r4` read a stale copy under
-`/private/var/folders/…/T/opencode` (contaminated) and `r6` stalled and was killed
-by the watchdog (infrastructure). Both are new behaviour from SPEC-0020 and
-neither is a behavioural failure.
+The two exclusions are different mechanisms, not one: `r4` read a stale copy under
+`/private/var/folders/…/T/opencode`, which SPEC-0017's detector marks as
+contamination; `r6` stalled and was killed by the watchdog, which is SPEC-0020's
+infrastructure path. Neither is a behavioural failure.
 
 `#2` is therefore readable as a `with-skill` cell (11/12) but still not a
 separator: its control has 0/2 clean draws. It stays a regression case until a
@@ -220,14 +226,17 @@ control re-run produces a denominator worth quoting.
 - **#7 — non-discriminator.** 5/5 in both arms on the deterministic reading. The
   judge failed four control runs as `unverifiable`, but the assertions that
   decide the case pass in both arms. Keep as a regression case.
-- **#2 — readable after the load re-measurement (SPEC-0019).** At `701657d` the
-  gate held 12/12 in the `n=12` re-run (`2026-11-06T10-38-39--implement-from-prompt`),
-  so the Gate A 2/5 is a pre-fix reading. 11/12 passed; the one red is the reply
-  assertion (`r12`), not the load. The control re-read under the detector is **0/3
-  draws**, 1 contaminated (`r3`) and the two clean draws (`r1`, `r2`) failed the
-  reply assertion — **0/2 clean** — at
-  `2026-11-06T07-31-00--implement-from-prompt--without-skill`. The case is
-  readable, but a two-draw control is not a denominator; it stays a regression
+- **#2 — readable after the load re-measurement (SPEC-0019).** At `07f4fe6` the
+  gate held 12/12 (`2026-11-06T10-38-39--implement-from-prompt`; every draw
+  reports `loaded: ["implement-from-prompt"]`) and the case passed 11/12. The Gate
+  A 2/5 (`3779a20`, `skillHash a58c5074…`) **did not reproduce**; the delta
+  includes the SPEC-0016 rule change and the runner, so the cause is not isolated —
+  "did not reproduce" is the claim, not "fixed". The one red is `r12`, the reply
+  assertion: `transcript.r12.md` shows the agent offering to draft the missing
+  prompt itself instead of pointing at `write-implementation-prompt`. Control:
+  **0/3 draws**, 1 contaminated (`r3`), the two clean draws failed the reply —
+  **0/2 clean** — at `2026-11-06T07-31-00--implement-from-prompt--without-skill`.
+  Readable, but a two-draw control is not a denominator; it stays a regression
   case until the control is re-run.
 - **#4 — non-discriminator after the SPEC-0016 fix.** 5/5 with the skill against
   3/5 without it at `6dd38aa` (the Gate A row, 1/5 against 1/5, is the pre-fix

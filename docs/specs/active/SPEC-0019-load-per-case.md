@@ -39,8 +39,9 @@ unreadable, and the matrix cannot say whether that is a prompt problem, a
 description problem, or variance.
 
 The misses all load **nothing** — `skillGate.loaded` is `[]`, not another skill —
-so this is not "the model picked a different skill". It answered without
-invoking any. That is the behaviour to explain.
+so this is not "the model picked a different skill". The tool-call record cannot
+tell whether it read the staged `SKILL.md` directly, which is why that is now one
+of the shapes F1 diagnoses. That is the behaviour to explain.
 
 ## User Outcome
 
@@ -63,11 +64,13 @@ measures whether the model felt like loading it.
   `#5` is the trigger, where the gate is off and the `assert: skill` is the
   signal; `#8` lost one draw in five. `#7` had no miss in 5/5 and is not
   re-measured.
-- **Diagnose every miss from the transcript**, recording which of three shapes it
+- **Diagnose every miss from the transcript**, recording which of these shapes it
   is:
-  - the agent never called the `skill` tool (answered from its own knowledge);
+  - the agent never called the `skill` tool and answered from its own knowledge;
   - it called the tool and it failed or was denied;
-  - it loaded a different skill.
+  - it loaded a different skill;
+  - it read the staged `SKILL.md` directly, so the skill informed the answer
+    without the tool call the assertion checks.
 - **At most one change** if the cause is a cue the skill controls — most likely
   the `description` frontmatter, the only text the model sees before loading.
   Measure it before/after at n=12 on the affected case, same model, same prompt.
@@ -94,7 +97,7 @@ prompted the change.
 
 1. **F0 — measure.** The four runs above. For each: `passed/12`, `skillGate.ok`
   count, and the `loaded` list of every miss.
-2. **F1 — diagnose.** Group the misses by the three shapes above, citing the
+2. **F1 — diagnose.** Group the misses by the shapes above, citing the
   transcript of at least one miss per case. `#5` is special: the gate is off, so
   read the `assert: skill` result rather than `skillGate`.
 3. **F2 — decide per case.**
@@ -117,7 +120,7 @@ prompted the change.
 
 ## Results
 
-Measured at `701657d`, default model, `--stop 12/0` (stop rule disabled so the
+Measured at `07f4fe6`, default model, `--stop 12/0` (stop rule disabled so the
 denominator is the full twelve), no judge. The full table is in
 `docs/evals/implement-from-prompt-matrix.md` under *Load re-measurement*.
 
@@ -128,10 +131,15 @@ denominator is the full twelve), no judge. The full table is in
 | `#5` | `2026-11-06T10-45-29--implement-from-prompt` | 12/12 (gate off) | 10 | 9/10 loaded; 1 contaminated, 1 stalled |
 | `#8` | `2026-11-06T10-53-13--implement-from-prompt` | 12/12 | 12 | 12/12 |
 
-The load defect did not reproduce: 45 of 45 draws that ran to completion loaded
-the skill. `#5`'s single miss (`r9`) is one clean draw in ten — variance by the
-spec's stop condition, not a cue. The `description` was **not** changed, because
-there was no repeated miss to attribute to it (AC-3's negative branch).
+The load defect did not reproduce: of 48 draws, two were excluded (`#5 r4`
+contaminated, `#5 r6` stalled), leaving 46 clean; **45 of those 46 loaded the
+skill**. `#5`'s single miss (`r9`) never called the `skill` tool, but
+`transcript.r9.md` shows it read the staged `SKILL.md` directly and cited its
+rules — the fourth shape above, not "answered from its own knowledge". One in ten
+is variance by the spec's stop condition, not a cue. The `description` was **not**
+changed, because there was no repeated miss to attribute to it (AC-3's negative
+branch). `#2 r12` failed the reply assertion because the agent offered to draft the
+missing prompt itself (`transcript.r12.md`), which is behavioural, not load.
 
 `#2` is readable at 11/12 but not a separator: its control has 0/2 clean draws.
 It stays a regression case until a control re-run gives a denominator.
