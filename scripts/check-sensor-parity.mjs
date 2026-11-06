@@ -51,11 +51,11 @@ const python = findPython({ env: process.env })
 if (!python.command) {
   const tried = formatTried(python.tried)
   if (process.env.PDLC_ALLOW_MISSING_PYTHON === "1") {
-    console.log(`skip python: no interpreter found (tried: ${tried}); parity not checked`)
+    console.log(`skip python: no usable interpreter found (tried: ${tried}); parity not checked`)
     process.exit(0)
   }
   console.error(
-    `cannot check sensor parity: no Python 3 interpreter found (tried: ${tried}); set PDLC_PYTHON=/path/to/python3`,
+    `cannot check sensor parity: no usable Python 3 interpreter found (tried: ${tried}); set PDLC_PYTHON=/path/to/python3`,
   )
   process.exit(1)
 }

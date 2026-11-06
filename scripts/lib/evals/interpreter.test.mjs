@@ -146,7 +146,7 @@ test("a stripped PATH with no usable interpreter names it and exits 1, with no f
   assert.equal(r.code, 1, r.err)
   assert.match(
     r.err,
-    /^cannot check sensor parity: no Python 3 interpreter found \(tried: .+\); set PDLC_PYTHON=\/path\/to\/python3$/m,
+    /^cannot check sensor parity: no usable Python 3 interpreter found \(tried: .+\); set PDLC_PYTHON=\/path\/to\/python3$/m,
   )
   // One line, and the absence is not reported as a fixture divergence.
   assert.equal(r.err.trim().split(/\r?\n/).length, 1)
@@ -158,7 +158,7 @@ test("a stripped PATH with no usable interpreter names it and exits 1, with no f
 test("PDLC_ALLOW_MISSING_PYTHON=1 turns the absence into a named skip and exits 0", () => {
   const r = cli(noInterpreterEnv({ PDLC_ALLOW_MISSING_PYTHON: "1" }))
   assert.equal(r.code, 0, r.err)
-  assert.match(r.out, /^skip python: no interpreter found \(tried: .+\); parity not checked$/m)
+  assert.match(r.out, /^skip python: no usable interpreter found \(tried: .+\); parity not checked$/m)
   assert.doesNotMatch(r.out, /FAIL/)
   assert.doesNotMatch(r.out + r.err, /undefined/)
 })
