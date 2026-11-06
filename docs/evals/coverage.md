@@ -82,7 +82,7 @@ directories; they are not estimates.
   and #8 separate (12/12 vs 0/12 on the default model, pre-detector history —
   `warnings=12`, the rates stand); #7 is a
   non-discriminator (5/5 both arms); #2's load defect did not reproduce at
-  `701657d` (gate 12/12, 11/12 passed; `2026-11-06T10-38-39--implement-from-prompt`),
+  `07f4fe6` (gate 12/12, 11/12 passed; `2026-11-06T10-38-39--implement-from-prompt`),
   so it is readable but still not a separator — its control has 0/2 clean draws
   at `2026-11-06T07-31-00--implement-from-prompt--without-skill`; #4 was fixed by
   SPEC-0016, which taught the skill to
