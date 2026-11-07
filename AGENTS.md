@@ -24,4 +24,10 @@ Este repositório autora skills e o harness que as avalia. O manual é
 `pdlc plan` → `pdlc prompt <slug>` → `pdlc dispatch <slug>` → worker implementa →
 reviewer → `pdlc review` → `pdlc verify` → `pdlc merge` → `pdlc audit`.
 
+Enquanto o pdlc 1.2.0 não resolver o `task:` do frontmatter no dispatch/verify,
+marque a task à mão: `backlog task edit TASK-N --status "In Progress"` antes do
+worker e `--status "In Review"` depois do verify. `dispatch`/`verify` resolvem
+pelo slug (`SPEC-NNNN`), então o aviso "não foi possível marcar SPEC-..." é
+esperado; `plan` e `merge` já usam `resolveTaskId`. Ver TASK-36.
+
 Detalhes de contribuição e de medição estão em `CONTRIBUTING.md`.
