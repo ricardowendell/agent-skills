@@ -144,6 +144,21 @@ node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 1 
 **0/5**, zero contaminated. The separator is 5/5 against 0/5 on both models. The
 default-model control had no such read in its 12 draws.
 
+## Discriminating set — SPEC-0033 (v2)
+
+The two separators were re-measured at `a7cb10e` under detector v2 on
+`agentworks/deepseek-v4-1-flash` (the default route was over its weekly limit),
+five draws per arm:
+
+| case | with skill | control | failing assertion | run directories |
+| --- | --- | --- | --- | --- |
+| #1 | 5/5 | 0/5 | `filematch docs/specs/SPEC-0007-demo.md status: implemented` | `2026-11-07T08-57-39--implement-from-prompt--agentworks-deepseek-v4-1-flash`, `2026-11-07T08-59-39--implement-from-prompt--agentworks-deepseek-v4-1-flash--without-skill` |
+| #8 | 5/5 | 0/5 | `nofile src/format.js` | `2026-11-07T09-01-25--implement-from-prompt--agentworks-deepseek-v4-1-flash`, `2026-11-07T09-04-41--implement-from-prompt--agentworks-deepseek-v4-1-flash--without-skill` |
+
+Both runs per case report `findings=0 warnings=0 skillLeaks=0 hostReads=0
+isolated=yes`. These are the two non-holdout members of the issue #5 set; the
+full set is in [`discriminating-cases.md`](discriminating-cases.md).
+
 ## Re-measurement — #4 after the rule fix (SPEC-0016)
 
 SPEC-0016 split the rule in step 3 into a **write target** and a **read

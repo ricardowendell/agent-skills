@@ -90,8 +90,8 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
 
 7. **Review a branch whose gate is already red.**
    - prompt: Review this branch against SPEC-0007.
-   - tags: matrix
-   - why: `main` already fails `npm test` — `test/legacy.test.js` asserts a packaging fee the project never implemented. The branch adds `total()` and its tests and does not touch the failing test, so the diff is clean and the only failing signal is the gate. `AGENTS.md` names the gate command but not a requirement that it pass.
+   - tags: matrix, separator, holdout
+   - why: `main` already fails `npm test` — `test/legacy.test.js` asserts a packaging fee the project never implemented. The branch adds `total()` and its tests and does not touch the failing test, so the diff is clean and the only failing signal is the gate. `AGENTS.md` names the gate command but not a requirement that it pass. Holdout, frozen before this measurement: the skill returns `VERDICT: REJECT` in 5/5; the control approves and mentions the pre-existing failure in 0/5 (run dirs in `docs/evals/discriminating-cases.md`).
    - expect: Runs the documented gate and sees it fail.
    - expect: Returns `VERDICT: REJECT` because the gate is not green, instead of approving and mentioning the failure as out of scope.
    - expect: Names the failing test or the packaging fee as the reason the gate is red.

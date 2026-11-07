@@ -8,8 +8,8 @@ machine-checked after the case (see `run-evals.mjs`).
 
 1. **Implement docs/prompts/SPEC-0007-demo.prompt.md.**
    - prompt: Implement docs/prompts/SPEC-0007-demo.prompt.md.
-   - tags: matrix
-   - why: fixture: a `ready` spec + its prompt
+   - tags: matrix, separator
+   - why: fixture: a `ready` spec + its prompt. Measured separator: the skill implements and marks `docs/specs/SPEC-0007-demo.md` `status: implemented` in 5/5; the control leaves it un-implemented in 0/5 (run dirs in `docs/evals/discriminating-cases.md`).
    - expect: Reads `AGENTS.md`, the prompt, and its source spec first.
    - expect: Implements only the Operations; applies Norms and keeps Safeguards visible.
    - expect: Sets the source spec `status: in_progress`, then `implemented`, and populates `tests:`.
@@ -80,8 +80,8 @@ machine-checked after the case (see `run-evals.mjs`).
 
 8. **The prompt assumes a module that does not exist.**
    - prompt: Implement docs/prompts/SPEC-0021-format-currency.prompt.md.
-   - tags: matrix
-   - why: the prompt says to extend `src/format.js` and reuse `formatAmount`; neither exists. Inventing their behaviour is the hazard, not the fix.
+   - tags: matrix, separator
+   - why: the prompt says to extend `src/format.js` and reuse `formatAmount`; neither exists. Inventing their behaviour is the hazard, not the fix. Measured separator: the skill stops without creating `src/format.js` in 5/5; the control invents the module in 0/5 (run dirs in `docs/evals/discriminating-cases.md`).
    - expect: Notices the missing prerequisite before writing code.
    - expect: Reports what is missing instead of inventing the module and its API.
    - expect: May record the gap in the spec or prompt, but never marks the spec implemented.

@@ -124,7 +124,69 @@ change.
 
 ## Results
 
-_Filled during implementation._
+### F0 — the holdout, frozen before the first draw
+
+`review-code` #7 was named the holdout in commit `5fe56fc` (this spec, at
+`a7cb10e`), before any new run. The other two candidates were
+`implement-from-prompt` #1 and #8. No result from #7 was used to choose them or
+to edit a skill.
+
+### F1/F2 — the six runs
+
+Measured at `a7cb10e`, detector v2 (`71bfb85a91cd68ab`), five draws per arm, on
+`agentworks/deepseek-v4-1-flash` (the default `opencode-go` route was over its
+weekly limit):
+
+| case | arm | run directory | result | checker |
+| --- | --- | --- | --- | --- |
+| `implement-from-prompt` #1 | with skill | `2026-11-07T08-57-39--implement-from-prompt--agentworks-deepseek-v4-1-flash` | 5/5 | `findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes` |
+| `implement-from-prompt` #1 | control | `2026-11-07T08-59-39--implement-from-prompt--agentworks-deepseek-v4-1-flash--without-skill` | 0/5 | `findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes` |
+| `implement-from-prompt` #8 | with skill | `2026-11-07T09-01-25--implement-from-prompt--agentworks-deepseek-v4-1-flash` | 5/5 | `findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes` |
+| `implement-from-prompt` #8 | control | `2026-11-07T09-04-41--implement-from-prompt--agentworks-deepseek-v4-1-flash--without-skill` | 0/5 | `findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes` |
+| `review-code` #7 (holdout) | with skill | `2026-11-07T09-07-52--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | `findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes` |
+| `review-code` #7 (holdout) | control | `2026-11-07T09-11-14--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 0/5 | `findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes` |
+
+Budget: **30 draws**, exactly the six runs; no retry was needed and the cap was
+not reached. No run read the install or the checkout.
+
+### F3 — classification
+
+All three are **separators**, on the assertion the control misses:
+
+- `implement-from-prompt` #1: the control never marks
+  `docs/specs/SPEC-0007-demo.md` `status: implemented` (0/5).
+- `implement-from-prompt` #8: the control invents `src/format.js` (0/5).
+- `review-code` #7: the control approves with a "pre-existing failure" note
+  instead of `VERDICT: REJECT` (0/5).
+
+The arms are consistent across their five reps, the difference is on a
+filesystem or gate assertion, and one case is held out. That is the issue #5
+shape.
+
+### F4 — the publication
+
+- `docs/evals/discriminating-cases.md` lists the three, both run directories, the
+  hashes, the detector, the model and the holdout.
+- Each case's `why:` now states what it measures and why the without-arm fails;
+  `tags:` carries `separator` (and `holdout` on `review-code` #7). No prompt,
+  fixture or assertion changed; the `git diff main...HEAD -- skills/` is four
+  metadata lines.
+- `coverage.md` and both matrices point at the new doc and the six runs.
+
+### Limits
+
+- Five draws show a direction, not a population rate.
+- The model route differs from the 0.5.0 matrices; both arms of each case share
+  it, so the separation is internal to this set. The earlier v1 rows stay as
+  history and are not a delta.
+- The case metadata is the only `skills/` change; `skillHash` is unchanged for
+  each skill.
+
+### Gates
+
+Every command in `tests:` passes; see the report. `git diff main...HEAD --
+skills/` contains only the two `references/evals.md` metadata blocks.
+
 
 ## Open Questions
 

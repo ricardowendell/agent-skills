@@ -142,6 +142,17 @@ This is three draws per arm, not the five the table above uses, so it is
 recorded as a preliminary cell: the case separates, and the control's failure is
 `verdict REJECT` in all three runs.
 
+### SPEC-0033 re-measure (v2, holdout)
+
+#7 was re-measured at `a7cb10e` under detector v2 on
+`agentworks/deepseek-v4-1-flash`, five draws per arm: **5/5 vs 0/5**, both clean
+(`findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes`). The control fails
+`verdict REJECT` in all five. This is the held-out case of the issue #5 set,
+frozen in SPEC-0033 before the first draw; see
+[`discriminating-cases.md`](discriminating-cases.md). Runs:
+`2026-11-07T09-07-52--review-code--agentworks-deepseek-v4-1-flash`,
+`2026-11-07T09-11-14--review-code--agentworks-deepseek-v4-1-flash--without-skill`.
+
 ## Audit note — SPEC-0023
 
 The #1 and #3 separator claims were re-checked against controls on the same
