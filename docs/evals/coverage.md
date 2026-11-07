@@ -195,9 +195,9 @@ row listed here is not a clean measurement.
   re-measure
   (`2026-11-07T08-22-28--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill`) (dirty)
   is 2/2 clean passed with 3 contaminated, so the control passes when clean and
-  the case cannot separate the arms. The decision stands; neither arm is a
-  five-draw rate. A bare agent mirrors the existing prompt and records
-  `spec_sha` as often as the skill. Recorded as a regression case; see
+  the case cannot separate the arms. The decision stands; the control's 2/2 clean
+  subset is not a five-draw rate. A bare agent mirrors the existing prompt and
+  records `spec_sha` as often as the skill. Recorded as a regression case; see
   `write-implementation-prompt-matrix.md`.
 - **`capture-idea` #1 is unresolved.** 5/5 with the skill under v2
   (`2026-11-07T08-25-21--capture-idea--agentworks-deepseek-v4-1-flash`); the v2
@@ -289,7 +289,7 @@ rows below were decided on existing runs, not a new draw.
 | --- | --- | --- | --- | --- |
 | `audit-code-quality` #4 | `regression` | On the final 8-assertion case it separated once (1/1 with the skill vs 0/1 without), but one draw per arm cannot carry a discriminator claim; the earlier 5-assertion run predates the contract. | `2026-11-04T21-57-53--audit-code-quality--without-skill` (pre-contract 5-assertion version), `2026-11-04T21-59-17--audit-code-quality` and `2026-11-04T21-59-17--audit-code-quality--without-skill` (final 8-assertion pair; `warnings=1` each) | 2026-11-06 |
 | `review-code` #2 | `regression` | 5/5 in both arms on the replaced fixture: the control finds the spec and cites AC-2, so a diff-reading case cannot discriminate. | `2026-11-02T10-27-26--review-code`, `2026-11-02T10-31-40--review-code--without-skill` (`warnings=5` each, pre-detector) | 2026-11-06 |
-| `write-implementation-prompt` #4 | `regression` | 5/5 in both arms under v1. The v2 control is 2/2 clean passed (3 contaminated), so a bare agent mirrors the existing prompt and records `spec_sha` as often as the skill does; the case cannot separate the arms, and neither arm is a five-draw rate. | `2026-11-06T14-04-25--write-implementation-prompt`, `2026-11-06T14-37-23--write-implementation-prompt--without-skill`, `2026-11-07T08-22-28--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill` (v2, `contaminated`) | 2026-11-06 |
+| `write-implementation-prompt` #4 | `regression` | 5/5 in both arms under v1. The v2 control is 2/2 clean passed (3 contaminated), so a bare agent mirrors the existing prompt and records `spec_sha` as often as the skill does; the case cannot separate the arms, and the control's 2/2 clean subset is not a five-draw rate. | `2026-11-06T14-04-25--write-implementation-prompt`, `2026-11-06T14-37-23--write-implementation-prompt--without-skill`, `2026-11-07T08-22-28--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill` (v2, `contaminated`) | 2026-11-06 |
 | `record-decision` #3 | `regression` | 4/5 with the skill against 5/5 without it: the control writes ADR-0003, marks ADR-0002 superseded and updates the index as reliably as the skill. | `2026-11-06T16-48-00--record-decision`, `2026-11-06T17-20-53--record-decision--without-skill` | 2026-11-06 |
 
 No case is removed: each fails a control that breaks the contract or ignores an

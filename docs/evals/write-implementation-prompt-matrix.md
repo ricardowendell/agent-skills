@@ -250,8 +250,8 @@ The red cells, by assertion or gate reason:
 - **#4** — no red: both arms passed both assertions in five draws under v1. The
   control produced the prompt and the `spec_sha` without the skill. Under v2 the
   SPEC-0031 run `08-22-28` is **2/2 clean passed** with 3 contaminated, so the
-  non-discriminator reading holds on the clean subset; the v1 `15-30-39`-style
-  five-draw clean cell does not exist.
+  non-discriminator reading holds on the clean subset; the v1 `14-37-23` run is
+  4/5 draws clean (4/4 passed), not five.
 - **#5** — no assertion red in any clean scored draw: all five draws loaded the
   skill in both new trigger runs. Stalls: `14-07-04 r5`, `14-43-01 r1`/`r4`,
   `15-33-16 r1` (also contaminated), `15-49-43 r1`; new at `dcf5177`:
@@ -309,7 +309,8 @@ were stable; it is not, and five draws cannot promote it.
   (`19-30-26`). The v2 control (`08-22-28`) is **2/2 clean passed** with 3
   contaminated; the v1 reading is 4/4 passed on 4/5 clean draws. A bare agent
   mirrors the existing prompt and records `spec_sha` as often as the skill does.
-  The non-discriminator reading holds, but neither arm is a five-draw rate.
+  The non-discriminator reading holds, but the control's 2/2 clean subset is not
+  a five-draw rate.
   Keep as a regression case.
 - **#5 — trigger, not a rate; no five-draw clean cell.** `#5` loaded in **5/5
   draws** in both new runs (`19-32-45`, `19-53-34`), but the saved outcome

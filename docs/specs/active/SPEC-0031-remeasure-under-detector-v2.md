@@ -160,9 +160,9 @@ The default provider, `opencode-go/deepseek-v4.1-flash`, returned
 The re-measure therefore ran on `agentworks/deepseek-v4-1-flash`, the same model
 family through a different route; every row below names that model. A one-draw
 probe (`2026-11-07T08-16-35--capture-idea--agentworks-deepseek-v4-1-flash`,
-1/1 clean) checked the route before the paid run. The with-skill controls and
-the SPEC-0030 skill arms are therefore not a same-model pair; the rows say so and
-no paired rate is claimed from them.
+1/1 clean) checked the route before the paid run. The new SPEC-0031 control arms
+and the SPEC-0030 with-skill arms are therefore not a same-model pair; the rows
+say so and no paired rate is claimed from them.
 
 ### F1/F2 — the runs and the checker
 
@@ -203,7 +203,9 @@ node scripts/check-eval-run.mjs ~/.local/share/opencode/evals/runs/2026-11-07T08
 - **`write-implementation-prompt` #4 — non-discriminator.** Both clean control
   draws passed; 3 contaminated. The control passes when clean, so the case
   cannot separate the arms. The 2/2 clean subset is not a five-draw rate, but the
-  earlier v1 reading (4/5 clean, 4/4 passed) points the same way.
+  earlier v1 reading (4/5 clean, 4/4 passed) points the same way. The label is a
+  direction, not a rate: the Scope's `unresolved` rule applies when the missing
+  clean draws leave the direction open, and here they do not.
 - **`capture-idea` #1 — unresolved.** Skill 5/5 clean; every control draw read
   the install under `/Users/wendell/.agents/skills` (`r1` the directory, the rest
   the `SKILL.md`), so the clean subset is 0/0. The direction (the clean controls

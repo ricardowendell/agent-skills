@@ -12,11 +12,11 @@ the default provider's weekly limit was exhausted (HTTP 429), so the same model
 family was reached through a different route. Those rows name the model; a v2 row
 and a v1 row are not a same-model pair.
 
-The 0.5.0 arms were taken at `db7c49a`; the SPEC-0031 rows at `eb9903e`. In
-each wave the tree stayed clean between runs, so the `fixtureHash`, `promptHash`
-and `detectorVersion` in the hash table are identical across the two arms, and
-the `skillHash` is shared by the with-skill and trigger arms. No skill, fixture,
-assertion, runner or policy file changed.
+The 0.5.0 arms were taken at `db7c49a`; the SPEC-0031 rows at `eb9903e`. The
+hash table below describes the 0.5.0 wave (detector v1); the SPEC-0031 control
+rows carry v2 (`71bfb85a91cd68ab`) and the same `fixtureHash`/`promptHash` as
+their 0.5.0 counterparts, and there is no SPEC-0031 trigger arm. No skill,
+fixture, assertion, runner or policy file changed in either wave.
 
 ## What the arms mean
 
