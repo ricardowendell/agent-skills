@@ -5,7 +5,7 @@ status: ready
 priority: P1
 task: TASK-46
 created_at: 2026-11-06
-updated_at: 2026-11-06
+updated_at: 2026-11-07
 source_docs:
   - docs/evals/coverage.md
   - docs/evals/write-implementation-prompt-matrix.md
@@ -26,6 +26,8 @@ tests:
   - node --test scripts/lib/evals/*.test.mjs
   - node --test skills/bootstrap-project-harness/scripts/*.test.mjs
   - node scripts/check-sensor-parity.mjs
+  - node scripts/check-evidence.mjs
+  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0031-remeasure-under-detector-v2.md --base main
 ---
 
 # SPEC-0031: Re-measure the cells detector v2 invalidates
@@ -57,6 +59,21 @@ nobody re-checked it.
 
 - **Read the replay output first.** The cell list and its size come from
   SPEC-0028's invalidation table; the spec does not guess it.
+- **F0 — the list, already derived.** From the 26 invalidated cells, the arms
+  still open after SPEC-0030 are exactly seven, five draws each (35 draws):
+  - `write-implementation-prompt` #1, control — four v1 attempts, no five-draw
+    clean run;
+  - `write-implementation-prompt` #2, control — `15-30-39` is 0/4 replay-clean;
+  - `write-implementation-prompt` #4, control — `14-37-23` is 4/5 replay-clean;
+  - `capture-idea` #1, both arms — control `17-07-09`/`17-23-44`/`17-32-50`
+    dirty, skill arm v1 only;
+  - `process-inbox` #1, both arms — control `17-08-43`/`17-25-52`/`17-34-41`
+    dirty, skill arm v1 only.
+  Out of scope because SPEC-0030 already re-measured them at v2: the
+  `write-implementation-prompt` with-skill cells #1/#2/#4 and the triggers
+  #5/#6. Out of scope because the case is `manual`: #3. The remaining
+  invalidated rows are the control attempts listed above, which the new runs
+  supersede.
 - **Do not re-run what SPEC-0030 already measured.** The four
   `write-implementation-prompt` with-skill cells and its two triggers are
   re-measured there, at the same detector; cite those runs. A control that
@@ -67,9 +84,10 @@ nobody re-checked it.
   clean counts — the rule the 0.5.0 spec already uses.
 - **Downgrade is free, re-measurement is paid.** A separator the replay
   invalidates is downgraded to `unresolved` immediately if it falls outside this
-  spec's budget; it is never kept as a separator on inertia. The budget is
-  **at most 80 draws**: the three minimum cells (30) plus up to five more
-  (50).
+  spec's budget; it is never kept as a separator on inertia. The expected cost
+  from F0 is **35 draws**; the cap is **80**, leaving room for a retry when a
+  run is dirty or a draw stalls. Do not spend the headroom without naming the
+  finding that forced it.
 - **Annotate, do not rewrite.** Every row in both matrices and in
   `docs/evals/coverage.md` says which detector produced the reading. Old numbers
   stay where they are, marked `v1` history.
@@ -118,8 +136,8 @@ assertion, runner or detector change.
    old value stays as history.
 5. **The budget is respected or the stop rule is followed**: at most 80 draws,
    and any remaining cell is listed as a follow-up.
-6. **No drift.** `git diff main...HEAD -- skills/` is empty, the five gates pass,
-   and no run is cited without a `check-eval-run` line.
+6. **No drift.** `git diff main...HEAD -- skills/` is empty, every command in
+   `tests:` passes, and no run is cited without a `check-eval-run` line.
 
 ## Results
 
