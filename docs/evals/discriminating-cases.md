@@ -92,8 +92,9 @@ clean. The skill arm is at `dcf5177` and its control at `eb9903e`; their
 `fixtureHash`/`promptHash` match, so the pair is valid.
 
 `process-inbox` #1 looked like a second extra, but its `03-08-51` control run
-aborted on the provider go-limit in all five reps; its assertions are trivially
-green and it is not evidence. It stays `unresolved` in SPEC-0031.
+died on the provider go-limit in all five reps before acting on the case; its
+assertions are trivially green and it is not evidence. It stays `unresolved` in
+SPEC-0031.
 
 ## Limits
 

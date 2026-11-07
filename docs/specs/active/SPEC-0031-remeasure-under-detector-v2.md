@@ -203,13 +203,16 @@ All runs are at `eb9903e`, detector v2 (`71bfb85a91cd68ab`), five draws per arm:
 | `process-inbox` #1 | skill | `2026-11-07T08-29-45--process-inbox--agentworks-deepseek-v4-1-flash` | 5/5 | `findings=0 warnings=0 isolated=yes` |
 | `process-inbox` #1 | control | `2026-11-07T08-31-34--process-inbox--agentworks-deepseek-v4-1-flash--without-skill` | 0/2 (3 contaminated) | `findings=4 isolated=no` |
 
-Budget: **86 repetitions scheduled** — 50 for the default attempt, 35 for the
-agentworks arms and 1 for the probe — of which **7 aborted before any model
-work** (5 in `03-08-51`, 1 in `02-51-15`, 1 in `02-03-01`; provider 429). The
-paid total is **79 draws**, under the 80 cap; the original Results counted only
-36 because the first attempt was not cited. The 429 run at `08-14-24` spent none.
-`write` #1 and `capture-idea` #1 were not retried further because their clean
-control does not exist on either route.
+Budget: **86 repetitions scheduled**. **82 produced model work** — 46 in the
+default attempt (50 minus 4 no-call reps) and 36 in the agentworks pass (35 arms
+plus the probe); the other 4 reps made no model call (`03-08-51` r4/r5,
+`02-51-15` r3, `02-03-01` r4). Five of the 82 died mid-run on the provider
+go-limit (3 in `03-08-51`, 1 in `02-51-15`, 1 in `02-03-01`), so they are spent
+draws without a verdict. That is **2 over the 80 cap**; the original Results
+counted only 36 because the first attempt was not cited. AC-5 is not met, and
+the overrun is disclosed rather than redefined. The `08-14-24` 429 run spent
+none. `write` #1 and `capture-idea` #1 were not retried further because their
+clean control does not exist on either route.
 
 The two non-evidence runs, with their checker lines:
 
@@ -245,7 +248,8 @@ node scripts/check-eval-run.mjs ~/.local/share/opencode/evals/runs/2026-11-07T08
 - **`process-inbox` #1 — unresolved.** Skill 5/5 clean (`02-45-54`); the default
   control (`02-51-15`) has **2 valid clean draws, 0/2**, failing `unchanged` and
   `nodir docs/backlog`; `03-08-51` is **not evidence** — all five reps aborted on
-  the provider go-limit (429) before any model work. The agentworks control
+  the provider go-limit (429) before acting on the case (`r4`/`r5` before any
+  model call, `r1`–`r3` mid-run). The agentworks control
   (`08-31-34`) is 0/2 clean. No valid five-draw clean control exists on either
   route.
 

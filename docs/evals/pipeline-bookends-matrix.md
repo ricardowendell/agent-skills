@@ -149,8 +149,9 @@ SPEC-0031 re-ran both cells at `eb9903e` under v2 on two routes. The default
 attempt (`01:46`–`03:08`) is primary: `capture-idea` #1 skill 5/5 (`02-09-26`),
 control 0/2 clean (`02-39-46`); `process-inbox` #1 skill 5/5 (`02-45-54`),
 control **0/2 valid clean** (`02-51-15`, plus one abort and two contaminated).
-`03-08-51` is not evidence: all five reps aborted on the provider go-limit before
-any model work. The agentworks fallback has capture control 0/0 (5 contaminated)
+`03-08-51` is not evidence: all five reps died on the provider go-limit before
+acting on the case (`r4`/`r5` before any model call, `r1`–`r3` mid-run). The
+agentworks fallback has capture control 0/0 (5 contaminated)
 and process control 0/2 (3 contaminated). Both cells stay **unresolved**; no
 valid five-draw clean control exists on either route. The clean counts are not
 rates.
@@ -204,8 +205,9 @@ in every draw, including the misses.
   docs/inbox/2026-01-01-digest-email.md` and `nodir docs/backlog` failed in
   **3/3 clean draws** in the v1 runs, **2/2 valid** in the default v2 run
   (`02-51-15`) and **2/2 valid** in the agentworks v2 run. `03-08-51` is not
-  counted: all five reps aborted on the provider go-limit and its assertions are
-  trivially green. The control marked the note processed and created a backlog
+  counted: all five reps died on the provider go-limit before acting on the
+  case, so its assertions are trivially green. The control marked the note
+  processed and created a backlog
   without waiting; the skill waits for confirmation. Twelve v1 draws were
   excluded (eleven contaminated, one stalled), 3 agentworks draws contaminated,
   and 1 default rep aborted.
@@ -292,7 +294,8 @@ install. Bookends budget: ten draws (five per case).
 - **`process-inbox` #1 — unresolved.** The skill is 5/5 (`02-45-54`); the default
   control (`02-51-15`) has **2 valid clean draws, 0/2**, and both failed
   `unchanged` and `nodir docs/backlog`. `03-08-51` is not evidence: all five
-  reps aborted on the provider go-limit (429) before any model work, so its
+  reps aborted on the provider go-limit (429) before acting on the case (`r4`/
+  `r5` before any model call, `r1`–`r3` mid-run), so its
   assertions are trivially green. The agentworks control (`08-31-34`) is 0/2
   clean. No valid five-draw clean control exists on either route. The
   expectation that a do-nothing control would pass remains unmeasured.
