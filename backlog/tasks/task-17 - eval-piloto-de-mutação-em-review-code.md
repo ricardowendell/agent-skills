@@ -4,7 +4,7 @@ title: 'eval: piloto de mutação em review-code para medir se o corpus detecta 
 status: Done
 assignee: []
 created_date: '2026-11-03T10:38:00Z'
-updated_date: '2026-11-03T12:35:00Z'
+updated_date: '2026-11-07T23:05:00Z'
 labels: []
 dependencies: []
 ordinal: 17000
@@ -41,12 +41,12 @@ Classificar cada mutação como **detectada**, **sobrevivente** ou **inválida**
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 baseline reproduzido antes de qualquer mutação (com skill, 5/5 no caso escolhido)
+- [x] #1 baseline reproduzido antes de qualquer mutação (com skill, 5/5 no caso escolhido)
 - [ ] #2 três mutações executadas em roots separados, sem flag nova no runner
-- [ ] #3 cada mutação classificada como detectada, sobrevivente ou inválida, com o trace inspecionado
+- [x] #3 cada mutação classificada como detectada, sobrevivente ou inválida, com o trace inspecionado
 - [ ] #4 sobreviventes distinguem "defeito não detectado" de "defeito não manifestado", com a evidência de cada um
 - [ ] #5 se um sobrevivente revelar lacuna real, o caso novo entra primeiro e a mutação é remedida
-- [ ] #6 resultado registrado com sha do repo, hash da skill e custo em execuções
+- [x] #6 resultado registrado com sha do repo, hash da skill e custo em execuções
 <!-- AC:END -->
 
 ## Comments
@@ -92,5 +92,9 @@ Segundo resultado, em 2026-11-03, sha `6054b49`, 16 execuções adicionais (base
 Os três traces calcularam os dois hashes, compararam com o pin e rejeitaram nomeando a spec defasada (`feb763b1…` vs `fa0d1363…`; r3 rodou `spec-sha.mjs`). A única asserção que falhou, `reply spec hash:.*mismatch`, exige a frase do template que o mutante removeu; os agentes escreveram `SPEC: SPEC-0007` e o mismatch na prosa. É falso positivo de wording, não detecção do defeito. O caso também não isola a regra pelo veredito, porque o diff tem um segundo defeito (AC-3 non-finite).
 
 Consequência: o método segue sem controle positivo limpo. O defeito espelhado do primeiro controle (fixture repete a regra) virou o segundo (asserção repete o template). A correção do caso #4 ficou na TASK-22; a lacuna do gate vermelho continua na TASK-21. O piloto terminou com resultado negativo e dois follow-ups, não com um "detectado".
+
+---
+
+TASK-53 (reconciliacao) contra a SPEC-0006: AC-1 met — baseline #1 5/5 (2026-11-03T11-18-06) e baseline #4 5/5 a 600 s (2026-11-03T12-12-41) reproduzidos antes do controle. AC-3 met — no-gates e ignore-spec-sha classificados invalid com trace (SPEC-0006 Result). AC-6 met — README do experimento registra repo sha a248f6c/6054b49, sha256 de cada SKILL.md e o custo em execucoes. AC-2 NAO cumprido como escrito: a SPEC-0006 reduziu o escopo (Scope change) e rodou dois controles, nao tres mutacoes; o terceiro nao era manifestavel com os fixtures. AC-4 e AC-5 sao condicionais a sobreviventes; nao houve sobrevivente (ambos invalid), entao ficam sem marcacao com esta razao. Follow-ups: TASK-21 e TASK-22.
 
 <!-- COMMENTS:END -->

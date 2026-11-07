@@ -4,7 +4,7 @@ title: 'agent-browser: description inválida no frontmatter'
 status: Done
 assignee: []
 created_date: '2026-10-29T13:26:00Z'
-updated_date: '2026-11-02T17:54:00Z'
+updated_date: '2026-11-07T23:05:00Z'
 labels: []
 dependencies: []
 ordinal: 3000
@@ -45,6 +45,10 @@ Consequência nos ACs, que foram reescritos para registrar o desfecho em vez do 
 - AC-2: Copilot continua sem verificação disponível aqui; o que se sabe é que o YAML local é válido (aspas explícitas) e o OpenCode carrega.
 
 A cópia local é de maio (`c1470a4`, instalada em 2026-05-16) e está atrás do upstream: o `allowed-tools` local ainda tem `Bash(npx agent-browser:*)`, que o `495a987` removeu. Isso é um problema separado, registrado na TASK-8.
+
+---
+
+TASK-53 (reconciliacao): AC-1/3/4 fechados com o patch local e a verificacao no HEAD upstream (comentario de 2026-11-02). AC-2 permanece aberto e NAO e reaberto: o Copilot nao esta disponivel aqui; o verificado e YAML valido + load no OpenCode, e o HEAD upstream ja e valido. O defeito nao existe no HEAD e o patch local e desnecessario, nao so nao-sobrevivente.
 
 ---
 <!-- COMMENTS:END -->
