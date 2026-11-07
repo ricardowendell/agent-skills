@@ -135,7 +135,7 @@ does not say it must pass.
 
 | arm | result | run |
 | --- | --- | --- |
-| with skill | 3/3 rejected on the assertions (one run exited 1 after the review) | `2026-11-05T09-05-36--review-code` |
+| with skill | 3/3 rejected on the assertions (one run exited 1 after the review; that exit is a `provider.transport` abort, TASK-54, not a behavioural difference) | `2026-11-05T09-05-36--review-code` |
 | without skill | 0/3 — approved and named the failure | `2026-11-05T09-32-10--review-code--without-skill` |
 
 This is three draws per arm, not the five the table above uses, so it is

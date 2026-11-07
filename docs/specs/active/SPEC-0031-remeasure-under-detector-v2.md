@@ -159,8 +159,10 @@ A **first attempt on the default model** ran the same arms at `eb9903e` between
 01:46 and 03:08 (`2026-11-07T01-46-26` through `03-08-51`). Those runs are v2,
 five draws each, and are the primary evidence where they pair with a skill arm
 on the same model. The later attempt at 08:14 hit `GoUsageLimitError` (weekly
-limit, HTTP 429; `2026-11-07T08-14-24--capture-idea`, 5 gate-miss repetitions,
-no model draw), so the second pass used `agentworks/deepseek-v4-1-flash` (probe
+limit, HTTP 429; `2026-11-07T08-14-24--capture-idea`, 5 provider go-limit
+aborts — the gate missed because the provider aborted before load, not because
+routing failed; TASK-54), so the second pass used
+`agentworks/deepseek-v4-1-flash` (probe
 `08-16-35`, 1/1 clean). The routes disagree on `write` #2 (separator on default,
 no clean control on agentworks); they are reported separately, and no rate is
 pooled across them.

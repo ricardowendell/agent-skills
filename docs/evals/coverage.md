@@ -74,6 +74,11 @@ in [`discriminating-cases.md`](discriminating-cases.md).
   design intent, not evidence.
 - A per-case number belongs in its `why:` line. A measured set belongs in a doc
   beside `review-code-matrix.md`.
+- Before a release, `node scripts/audit-provider-aborts.mjs` lists every stored
+  transcript with a `provider.*` abort and whether its result recorded it. An old
+  artefact can abort while the result says only `failed — exit 1`; the audit and
+  its dispositions are in [`provider-aborts.md`](provider-aborts.md). It reads the
+  store, writes nothing and spends no model call.
 - Never round a repetition into a rate: `--repeat 3` gives three draws, and the
   matrix says five is enough to see a direction, not to publish a per-case rate.
 
