@@ -30,6 +30,26 @@ and every assertion kind. This file covers only what changes when you contribute
 | `docs/` | this repo's own record; see [`docs/README.md`](docs/README.md) |
 | `backlog/` | the working queue used to build this repo (`task-N`) |
 
+## Editing the backlog
+
+`backlog task edit --comment "…"` **silently truncates a comment at the first
+line that is just `---`**, and drops everything after it, including the next
+comment. The CLI is a precompiled binary (Backlog.md 1.55.3), so there is nothing
+in-repo to patch. Reproduced on 2026-11-07, on a task whose comments held a
+horizontal rule or a fenced block containing `---`:
+
+```sh
+# COMMENTS block had: created: … / --- / Primeiro / --- / Segundo
+backlog task edit TASK-N --comment "NOVO"   # exit 0, prints "Updated task"
+# result: "Segundo" is gone, "NOVO" is there
+```
+
+Rule: **do not use `--comment` on a task whose COMMENTS block contains a `---`
+line.** Edit the file with the editor tool instead, or restore with
+`git checkout HEAD -- backlog/tasks/` and reapply by hand. After any
+`backlog task edit`, check `git diff -- backlog/tasks/` for removed lines: the
+command reports success either way. TASK-55 tracks the upstream issue.
+
 ## Adding a skill
 
 1. `mkdir skills/<id>` with a lowercase kebab-case id. The directory name *is*
