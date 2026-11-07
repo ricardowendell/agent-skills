@@ -128,7 +128,8 @@ trigger draws carry the same `skillHash` as the with-skill arm.
 | `capture-idea` #1 | control (agentworks) | `2026-11-07T08-27-30--capture-idea--agentworks-deepseek-v4-1-flash--without-skill` | 0/0 clean, 5 contaminated | `findings=5 isolated=no` |
 | `process-inbox` #1 | with skill (default) | `2026-11-07T02-45-54--process-inbox` | 5/5 | `findings=0 warnings=0 isolated=yes` |
 | `process-inbox` #1 | with skill (agentworks) | `2026-11-07T08-29-45--process-inbox--agentworks-deepseek-v4-1-flash` | 5/5 | `findings=0 warnings=0 isolated=yes` |
-| `process-inbox` #1 | control (default) | `2026-11-07T03-08-51--process-inbox--without-skill` | 5/5 clean, **0/5 passed** | `findings=0 warnings=0 isolated=yes` |
+| `process-inbox` #1 | control (default a) | `2026-11-07T02-51-15--process-inbox--without-skill` | 0/2 valid, 1 abort, 2 contaminated | `findings=2 isolated=no` |
+| `process-inbox` #1 | control (default b) | `2026-11-07T03-08-51--process-inbox--without-skill` | 0/5 valid — **5 provider aborts** | `findings=0 isolated=yes`; not evidence |
 | `process-inbox` #1 | control (agentworks) | `2026-11-07T08-31-34--process-inbox--agentworks-deepseek-v4-1-flash--without-skill` | 0/2 clean, 3 contaminated | `findings=4 isolated=no` |
 | `record-decision` #1 | with skill | `2026-11-06T16-43-33--record-decision` | 4/5 | `findings=0 warnings=0` |
 | `record-decision` #1 | control | `2026-11-06T17-11-37--record-decision--without-skill` | 1/5 | `findings=0 warnings=0` |
@@ -147,10 +148,11 @@ draws across three v1 runs (`0/2`, `0/2`, `0/0`) and `process-inbox #1` three
 SPEC-0031 re-ran both cells at `eb9903e` under v2 on two routes. The default
 attempt (`01:46`–`03:08`) is primary: `capture-idea` #1 skill 5/5 (`02-09-26`),
 control 0/2 clean (`02-39-46`); `process-inbox` #1 skill 5/5 (`02-45-54`),
-control **5/5 clean, 0/5 passed** (`03-08-51`). The agentworks fallback has
-capture control 0/0 (5 contaminated) and process control 0/2 (3 contaminated):
-that is a route difference, not a demotion. `capture-idea` #1 stays
-**unresolved**; `process-inbox` #1 is a **separator**. The clean counts are not
+control **0/2 valid clean** (`02-51-15`, plus one abort and two contaminated).
+`03-08-51` is not evidence: all five reps aborted on the provider go-limit before
+any model work. The agentworks fallback has capture control 0/0 (5 contaminated)
+and process control 0/2 (3 contaminated). Both cells stay **unresolved**; no
+valid five-draw clean control exists on either route. The clean counts are not
 rates.
 
 ### Trigger runs
@@ -175,7 +177,7 @@ rates; their clean scored subsets are named above.
 | case | with skill | with, gate | control | control, gate | classification |
 | --- | --- | --- | --- | --- | --- |
 | `capture-idea` #1 capture the idea | 5/5 | 5/5 | default 0/2 clean (3 contaminated); agentworks 0/0 (5 contaminated); v1 0/2, 0/2, 0/0 | no skill loaded | **unresolved** |
-| `process-inbox` #1 process the inbox | 5/5 | 5/5 | **0/5 clean** on default (`03-08-51`); agentworks 0/2 | no skill loaded | **separator** |
+| `process-inbox` #1 process the inbox | 5/5 | 5/5 | default 0/2 valid (`02-51-15`; `03-08-51` is 5 aborts); agentworks 0/2 | no skill loaded | **unresolved** |
 | `record-decision` #1 record an ADR | 4/5 | 5/5 | **1/5 clean** | 5/5 no skill loaded | **separator** |
 | `record-decision` #2 refuse an incomplete decision | 4/5 | 5/5 | **0/5 clean** | 5/5 no skill loaded | **separator** |
 | `record-decision` #3 supersede ADR-0002 | 4/5 | 5/5 | **5/5 clean** | 5/5 no skill loaded | **non-discriminator** |
@@ -200,11 +202,13 @@ in every draw, including the misses.
   (11 v1, 3 default, 5 agentworks).
 - **`process-inbox` #1 control** — `unchanged
   docs/inbox/2026-01-01-digest-email.md` and `nodir docs/backlog` failed in
-  **3/3 clean draws** in the v1 runs, **5/5** in the default v2 run and **2/2**
-  in the agentworks v2 run. The control marked the note processed and created a
-  backlog without waiting; the skill waits for confirmation. Twelve v1 draws
-  were excluded (eleven contaminated, one stalled) and 3 agentworks draws
-  contaminated.
+  **3/3 clean draws** in the v1 runs, **2/2 valid** in the default v2 run
+  (`02-51-15`) and **2/2 valid** in the agentworks v2 run. `03-08-51` is not
+  counted: all five reps aborted on the provider go-limit and its assertions are
+  trivially green. The control marked the note processed and created a backlog
+  without waiting; the skill waits for confirmation. Twelve v1 draws were
+  excluded (eleven contaminated, one stalled), 3 agentworks draws contaminated,
+  and 1 default rep aborted.
 - **`record-decision` #1 with skill** — `r3` asked for the missing consequence
   ("what does SQLite make harder that you're accepting?") and wrote nothing, so
   the three `filematch` assertions failed. The other four wrote ADR-0003.
@@ -285,13 +289,13 @@ install. Bookends budget: ten draws (five per case).
   the agentworks control `0/0` (5 contaminated). The v1 attempts were `0/2`,
   `0/2`, `0/0` clean. Every clean draw failed `status: unprocessed`, so the
   direction is a separator, but no run carries five clean control draws.
-- **`process-inbox` #1 — separator.** The skill is 5/5 (`02-45-54`) against
-  **0/5 clean** without it (`03-08-51`), both on the default model and detector
-  v2. The expectation was that a do-nothing control would pass the "nothing
-  changed" assertions; measured, every control draw marked the note processed
-  and created `docs/backlog`, failing `unchanged` and `nodir`. The agentworks
-  control (`08-31-34`) only reached 0/2 clean; that is a route difference, not a
-  demotion.
+- **`process-inbox` #1 — unresolved.** The skill is 5/5 (`02-45-54`); the default
+  control (`02-51-15`) has **2 valid clean draws, 0/2**, and both failed
+  `unchanged` and `nodir docs/backlog`. `03-08-51` is not evidence: all five
+  reps aborted on the provider go-limit (429) before any model work, so its
+  assertions are trivially green. The agentworks control (`08-31-34`) is 0/2
+  clean. No valid five-draw clean control exists on either route. The
+  expectation that a do-nothing control would pass remains unmeasured.
 - **`record-decision` #1 — separator.** 4/5 with the skill against **1/5**
   clean without it (`17-11-37`). The control edits `docs/architecture.md`; the
   skill links to it. The one clean control pass wrote the ADR without touching
@@ -354,8 +358,10 @@ node scripts/check-eval-run.mjs ~/.local/share/opencode/evals/runs/<dir>
 #   leak #1 r1, r2, r4 — real install; host #1 r3 — checkout root
 # 2026-11-07T02-45-54--process-inbox
 #   findings=0 warnings=0 isolated=yes
+# 2026-11-07T02-51-15--process-inbox--without-skill (dirty)
+#   findings=2 isolated=no — 0/2 valid clean, 2 contaminated, 1 abort (429)
 # 2026-11-07T03-08-51--process-inbox--without-skill
-#   findings=0 warnings=0 isolated=yes — 0/5 passed
+#   findings=0 warnings=0 isolated=yes — 0/5 valid: every rep aborted on the provider go-limit (429), not evidence
 # 2026-11-07T08-25-21--capture-idea--agentworks-deepseek-v4-1-flash
 #   findings=0 warnings=0 isolated=yes
 # 2026-11-07T08-27-30--capture-idea--agentworks-deepseek-v4-1-flash--without-skill (contaminated)

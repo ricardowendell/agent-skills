@@ -161,8 +161,9 @@ five draws each, and are the primary evidence where they pair with a skill arm
 on the same model. The later attempt at 08:14 hit `GoUsageLimitError` (weekly
 limit, HTTP 429; `2026-11-07T08-14-24--capture-idea`, 5 gate-miss repetitions,
 no model draw), so the second pass used `agentworks/deepseek-v4-1-flash` (probe
-`08-16-35`, 1/1 clean). The two routes disagree on two cells; both are reported,
-and no rate is pooled across them.
+`08-16-35`, 1/1 clean). The routes disagree on `write` #2 (separator on default,
+no clean control on agentworks); they are reported separately, and no rate is
+pooled across them.
 
 ### The first attempt — default model
 
@@ -173,20 +174,20 @@ Ten runs at `eb9903e`, detector v2 (`71bfb85a91cd68ab`), default
 | --- | --- | --- | --- | --- | --- |
 | `write-implementation-prompt` #1 | control (a) | `2026-11-07T01-46-26--write-implementation-prompt--without-skill` | 3/5 | 0/3 | `findings=4 isolated=no` |
 | `write-implementation-prompt` #2 | control (a) | `2026-11-07T01-57-39--write-implementation-prompt--without-skill` | 3/5 | 0/3 | `findings=2 isolated=no` |
-| `write-implementation-prompt` #4 | control | `2026-11-07T02-03-01--write-implementation-prompt--without-skill` | 5/5 | **4/5** | `findings=0 isolated=yes` |
+| `write-implementation-prompt` #4 | control | `2026-11-07T02-03-01--write-implementation-prompt--without-skill` | 4/4 valid | **4/4** | `findings=0 isolated=yes`; 1 rep aborted (429) |
 | `capture-idea` #1 | skill | `2026-11-07T02-09-26--capture-idea` | 5/5 | 5/5 | `findings=0 isolated=yes` |
 | `capture-idea` #1 | control | `2026-11-07T02-39-46--capture-idea--without-skill` | 2/5 | 0/2 | `findings=4 isolated=no` |
 | `process-inbox` #1 | skill | `2026-11-07T02-45-54--process-inbox` | 5/5 | 5/5 | `findings=0 isolated=yes` |
-| `process-inbox` #1 | control (a) | `2026-11-07T02-51-15--process-inbox--without-skill` | 3/5 | 0/3 | `findings=2 isolated=no` |
+| `process-inbox` #1 | control (a) | `2026-11-07T02-51-15--process-inbox--without-skill` | 2/5 valid | 0/2 | `findings=2 isolated=no`; 1 rep aborted (429), 2 contaminated |
 | `write-implementation-prompt` #1 | control (b) | `2026-11-07T02-58-14--write-implementation-prompt--without-skill` | 3/5 | 0/3 | `findings=4 isolated=no` |
 | `write-implementation-prompt` #2 | control (b) | `2026-11-07T03-01-29--write-implementation-prompt--without-skill` | 5/5 | **0/5** | `findings=0 isolated=yes` |
-| `process-inbox` #1 | control (b) | `2026-11-07T03-08-51--process-inbox--without-skill` | 5/5 | **0/5** | `findings=0 isolated=yes` |
+| `process-inbox` #1 | control (b) | `2026-11-07T03-08-51--process-inbox--without-skill` | 0/5 valid | — | `findings=0 isolated=yes`; **all 5 reps aborted on the provider go-limit (429), not evidence** |
 
-This attempt produced the **primary** evidence for three cells: `write` #2 is a
-separator (5/5 vs 0/5), `process-inbox` #1 is a separator (5/5 vs 0/5), and
-`write` #4 is a non-discriminator (control 4/5 passed). The later agentworks
-route adds no clean five-draw control for any of them; it is a fallback, not a
-tie-breaker.
+This attempt produced the **primary** evidence for two cells: `write` #2 is a
+separator (5/5 vs 0/5) and `write` #4 is a non-discriminator (control 4/4 valid
+passed); `process-inbox` #1's `03-08-51` run is not evidence because every rep
+aborted before model work. The later agentworks route adds no clean five-draw
+control for any of them; it is a fallback, not a tie-breaker.
 
 ### F1/F2 — the runs and the checker (agentworks fallback)
 
@@ -202,12 +203,13 @@ All runs are at `eb9903e`, detector v2 (`71bfb85a91cd68ab`), five draws per arm:
 | `process-inbox` #1 | skill | `2026-11-07T08-29-45--process-inbox--agentworks-deepseek-v4-1-flash` | 5/5 | `findings=0 warnings=0 isolated=yes` |
 | `process-inbox` #1 | control | `2026-11-07T08-31-34--process-inbox--agentworks-deepseek-v4-1-flash--without-skill` | 0/2 (3 contaminated) | `findings=4 isolated=no` |
 
-Budget: **86 draws** — 50 for the default attempt, 35 for the agentworks arms
-and 1 for the probe. The 429 run spent none. The cap is **80**, so the wave ended
-**6 draws over** it: the first attempt's ten runs were not counted when the
-second pass started, and the original Results reported only the 36. That is a
-stop-rule miss, not a planned 86. `write` #1 and `capture-idea` #1 were not
-retried further because their clean control does not exist on either route.
+Budget: **86 repetitions scheduled** — 50 for the default attempt, 35 for the
+agentworks arms and 1 for the probe — of which **7 aborted before any model
+work** (5 in `03-08-51`, 1 in `02-51-15`, 1 in `02-03-01`; provider 429). The
+paid total is **79 draws**, under the 80 cap; the original Results counted only
+36 because the first attempt was not cited. The 429 run at `08-14-24` spent none.
+`write` #1 and `capture-idea` #1 were not retried further because their clean
+control does not exist on either route.
 
 The two non-evidence runs, with their checker lines:
 
@@ -232,45 +234,49 @@ node scripts/check-eval-run.mjs ~/.local/share/opencode/evals/runs/2026-11-07T08
   (`08-20-10`) only reached 0/4 clean; that is a route difference, not a reason
   to demote the clean default pair.
 - **`write-implementation-prompt` #4 — non-discriminator.** The default control
-  (`02-03-01`) is 5 clean and **4/5 passed**; the agentworks control is 2/2
-  passed. The control passes when clean, so the case cannot separate the arms.
-  The 4/5 is not a five-draw rate, but the direction is closed.
+  (`02-03-01`) is **4/4 valid draws passed** (one rep aborted on the provider);
+  the agentworks control is 2/2 passed. The control passes when it runs, so the
+  case cannot separate the arms. The 4/4 is not a five-draw rate, but the
+  direction is closed.
 - **`capture-idea` #1 — unresolved.** Skill 5/5 clean on both routes
   (`02-09-26`, `08-25-21`); the default control (`02-39-46`) is 0/2 clean and the
   agentworks control is 0/0 (5 contaminated). The direction (the clean controls
   would fail `status: unprocessed`) is unchanged, but no clean control exists.
-- **`process-inbox` #1 — separator.** 5/5 with the skill
-  (`2026-11-07T02-45-54--process-inbox`) against **0/5 clean** without it
-  (`2026-11-07T03-08-51--process-inbox--without-skill`), both on the default
-  model and detector v2. The agentworks control (`08-31-34`) only reached 0/2
-  clean; that is the same route difference as #2.
+- **`process-inbox` #1 — unresolved.** Skill 5/5 clean (`02-45-54`); the default
+  control (`02-51-15`) has **2 valid clean draws, 0/2**, failing `unchanged` and
+  `nodir docs/backlog`; `03-08-51` is **not evidence** — all five reps aborted on
+  the provider go-limit (429) before any model work. The agentworks control
+  (`08-31-34`) is 0/2 clean. No valid five-draw clean control exists on either
+  route.
 
 ### The finding
 
 Contamination is route- and prompt-dependent, not uniform. On the default model
-the `write` #2/#4 and `process-inbox` #1 controls stayed clean for all five
-draws; on `agentworks` the same cases read the install. `write` #1 and
+`write` #2 stayed clean for all five draws and `write` #4 for four valid draws;
+`process-inbox` #1's `03-08-51` attempt aborted on the provider limit and is not
+evidence. On `agentworks` the same cases read the install. `write` #1 and
 `capture-idea` #1 read it on both routes. `--no-skill` denies the `skill` tool,
 not the file text, and the v2 detector correctly marks those draws contaminated.
 The deny-layer half of TASK-43 is still the reason a control can be dirty, but
-it no longer blocks #2/process: those have a clean default-model pair. Do not
-lower the five-draw rule to rescue the two that remain.
+it no longer blocks `write` #2, which has a clean default-model pair. Do not
+lower the five-draw rule to rescue the others.
 
 ### Forward references closed
 
 `SPEC-0028` and `SPEC-0030` said the #2/#4 controls were pending SPEC-0031. Both
-now carry the v2 outcome — #2 unresolved at 0/4 clean, #4 non-discriminator at
-2/2 clean passed — and the numbers those specs published are unchanged.
+now carry the v2 outcome — #2 is a separator at 5/5 vs 0/5, #4 a
+non-discriminator at 4/4 valid passed — and the numbers those specs published
+are unchanged.
 
 ### What this means for issue #5
 
-The corrected verdicts add two separators that the first attempt had already
-measured: `write-implementation-prompt` #2 and `process-inbox` #1 (both 5/5 vs
-0/5 on the default model). With `implement-from-prompt` #1/#8 and `review-code`
-#7, five cells now separate. The held-out set published by SPEC-0033 stays the
-three it measured; the two extras are listed beside it in
-`docs/evals/discriminating-cases.md`. `capture-idea` #1 and `write` #1 remain
-unresolved because their controls never reached five clean draws.
+The corrected verdict adds one separator that the first attempt had already
+measured: `write-implementation-prompt` #2 (5/5 vs 0/5 on the default model).
+With `implement-from-prompt` #1/#8 and `review-code` #7, four cells now separate.
+The held-out set published by SPEC-0033 stays the three it measured; `write` #2
+is listed beside it in `docs/evals/discriminating-cases.md`. `capture-idea` #1,
+`process-inbox` #1 and `write` #1 remain unresolved because their controls never
+reached five valid clean draws.
 
 ### Gates
 

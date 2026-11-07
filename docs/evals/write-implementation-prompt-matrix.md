@@ -159,7 +159,7 @@ for an unchanged case is the skills diff cited at the top, not the table alone.
 | #1 | control (default b) | `2026-11-07T02-58-14--write-implementation-prompt--without-skill` | `eb9903e` | `findings=4` `isolated=no`; 3/5 clean, 0/3 — **unresolved** (dirty) |
 | #2 | control (default) | `2026-11-07T03-01-29--write-implementation-prompt--without-skill` | `eb9903e` | `findings=0 warnings=0 isolated=yes`; 5/5 clean, **0/5 passed** — **separator** |
 | #3 | control | `2026-11-06T14-32-58--write-implementation-prompt--without-skill` | `8e26cf6` | `findings=1`; 0/4 clean |
-| #4 | control (default) | `2026-11-07T02-03-01--write-implementation-prompt--without-skill` | `eb9903e` | `findings=0 warnings=0 isolated=yes`; 5/5 clean, **4/5 passed** — **non-discriminator** |
+| #4 | control (default) | `2026-11-07T02-03-01--write-implementation-prompt--without-skill` | `eb9903e` | `findings=0 warnings=0 isolated=yes`; 4/4 valid, **4/4 passed** (1 abort) — **non-discriminator** |
 | #1 | control (agentworks) | `2026-11-07T08-17-29--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill` | `eb9903e` | `findings=4` `isolated=no`; 0/2 clean — route difference (dirty) |
 | #2 | control (agentworks) | `2026-11-07T08-20-10--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill` | `eb9903e` | `findings=1` `isolated=no`; 0/4 clean — route difference (dirty) |
 | #4 | control (agentworks) | `2026-11-07T08-22-28--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill` | `eb9903e` | `findings=5` `isolated=no`; 2/2 clean passed — same direction (dirty) |
@@ -235,7 +235,7 @@ owns them, and #5 still has no stall-free five-draw cell.
 | #1 create the demo prompt | **5/5** (new) | 5/5 | default 0/3 ×2; agentworks 0/2 | 4/4 no skill loaded | **unresolved** |
 | #2 draft spec | **5/5** (new) | 5/5 | **0/5 clean** on default (`03-01-29`); agentworks 0/4 | 5/5 no skill loaded | **separator** |
 | #3 open questions | 4/5 (history) | 5/5 (history) | 0/4 clean (1 contaminated) | 4/4 no skill loaded | **manual** (reverted; not re-run) |
-| #4 overlapping prompt | **5/5** (new) | 5/5 | default **4/5 passed**, 5/5 clean (`02-03-01`); agentworks 2/2 | 5/5 no skill loaded | **non-discriminator** |
+| #4 overlapping prompt | **5/5** (new) | 5/5 | default **4/4 valid passed** (`02-03-01`, 1 abort); agentworks 2/2 | 5/5 no skill loaded | **non-discriminator** |
 
 The red cells, by assertion or gate reason:
 
@@ -314,9 +314,9 @@ were stable; it is not, and five draws cannot promote it.
   `why:` instead of a classification. The run pair is cited as the record of
   that split, not as a separator.
 - **#4 — non-discriminator.** 5/5 with the skill at `dcf5177` (`19-30-26`). The
-  default control (`02-03-01`) is 5 clean and **4/5 passed**; the agentworks
-  control is 2/2 passed. The control passes when clean, so the case cannot
-  separate the arms. The 4/5 is not a five-draw rate, but the direction is
+  default control (`02-03-01`) is **4/4 valid passed** (one rep aborted); the
+  agentworks control is 2/2 passed. The control passes when it runs, so the case
+  cannot separate the arms. The 4/4 is not a five-draw rate, but the direction is
   closed. Keep as a regression case.
 - **#5 — trigger, not a rate; no five-draw clean cell.** `#5` loaded in **5/5
   draws** in both new runs (`19-32-45`, `19-53-34`), but the saved outcome
@@ -379,7 +379,7 @@ node scripts/check-eval-run.mjs ~/.local/share/opencode/evals/runs/<dir>
 # 2026-11-07T01-57-39--write-implementation-prompt--without-skill (dirty)
 #   findings=2 isolated=no — #2 0/3 clean
 # 2026-11-07T02-03-01--write-implementation-prompt--without-skill
-#   findings=0 warnings=0 isolated=yes — #4 5/5 clean, 4/5 passed
+#   findings=0 warnings=0 isolated=yes — #4 4/4 valid passed, 1 abort
 # 2026-11-07T02-58-14--write-implementation-prompt--without-skill (dirty)
 #   findings=4 isolated=no — #1 0/3 clean
 # 2026-11-07T03-01-29--write-implementation-prompt--without-skill
@@ -414,9 +414,9 @@ trigger cells are `dcf5177` at `skillHash 046369c29a8383db…`; the 0.5.0
 with-skill cells are `8e26cf6` at `ab314e2ceb8f793f…` and the controls are
 `fff5b96`/`8e26cf6`. The hash table proves which fixture and prompt each run
 used. The `#1` control has no five-draw clean run and stays `unresolved`. The
-`#2`, `#3` and `#4` control cells are one run each (`08-20-10`, `14-32-58`
-history, `08-22-28`); under v2 #2 is **0/4** clean and #4 is **2/2** clean
-passed. Neither is a five-draw clean cell, so #2 stays `unresolved` and #4 stays
-a non-discriminator; the middle is a leak, read from its clean draws with the
-leak named. The #5 trigger has no stall-free five-draw cell in any wave; it
+`#2` and `#4` controls now have a clean default pair — `03-01-29` (5/5 clean,
+0/5 passed) and `02-03-01` (4/4 valid passed) — plus the agentworks fallback
+(`08-20-10` 0/4, `08-22-28` 2/2). #2 is a separator; #4 is a non-discriminator.
+`#3`'s control is `14-32-58` history, read from its clean draws with the leak
+named. The #5 trigger has no stall-free five-draw cell in any wave; it
 is a trigger direction, not a rate.

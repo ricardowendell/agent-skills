@@ -164,10 +164,11 @@ The arms are consistent across their five reps, the difference is on a
 filesystem or gate assertion, and one case is held out. That is the issue #5
 shape.
 
-A later inventory of SPEC-0031's default-model runs found two more clean
-separators — `process-inbox` #1 and `write-implementation-prompt` #2, both 5/5
-vs 0/5. They are listed in the doc's **Also qualifying** section but are not
-part of this held-out set.
+A later inventory of SPEC-0031's default-model runs found one more clean
+separator — `write-implementation-prompt` #2, 5/5 vs 0/5 — listed in the doc's
+**Also qualifying** section. `process-inbox` #1 looked like a second, but its
+default control aborted on the provider limit in all five reps and stays
+unresolved.
 
 ### F4 — the publication
 
