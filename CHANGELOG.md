@@ -9,6 +9,81 @@ skills, which cases, and which published measurements.
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-11-07
+
+The harness stops reporting what it cannot see, and two mechanical review
+classes move into code.
+
+### Added
+
+- **A detector that sees the host corpus** (`SPEC-0028`): `leak.mjs` classifies
+  reads under the host roots as `host`, so "no skill leak" is no longer read as
+  "isolated". `check-eval-run` prints `skillLeaks=N hostReads=N
+  isolated=yes|no|unknown`; `yes` requires a v2 run and a recorded isolated
+  mode. `replay-evals --leaks` re-judges stored transcripts and writes nothing.
+- **`stage:` for cross-skill routing** (`SPEC-0029`): a case names the sibling
+  skill it expects to load and the runner stages it, so `capture-idea #3` and
+  `process-inbox #3` measure the declared route instead of failing by
+  construction.
+- **`spec-check` and `check-evidence`** (`SPEC-0032`): the spec contract
+  (`files:` vs the diff, `task:`, dependency links, placeholders) and every run
+  directory cited in `docs/evals/` are checked in code. `check-evidence` runs in
+  `selftest` and the pre-commit hook; `spec-check` runs in CI for changed specs.
+- **`docs/integrations/opencode.md`**: which paths the kit owns and which ones
+  the machine links.
+
+### Changed
+
+- **The load canary is 12 draws, not "up to 12".** `CONTRIBUTING.md` runs it
+  with `--stop 12/0`, because the default `5/3` stop cuts a clean canary at
+  eight. `check-eval-run` prints `warn stopped-early … reps=N of requested 12`,
+  so a short canary cannot be published as 12/12 (`TASK-47`).
+- **`commands/` is canonical and the machine links it** (`TASK-48`):
+  `~/.config/opencode/commands` is one directory symlink, not a copy. A command
+  added to the repo appears without an install step.
+- **`write-implementation-prompt` draws the boundary** (`SPEC-0030`): it
+  produces an executable prompt; a summary or an explanation is not its job.
+
+### Fixed
+
+- **A control run that reads the host is dirty, not clean** (`SPEC-0028`). The
+  26 cells whose verdict changed under the host rules are published as
+  invalidated, not re-scored; the v2 replay of the 0.5.0 store is in
+  `docs/evals/coverage.md`.
+- **`#6` no longer loads on a summary request** (`SPEC-0030`): 5/5 clean in
+  `2026-11-06T20-12-15--write-implementation-prompt`, against 4/5 in an earlier
+  run. Improved, not proven deterministic.
+- **A stopped run is named.** `check-eval-run` reports a case that ran fewer
+  draws than the manifest requested, instead of letting the summary hide the
+  denominator.
+- **`spec-check` survives non-ASCII paths**: `git diff -z` with
+  `core.quotepath=false`.
+
+### Measured
+
+- **51 draws**: 10 for the staged routing pair, 40 for the near-miss/trigger
+  re-measure and 1 control draw.
+  - `capture-idea #3` and `process-inbox #3` are **5/5** with the sibling
+    staged, replacing a 0/N by construction.
+  - `#6` is 5/5 clean in one run; across three runs it is 5/5, 5/5 and 4/5.
+  - `#5` loaded **10/10**; four of the ten trigger draws stalled after the
+    load, so there is no stall-free five-draw cell.
+  - The re-measured with-skill cells `#1`, `#2` and `#4` are 5/5 clean.
+
+### Known gaps
+
+- **The `#5` stall is provider-side and follows the load** (TASK-50): event
+  gaps of 27.2 s to 355.0 s, one retry each. A stall-free run is not yet
+  measured.
+- **Five controls still cannot carry a rate.** `capture-idea #1`,
+  `process-inbox #1` and `write-implementation-prompt #1` are `unresolved`;
+  `write-implementation-prompt #2` and `#4` are pending SPEC-0031. The routing
+  cells are triggers, so they have no control arm by design.
+- **pdlc still records one duration per cycle.** Implementation and review
+  cannot be separated; the phase markers stay in PDLC-83.
+- **`#3` of `write-implementation-prompt` stays `manual`**: a 4/5 historical
+  split, not re-run.
+
 ## [0.5.0] — 2026-11-06
 
 Coverage closes: every skill in the repo now has evidence or a written reason.

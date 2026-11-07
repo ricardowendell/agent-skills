@@ -119,6 +119,59 @@ describes, not a regression — the 82 strict failures are control draws.
 
 No fix shipped for any of them; this release publishes the evidence.
 
+## 0.6.0 delta — 2026-11-07T01:03:57Z
+
+```sh
+node scripts/harness-health.mjs --until 2026-11-07T01:03:57Z
+```
+
+| Metric | 0.5.0 (20:52:31Z) | 0.6.0 (01:03:57Z) |
+| --- | --- | --- |
+| Runs | 234 | 243 |
+| Unfinished runs | 7 | 7 |
+| Cases | 313 | 324 |
+| Draws | 1,147 | 1,198 |
+| Eligible draws | 1,079 | 1,122 |
+| Rate denominator | 1,066 | 1,109 |
+| Pass rate (eligible, non-staged) | 67.2% | 68.3% |
+| Gate misses (eligible) | 25 | 25 |
+| Strict clean draws | 338 | 381 |
+| Strict passed / failed | 256 / 82 | 298 / 83 |
+| Strict pass rate | 75.7% | 78.2% |
+| Contaminated | 47 | 51 |
+| Infrastructure | 17 | 21 |
+| Provenance (completed draws) | 398 complete, 745 partial | 449 complete, 745 partial |
+| Wall time | 15h 55m 56s | 16h 43m 37s |
+| Sum of draw durations | 24h 31m 15s | 26h 18m 2s |
+| pdlc runs | 13 | 17 |
+| pdlc retries / red gates | 0 / 0 | 0 / 0 |
+| pdlc median | 47m 55s | 45m 56s |
+
+The broad rate moved 1.1 points and the strict base grew by 43 draws, of which
+42 passed and one failed. That is the staged routing cells (`capture-idea #3`,
+`process-inbox #3`) and the re-measured with-skill cells, not a change in the
+controls: the control arms still read the host and still fail by design.
+
+### Findings (three)
+
+1. **Contamination rose again, 47 → 51.** The host-corpus rules now see the
+   reads they used to miss (`SPEC-0028`), and the 26 cells that changed verdict
+   are published as invalidated rather than re-scored. The detector is more
+   accurate, not the store dirtier; the control design is still TASK-43's
+   problem.
+2. **A short canary reads as short now.** The discarded 12-draw canary stopped
+   at eight under the default `5/3` rule; `check-eval-run` reports
+   `warn stopped-early … reps=8 of requested 12` instead of letting the eight
+   pass for a 12/12 claim (`TASK-47`).
+3. **pdlc still cannot separate implementation from review.** The median fell to
+   45m 56s, but `SPEC-0032` spent five review rounds on a six-file change and the
+   record shows one duration for the whole cycle. Phase markers stay in
+   PDLC-83; this release does not measure them.
+
+The only skill edit in this release is the `write-implementation-prompt`
+description boundary (`SPEC-0030`); the controls were not re-run, so the control
+arm's rate is unchanged by it.
+
 ## How to read it
 
 - **Two rates, two questions.** `Pass rate (eligible, non-staged)` is the broad
