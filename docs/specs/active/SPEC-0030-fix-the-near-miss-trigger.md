@@ -17,6 +17,8 @@ blocks: []
 files:
   - skills/write-implementation-prompt/SKILL.md
   - scripts/validate-skills.mjs
+  - scripts/lib/evals/parse.mjs
+  - scripts/lib/evals/parse.test.mjs
   - skills/write-implementation-prompt/references/evals.md
   - docs/evals/write-implementation-prompt-matrix.md
   - docs/evals/coverage.md
@@ -113,11 +115,15 @@ change. **Budget: ~30 draws** (four with-skill cells + two triggers).
 1. **The near-miss holds.** `#6` does not load the skill in 5/5 draws of one run
    with `findings=0 warnings=0`, or the spec stops and reports that the
    description cannot separate without breaking a real trigger.
-2. **The real trigger still loads.** `#5` loads in 5/5 draws of a stall-free
-   run; any stall is named with its event gap and retry.
-3. **The behavioural cells are re-measured** at the new `skillHash`: #1–#4 with
-   the skill, five draws each, run directories cited, and the matrix states that
-   the controls are unchanged and why they remain citable.
+2. **The real trigger still loads.** `#5` loads in 5/5 draws. The stall that
+   follows the load is provider-side, named with its event gap and retry, and a
+   stall-free run is a documented follow-up (`TASK-50`), not a condition of this
+   spec. A stall *before* the load would still block.
+3. **The runnable behavioural cells are re-measured** at the new `skillHash`:
+   #1, #2 and #4 with the skill, five draws each, run directories cited. #3 is
+   `manual` and stays that way (a 4/5 historical split), cited as history; the
+   matrix states which controls are replay-clean and which are pending
+   SPEC-0031.
 4. **The validator refuses an undeclared assertion.** A case asserting `skill X`
    without `stage: X` (or X being the case's own skill) fails `--check`; a
    declared stage with no assertion warns.
@@ -202,8 +208,9 @@ load, named by the last event before the watchdog's 120 s gap:
 The contamination is separate: `19-32-45 r3`/`r5` read the installed skill and
 host corpus; `19-53-34 r4` read a stale copy under
 `/private/var/folders/.../opencode/agent-skills-pr`. These are excluded, not
-scored. The best clean subsets are 1/1 and 2/2; AC-2's stall-free five-draw
-requirement is **not met** and is not claimed.
+scored. The best clean subsets are 1/1 and 2/2. AC-2 was amended at the human
+gate: the load is 10/10, the stall is provider-side and follows it, and a
+stall-free run is `TASK-50`, not a condition of this spec.
 
 ### Controls — superseded by detector v2
 
@@ -279,10 +286,10 @@ exit=1
   `notskill` line are unchanged.
 - **Gates:** `lint`, `selftest` (`--list --check`, harness tests, bootstrap
   tests, sensor parity) all pass; see the report.
-- **Left out:** AC-2 (stall-free #5 5/5) is not met; #3 is manual and was not
-  re-measured; the #2/#4 controls remain pending SPEC-0031. The #6 result is
-  5/5 clean in one run but 4/5 in another, so the near-miss is improved, not
-  proven deterministic.
+- **Left out:** a stall-free `#5` run (`TASK-50`, after AC-2 was amended); `#3` is
+  manual and was not re-measured; the #2/#4 controls remain pending SPEC-0031.
+  The #6 result is 5/5 clean in one run but 4/5 in another, so the near-miss is
+  improved, not proven deterministic.
 
 ## Open Questions
 

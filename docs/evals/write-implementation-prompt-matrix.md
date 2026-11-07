@@ -325,7 +325,8 @@ node scripts/check-eval-run.mjs ~/.local/share/opencode/evals/runs/<dir>
 # 2026-11-06T19-32-45--write-implementation-prompt
 #   findings=6 isolated=no — #5 r1,r4 stalled; #5 r3,r5 leak+host; #6 5/5 clean
 # 2026-11-06T19-53-34--write-implementation-prompt
-#   findings=3 isolated=no — #5 r3,r5 stalled; #5 r4 stale copy; #6 r3 loaded
+#   findings=3 isolated=no — #5 r3,r5 stalled; #5 r4 stale copy. Separately,
+#   #6 r3 loaded the skill: a case failure, not a checker finding.
 # 2026-11-06T20-12-15--write-implementation-prompt
 #   cases=1 reps=5 findings=0 warnings=0 isolated=yes (#6)
 # 2026-11-06T13-46-05--write-implementation-prompt   (discarded canary)
