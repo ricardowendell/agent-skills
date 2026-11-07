@@ -1,7 +1,7 @@
 ---
 id: TASK-54
 title: 'evals: auditar os transcripts do store por abort de provider'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-07T20:50:00Z'
 updated_date: '2026-11-07T23:20:00Z'
