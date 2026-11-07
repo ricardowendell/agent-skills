@@ -237,15 +237,18 @@ makes those warnings fatal. The local `selftest` and the pre-commit hook run
 ```sh
 node scripts/validate-skills.mjs --root skills
 node scripts/run-evals.mjs --root skills --list --check
-node scripts/spec-check.mjs --spec <changed spec> --base <base sha>  # one per changed spec
+node scripts/spec-check.mjs --spec <changed spec> --base <PR base sha>   # pull requests only
 node --test scripts/lib/evals/*.test.mjs
 node --test skills/bootstrap-project-harness/scripts/*.test.mjs
 node scripts/check-sensor-parity.mjs
 ```
 
-The same commands are in `.githooks/pre-commit`, except `spec-check` (it needs
-the PR base). Behavioural runs stay local: they need a model provider and cost
-money.
+`spec-check` runs only on a `pull_request` event: the branch point is the base
+its `files:` list is written against. A push to `main` has no per-spec base (it
+carries the cumulative local fan-in), so the step is skipped there and the local
+pre-merge run is the gate. The same commands are in `.githooks/pre-commit`,
+except `spec-check`. Behavioural runs stay local: they need a model provider and
+cost money.
 
 ## Third-party skills
 

@@ -58,6 +58,10 @@ classes move into code.
   denominator.
 - **`spec-check` survives non-ASCII paths**: `git diff -z` with
   `core.quotepath=false`.
+- **CI runs the spec contract only on pull requests.** A push to `main` carries
+  the cumulative local fan-in, so the step compared merged specs with later
+  changes and failed the first 0.6.0 build; the branch point is the only base a
+  `files:` list is written against.
 
 ### Measured
 

@@ -236,8 +236,11 @@ The token cases that used to slip:
   line; the gate description says CI runs the rest plus `spec-check` because it
   has no local store.
 - `.github/workflows/skills.yml`: checkout is `fetch-depth: 0`, and a
-  `Spec contract for changed specs` step runs `spec-check` for every spec the
-  push/PR diff touches, using the PR base sha or `event.before`.
+  `Spec contract for changed specs` step runs `spec-check` for every spec a
+  pull request touches, using the PR base sha. A push to `main` skips the step:
+  the range there is the cumulative local fan-in, so a merged spec's `files:`
+  would be compared with every later change (see the release-time correction
+  below).
 - `CONTRIBUTING.md`: new **Checking a publication** section with both exact
   commands, the local-`main` base rule, and the `--strict` rule; the CI list and
   the pre-PR checklist now name them.
@@ -283,6 +286,17 @@ node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0032-...md --base main
 ```
 
 `git diff main...HEAD -- skills/` is empty. Zero model draws.
+
+### Release-time correction — CI base
+
+The first 0.6.0 push ran `spec-check` on `push` with `event.before` as the base.
+That range is the cumulative local fan-in (27 commits, four specs, the release
+notes), so every already-merged spec was compared against changes it never
+declared, and the step failed with dozens of `files-touched-undeclared` errors.
+The rule is per-branch; the branch point is the only base a spec's `files:` was
+written against. The step now runs only on `pull_request`, where that base
+exists. This is a wiring correction, not a change to the rules: a merged spec
+is not re-checked against later work.
 
 
 ## Open Questions

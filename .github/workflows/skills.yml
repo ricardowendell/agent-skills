@@ -27,11 +27,14 @@ jobs:
       - run: node scripts/run-evals.mjs --root skills --list --check
       # The spec contract: files: against the base diff, task: against
       # backlog/tasks, dependency symmetry, and the ready/implemented body rules.
-      # Only the specs this change touches are checked; the rest of the durable
-      # record predates the rule.
+      # Only a pull request has a per-spec base: the branch point. On a push to
+      # main the range is the cumulative local fan-in, and an already-merged
+      # spec's files: would be compared with every later change. Skip it there;
+      # the local pre-merge run is the gate (CONTRIBUTING.md).
       - name: Spec contract for changed specs
+        if: github.event_name == 'pull_request'
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
             echo "no base commit; spec-check skipped"
