@@ -7,6 +7,11 @@ classifies it, and `record-decision` writes the ADR. Eleven cases: five
 behavioural and six routing triggers. Everything below runs under
 `node scripts/run-evals.mjs --root skills`.
 
+The SPEC-0031 re-measure at `eb9903e` used `agentworks/deepseek-v4-1-flash`:
+the default provider's weekly limit was exhausted (HTTP 429), so the same model
+family was reached through a different route. Those rows name the model; a v2 row
+and a v1 row are not a same-model pair.
+
 All arms were taken at `db7c49a`; the tree stayed clean between runs, so the
 `fixtureHash`, `promptHash` and `detectorVersion` in the hash table are identical
 across the two arms, and the `skillHash` is shared by the with-skill and trigger
@@ -116,6 +121,10 @@ trigger draws carry the same `skillHash` as the with-skill arm.
 | `process-inbox` #1 | control (1) | `2026-11-06T17-08-43--process-inbox--without-skill` | 0/1 clean, 4 contaminated | `findings=4` |
 | `process-inbox` #1 | control (2) | `2026-11-06T17-25-52--process-inbox--without-skill` | 0/1 clean, 4 contaminated | `findings=4` |
 | `process-inbox` #1 | control (3) | `2026-11-06T17-34-41--process-inbox--without-skill` | 0/1 clean, 3 contaminated, 1 stalled | `findings=4` |
+| `capture-idea` #1 | with skill (v2) | `2026-11-07T08-25-21--capture-idea--agentworks-deepseek-v4-1-flash` | 5/5 | `findings=0 warnings=0 isolated=yes` |
+| `capture-idea` #1 | control (v2) | `2026-11-07T08-27-30--capture-idea--agentworks-deepseek-v4-1-flash--without-skill` | 0/0 clean, 5 contaminated | `findings=5 isolated=no` |
+| `process-inbox` #1 | with skill (v2) | `2026-11-07T08-29-45--process-inbox--agentworks-deepseek-v4-1-flash` | 5/5 | `findings=0 warnings=0 isolated=yes` |
+| `process-inbox` #1 | control (v2) | `2026-11-07T08-31-34--process-inbox--agentworks-deepseek-v4-1-flash--without-skill` | 0/2 clean, 3 contaminated | `findings=4 isolated=no` |
 | `record-decision` #1 | with skill | `2026-11-06T16-43-33--record-decision` | 4/5 | `findings=0 warnings=0` |
 | `record-decision` #1 | control | `2026-11-06T17-11-37--record-decision--without-skill` | 1/5 | `findings=0 warnings=0` |
 | `record-decision` #2 | with skill | `2026-11-06T16-45-46--record-decision` | 4/5 | `findings=0 warnings=0` |
@@ -127,8 +136,16 @@ trigger draws carry the same `skillHash` as the with-skill arm.
 The control draws that were excluded read the real install under
 `/Users/wendell/.agents/skills`; the stalled draws are counted as
 infrastructure, not failures. `capture-idea #1` produced four clean control
-draws across three runs (`0/2`, `0/2`, `0/0`) and `process-inbox #1` three
+draws across three v1 runs (`0/2`, `0/2`, `0/0`) and `process-inbox #1` three
 (`0/1`, `0/1`, `0/1`); no run has five clean draws.
+
+SPEC-0031 re-ran both cells at `eb9903e` under v2 on
+`agentworks/deepseek-v4-1-flash` (five draws per arm). The skill arms are clean
+5/5. The controls are not: `capture-idea` #1 is `0/0` clean (5 contaminated,
+every draw read the installed `SKILL.md`) and `process-inbox` #1 is `0/2` clean
+(3 contaminated; both clean draws failed `unchanged` and `nodir docs/backlog`).
+Both stay **unresolved** with the new clean counts. The clean counts are not
+rates.
 
 ### Trigger runs
 
@@ -151,8 +168,8 @@ rates; their clean scored subsets are named above.
 
 | case | with skill | with, gate | control | control, gate | classification |
 | --- | --- | --- | --- | --- | --- |
-| `capture-idea` #1 capture the idea | 5/5 | 5/5 | no clean run; clean subsets 0/2, 0/2, 0/0 | no skill loaded | **unresolved** |
-| `process-inbox` #1 process the inbox | 5/5 | 5/5 | no clean run; clean subsets 0/1, 0/1, 0/1 | no skill loaded | **unresolved** |
+| `capture-idea` #1 capture the idea | 5/5 | 5/5 | v2 0/0 clean (5 contaminated); v1 subsets 0/2, 0/2, 0/0 | no skill loaded | **unresolved** |
+| `process-inbox` #1 process the inbox | 5/5 | 5/5 | v2 0/2 clean (3 contaminated); v1 subsets 0/1, 0/1, 0/1 | no skill loaded | **unresolved** |
 | `record-decision` #1 record an ADR | 4/5 | 5/5 | **1/5 clean** | 5/5 no skill loaded | **separator** |
 | `record-decision` #2 refuse an incomplete decision | 4/5 | 5/5 | **0/5 clean** | 5/5 no skill loaded | **separator** |
 | `record-decision` #3 supersede ADR-0002 | 4/5 | 5/5 | **5/5 clean** | 5/5 no skill loaded | **non-discriminator** |
@@ -253,19 +270,20 @@ install. Bookends budget: ten draws (five per case).
 
 ## Classification
 
-- **`capture-idea` #1 — unresolved.** The skill is 5/5; the control never
-  produced five clean draws in one run (three attempts: `0/2`, `0/2`, `0/0`
-  clean). Every clean draw failed `status: unprocessed`, so the direction is a
-  separator, but four clean draws spread over three runs cannot carry a
-  five-draw cell. Re-measure after the control arm can no longer read the
-  install.
+- **`capture-idea` #1 — unresolved.** The skill is 5/5; the v2 control produced
+  `0/0` clean draws (5 contaminated: every draw read the installed `SKILL.md`).
+  The v1 attempts were `0/2`, `0/2`, `0/0` clean. Every clean draw failed
+  `status: unprocessed`, so the direction is a separator, but no run carries
+  five clean control draws. Re-measure after the control arm can no longer read
+  the install.
 - **`process-inbox` #1 — unresolved, not the expected non-discriminator.** The
-  skill is 5/5 and the control never produced five clean draws (`0/1` in each of
-  three attempts). The expectation was that a do-nothing control would pass the
-  "nothing changed" assertions; measured, each clean control draw marked the note
-  processed and created `docs/backlog`, failing `unchanged` and `nodir` every
-  time. The direction is a separator; the cell is unresolved only because the
-  control was never clean enough. The case was not redesigned.
+  skill is 5/5; the v2 control produced `0/2` clean (3 contaminated), and both
+  clean draws failed `unchanged` and `nodir docs/backlog`. The v1 attempts were
+  `0/1` in each of three runs. The expectation was that a do-nothing control
+  would pass the "nothing changed" assertions; measured, each clean control draw
+  marked the note processed and created `docs/backlog`. The direction is a
+  separator; the cell is unresolved only because the control was never clean
+  enough. The case was not redesigned.
 - **`record-decision` #1 — separator.** 4/5 with the skill against **1/5**
   clean without it (`17-11-37`). The control edits `docs/architecture.md`; the
   skill links to it. The one clean control pass wrote the ADR without touching
@@ -322,6 +340,14 @@ node scripts/check-eval-run.mjs ~/.local/share/opencode/evals/runs/<dir>
 # 2026-11-06T17-34-41--process-inbox--without-skill
 #   infrastructure #1 r4 — stalled
 #   leak #1 r2, r3, r5 — real install (r2, r3) and stale copy /private/tmp/as-remote (r5)
+# 2026-11-07T08-25-21--capture-idea--agentworks-deepseek-v4-1-flash
+#   findings=0 warnings=0 isolated=yes
+# 2026-11-07T08-27-30--capture-idea--agentworks-deepseek-v4-1-flash--without-skill (contaminated)
+#   leak #1 r1–r5 — real install
+# 2026-11-07T08-29-45--process-inbox--agentworks-deepseek-v4-1-flash
+#   findings=0 warnings=0 isolated=yes
+# 2026-11-07T08-31-34--process-inbox--agentworks-deepseek-v4-1-flash--without-skill (contaminated)
+#   leak #1 r1, r2, r3 — real install; host #1 r3 — checkout root
 ```
 
 The excluded control draws read the install as a hand-off: the agent searches

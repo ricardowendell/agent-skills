@@ -3,11 +3,13 @@
 Measured on `opencode-go/deepseek-v4.1-flash`, the config default, with
 deterministic assertions only and no judge. The behavioural and trigger cells
 were re-taken at `dcf5177` after the description/boundary change; their
-`skillHash` is `046369c29a8383db…`. The controls are the earlier runs and were
-**not** re-run: they stage no skill, so the description edit cannot move their
-`fixtureHash` or `promptHash`; their `detectorVersion` is still v1 and their
-clean status is governed by the v2 replay below. The new with-skill cells (#1,
-#2, #4), the trigger cells (#5, #6) and the #6-only run carry detector v2
+`skillHash` is `046369c29a8383db…`. The three controls were re-run under
+SPEC-0031 at `eb9903e` on `agentworks/deepseek-v4-1-flash`: the default
+provider's weekly limit was exhausted (HTTP 429), so the same model family was
+reached through a different route. The model is recorded per run; a control row
+and its with-skill row are therefore **not** a same-model pair unless it says
+so. The new with-skill cells (#1, #2, #4), the trigger cells (#5, #6), the
+#6-only run and the SPEC-0031 controls carry detector v2
 (`71bfb85a91cd68ab`). `stageSkill` excludes `references/evals.md` from
 `skillHash`; `promptHash` covers only the prompt text, so the fixture and prompt
 hashes repeat the 0.5.0 values. #3 is `status: manual` and produced 0 draws, as
@@ -39,9 +41,9 @@ The 0.5.0 measurements in this matrix were written by detector v1
 that and nothing more: a draw could read the host checkout and still score
 `findings=0`. V2 (`71bfb85a91cd68ab`) adds the `host` finding, including the
 checkout root. The 0.5.0 numbers below are unchanged and remain history; where
-the replay changes a cell, the correction is beside it and the clean five-draw
-measurement is **pending SPEC-0031**. The clean SPEC-0030 cells are v2 and print
-`isolated=yes`; the dirty trigger runs are named with their findings.
+the replay changes a cell, the correction is beside it and SPEC-0031 re-ran the
+controls. None reached five clean draws. The clean SPEC-0030 cells are v2 and
+print `isolated=yes`; the dirty trigger runs are named with their findings.
 
 `node scripts/replay-evals.mjs --leaks <run-dir>` re-judged the stored
 transcripts with no model. Two control dirs are `dirty(host)`:
@@ -58,6 +60,25 @@ transcripts with no model. Two control dirs are `dirty(host)`:
 
 `check-eval-run` cannot see this in the old artifacts: they carry v1 and print
 `isolated=unknown`, not `yes`. The replay is the citation.
+
+### SPEC-0031 re-measure — the three controls
+
+The controls were re-run at `eb9903e` under v2 on
+`agentworks/deepseek-v4-1-flash` (five draws each). None produced a five-draw
+clean run:
+
+| case | run directory | clean draws | checker | reading |
+| --- | --- | --- | --- | --- |
+| #1 | `2026-11-07T08-17-29--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill` | 0/2 (3 contaminated) | `findings=4` `isolated=no` | both clean draws failed `spec_sha:`; 3 read the install or the checkout — **unresolved** |
+| #2 | `2026-11-07T08-20-10--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill` | 0/4 (1 contaminated) | `findings=1` `isolated=no` | all four clean draws failed `nodir docs/prompts`; `r1` read the installed `SKILL.md` — **unresolved** |
+| #4 | `2026-11-07T08-22-28--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill` | 2/2 (3 contaminated) | `findings=5` `isolated=no` | both clean draws passed; `r5` read the checkout — **non-discriminator** |
+
+The controls still reach `/Users/wendell/.agents/skills` and the checkout. The
+`skill` tool is denied, but the text is not; that is the open half of TASK-43.
+Re-running the control does not fix it, so #1/#2 stay `unresolved` with the raw
+clean counts and #4 stays a non-discriminator on a two-draw clean subset. The
+with-skill arms are the SPEC-0030 runs on the default model; the model
+difference is named here and is not used to claim a paired rate.
 
 ## Load canary
 
@@ -128,10 +149,10 @@ for an unchanged case is the skills diff cited at the top, not the table alone.
 | #2 | with skill | `2026-11-06T19-28-47--write-implementation-prompt` | `dcf5177` | `findings=0 warnings=0 isolated=yes` |
 | #3 | manual | — | — | 0 draws; `14-01-54` is history |
 | #4 | with skill | `2026-11-06T19-30-26--write-implementation-prompt` | `dcf5177` | `findings=0 warnings=0 isolated=yes` |
-| #1 | control | the four attempts in the history below | `fff5b96` | no five-draw clean run — **unresolved** |
-| #2 | control | `2026-11-06T15-30-39--write-implementation-prompt--without-skill` | `fff5b96` | v1 `findings=0`; v2 replay `dirty(host)` (`r1`, 0/4 clean) — **pending SPEC-0031** |
+| #1 | control | `2026-11-07T08-17-29--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill` | `eb9903e` | `findings=4` `isolated=no`; 0/2 clean, 3 contaminated — **unresolved** |
+| #2 | control | `2026-11-07T08-20-10--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill` | `eb9903e` | `findings=1` `isolated=no`; 0/4 clean, 1 contaminated — **unresolved** |
 | #3 | control | `2026-11-06T14-32-58--write-implementation-prompt--without-skill` | `8e26cf6` | `findings=1`; 0/4 clean |
-| #4 | control | `2026-11-06T14-37-23--write-implementation-prompt--without-skill` | `8e26cf6` | v1 `findings=0`; v2 replay `dirty(host)` (`r5`, 4/5 draws clean, 4/4 passed) — **pending SPEC-0031** |
+| #4 | control | `2026-11-07T08-22-28--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill` | `eb9903e` | `findings=5` `isolated=no`; 2/2 clean passed, 3 contaminated — **non-discriminator** |
 
 The three with-skill cells that ran are clean five-draw runs at the new
 `skillHash`. #3 is `status: manual`: the five-draw run at `8e26cf6`
@@ -140,16 +161,14 @@ not a re-measurement and no new draws exist. The old with-skill dirs
 (`13-56-14` #1, `13-59-48` #2, `14-04-25` #4) remain history at
 `ab314e2ceb8f793f…`.
 
-The controls were not re-run. #1 never produced a clean five-draw run: clean
-subsets are `0/3` (`15-15-52`), `0/4` (`15-18-26`), `0/3` (`15-20-43`) and the
-older `0/4` (`14-28-07`), and every clean draw failed `spec_sha:`; it is
-**unresolved**, not a control. #2 is **0/4 replay-clean** under v2 (`r1` is
-`dirty(host)`) and #4 is **4/5 draws clean (4/4 passed)** (`r5` is
-`dirty(host)`); both are **pending SPEC-0031**, so neither is a five-draw clean
-cell in this matrix. #3's control is a leak-verified 0/4 clean, and the case
-itself is manual. That is why "the controls stay citable" from the spec is
-superseded: the description edit does not move them, but detector v2 already
-removed the two clean five-draw controls.
+The controls were re-run under SPEC-0031 at `eb9903e` (v2,
+`agentworks/deepseek-v4-1-flash`). None is a five-draw clean cell: #1 is `0/2`
+clean (3 contaminated; both clean draws failed `spec_sha:`), #2 is `0/4` clean
+(1 contaminated; all four failed `nodir docs/prompts`), and #4 is `2/2` clean
+passed (3 contaminated). #1/#2 stay **unresolved**; #4 stays a
+**non-discriminator** on the clean subset. The 0.5.0 attempts (`15-15-52` 0/3,
+`15-18-26` 0/4, `15-20-43` 0/3, `14-28-07` 0/4 for #1; `15-30-39` 0/4 and
+`14-37-23` 4/5 for #2/#4) remain history. The clean counts are not rates.
 
 ### Trigger runs
 
