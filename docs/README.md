@@ -11,6 +11,7 @@ templates.
 
 | Path | Holds |
 | --- | --- |
+| `roadmap.md` | the release order and its claims; not a policy |
 | `inbox/` | raw analyses, processed in place (`status: processed`) |
 | `specs/` | `SPEC-NNNN-*.md` — the durable record of why the harness changed |
 | `specs/active/` | the pdlc work queue; `plan`, `prompt`, `verify` and `merge` read here |
