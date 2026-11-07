@@ -67,7 +67,7 @@ refuses a case whose assertion names a skill the run will not stage.
 - **Re-measure what the edit invalidates.** Changing `SKILL.md` changes
   `skillHash`, so the runnable with-skill cells (#1, #2, #4) are re-run, five
   draws each, and #5/#6 five draws each. The controls do not stage the skill;
-  the matrix says which are replay-clean and which are pending SPEC-0031.
+  the matrix says which are replay-clean and which SPEC-0031 re-measured.
 - **Name the stall.** Read the `#5` transcripts; if it is provider silence, say
   so with the event gap and add a note to the matrix about retry behaviour. The
   AC is five loads; the stall-free run is `TASK-50`.
@@ -122,8 +122,8 @@ change. **Budget: ~30 draws** (four with-skill cells + two triggers).
 3. **The runnable behavioural cells are re-measured** at the new `skillHash`:
    #1, #2 and #4 with the skill, five draws each, run directories cited. #3 is
    `manual` and stays that way (a 4/5 historical split), cited as history; the
-   matrix states which controls are replay-clean and which are pending
-   SPEC-0031.
+   matrix states which controls are replay-clean and which SPEC-0031
+   re-measured.
 4. **The validator refuses an undeclared assertion.** A case asserting `skill X`
    without `stage: X` (or X being the case's own skill) fails `--check`; a
    declared stage with no assertion warns.
@@ -221,11 +221,11 @@ superseded by the v2 replay:
 
 - `#1` is **unresolved**: four attempts, no five-draw clean run (clean subsets
   0/3, 0/4, 0/3, 0/4; every clean draw failed `spec_sha:`).
-- `#2` is **0/4 replay-clean** (`15-30-39 r1` is `dirty(host)`) and is **pending
-  SPEC-0031**.
+- `#2` is **0/4 replay-clean** (`15-30-39 r1` is `dirty(host)`); SPEC-0031
+  re-measured it at v2 as **0/4 clean, unresolved**.
 - `#3` is manual; its control is a leak-verified 0/4 clean history.
-- `#4` is **4/5 draws clean (4/4 passed)** (`14-37-23 r5` is `dirty(host)`) and
-  is **pending SPEC-0031**.
+- `#4` is **4/5 draws clean (4/4 passed)** (`14-37-23 r5` is `dirty(host)`);
+  SPEC-0031 re-measured it at v2 as **2/2 clean passed, non-discriminator**.
 
 The matrix states the same status in its control rows and says why.
 
@@ -287,9 +287,10 @@ exit=1
 - **Gates:** `lint`, `selftest` (`--list --check`, harness tests, bootstrap
   tests, sensor parity) all pass; see the report.
 - **Left out:** a stall-free `#5` run (`TASK-50`, after AC-2 was amended); `#3` is
-  manual and was not re-measured; the #2/#4 controls remain pending SPEC-0031.
-  The #6 result is 5/5 clean in one run but 4/5 in another, so the near-miss is
-  improved, not proven deterministic.
+  manual and was not re-measured. SPEC-0031 re-measured the #2/#4 controls at
+  v2: #2 is 0/4 clean (unresolved) and #4 is 2/2 clean passed
+  (non-discriminator). The #6 result is 5/5 clean in one run but 4/5 in another,
+  so the near-miss is improved, not proven deterministic.
 
 ## Open Questions
 
