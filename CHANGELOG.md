@@ -9,6 +9,15 @@ skills, which cases, and which published measurements.
 
 ## [Unreleased]
 
+### Added
+
+- **`pdlc-orca`** — runs a pdlc cycle inside Orca: registers the repo with
+  `external-worktree-visibility: show`, guards the dispatched worktree by path and
+  branch (the default `hide` silently resolves `main`), delivers the pinned prompt
+  to the agent, and keeps review, verify and merge in pdlc. Evidence: 3/3 cases ×
+  3 repetitions, clean v2 (`2026-11-07T04-13-13--pdlc-orca`); the control arm
+  scored 0/2 with one contaminated draw (`2026-11-07T03-53-17--pdlc-orca--agentworks-deepseek-v4-1-flash--without-skill`).
+
 ## [0.6.0] — 2026-11-07
 
 The harness stops reporting what it cannot see, and two mechanical review
