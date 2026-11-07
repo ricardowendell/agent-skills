@@ -213,17 +213,17 @@ fixed here.
 
 Under v2, `14-07-04` `r1` (#5 and #6) and `15-33-16` `r1` (#6) are also
 `dirty(host)` (checkout-root reads, denied). The v1 columns are unchanged; those
-cells lose one clean draw, and their five-clean-draw readings remain pending
-SPEC-0031.
+cells lose one clean draw. The triggers were not re-run by SPEC-0031; SPEC-0030
+owns them, and #5 still has no stall-free five-draw cell.
 
 ### Scores
 
 | case | with skill | with, gate | control | control, gate | classification |
 | --- | --- | --- | --- | --- | --- |
-| #1 create the demo prompt | **5/5** (new) | 5/5 | no clean run; largest clean subset 0/4 | 4/4 no skill loaded | **unresolved** |
-| #2 draft spec | **5/5** (new) | 5/5 | **0/4 replay-clean** (v1 0/5; `r1` host) | 5/5 no skill loaded | **separator**, pending SPEC-0031 |
+| #1 create the demo prompt | **5/5** (new) | 5/5 | v2 0/2 clean; v1 largest clean subset 0/4 | 4/4 no skill loaded | **unresolved** |
+| #2 draft spec | **5/5** (new) | 5/5 | v2 0/4 clean (1 contaminated); v1 0/4 replay-clean | 5/5 no skill loaded | **unresolved** |
 | #3 open questions | 4/5 (history) | 5/5 (history) | 0/4 clean (1 contaminated) | 4/4 no skill loaded | **manual** (reverted; not re-run) |
-| #4 overlapping prompt | **5/5** (new) | 5/5 | **4/4 replay-clean** (v1 5/5; `r5` host, 4/5 draws) | 5/5 no skill loaded | **non-discriminator**, pending SPEC-0031 |
+| #4 overlapping prompt | **5/5** (new) | 5/5 | v2 2/2 clean passed (3 contaminated); v1 4/4 replay-clean | 5/5 no skill loaded | **non-discriminator** |
 
 The red cells, by assertion or gate reason:
 
@@ -248,9 +248,10 @@ The red cells, by assertion or gate reason:
 - **#3 control** — `nodir docs/prompts` failed in all four clean draws; the
   fifth read the real install and is excluded.
 - **#4** — no red: both arms passed both assertions in five draws under v1. The
-  control produced the prompt and the `spec_sha` without the skill; under v2 its
-  `r5` is `dirty(host)` (grep of the checkout root, denied), leaving **4/5 draws
-  clean (4/4 passed)**, so the clean five-draw cell is pending SPEC-0031.
+  control produced the prompt and the `spec_sha` without the skill. Under v2 the
+  SPEC-0031 run `08-22-28` is **2/2 clean passed** with 3 contaminated, so the
+  non-discriminator reading holds on the clean subset; the v1 `15-30-39`-style
+  five-draw clean cell does not exist.
 - **#5** — no assertion red in any clean scored draw: all five draws loaded the
   skill in both new trigger runs. Stalls: `14-07-04 r5`, `14-43-01 r1`/`r4`,
   `15-33-16 r1` (also contaminated), `15-49-43 r1`; new at `dcf5177`:
@@ -290,29 +291,26 @@ were stable; it is not, and five draws cannot promote it.
 ## Classification
 
 - **#1 — unresolved.** With the skill it is **5/5 clean at `dcf5177`**
-  (`19-25-26`), but four control attempts still have no five-draw clean run:
-  `15-15-52` 0/3 clean, `15-18-26` 0/4 clean, `15-20-43` 0/3 clean, and the
-  older `14-28-07` 0/4 clean. Every clean draw failed `spec_sha:`, but the AC-2
-  rule forbids promoting a separator from a rejected run, and draws from
+  (`19-25-26`). The v2 control (`08-17-29`) is `0/2` clean with 3 contaminated;
+  both clean draws failed `spec_sha:`. The four v1 attempts are history
+  (`15-15-52` 0/3 clean, `15-18-26` 0/4, `15-20-43` 0/3, `14-28-07` 0/4). The
+  AC-2 rule forbids promoting a separator from a rejected run, and draws from
   different runs are not summed into a five-draw cell. Re-measure after the
   control arm can no longer read the install.
-- **#2 — separator, pending SPEC-0031 under detector v2.** 5/5 with the skill
-  (re-measured 5/5 at `dcf5177`, `19-28-47`) against **0/5** clean without it in
-  `15-30-39` under v1. The v2 replay marks
-  `r1` `dirty(host)` (glob of the checkout root, denied), so the reading is
-  **0/4 replay-clean**: the direction is unchanged, but the five-draw clean
-  control does not exist and must be re-measured. The two earlier attempts are
-  history, not part of the denominator.
+- **#2 — unresolved under detector v2.** 5/5 with the skill (re-measured 5/5 at
+  `dcf5177`, `19-28-47`). The v2 control (`08-20-10`) is **0/4 clean** with 1
+  contaminated; all four clean draws failed `nodir docs/prompts`, and `r1` read
+  the installed `SKILL.md`. The v1 `15-30-39` reading is 0/4 replay-clean. The
+  direction is unchanged, but the five-draw clean control does not exist.
 - **#3 — manual (reverted).** The five draws split 4/5, so the case carries a
   `why:` instead of a classification. The run pair is cited as the record of
   that split, not as a separator.
-- **#4 — non-discriminator, pending SPEC-0031 under detector v2.** 5/5 with the
-  skill at `dcf5177` (`19-30-26`) and 5/5 in both arms under v1. The control's
-  `r5` is `dirty(host)` (grep of the checkout root, denied), so the v2 reading
-  is **4/5 draws clean (4/4 passed)**: the
-  non-discriminator reading holds on the clean subset, but the five-draw clean
-  cell is pending. A bare agent mirrors the existing prompt and records
-  `spec_sha` as often as the skill does. Keep as a regression case.
+- **#4 — non-discriminator under detector v2.** 5/5 with the skill at `dcf5177`
+  (`19-30-26`). The v2 control (`08-22-28`) is **2/2 clean passed** with 3
+  contaminated; the v1 reading is 4/4 passed on 4/5 clean draws. A bare agent
+  mirrors the existing prompt and records `spec_sha` as often as the skill does.
+  The non-discriminator reading holds, but neither arm is a five-draw rate.
+  Keep as a regression case.
 - **#5 — trigger, not a rate; no five-draw clean cell.** `#5` loaded in **5/5
   draws** in both new runs (`19-32-45`, `19-53-34`), but the saved outcome
   stalled in four of those ten draws, a fifth stall recovered on retry
@@ -369,6 +367,12 @@ node scripts/check-eval-run.mjs ~/.local/share/opencode/evals/runs/<dir>
 #   findings=0 warnings=0 (v1; v2 replay: dirty(host), r5)
 # 2026-11-06T15-30-39--write-implementation-prompt--without-skill
 #   findings=0 warnings=0 (v1; v2 replay: dirty(host), r1)
+# 2026-11-07T08-17-29--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill (dirty)
+#   findings=4 isolated=no — #1 0/2 clean, 3 contaminated (install + checkout)
+# 2026-11-07T08-20-10--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill (dirty)
+#   findings=1 isolated=no — #2 0/4 clean, 1 contaminated (installed SKILL.md)
+# 2026-11-07T08-22-28--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill (dirty)
+#   findings=5 isolated=no — #4 2/2 clean passed, 3 contaminated (install + checkout)
 # 2026-11-06T15-33-16--write-implementation-prompt
 #   infrastructure #5 r1 — stalled; leak #5 r4 — stale copy
 # 2026-11-06T15-49-43--write-implementation-prompt
@@ -393,9 +397,9 @@ trigger cells are `dcf5177` at `skillHash 046369c29a8383db…`; the 0.5.0
 with-skill cells are `8e26cf6` at `ab314e2ceb8f793f…` and the controls are
 `fff5b96`/`8e26cf6`. The hash table proves which fixture and prompt each run
 used. The `#1` control has no five-draw clean run and stays `unresolved`. The
-`#2`, `#3` and `#4` control cells are one run each (`15-30-39`, `14-32-58`,
-`14-37-23`). Under v2 the first and third are `dirty(host)` (`15-30-39 r1`,
-`14-37-23 r5`), so their readings are **0/4** and **4/4** replay-verified and
-the five-draw clean cells are pending SPEC-0031; the middle is a leak, read from
-its clean draws with the leak named. The #5 trigger has no stall-free five-draw
-cell in any wave; it is a trigger direction, not a rate.
+`#2`, `#3` and `#4` control cells are one run each (`08-20-10`, `14-32-58`
+history, `08-22-28`); under v2 #2 is **0/4** clean and #4 is **2/2** clean
+passed. Neither is a five-draw clean cell, so #2 stays `unresolved` and #4 stays
+a non-discriminator; the middle is a leak, read from its clean draws with the
+leak named. The #5 trigger has no stall-free five-draw cell in any wave; it
+is a trigger direction, not a rate.

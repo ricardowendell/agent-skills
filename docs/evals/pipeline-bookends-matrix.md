@@ -1,21 +1,22 @@
 # Pipeline bookends matrix — 2026-11-06
 
-Measured at commit `db7c49a` on `opencode-go/deepseek-v4.1-flash`, the config
-default, with deterministic assertions only and no judge. The three skills hold
-the two ends of the pipeline: `capture-idea` catches the note, `process-inbox`
-classifies it, and `record-decision` writes the ADR. Eleven cases: five
-behavioural and six routing triggers. Everything below runs under
-`node scripts/run-evals.mjs --root skills`.
+The 0.5.0 rows were measured at commit `db7c49a` on
+`opencode-go/deepseek-v4.1-flash`, the config default, with deterministic
+assertions only and no judge. The three skills hold the two ends of the pipeline:
+`capture-idea` catches the note, `process-inbox` classifies it, and
+`record-decision` writes the ADR. Eleven cases: five behavioural and six routing
+triggers. Everything below runs under `node scripts/run-evals.mjs --root skills`.
 
 The SPEC-0031 re-measure at `eb9903e` used `agentworks/deepseek-v4-1-flash`:
 the default provider's weekly limit was exhausted (HTTP 429), so the same model
 family was reached through a different route. Those rows name the model; a v2 row
 and a v1 row are not a same-model pair.
 
-All arms were taken at `db7c49a`; the tree stayed clean between runs, so the
-`fixtureHash`, `promptHash` and `detectorVersion` in the hash table are identical
-across the two arms, and the `skillHash` is shared by the with-skill and trigger
-arms. No skill, fixture, assertion, runner or policy file changed.
+The 0.5.0 arms were taken at `db7c49a`; the SPEC-0031 rows at `eb9903e`. In
+each wave the tree stayed clean between runs, so the `fixtureHash`, `promptHash`
+and `detectorVersion` in the hash table are identical across the two arms, and
+the `skillHash` is shared by the with-skill and trigger arms. No skill, fixture,
+assertion, runner or policy file changed.
 
 ## What the arms mean
 
@@ -142,7 +143,8 @@ draws across three v1 runs (`0/2`, `0/2`, `0/0`) and `process-inbox #1` three
 SPEC-0031 re-ran both cells at `eb9903e` under v2 on
 `agentworks/deepseek-v4-1-flash` (five draws per arm). The skill arms are clean
 5/5. The controls are not: `capture-idea` #1 is `0/0` clean (5 contaminated,
-every draw read the installed `SKILL.md`) and `process-inbox` #1 is `0/2` clean
+every draw read the install under `/Users/wendell/.agents/skills`, `r1` the
+directory and the rest the `SKILL.md`) and `process-inbox` #1 is `0/2` clean
 (3 contaminated; both clean draws failed `unchanged` and `nodir docs/backlog`).
 Both stay **unresolved** with the new clean counts. The clean counts are not
 rates.
@@ -187,14 +189,16 @@ in every draw, including the misses.
 ### Red cells by assertion
 
 - **`capture-idea` #1 control** — `filematch docs/inbox/*.md status: unprocessed`
-  failed in **4/4 clean draws** across the three runs. The control wrote a note
-  under `docs/inbox/` but without the `status: unprocessed` frontmatter. The
-  other eleven draws were excluded for reading the installed skill.
+  failed in **4/4 clean draws** in the v1 runs; the v2 run produced 0 clean draws
+  (5 contaminated). The control wrote a note under `docs/inbox/` but without the
+  `status: unprocessed` frontmatter. The 16 other draws were excluded for reading
+  the installed skill.
 - **`process-inbox` #1 control** — `unchanged
   docs/inbox/2026-01-01-digest-email.md` and `nodir docs/backlog` failed in
-  **3/3 clean draws** across the three runs. The control marked the note
-  processed and created a backlog without waiting; the skill waits for
-  confirmation. Twelve draws were excluded (eleven contaminated, one stalled).
+  **3/3 clean draws** in the v1 runs and **2/2** in the v2 run. The control
+  marked the note processed and created a backlog without waiting; the skill
+  waits for confirmation. Twelve v1 draws were excluded (eleven contaminated,
+  one stalled); the v2 run excluded 3 contaminated draws.
 - **`record-decision` #1 with skill** — `r3` asked for the missing consequence
   ("what does SQLite make harder that you're accepting?") and wrote nothing, so
   the three `filematch` assertions failed. The other four wrote ADR-0003.
@@ -271,7 +275,9 @@ install. Bookends budget: ten draws (five per case).
 ## Classification
 
 - **`capture-idea` #1 — unresolved.** The skill is 5/5; the v2 control produced
-  `0/0` clean draws (5 contaminated: every draw read the installed `SKILL.md`).
+  `0/0` clean draws (5 contaminated: every draw read the install under
+  `/Users/wendell/.agents/skills`, `r1` the directory and the rest the
+  `SKILL.md`).
   The v1 attempts were `0/2`, `0/2`, `0/0` clean. Every clean draw failed
   `status: unprocessed`, so the direction is a separator, but no run carries
   five clean control draws. Re-measure after the control arm can no longer read
@@ -367,6 +373,6 @@ overrun is the control re-runs made necessary by contamination.
 
 The earlier run directories for these skills — the 2026-11-01 `capture-idea`
 runs and the 2026-11-06 `agentworks-gpt-oss-120b` runs — are a different model
-and/or an earlier case set. They are not evidence for this table. Every cell
-above is at `db7c49a`, with the hashes in the table proving the measurement
-surface is the same in both arms.
+and/or an earlier case set. They are not evidence for this table. Every 0.5.0
+cell above is at `db7c49a` and the SPEC-0031 rows are at `eb9903e`, with the
+hashes in the table proving the measurement surface is the same in both arms.

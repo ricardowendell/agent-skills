@@ -19,6 +19,8 @@ files:
   - docs/evals/write-implementation-prompt-matrix.md
   - docs/evals/pipeline-bookends-matrix.md
   - docs/evals/coverage.md
+  - docs/specs/active/SPEC-0028-detector-host-corpus.md
+  - docs/specs/active/SPEC-0030-fix-the-near-miss-trigger.md
   - docs/specs/active/SPEC-0031-remeasure-under-detector-v2.md
 tests:
   - node scripts/validate-skills.mjs --root skills
@@ -71,9 +73,12 @@ nobody re-checked it.
     dirty, skill arm v1 only.
   Out of scope because SPEC-0030 already re-measured them at v2: the
   `write-implementation-prompt` with-skill cells #1/#2/#4 and the triggers
-  #5/#6. Out of scope because the case is `manual`: #3. The remaining
-  invalidated rows are the control attempts listed above, which the new runs
-  supersede.
+  #5/#6. The earlier `#2` control attempts (`14-30-42`, `14-40-36`, `15-25-06`,
+  `15-27-30`) are superseded by the new run for the same arm, and
+  `capture-idea` #3 at `16-50-30` is superseded by SPEC-0029's staged
+  re-measure. #3 is `manual`. Every other invalidated row is either a #5/#6
+  trigger run that SPEC-0030 re-ran or one of those attempts; no cell is left
+  without a v2 verdict or a history label.
 - **Do not re-run what SPEC-0030 already measured.** The four
   `write-implementation-prompt` with-skill cells and its two triggers are
   re-measured there, at the same detector; cite those runs. A control that
@@ -95,7 +100,8 @@ nobody re-checked it.
   after the three minimum cells, publish the remaining list as a follow-up task,
   and say so in Results. Do not overspend silently.
 
-**Blast radius.** Three documents and the draws. No skill, case, fixture,
+**Blast radius.** Three evidence documents, the two historical specs whose
+forward references the result closes, and the draws. No skill, case, fixture,
 assertion, runner or detector change.
 
 ## Non-Goals
@@ -176,6 +182,15 @@ Budget: **36 draws** — 35 for the seven arms and 1 for the probe. The 429 run
 spent none. The cap is 80; the remaining 44 were not spent because the control
 contamination is structural (below), not probabilistic.
 
+The two non-evidence runs, with their checker lines:
+
+```sh
+node scripts/check-eval-run.mjs ~/.local/share/opencode/evals/runs/2026-11-07T08-14-24--capture-idea
+# cases=1 reps=5 findings=5 ... isolated=yes — gate-miss: provider GoUsageLimit 429, no model draw
+node scripts/check-eval-run.mjs ~/.local/share/opencode/evals/runs/2026-11-07T08-16-35--capture-idea--agentworks-deepseek-v4-1-flash
+# cases=1 reps=1 findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes — one-draw route probe, discarded
+```
+
 ### F3 — classification
 
 - **`write-implementation-prompt` #1 — unresolved.** Both clean control draws
@@ -190,9 +205,9 @@ contamination is structural (below), not probabilistic.
   cannot separate the arms. The 2/2 clean subset is not a five-draw rate, but the
   earlier v1 reading (4/5 clean, 4/4 passed) points the same way.
 - **`capture-idea` #1 — unresolved.** Skill 5/5 clean; every control draw read
-  the installed `SKILL.md`, so the clean subset is 0/0. The direction (the clean
-  controls would fail `status: unprocessed`) is unchanged, but no clean control
-  exists.
+  the install under `/Users/wendell/.agents/skills` (`r1` the directory, the rest
+  the `SKILL.md`), so the clean subset is 0/0. The direction (the clean controls
+  would fail `status: unprocessed`) is unchanged, but no clean control exists.
 - **`process-inbox` #1 — unresolved.** Skill 5/5 clean; control 0/2 clean (3
   contaminated). Both clean draws failed `unchanged` and `nodir docs/backlog`.
 
@@ -204,6 +219,12 @@ correctly marks those draws contaminated. Re-running the control cannot fix it:
 the clean counts above are the third wave to show the same mechanism. That is the
 deny-layer half of TASK-43, not a case-design defect and not a reason to lower
 the five-draw rule.
+
+### Forward references closed
+
+`SPEC-0028` and `SPEC-0030` said the #2/#4 controls were pending SPEC-0031. Both
+now carry the v2 outcome — #2 unresolved at 0/4 clean, #4 non-discriminator at
+2/2 clean passed — and the numbers those specs published are unchanged.
 
 ### What this means for issue #5
 

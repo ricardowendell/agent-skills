@@ -171,7 +171,9 @@ scheduling change. **No model draw.**
   the controls for `write-implementation-prompt` #2 (`2026-11-06T15-30-39`) and
   #4 (`2026-11-06T14-37-23`), each with one denied read of the checkout root:
   the published `0/5` and `5/5` are now **0/4 replay-clean** and **4/5 draws
-  clean (4/4 passed)**, both pending SPEC-0031. The corrections are beside the
+  clean (4/4 passed)**. SPEC-0031 re-measured both at v2: #2 is **0/4 clean**
+  (unresolved) and #4 is **2/2 clean passed** (non-discriminator). The
+  corrections are beside the
   published numbers in `docs/evals/coverage.md` and
   `docs/evals/write-implementation-prompt-matrix.md`. The record-decision
   controls and the agentworks controls replay clean, so the host was read by
