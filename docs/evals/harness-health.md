@@ -39,10 +39,10 @@ no model and writes nothing.
 
 ### Unreadable eval artefacts
 
-- `2026-11-03T09-52-59--review-code--without-skill/review-code--03`: missing result.json
-- `2026-11-05T07-55-46--review-code/review-code--07`: missing result.json
-- `2026-11-06T07-09-52--implement-from-prompt--without-skill/implement-from-prompt--02`: missing result.json
-- `2026-11-06T13-11-35--review-code--agentworks-gpt-oss-120b--without-skill/review-code--01`: missing result.json
+- `2026-11-03T09-52-59--review-code--without-skill/review-code--03`: missing result.json (unreadable)
+- `2026-11-05T07-55-46--review-code/review-code--07`: missing result.json (unreadable)
+- `2026-11-06T07-09-52--implement-from-prompt--without-skill/implement-from-prompt--02`: missing result.json (unreadable)
+- `2026-11-06T13-11-35--review-code--agentworks-gpt-oss-120b--without-skill/review-code--01`: missing result.json (unreadable)
 
 ## pdlc
 

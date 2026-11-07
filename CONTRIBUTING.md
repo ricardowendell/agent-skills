@@ -198,6 +198,28 @@ for the broad trend. Paste the new table into the baseline doc, then open at mos
 three findings and at most one spec. The report is evidence, not a CI gate: a
 red number does not fail a build.
 
+## Checking a publication
+
+Two model-free checks catch the mechanical review findings: a spec whose
+contract disagrees with its diff, and a document citing evidence that does not
+say what the sentence claims. Run them before review and before a merge:
+
+```sh
+# the spec's task:, files: vs the branch diff, dependency links, body rules
+node scripts/spec-check.mjs --spec docs/specs/active/<slug>.md --base main
+# every run-directory citation in docs/evals/*.md against the local store
+node scripts/check-evidence.mjs
+```
+
+`spec-check` exits 1 with one line per finding. A file may sit on one side of
+the diff and not the other when the Results section names it and says why; the
+check reports the direction instead of hiding it. `check-evidence` exits 1 on a
+missing directory, an unfinished run cited as complete, or `isolated=yes` on a
+run whose recorded detector is not current. It warns when a run with findings is
+cited without a `dirty|leak|host|stall|contaminated|discard|history|failure`
+marker; `--strict` makes those warnings fatal. The local `selftest` runs
+`check-evidence`; CI cannot, because it has no eval store.
+
 ## What CI enforces
 
 `.github/workflows/skills.yml` runs, on Node 24:
@@ -205,13 +227,15 @@ red number does not fail a build.
 ```sh
 node scripts/validate-skills.mjs --root skills
 node scripts/run-evals.mjs --root skills --list --check
+node scripts/spec-check.mjs --spec <changed spec> --base <base sha>  # one per changed spec
 node --test scripts/lib/evals/*.test.mjs
 node --test skills/bootstrap-project-harness/scripts/*.test.mjs
 node scripts/check-sensor-parity.mjs
 ```
 
-The same commands are in `.githooks/pre-commit`. Behavioural runs stay local:
-they need a model provider and cost money.
+The same commands are in `.githooks/pre-commit`, except `spec-check` (it needs
+the PR base) and `check-evidence` (it needs the local store). Behavioural runs
+stay local: they need a model provider and cost money.
 
 ## Third-party skills
 
@@ -234,6 +258,8 @@ imperative subject ≤ 72 characters. The body explains why, not what.
       can fail.
 - [ ] No new measurement without a run directory (historical notes are marked
       `no run dir` in the coverage table).
+- [ ] `node scripts/spec-check.mjs --spec <spec> --base main` is clean.
+- [ ] `node scripts/check-evidence.mjs` has no errors.
 - [ ] A run directory cited as a clean measurement passes
       `node scripts/check-eval-run.mjs <dir>` with `findings=0 warnings=0`.
 - [ ] `docs/evals/coverage.md` is updated.

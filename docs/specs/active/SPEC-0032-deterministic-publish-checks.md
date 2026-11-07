@@ -24,6 +24,8 @@ files:
   - docs/pipeline.md
   - .github/workflows/skills.yml
   - CONTRIBUTING.md
+  - docs/evals/coverage.md
+  - docs/evals/harness-health.md
   - docs/specs/active/SPEC-0032-deterministic-publish-checks.md
 tests:
   - node scripts/validate-skills.mjs --root skills
@@ -138,7 +140,117 @@ change. **Zero model draws.**
 
 ## Results
 
-_Filled during implementation._
+### F0 — the inventory
+
+Both checks were run over the current corpus in report mode before any code was
+changed:
+
+```text
+node scripts/spec-check.mjs --spec docs/specs/active/<each>.md
+node scripts/check-evidence.mjs
+```
+
+After the shorthand rule below, `check-evidence` found 4 errors and 97 warnings.
+The errors were the four `missing result.json` bullets under **Unreadable eval
+artefacts** in `docs/evals/harness-health.md`, where the run is `running` but the
+line did not carry a completion marker. The warnings are runs with findings
+cited as history without one of the dirty markers; they stay warnings, not
+errors.
+
+The first pass with exact-directory resolution produced 116 "missing" errors.
+Most were shorthands the corpus already uses (`2026-11-06T17-25-52--process-inbox`
+for the `...--without-skill` directory). That was a false positive, so the check
+now resolves an exact directory first, then a unique prefix or a unique
+timestamp+arm shorthand; an ambiguous token is still a missing directory. Two
+genuinely wrong citations were corrected rather than hidden by the shorthand
+rule: `2026-11-04T21-59-17--without-skill` (missing the
+`--audit-code-quality` label) and
+`2026-11-05T13-22-08--implement-from-prompt--opencode-go-gpt-6-luna` (the
+with-skill directory does not exist; the cited artefact is the control). Neither
+change moves a number.
+
+`spec-check` over the active corpus found two historical specs with
+`status: implemented` and no Results section (`SPEC-0015`, `SPEC-0016`) and four
+one-way links: `SPEC-0019` → `SPEC-0020`, `SPEC-0023` → `SPEC-0021`,
+`SPEC-0023` → `SPEC-0022`, and `SPEC-0030` → `SPEC-0029`. They predate the rule
+or live in specs outside this spec's files; they are not changed. CI checks only
+the specs a change touches, so they do not fail a build.
+
+### F1/F2 — `speccheck` and `spec-check`
+
+`scripts/lib/evals/speccheck.mjs` parses the frontmatter subset the specs use
+(scalars, `[]`, inline and block lists) and applies the contract rules. The CLI
+is `--spec <path> --base <ref> [--json]`; without `--base` it runs the
+contract-only rules. Each finding is one line, exit 1, no stack trace.
+
+The diff rule reports both directions: `files-declared-untouched` and
+`files-touched-undeclared`. A declared file the diff did not touch is explained
+by naming the path in Results, per the Open Question in this spec; a touched
+file the spec did not declare is always a finding. Symmetry is literal
+(`A blocks B` ⇔ `B depends_on A`); a dependency on a spec that does not list the
+blocker in `blocks:` is a finding. A full sweep finds four pre-existing one-way
+links, named in F0 above; they are not in this spec's files.
+
+### F3 — `evidence` and `check-evidence`
+
+`scripts/lib/evals/evidence.mjs` scans `docs/evals/*.md` for run-directory
+tokens and applies `checkCitation` to the record the CLI reads. The CLI reads
+`manifest.json` and `cases/*/result.json`, reuses `checkRun`, and never calls a
+model. Errors: missing directory, non-`completed` run without a marker on the
+line, and `isolated=yes` for a run whose recorded detector differs from
+`DETECTOR_VERSION`. Warning: a completed run with findings cited without a
+`dirty|leak|host|stall|contaminated|discard|history|failure` marker; `--strict`
+makes it fatal. The warning is advisory in `selftest` so the 97 historical
+citations do not turn the gate red.
+
+### F4 — wiring
+
+- `docs/pipeline.md`: `node scripts/check-evidence.mjs` joins the `selftest`
+  line; the gate description says CI runs the rest plus `spec-check` because it
+  has no local store.
+- `.github/workflows/skills.yml`: checkout is `fetch-depth: 0`, and a
+  `Spec contract for changed specs` step runs `spec-check` for every spec the
+  push/PR diff touches, using the PR base sha or `event.before`.
+- `CONTRIBUTING.md`: new **Checking a publication** section with both exact
+  commands and the `--strict` rule; the CI list and the pre-PR checklist now
+  name them.
+
+### F5 — the repair list
+
+- `docs/evals/harness-health.md`: the four `missing result.json` bullets gained
+  `(unreadable)`. They are the four errors the check reported.
+- `docs/evals/coverage.md`: `2026-11-04T21-59-17--without-skill` →
+  `2026-11-04T21-59-17--audit-code-quality--without-skill`, and
+  `2026-11-05T13-22-08--implement-from-prompt--opencode-go-gpt-6-luna` →
+  the `--without-skill` directory. No published number moved.
+
+These two documents were added to this spec's `files:` line: they are the corpus
+repair the Scope asks for, and declaring them keeps the diff honest.
+
+```text
+node scripts/check-evidence.mjs
+6 documents, 0 errors, 97 warnings; current detector 71bfb85a91cd68ab
+```
+
+### Tests and gates
+
+`scripts/lib/evals/speccheck.test.mjs` has one fixture per rule plus the clean
+case and a git-backed CLI test for exit 1 and `--json`. `evidence.test.mjs` has
+the pure rule cases plus a synthetic store (existing/clean, running, v1 with
+`isolated=yes`, dirty) and a shorthand/ambiguity test.
+
+```text
+node scripts/validate-skills.mjs --root skills                      All clear
+node scripts/run-evals.mjs --root skills --list --check             exit 0
+node --test scripts/lib/evals/*.test.mjs                            326 pass
+node --test skills/bootstrap-project-harness/scripts/*.test.mjs     pass
+node scripts/check-sensor-parity.mjs                                2/2 fixtures
+node scripts/check-evidence.mjs                                     0 errors
+node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0032-...md --base main
+```
+
+`git diff main...HEAD -- skills/` is empty. Zero model draws.
+
 
 ## Open Questions
 

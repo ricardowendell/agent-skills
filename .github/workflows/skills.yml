@@ -12,6 +12,10 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
+        with:
+          # spec-check reads the base commit from the push/PR event; a shallow
+          # checkout would make `git diff <base>...HEAD` fail.
+          fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
           node-version: 24
@@ -21,6 +25,24 @@ jobs:
       # Cases parse, and every case has a prompt, a known assertion kind and a
       # unique number. Behavioural runs need a model provider, so they stay local.
       - run: node scripts/run-evals.mjs --root skills --list --check
+      # The spec contract: files: against the base diff, task: against
+      # backlog/tasks, dependency symmetry, and the ready/implemented body rules.
+      # Only the specs this change touches are checked; the rest of the durable
+      # record predates the rule.
+      - name: Spec contract for changed specs
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            echo "no base commit; spec-check skipped"
+            exit 0
+          fi
+          changed=$(git diff --name-only "$BASE_SHA" HEAD -- 'docs/specs/*.md' 'docs/specs/active/*.md')
+          for spec in $changed; do
+            if [ -f "$spec" ]; then
+              node scripts/spec-check.mjs --spec "$spec" --base "$BASE_SHA"
+            fi
+          done
       # The runner's own tests: parser, globs, assertions, fixture staging.
       # Coverage is reported, not enforced: a numeric floor needs a baseline
       # measured on the same Node the workflow pins.
