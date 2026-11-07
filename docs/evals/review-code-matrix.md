@@ -147,8 +147,9 @@ recorded as a preliminary cell: the case separates, and the control's failure is
 #7 was re-measured at `a7cb10e` under detector v2 on
 `agentworks/deepseek-v4-1-flash`, five draws per arm: **5/5 vs 0/5**, both clean
 (`findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes`). The control fails
-`verdict REJECT` in all five. This is the held-out case of the issue #5 set,
-frozen in SPEC-0033 before the first draw; see
+`verdict REJECT` in all five: `r3`/`r4`/`r5` approve despite the red gate,
+`r1`/`r2` name the gate but do not emit the token. This is the held-out case of
+the issue #5 set, frozen in SPEC-0033 before the first draw; see
 [`discriminating-cases.md`](discriminating-cases.md). Runs:
 `2026-11-07T09-07-52--review-code--agentworks-deepseek-v4-1-flash`,
 `2026-11-07T09-11-14--review-code--agentworks-deepseek-v4-1-flash--without-skill`.

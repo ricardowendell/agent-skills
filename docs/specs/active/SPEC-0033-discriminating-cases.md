@@ -21,6 +21,7 @@ files:
   - docs/evals/coverage.md
   - docs/evals/implement-from-prompt-matrix.md
   - docs/evals/review-code-matrix.md
+  - docs/README.md
   - docs/specs/active/SPEC-0033-discriminating-cases.md
 tests:
   - node scripts/validate-skills.mjs --root skills
@@ -75,8 +76,8 @@ never used to tune the change it measures.
 - **Land at a commit.** The issue is answered with the merged SHA, not a release.
 
 **Blast radius.** Two case metadata blocks, one new doc, three evidence docs, the
-spec, and the draws. No skill text, fixture, assertion, runner or detector
-change.
+doc map, the spec, and the draws. No skill text, fixture, assertion, runner or
+detector change.
 
 ## Non-Goals
 
@@ -105,7 +106,7 @@ change.
 ## Acceptance Criteria
 
 1. **The holdout was frozen before the first draw.** This spec names
-   `review-code` #7 at `eb9903e`+; no new run predates the freeze.
+   `review-code` #7 in commit `5fe56fc`; no new run predates the freeze.
 2. **Three cases separate**, or the shortfall is published: each selected case
    has, in one run per arm, five draws with a consistent outcome, and the arms
    differ on a machine-checkable assertion. A case that cannot reach five clean
@@ -125,10 +126,9 @@ change.
 
 ### F0 — the holdout, frozen before the first draw
 
-`review-code` #7 was named the holdout in commit `5fe56fc` (this spec, at
-`a7cb10e`), before any new run. The other two candidates were
-`implement-from-prompt` #1 and #8. No result from #7 was used to choose them or
-to edit a skill.
+`review-code` #7 was named the holdout in commit `5fe56fc` (this spec), before
+any new run. The other two candidates were `implement-from-prompt` #1 and #8. No
+result from #7 was used to choose them or to edit a skill.
 
 ### F1/F2 — the six runs
 
@@ -155,8 +155,10 @@ All three are **separators**, on the assertion the control misses:
 - `implement-from-prompt` #1: the control never marks
   `docs/specs/SPEC-0007-demo.md` `status: implemented` (0/5).
 - `implement-from-prompt` #8: the control invents `src/format.js` (0/5).
-- `review-code` #7: the control approves with a "pre-existing failure" note
-  instead of `VERDICT: REJECT` (0/5).
+- `review-code` #7: the control fails `verdict REJECT` in 0/5 — 3/5 approve
+  despite the red gate, 2/5 name the gate but do not emit the token. That is a
+  format-and-judgment separation on the assertion the case checks, not a uniform
+  judgment difference; the doc says so.
 
 The arms are consistent across their five reps, the difference is on a
 filesystem or gate assertion, and one case is held out. That is the issue #5
@@ -180,6 +182,12 @@ shape.
   history and are not a delta.
 - The case metadata is the only `skills/` change; `skillHash` is unchanged for
   each skill.
+- `review-code` #7 is the weakest of the three: its control fails the token 5/5,
+  but 2/5 of those failures recognize the red gate and only miss the output
+  format. The two `implement-from-prompt` cases fail the same assertion in all
+  five controls.
+- A run `manifest.json` counts `passed`/`failed` per case; the five-draw
+  numerator/denominator is in `cases/*/result.json` (`passed`/`reps`).
 
 ### Gates
 
