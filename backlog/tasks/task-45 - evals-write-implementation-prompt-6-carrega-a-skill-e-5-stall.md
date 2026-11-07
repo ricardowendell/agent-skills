@@ -1,9 +1,10 @@
 ---
 id: TASK-45
 title: 'evals: write-implementation-prompt #6 carrega a skill e #5 stall'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-11-06T20:53:00Z'
+updated_date: '2026-11-06T22:22:00Z'
 labels: []
 dependencies: []
 references:
