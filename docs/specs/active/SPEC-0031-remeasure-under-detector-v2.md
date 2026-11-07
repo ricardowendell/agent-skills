@@ -14,7 +14,8 @@ related_decisions: []
 depends_on:
   - SPEC-0028-detector-host-corpus
   - SPEC-0032-deterministic-publish-checks
-blocks: []
+blocks:
+  - SPEC-0033-discriminating-cases
 files:
   - docs/evals/write-implementation-prompt-matrix.md
   - docs/evals/pipeline-bookends-matrix.md

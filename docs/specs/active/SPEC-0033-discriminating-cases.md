@@ -21,6 +21,7 @@ files:
   - docs/evals/coverage.md
   - docs/evals/implement-from-prompt-matrix.md
   - docs/evals/review-code-matrix.md
+  - docs/specs/active/SPEC-0031-remeasure-under-detector-v2.md
   - docs/specs/active/SPEC-0033-discriminating-cases.md
 tests:
   - node scripts/validate-skills.mjs --root skills
