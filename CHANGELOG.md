@@ -9,6 +9,58 @@ skills, which cases, and which published measurements.
 
 ## [Unreleased]
 
+## [0.6.1] — 2026-11-07
+
+A correction release: the first measurement attempt was already in the store,
+and the documentation now uses it.
+
+### Added
+
+- **The discriminating set for issue #5** (`docs/evals/discriminating-cases.md`):
+  three held-out separators at n=5 — `implement-from-prompt` #1 (5/5 vs 0/5,
+  `status: implemented`), #8 (5/5 vs 0/5, `nofile src/format.js`) and
+  `review-code` #7 (5/5 vs 0/5, `verdict REJECT`). All six runs are
+  `findings=0 isolated=yes`. `review-code` #7 is the holdout, frozen at
+  `5fe56fc` before the first draw. `write-implementation-prompt` #2 also
+  separates (5/5 vs 0/5) and is listed beside the held-out three.
+- **TASK-52**: a provider abort could pass `check-eval-run` as a clean run.
+
+### Fixed
+
+- **SPEC-0031's first attempt was uncited.** Ten default-model v2 runs (50
+  repetitions) were left in the store when the second pass started. Including
+  them makes `write-implementation-prompt` #2 a clean separator (5/5 vs 0/5)
+  and confirms #4 as a non-discriminator (4/4 valid passed). `process-inbox` #1
+  stays unresolved: its `03-08-51` control died on the provider go-limit in all
+  five reps, and its green assertions are an abort artifact.
+- **The draw budget is stated honestly.** The wave scheduled 86 repetitions,
+  82 produced model work and 4 made no model call — 2 over the 80 cap. The
+  original Results counted only 36. AC-5 is not met; the overrun is published,
+  not redefined.
+- **The stale `pending SPEC-0031` markers** in both matrices, `coverage.md` and
+  the forward references in SPEC-0028/0030 now carry the measured outcome.
+
+### Measured
+
+- **30 draws** for the issue #5 set: three separators, five draws per arm, both
+  arms clean, one holdout.
+- **Health delta** at `2026-11-07T18:45:51Z`: 279 runs, 1,362 draws; eligible
+  **66.9%**, strict **72.9%**. The strict base grew by 131 draws (75 passed, 56
+  failed); the failures are control arms by design plus the pdlc-orca pilot.
+
+### Known gaps
+
+- **Three cells remain `unresolved`**: `capture-idea` #1, `process-inbox` #1 and
+  `write-implementation-prompt` #1. Their controls never reached five valid
+  clean draws.
+- **The holdout's control is not uniform**: `review-code` #7 fails the verdict
+  token 5/5, but 3/5 approve despite the red gate and 2/5 only miss the token.
+- **Provider aborts are not classified as infrastructure** (TASK-52):
+  `go-limit`, `rate-limit` and `overloaded` can leave a run with trivially green
+  assertions and `isolated=yes`.
+- **The pdlc-orca pilot** (36 draws) is in the health window; the skill was
+  removed before this release and is not part of the artifact.
+
 ## [0.6.0] — 2026-11-07
 
 The harness stops reporting what it cannot see, and two mechanical review

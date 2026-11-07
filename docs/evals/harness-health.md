@@ -172,6 +172,57 @@ The only skill edit in this release is the `write-implementation-prompt`
 description boundary (`SPEC-0030`); the controls were not re-run, so the control
 arm's rate is unchanged by it.
 
+## 0.6.1 delta — 2026-11-07T18:45:51Z
+
+```sh
+node scripts/harness-health.mjs --until 2026-11-07T18:45:51Z
+```
+
+| Metric | 0.6.0 (01:03:57Z) | 0.6.1 (18:45:51Z) |
+| --- | --- | --- |
+| Runs | 243 | 279 |
+| Unfinished runs | 7 | 8 |
+| Cases | 324 | 369 |
+| Draws | 1,198 | 1,362 |
+| Eligible draws | 1,122 | 1,259 |
+| Rate denominator | 1,109 | 1,246 |
+| Pass rate (eligible, non-staged) | 68.3% | 66.9% |
+| Gate misses (eligible) | 25 | 31 |
+| Strict clean draws | 381 | 512 |
+| Strict passed / failed | 298 / 83 | 373 / 139 |
+| Strict pass rate | 78.2% | 72.9% |
+| Contaminated | 51 | 78 |
+| Infrastructure | 21 | 21 |
+| Provenance (completed draws) | 449 complete, 745 partial | 613 complete, 745 partial |
+| Wall time | 16h 43m 37s | 18h 43m 46s |
+| Sum of draw durations | 26h 18m 2s | 31h 48m 25s |
+| pdlc runs | 17 | 19 |
+| pdlc retries / red gates | 0 / 0 | 0 / 0 |
+| pdlc median | 45m 56s | 45m 56s |
+
+The strict base grew by 131 draws: 75 passed and 56 failed. The failures are
+control arms by design (`write` #2/#4 and `process-inbox` #1 on the default
+attempt, the three issue #5 controls) plus the pdlc-orca pilot. The broad rate
+fell 1.4 points for the same reason: the new draws are mostly controls, and a
+control is supposed to fail.
+
+### Findings (three)
+
+1. **The first SPEC-0031 attempt was uncited.** Ten default-model runs, 50 reps,
+   were left in the store when the second pass started; one separator survived
+   (`write` #2). The F0 must inventory the store, not only the replay table
+   (`SPEC-0031`).
+2. **A provider abort passes as a clean run.** `03-08-51` died on
+   `provider.go-limit` in all five reps; `check-eval-run` prints `findings=0
+   isolated=yes` because the assertions are trivially green. The same signature
+   appeared with `provider.rate-limit`. TASK-52.
+3. **The pdlc-orca pilot is in the window, not in the artifact.** 36 of the 164
+   new draws measured a skill that was removed before the release. They count in
+   the trend and are not evidence for any shipped skill.
+
+No shipped skill changed in this release; the new evidence is documentation and
+the corrected attribution of runs that already existed.
+
 ## How to read it
 
 - **Two rates, two questions.** `Pass rate (eligible, non-staged)` is the broad
