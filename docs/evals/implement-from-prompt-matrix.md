@@ -221,6 +221,12 @@ shape, not "answered from its own knowledge" — and one occurrence in ten is th
 variance branch of SPEC-0019, not a repeated cue. The description was **not**
 changed; there was no repeated miss to attribute to it.
 
+TASK-39 settled what that read means by arm: a behavioural case (gate on) now
+counts a direct read of the staged `SKILL.md` as a load, recorded as
+`skillGate.source: "read"`; a trigger case (`gate: off`) keeps the tool call as
+its routing signal, so `#5 r9` remains a trigger miss. The historical draw is
+not rewritten.
+
 The two exclusions are different mechanisms, not one: `r4` read a stale copy under
 `/private/var/folders/…/T/opencode`, which SPEC-0017's detector marks as
 contamination; `r6` stalled and was killed by the watchdog, which is SPEC-0020's

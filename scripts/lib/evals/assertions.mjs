@@ -7,7 +7,7 @@
 
 import { readFileSync, realpathSync } from "node:fs"
 import { createHash } from "node:crypto"
-import { join } from "node:path"
+import { isAbsolute, join, relative, sep } from "node:path"
 import { expand } from "./glob.mjs"
 import { replyText, skillLoads, toolCalls } from "./events.mjs"
 
@@ -51,17 +51,55 @@ function stance(line) {
   return first ? first[0].toUpperCase() : ""
 }
 
+// A behavioural case can be carried by the staged skill even when the `skill`
+// tool is never called: the agent opens the copied SKILL.md and follows it.
+// That is a load for the gate, but only the scratch copy. A read outside the
+// scratch is the global install or a stale copy — contamination, not a load —
+// and a trigger case keeps the tool call as its signal (`gate: off`).
+function stagedSkillRead(out, scratch, expectedId) {
+  const root = realPath(scratch)
+  for (const t of toolCalls(out)) {
+    if (t.tool !== "read" || t.status !== "completed") continue
+    const raw = t.input.filePath ?? t.input.path ?? t.input.filename
+    if (typeof raw !== "string" || !raw) continue
+    const candidate = realPath(isAbsolute(raw) ? raw : join(scratch, raw))
+    if (!isInside(scratch, candidate)) continue
+    const parts = relative(root, candidate).split(sep)
+    // <scratch>/.opencode/skills/<id>/SKILL.md
+    if (parts.length !== 4) continue
+    if (parts[0] !== ".opencode" || parts[1] !== "skills" || parts[3] !== "SKILL.md") continue
+    if (expectedId && parts[2] !== expectedId) continue
+    return { id: parts[2], directory: join(scratch, ".opencode", "skills", parts[2]), status: t.status }
+  }
+  return null
+}
+
 export function skillGate(out, scratch, expectedId) {
   const loads = skillLoads(out)
-  if (!loads.length) return { ok: false, reason: `skill '${expectedId}' was not loaded`, loads }
-  const hit = loads.find((l) => l.id === expectedId || !expectedId)
-  if (!hit) return { ok: false, reason: `loaded ${loads.map((l) => l.id).join(", ")} instead of '${expectedId}'`, loads }
+  let hit = loads.find((l) => l.id === expectedId || !expectedId)
+  let source = "tool"
+  if (!hit) {
+    const read = stagedSkillRead(out, scratch, expectedId)
+    if (read) {
+      hit = read
+      source = "read"
+    }
+  }
+  if (!hit) {
+    if (!loads.length) return { ok: false, reason: `skill '${expectedId}' was not loaded`, loads, source: null }
+    return { ok: false, reason: `loaded ${loads.map((l) => l.id).join(", ")} instead of '${expectedId}'`, loads, source: null }
+  }
   // Provenance lives here, not in the `skill` assertion: an id match from the
   // global install would mean the run tested something other than the checkout.
   if (!isInside(scratch, hit.directory)) {
-    return { ok: false, reason: `'${hit.id}' loaded from ${hit.directory || "an unknown path"}, outside the scratch dir`, loads }
+    return { ok: false, reason: `'${hit.id}' loaded from ${hit.directory || "an unknown path"}, outside the scratch dir`, loads, source: null }
   }
-  return { ok: true, reason: `loaded ${hit.id}`, loads }
+  return {
+    ok: true,
+    reason: source === "read" ? `read ${hit.id}/SKILL.md from the scratch dir` : `loaded ${hit.id}`,
+    loads: source === "read" ? [...loads, { ...hit, source }] : loads,
+    source,
+  }
 }
 
 function md5(file) {
@@ -188,22 +226,23 @@ function check(kind, arg, { scratch, out, text, snapshot }) {
 
 // Both sides are realpathed: macOS tmpdir is /var/..., while the agent reports
 // /private/var/..., and a symlinked scratch would otherwise read as "outside".
+// A path that does not exist yet falls back to its literal form.
+function realPath(p) {
+  try {
+    return realpathSync(p).replace(/\/+$/, "")
+  } catch {
+    return p.replace(/\/+$/, "")
+  }
+}
+
 function isInside(root, candidate) {
   if (!candidate) return false
-  const real = (p) => {
-    try {
-      return realpathSync(p).replace(/\/+$/, "")
-    } catch {
-      return p.replace(/\/+$/, "")
-    }
-  }
-  const raw = (p) => p.replace(/\/+$/, "")
-  const a = real(root)
-  const b = real(candidate)
+  const a = realPath(root)
+  const b = realPath(candidate)
   if (b === a || b.startsWith(a + "/")) return true
   // realpath only succeeds on paths that exist; fall back to the literal form
   // so a not-yet-created candidate still compares correctly.
-  return candidate === raw(root) || candidate.startsWith(raw(root) + "/")
+  return candidate === root.replace(/\/+$/, "") || candidate.startsWith(root.replace(/\/+$/, "") + "/")
 }
 
 export function safeRegex(pattern, flags = "") {

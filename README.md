@@ -280,9 +280,10 @@ dir. The copy lands in `<scratch>/.opencode/skills/<id>/`, which shadows a globa
 install of the same id, and the transcript records its hash — otherwise a local
 run could quietly test the installed skill and a CI run could test none. A case
 counts as `passed` only when the process exits 0, at least one assertion ran,
-every assertion passed, and that copy was the skill that loaded; a case with no
-assertions is `unscored` and fails the run. Nothing is appended to the prompt to
-make a run cheaper: a cheaper run is a different test.
+every assertion passed, and that copy was the skill that ran — through the
+`skill` tool or, for a behavioural case, read directly from the scratch dir; a
+case with no assertions is `unscored` and fails the run. Nothing is appended to
+the prompt to make a run cheaper: a cheaper run is a different test.
 
 The scratch dir is not an OS sandbox — the agent can still write outside it. The
 protection is `unchanged` plus the fixture's own `git status`.

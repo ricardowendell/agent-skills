@@ -80,7 +80,12 @@ Rules:
 - Numbers are unique per skill and never reused. `--check` rejects duplicates.
 - `status: manual` keeps a case in the file as design intent without running it.
 - `gate: off` is required by trigger cases, which ask whether a skill was
-  chosen at all.
+  chosen at all. A trigger case keeps the tool call as its signal: the `skill`
+  assertion does not accept a direct read of the staged `SKILL.md`. A
+  behavioural case (gate on) accepts either the `skill` tool or a direct read of
+  that staged file, and `skillGate.source` records which one (`tool` or `read`).
+  A read outside the scratch dir — the installed copy or a stale one — is never
+  a load.
 - `stage: <skill-id>` stages a second skill in the scratch when the case asserts
   on a sibling (`- assert: skill process-inbox` while reviewing `capture-idea`).
   `--check` rejects an unknown id and one that names the skill under review. The

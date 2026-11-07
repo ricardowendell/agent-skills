@@ -67,6 +67,8 @@ test("a run that loaded the pinned copy passes", async () => {
 
     assert.equal(result.status, "passed")
     assert.equal(gate.ok, true)
+    assert.equal(gate.source, "tool")
+    assert.deepEqual(result.skillGate.loaded, [skill.id])
     assert.ok(result.skillHash, "the staged copy is hashed")
     assert.equal(result.execution.exit, 0)
     assert.equal(calls.length, 1)
@@ -85,6 +87,30 @@ test("a run that never loaded the skill fails on the gate, not on an assertion",
     assert.equal(result.status, "failed")
     assert.match(result.reason, /was not loaded/)
     assert.equal(result.assertions.every((a) => a.pass), true, "the assertions themselves passed")
+  } finally {
+    cleanup()
+  }
+})
+
+test("a behavioural run that reads the staged SKILL.md passes with source read", async () => {
+  const { skill, scratch, c, cleanup } = setup()
+  try {
+    const file = join(scratch, ".opencode/skills", skill.id, "SKILL.md")
+    const out =
+      JSON.stringify({
+        type: "tool_use",
+        part: { tool: "read", state: { status: "completed", input: { filePath: file }, metadata: { metadata: {} } } },
+      }) +
+      "\n" +
+      JSON.stringify({ type: "text", part: { text: "done" } })
+    const { spawn } = agent({ out })
+    const { result, gate } = await executeCase({ skill, c, scratch, spawnAgent: spawn })
+
+    assert.equal(gate.ok, true)
+    assert.equal(gate.source, "read")
+    assert.equal(result.status, "passed")
+    assert.equal(result.skillGate.source, "read")
+    assert.deepEqual(result.skillGate.loaded, [skill.id])
   } finally {
     cleanup()
   }

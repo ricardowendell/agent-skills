@@ -21,14 +21,20 @@ import { DETECTOR_VERSION } from "./leak.mjs"
 const INFRASTRUCTURE_EXITS = new Set(["timeout", "stalled"])
 
 // The gate answers "was the skill under review the artefact that ran?" — a
-// trigger case opts out, the control arm answers the inverse question.
+// trigger case opts out, the control arm answers the inverse question. For a
+// behavioural case the `skillGate` itself accepts a direct read of the staged
+// SKILL.md (origin `read`); a trigger case never reaches it.
 function gateFor({ c, out, scratch, skillId, arm }) {
-  if (c.gate === "off") return { ok: true, reason: "case does not gate on the skill (trigger/routing case)" }
+  if (c.gate === "off") {
+    return { ok: true, reason: "case does not gate on the skill (trigger/routing case)", loads: skillLoads(out), source: null }
+  }
   if (arm === "without-skill") {
     const loads = skillLoads(out)
     return {
       ok: loads.length === 0,
       reason: loads.length ? `loaded ${loads.map((l) => l.id).join(", ")} although --no-skill` : "no skill loaded (control arm)",
+      loads,
+      source: null,
     }
   }
   return skillGate(out, scratch, skillId)
@@ -136,7 +142,14 @@ export async function executeCase({
     // The arm's skill hash stays `skillHash`; the declared stages are reported
     // apart so `skillGate` keeps answering only "did the arm's skill load".
     stagedSkills,
-    skillGate: { ok: gate.ok, reason: gate.reason, loaded: skillLoads(out).map((l) => l.id) },
+    // `source` says how the load was proven — the `skill` tool or a direct read
+    // of the staged SKILL.md — so a later reader can tell the two apart.
+    skillGate: {
+      ok: gate.ok,
+      reason: gate.reason,
+      source: gate.source ?? null,
+      loaded: (gate.loads ?? skillLoads(out)).map((l) => l.id),
+    },
     assertions: asserts.map(({ kind, arg, pass, detail }) => ({ kind, arg, pass, detail })),
     execution: {
       exit: code,

@@ -144,6 +144,7 @@ test("the skill gate requires the pinned copy inside the scratch dir", () => {
     tools: [{ tool: "skill", input: { id: "review-code" }, meta: { name: "review-code", directory: join(scratch, ".opencode/skills/review-code") } }],
   })
   assert.equal(skillGate(inside, scratch, "review-code").ok, true)
+  assert.equal(skillGate(inside, scratch, "review-code").source, "tool")
 
   const outside = transcript({
     tools: [{ tool: "skill", input: { id: "review-code" }, meta: { name: "review-code", directory: "/Users/wendell/.agents/skills/review-code" } }],
@@ -156,6 +157,59 @@ test("the skill gate requires the pinned copy inside the scratch dir", () => {
   const none = transcript({ text: "did it myself" })
   assert.equal(skillGate(none, scratch, "review-code").ok, false)
   assert.equal(one({ kind: "noskill" }, scratch, none).pass, true)
+})
+
+// A behavioural case is carried by the skill even when the `skill` tool is not
+// called: reading the staged SKILL.md is a load, with the origin recorded. The
+// control arm and trigger cases do not use this path.
+test("a direct read of the staged SKILL.md is a load, recorded as a read", () => {
+  const scratch = tree({ ".opencode/skills/review-code/SKILL.md": "rules" })
+  const absolute = transcript({
+    tools: [{ tool: "read", input: { filePath: join(scratch, ".opencode/skills/review-code/SKILL.md") } }],
+  })
+  const g = skillGate(absolute, scratch, "review-code")
+  assert.equal(g.ok, true)
+  assert.equal(g.source, "read")
+  assert.deepEqual(g.loads.map((l) => l.id), ["review-code"])
+
+  const relativePath = transcript({
+    tools: [{ tool: "read", input: { path: ".opencode/skills/review-code/SKILL.md" } }],
+  })
+  assert.equal(skillGate(relativePath, scratch, "review-code").ok, true)
+})
+
+test("a read outside the scratch, of another staged skill, or of a reference is not a load", () => {
+  const scratch = tree({
+    ".opencode/skills/review-code/SKILL.md": "rules",
+    ".opencode/skills/review-code/references/notes.md": "x",
+    ".opencode/skills/other/SKILL.md": "x",
+  })
+  const global = transcript({
+    tools: [{ tool: "read", input: { filePath: "/Users/wendell/.agents/skills/review-code/SKILL.md" } }],
+  })
+  assert.equal(skillGate(global, scratch, "review-code").ok, false)
+  assert.equal(skillGate(global, scratch, "review-code").source, null)
+
+  const sibling = transcript({
+    tools: [{ tool: "read", input: { filePath: join(scratch, ".opencode/skills/other/SKILL.md") } }],
+  })
+  assert.equal(skillGate(sibling, scratch, "review-code").ok, false)
+
+  const reference = transcript({
+    tools: [{ tool: "read", input: { filePath: join(scratch, ".opencode/skills/review-code/references/notes.md") } }],
+  })
+  assert.equal(skillGate(reference, scratch, "review-code").ok, false, "only the staged SKILL.md is the skill's contract")
+})
+
+test("a failed read does not count as a load, and a run with no use of the skill still fails", () => {
+  const scratch = tree({ ".opencode/skills/review-code/SKILL.md": "rules", "README.md": "fixture" })
+  const failed = transcript({
+    tools: [{ tool: "read", status: "error", input: { filePath: join(scratch, ".opencode/skills/review-code/SKILL.md") } }],
+  })
+  assert.equal(skillGate(failed, scratch, "review-code").ok, false)
+
+  const unrelated = transcript({ tools: [{ tool: "read", input: { filePath: join(scratch, "README.md") } }] })
+  assert.equal(skillGate(unrelated, scratch, "review-code").ok, false)
 })
 
 test("notskill allows a different skill to load", () => {
