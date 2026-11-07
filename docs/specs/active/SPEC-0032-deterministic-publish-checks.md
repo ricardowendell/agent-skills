@@ -100,7 +100,8 @@ v1 run as `isolated=yes` fails before it lands.
   claimed `isolated=yes`. The numbers are not rewritten; the marker is.
 
 **Blast radius.** Two new CLIs, their pure modules and tests, one policy line,
-one CI step, one manual section. No skill, case, fixture, assertion or runner
+one CI step, one hook line, one manual section, and the two `docs/evals`
+citations the new check repairs. No skill, case, fixture, assertion or runner
 change. **Zero model draws.**
 
 ## Non-Goals
@@ -148,8 +149,8 @@ change. **Zero model draws.**
    the exact command.
 5. **The corpus passes** after the citations this spec has to fix; the repair
    list and what changed are in Results, and no published number moved.
-6. **No drift**: `git diff main...HEAD -- skills/` is empty, the five gates pass,
-   and the spec spends no draw.
+6. **No drift**: `git diff main...HEAD -- skills/` is empty, every command in
+   `tests:` passes, and the spec spends no draw.
 
 ## Results
 
@@ -302,7 +303,8 @@ node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0032-...md --base main
   only read the repo and print.
 - **Operations**: `git diff --name-only` for the file list; `checkRun` from
   `runcheck.mjs` for the dirty verdict; no shell injection.
-- **Norms**: one line per finding, exit 1, `--json` for artifacts, no colour.
+- **Norms**: one line per finding, exit 1 on errors (warnings exit 0), `--json`
+  for artifacts, no colour.
 - **Safeguards**: never rewrite a number; a check that cannot decide prints a
   warning, not a pass; do not add a rule the corpus cannot satisfy without a
   repair list in the spec.
