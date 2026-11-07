@@ -44,11 +44,21 @@ backlog task edit TASK-N --comment "NOVO"   # exit 0, prints "Updated task"
 # result: "Segundo" is gone, "NOVO" is there
 ```
 
-Rule: **do not use `--comment` on a task whose COMMENTS block contains a `---`
-line.** Edit the file with the editor tool instead, or restore with
-`git checkout HEAD -- backlog/tasks/` and reapply by hand. After any
-`backlog task edit`, check `git diff -- backlog/tasks/` for removed lines: the
-command reports success either way. TASK-55 tracks the upstream issue.
+Rule: **do not use `--comment`.** Append with the repo's own tool, which never
+parses the block:
+
+```sh
+node scripts/backlog-comment.mjs TASK-55 "the note"
+node scripts/backlog-comment.mjs TASK-55 "the note" --at 2026-11-07T12:00:00Z  # reproducible stamp
+```
+
+It inserts the record before `<!-- COMMENTS:END -->` and leaves every existing
+byte alone, so a body containing `---` or a fenced block survives. `--status` and
+`--check-ac` do not touch the block and stay on the CLI. If you do use the CLI,
+check `git diff -- backlog/tasks/` for removed lines: it reports success either
+way. One caveat: `backlog task view` applies the same separator rule when it
+*reads*, so a body with a `---` shows up in pieces there — the file is intact,
+the display is not. TASK-55 tracks the upstream issue.
 
 ## Adding a skill
 

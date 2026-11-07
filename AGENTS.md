@@ -11,8 +11,9 @@ Este repositório autora skills e o harness que as avalia. O manual é
 - Uma spec por worker. O worker não sai do worktree. O reviewer é read-only.
 - Push nunca: branches e worktrees ficam locais até decisão humana.
 - `backlog task edit --comment` trunca o comentário na primeira linha `---` e
-  descarta o resto (binário upstream, 1.55.3). Edite o arquivo direto; ver
-  `CONTRIBUTING.md#editing-the-backlog` e TASK-55.
+  descarta o resto (binário upstream, 1.55.3). Use
+  `node scripts/backlog-comment.mjs TASK-N "texto"`; `--status`/`--check-ac`
+  seguem seguros. Ver `CONTRIBUTING.md#editing-the-backlog` e TASK-55.
 
 ## Gates
 
