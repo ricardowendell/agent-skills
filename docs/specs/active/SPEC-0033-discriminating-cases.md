@@ -155,10 +155,10 @@ All three are **separators**, on the assertion the control misses:
 - `implement-from-prompt` #1: the control never marks
   `docs/specs/SPEC-0007-demo.md` `status: implemented` (0/5).
 - `implement-from-prompt` #8: the control invents `src/format.js` (0/5).
-- `review-code` #7: the control fails `verdict REJECT` in 0/5 — 3/5 approve
-  despite the red gate, 2/5 name the gate but do not emit the token. That is a
-  format-and-judgment separation on the assertion the case checks, not a uniform
-  judgment difference; the doc says so.
+- `review-code` #7: the control fails `verdict REJECT` 5/5 (it emits the token in
+  0/5) — 3/5 approve despite the red gate, 2/5 name the gate but do not emit the
+  token. That is a format-and-judgment separation on the assertion the case
+  checks, not a uniform judgment difference; the doc says so.
 
 The arms are consistent across their five reps, the difference is on a
 filesystem or gate assertion, and one case is held out. That is the issue #5
