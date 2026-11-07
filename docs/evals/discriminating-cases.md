@@ -18,7 +18,9 @@ warnings=0 skillLeaks=0 hostReads=0 isolated=yes`.
 | `review-code` #7 | `verdict REJECT` | **5/5** | **0/5** | 3/5 approve despite the red gate; 2/5 name the red gate but do not emit `VERDICT: REJECT` | **yes** |
 
 The holdout was named in `SPEC-0033` at `5fe56fc` before the first draw. Its
-result was read only after the other two were classified.
+result was read only after the other two were classified. Two more clean
+separators from the same re-measure are listed at the end; they are not part of
+the held-out three.
 
 The holdout's control is the least clean of the three: it fails the machine
 assertion 5/5, but for two different reasons. `r1`/`r2` recognize the red gate
@@ -75,6 +77,20 @@ node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 1 
   --repeat 5 --no-skill --model agentworks/deepseek-v4-1-flash --run
 # repeat for #8 and review-code #7
 ```
+
+## Also qualifying — the default-model extras
+
+SPEC-0031's first attempt (default model, v2) already produced two more clean
+separators. They are not part of the held-out three, but a consumer can use them:
+
+| case | assertion | with skill | control | run directories |
+| --- | --- | --- | --- | --- |
+| `process-inbox` #1 | `unchanged docs/inbox/2026-01-01-digest-email.md` + `nodir docs/backlog` | **5/5** | **0/5** | `2026-11-07T02-45-54--process-inbox`, `2026-11-07T03-08-51--process-inbox--without-skill` |
+| `write-implementation-prompt` #2 | `nodir docs/prompts` | **5/5** | **0/5** | `2026-11-06T19-28-47--write-implementation-prompt`, `2026-11-07T03-01-29--write-implementation-prompt--without-skill` |
+
+Both pairs are on `opencode-go/deepseek-v4.1-flash`, detector v2, and all four
+runs are clean. The `write` skill arm is at `dcf5177` and its control at
+`eb9903e`; their `fixtureHash`/`promptHash` match, so the pair is valid.
 
 ## Limits
 

@@ -42,8 +42,9 @@ that and nothing more: a draw could read the host checkout and still score
 `findings=0`. V2 (`71bfb85a91cd68ab`) adds the `host` finding, including the
 checkout root. The 0.5.0 numbers below are unchanged and remain history; where
 the replay changes a cell, the correction is beside it and SPEC-0031 re-ran the
-controls. None reached five clean draws. The clean SPEC-0030 cells are v2 and
-print `isolated=yes`; the dirty trigger runs are named with their findings.
+controls. The default-model pair reached five clean draws for #2 (separator) and
+#4 (non-discriminator); #1 did not. The clean SPEC-0030 cells are v2 and print
+`isolated=yes`; the dirty trigger runs are named with their findings.
 
 `node scripts/replay-evals.mjs --leaks <run-dir>` re-judged the stored
 transcripts with no model. Two control dirs are `dirty(host)`:
@@ -63,22 +64,27 @@ transcripts with no model. Two control dirs are `dirty(host)`:
 
 ### SPEC-0031 re-measure — the three controls
 
-The controls were re-run at `eb9903e` under v2 on
-`agentworks/deepseek-v4-1-flash` (five draws each). None produced a five-draw
-clean run:
+Two routes ran the controls at `eb9903e` under v2, five draws each. The
+**default model** attempt (`01:46`–`03:08`) is the primary evidence; the
+`agentworks` attempt (`08:17`–`08:22`) is the fallback after the default route
+hit its weekly limit.
 
-| case | run directory | clean draws | checker | reading |
-| --- | --- | --- | --- | --- |
-| #1 | `2026-11-07T08-17-29--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill` | 0/2 (3 contaminated) | `findings=4` `isolated=no` | both clean draws failed `spec_sha:`; 3 read the install or the checkout — **unresolved** |
-| #2 | `2026-11-07T08-20-10--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill` | 0/4 (1 contaminated) | `findings=1` `isolated=no` | all four clean draws failed `nodir docs/prompts`; `r1` read the installed `SKILL.md` — **unresolved** |
-| #4 | `2026-11-07T08-22-28--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill` | 2/2 (3 contaminated) | `findings=5` `isolated=no` | both clean draws passed; `r5` read the checkout — **non-discriminator** |
+| case | route | run directory | clean draws | passed | checker | reading |
+| --- | --- | --- | --- | --- | --- | --- |
+| #1 | default (a) | `2026-11-07T01-46-26--write-implementation-prompt--without-skill` | 3/5 | 0/3 | `findings=4` `isolated=no` | clean draws failed `spec_sha:` — **unresolved** (dirty) |
+| #1 | default (b) | `2026-11-07T02-58-14--write-implementation-prompt--without-skill` | 3/5 | 0/3 | `findings=4` `isolated=no` | same — **unresolved** (dirty) |
+| #1 | agentworks | `2026-11-07T08-17-29--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill` | 0/2 (3 contaminated) | 0/2 | `findings=4` `isolated=no` | route difference; **unresolved** (dirty) |
+| #2 | default | `2026-11-07T03-01-29--write-implementation-prompt--without-skill` | 5/5 | **0/5** | `findings=0` `isolated=yes` | **separator** |
+| #2 | agentworks | `2026-11-07T08-20-10--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill` | 0/4 (1 contaminated) | 0/4 | `findings=1` `isolated=no` | route difference; no clean five-draw control |
+| #4 | default | `2026-11-07T02-03-01--write-implementation-prompt--without-skill` | 5/5 | **4/5** | `findings=0` `isolated=yes` | **non-discriminator** |
+| #4 | agentworks | `2026-11-07T08-22-28--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill` | 2/2 (3 contaminated) | 2/2 | `findings=5` `isolated=no` | same direction |
 
-The controls still reach `/Users/wendell/.agents/skills` and the checkout. The
-`skill` tool is denied, but the text is not; that is the open half of TASK-43.
-Re-running the control does not fix it, so #1/#2 stay `unresolved` with the raw
-clean counts and #4 stays a non-discriminator on a two-draw clean subset. The
-with-skill arms are the SPEC-0030 runs on the default model; the model
-difference is named here and is not used to claim a paired rate.
+The default pair is the one to cite: same model as the SPEC-0030 with-skill arms,
+same detector, both arms clean. On that pair #2 is a **separator** (5/5 vs 0/5)
+and #4 is a **non-discriminator** (the control passes 4/5). The agentworks
+control read the install and is a route difference, not a reason to demote the
+default pair. #1 has no five-draw clean control on either route and stays
+`unresolved`.
 
 ## Load canary
 
@@ -149,10 +155,14 @@ for an unchanged case is the skills diff cited at the top, not the table alone.
 | #2 | with skill | `2026-11-06T19-28-47--write-implementation-prompt` | `dcf5177` | `findings=0 warnings=0 isolated=yes` |
 | #3 | manual | — | — | 0 draws; `14-01-54` is history |
 | #4 | with skill | `2026-11-06T19-30-26--write-implementation-prompt` | `dcf5177` | `findings=0 warnings=0 isolated=yes` |
-| #1 | control | `2026-11-07T08-17-29--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill` | `eb9903e` | `findings=4` `isolated=no`; 0/2 clean, 3 contaminated — **unresolved** |
-| #2 | control | `2026-11-07T08-20-10--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill` | `eb9903e` | `findings=1` `isolated=no`; 0/4 clean, 1 contaminated — **unresolved** |
+| #1 | control (default a) | `2026-11-07T01-46-26--write-implementation-prompt--without-skill` | `eb9903e` | `findings=4` `isolated=no`; 3/5 clean, 0/3 — **unresolved** (dirty) |
+| #1 | control (default b) | `2026-11-07T02-58-14--write-implementation-prompt--without-skill` | `eb9903e` | `findings=4` `isolated=no`; 3/5 clean, 0/3 — **unresolved** (dirty) |
+| #2 | control (default) | `2026-11-07T03-01-29--write-implementation-prompt--without-skill` | `eb9903e` | `findings=0 warnings=0 isolated=yes`; 5/5 clean, **0/5 passed** — **separator** |
 | #3 | control | `2026-11-06T14-32-58--write-implementation-prompt--without-skill` | `8e26cf6` | `findings=1`; 0/4 clean |
-| #4 | control | `2026-11-07T08-22-28--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill` | `eb9903e` | `findings=5` `isolated=no`; 2/2 clean passed, 3 contaminated — **non-discriminator** |
+| #4 | control (default) | `2026-11-07T02-03-01--write-implementation-prompt--without-skill` | `eb9903e` | `findings=0 warnings=0 isolated=yes`; 5/5 clean, **4/5 passed** — **non-discriminator** |
+| #1 | control (agentworks) | `2026-11-07T08-17-29--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill` | `eb9903e` | `findings=4` `isolated=no`; 0/2 clean — route difference (dirty) |
+| #2 | control (agentworks) | `2026-11-07T08-20-10--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill` | `eb9903e` | `findings=1` `isolated=no`; 0/4 clean — route difference (dirty) |
+| #4 | control (agentworks) | `2026-11-07T08-22-28--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill` | `eb9903e` | `findings=5` `isolated=no`; 2/2 clean passed — same direction (dirty) |
 
 The three with-skill cells that ran are clean five-draw runs at the new
 `skillHash`. #3 is `status: manual`: the five-draw run at `8e26cf6`
@@ -161,14 +171,16 @@ not a re-measurement and no new draws exist. The old with-skill dirs
 (`13-56-14` #1, `13-59-48` #2, `14-04-25` #4) remain history at
 `ab314e2ceb8f793f…`.
 
-The controls were re-run under SPEC-0031 at `eb9903e` (v2,
-`agentworks/deepseek-v4-1-flash`). None is a five-draw clean cell: #1 is `0/2`
-clean (3 contaminated; both clean draws failed `spec_sha:`), #2 is `0/4` clean
-(1 contaminated; all four failed `nodir docs/prompts`), and #4 is `2/2` clean
-passed (3 contaminated). #1/#2 stay **unresolved**; #4 stays a
-**non-discriminator** on the clean subset. The 0.5.0 attempts (`15-15-52` 0/3,
-`15-18-26` 0/4, `15-20-43` 0/3, `14-28-07` 0/4 for #1; `15-30-39` 0/4 and
-`14-37-23` 4/5 for #2/#4) remain history. The clean counts are not rates.
+The controls were re-run under SPEC-0031 under v2, on two routes. The default
+runs (`01-46-26`–`03-01-29`) are the primary pair; the agentworks runs are the
+fallback after the default route hit its weekly limit. On the default pair #2 is
+a **separator** (5/5 vs 0/5, both clean) and #4 is a **non-discriminator** (the
+control passes 4/5 on 5 clean draws). #1 is **unresolved** on both routes: 0/3
+clean twice on default, 0/2 on agentworks. The agentworks control read the
+install for #1/#2/#4; that is a route difference, not a demotion of the clean
+default pair. The 0.5.0 attempts (`15-15-52` 0/3, `15-18-26` 0/4, `15-20-43`
+0/3, `14-28-07` 0/4 for #1; `15-30-39` 0/4 and `14-37-23` 4/5 for #2/#4) remain
+history. The clean counts are not rates.
 
 ### Trigger runs
 
@@ -220,10 +232,10 @@ owns them, and #5 still has no stall-free five-draw cell.
 
 | case | with skill | with, gate | control | control, gate | classification |
 | --- | --- | --- | --- | --- | --- |
-| #1 create the demo prompt | **5/5** (new) | 5/5 | v2 0/2 clean; v1 largest clean subset 0/4 | 4/4 no skill loaded | **unresolved** |
-| #2 draft spec | **5/5** (new) | 5/5 | v2 0/4 clean (1 contaminated); v1 0/4 replay-clean | 5/5 no skill loaded | **unresolved** |
+| #1 create the demo prompt | **5/5** (new) | 5/5 | default 0/3 ×2; agentworks 0/2 | 4/4 no skill loaded | **unresolved** |
+| #2 draft spec | **5/5** (new) | 5/5 | **0/5 clean** on default (`03-01-29`); agentworks 0/4 | 5/5 no skill loaded | **separator** |
 | #3 open questions | 4/5 (history) | 5/5 (history) | 0/4 clean (1 contaminated) | 4/4 no skill loaded | **manual** (reverted; not re-run) |
-| #4 overlapping prompt | **5/5** (new) | 5/5 | v2 2/2 clean passed (3 contaminated); v1 4/4 replay-clean | 5/5 no skill loaded | **non-discriminator** |
+| #4 overlapping prompt | **5/5** (new) | 5/5 | default **4/5 passed**, 5/5 clean (`02-03-01`); agentworks 2/2 | 5/5 no skill loaded | **non-discriminator** |
 
 The red cells, by assertion or gate reason:
 
@@ -291,27 +303,21 @@ were stable; it is not, and five draws cannot promote it.
 ## Classification
 
 - **#1 — unresolved.** With the skill it is **5/5 clean at `dcf5177`**
-  (`19-25-26`). The v2 control (`08-17-29`) is `0/2` clean with 3 contaminated;
-  both clean draws failed `spec_sha:`. The four v1 attempts are history
-  (`15-15-52` 0/3 clean, `15-18-26` 0/4, `15-20-43` 0/3, `14-28-07` 0/4). The
-  AC-2 rule forbids promoting a separator from a rejected run, and draws from
-  different runs are not summed into a five-draw cell. Re-measure after the
-  control arm can no longer read the install.
-- **#2 — unresolved under detector v2.** 5/5 with the skill (re-measured 5/5 at
-  `dcf5177`, `19-28-47`). The v2 control (`08-20-10`) is **0/4 clean** with 1
-  contaminated; all four clean draws failed `nodir docs/prompts`, and `r1` read
-  the installed `SKILL.md`. The v1 `15-30-39` reading is 0/4 replay-clean. The
-  direction is unchanged, but the five-draw clean control does not exist.
+  (`19-25-26`). Two default controls (`01-46-26`, `02-58-14`) have 3 clean draws
+  each, 0 passed; the agentworks control (`08-17-29`) has 0/2. Every clean draw
+  failed `spec_sha:`. No five-draw clean control exists on either route.
+- **#2 — separator.** 5/5 with the skill (`19-28-47`) against **0/5 clean**
+  without it (`2026-11-07T03-01-29--write-implementation-prompt--without-skill`),
+  both on the default model and detector v2. The agentworks control (`08-20-10`)
+  only reached 0/4 clean; that is a route difference, not a demotion.
 - **#3 — manual (reverted).** The five draws split 4/5, so the case carries a
   `why:` instead of a classification. The run pair is cited as the record of
   that split, not as a separator.
-- **#4 — non-discriminator under detector v2.** 5/5 with the skill at `dcf5177`
-  (`19-30-26`). The v2 control (`08-22-28`) is **2/2 clean passed** with 3
-  contaminated; the v1 reading is 4/4 passed on 4/5 clean draws. A bare agent
-  mirrors the existing prompt and records `spec_sha` as often as the skill does.
-  The non-discriminator reading holds, but the control's 2/2 clean subset is not
-  a five-draw rate.
-  Keep as a regression case.
+- **#4 — non-discriminator.** 5/5 with the skill at `dcf5177` (`19-30-26`). The
+  default control (`02-03-01`) is 5 clean and **4/5 passed**; the agentworks
+  control is 2/2 passed. The control passes when clean, so the case cannot
+  separate the arms. The 4/5 is not a five-draw rate, but the direction is
+  closed. Keep as a regression case.
 - **#5 — trigger, not a rate; no five-draw clean cell.** `#5` loaded in **5/5
   draws** in both new runs (`19-32-45`, `19-53-34`), but the saved outcome
   stalled in four of those ten draws, a fifth stall recovered on retry
@@ -368,6 +374,16 @@ node scripts/check-eval-run.mjs ~/.local/share/opencode/evals/runs/<dir>
 #   findings=0 warnings=0 (v1; v2 replay: dirty(host), r5)
 # 2026-11-06T15-30-39--write-implementation-prompt--without-skill
 #   findings=0 warnings=0 (v1; v2 replay: dirty(host), r1)
+# 2026-11-07T01-46-26--write-implementation-prompt--without-skill (dirty)
+#   findings=4 isolated=no — #1 0/3 clean
+# 2026-11-07T01-57-39--write-implementation-prompt--without-skill (dirty)
+#   findings=2 isolated=no — #2 0/3 clean
+# 2026-11-07T02-03-01--write-implementation-prompt--without-skill
+#   findings=0 warnings=0 isolated=yes — #4 5/5 clean, 4/5 passed
+# 2026-11-07T02-58-14--write-implementation-prompt--without-skill (dirty)
+#   findings=4 isolated=no — #1 0/3 clean
+# 2026-11-07T03-01-29--write-implementation-prompt--without-skill
+#   findings=0 warnings=0 isolated=yes — #2 5/5 clean, 0/5 passed
 # 2026-11-07T08-17-29--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill (dirty)
 #   findings=4 isolated=no — #1 0/2 clean, 3 contaminated (install + checkout)
 # 2026-11-07T08-20-10--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill (dirty)
