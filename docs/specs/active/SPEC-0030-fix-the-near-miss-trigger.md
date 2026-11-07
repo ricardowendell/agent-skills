@@ -65,13 +65,12 @@ refuses a case whose assertion names a skill the run will not stage.
   produces an executable prompt; a summary or an explanation is not its job.
   The case text stays as published — it is a valid near-miss.
 - **Re-measure what the edit invalidates.** Changing `SKILL.md` changes
-  `skillHash`, so the four with-skill cells (#1–#4) are re-run, five draws each,
-  and #5/#6 five draws each. The controls do not stage the skill and keep their
-  `fixtureHash`/`promptHash`/`detectorVersion`, so they stay citable; the matrix
-  says which arm moved and why.
+  `skillHash`, so the runnable with-skill cells (#1, #2, #4) are re-run, five
+  draws each, and #5/#6 five draws each. The controls do not stage the skill;
+  the matrix says which are replay-clean and which are pending SPEC-0031.
 - **Name the stall.** Read the `#5` transcripts; if it is provider silence, say
   so with the event gap and add a note to the matrix about retry behaviour. The
-  AC is five loads in a stall-free run, not "no stall ever".
+  AC is five loads; the stall-free run is `TASK-50`.
 - **A validator check for stage/assert consistency.** Every `assert: skill <id>`
   and `notskill <id>` must name the skill under review or an id declared with
   `stage:` (SPEC-0029). A `stage:` that no assertion uses is also a warning.
@@ -99,7 +98,8 @@ change. **Budget: ~30 draws** (four with-skill cells + two triggers).
 1. **F0 — evidence**: read the four runs' #6 transcripts and the #5 stall gaps.
 2. **F1 — description**: narrow it; add the boundary line.
 3. **F2 — validator**: the stage/assert rule plus its test.
-4. **F3 — re-measure**: #1–#4 with skill, #5/#6 triggers, five draws each.
+4. **F3 — re-measure**: #1, #2 and #4 with skill, #5/#6 triggers, five draws
+   each.
 5. **F4 — publish**: matrix rows, inventory, Results.
 
 ## Data
