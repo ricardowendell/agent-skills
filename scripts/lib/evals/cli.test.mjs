@@ -12,7 +12,7 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
 import { spawnSync } from "node:child_process"
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -21,8 +21,8 @@ const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "../../..")
 const RUN = join(REPO, "scripts/run-evals.mjs")
 const REPLAY = join(REPO, "scripts/replay-evals.mjs")
 
-function cli(script, args) {
-  const r = spawnSync(process.execPath, [script, ...args], { cwd: REPO, encoding: "utf8" })
+function cli(script, args, { env = process.env } = {}) {
+  const r = spawnSync(process.execPath, [script, ...args], { cwd: REPO, encoding: "utf8", env })
   return { code: r.status, out: r.stdout, err: r.stderr }
 }
 
@@ -184,4 +184,74 @@ test("replay --run selects one stored run", () => {
 test("replay --run refuses to swallow the next flag as an id", () => {
   const dir = mkdtempSync(join(tmpdir(), "replay-cli-"))
   rejects(["--dir", dir, "--run", "--json"], /--run needs a run id/, { script: REPLAY, code: 2 })
+})
+
+// Resume is a directory, not a new run: the manifest and the per-draw files are
+// the state. A missing manifest must fail before discovery, like any usage error.
+test("--resume needs --run", () => {
+  rejects(["--resume", "/tmp/nope", "--list"], /--resume needs --run/)
+})
+
+test("--resume refuses a directory without a manifest", () => {
+  const dir = mkdtempSync(join(tmpdir(), "resume-empty-"))
+  rejects(["--resume", dir, "--run", "--root", "skills"], /no manifest\.json/)
+})
+
+test("--resume reads the persisted draw and closes the case without a model", () => {
+  const home = mkdtempSync(join(tmpdir(), "resume-home-"))
+  const runDir = join(home, ".local/share/opencode/evals/runs/resume-demo")
+  const caseDir = join(runDir, "cases/capture-idea--01")
+  mkdirSync(join(caseDir, "draws"), { recursive: true })
+  writeFileSync(
+    join(runDir, "manifest.json"),
+    JSON.stringify({
+      run: "resume-demo",
+      dir: runDir,
+      label: "capture-idea",
+      arm: "with-skill",
+      model: "default",
+      agent: "build",
+      level: "smoke",
+      repoSha: "abc",
+      params: { repeat: 1 },
+      startedAt: "2026-01-01T00:00:00.000Z",
+      finishedAt: null,
+      status: "running",
+      counts: null,
+      skillHashes: {},
+      stagedSkills: {},
+    }),
+  )
+  writeFileSync(
+    join(caseDir, "draws/r1.json"),
+    JSON.stringify({
+      skill: "capture-idea",
+      case: 1,
+      status: "passed",
+      reason: "",
+      fixtureHash: "fixture",
+      promptHash: "prompt",
+      detectorVersion: "71bfb85a91cd68ab",
+      skillHash: "skill",
+      skillGate: { ok: true, reason: "loaded", loaded: ["capture-idea"] },
+      assertions: [],
+      execution: { exit: 0 },
+      arm: "with-skill",
+      leak: [],
+      contaminated: false,
+      meta: {},
+      transcript: join(caseDir, "transcript.md"),
+    }),
+  )
+
+  const r = cli(
+    RUN,
+    ["--root", "skills", "--skill", "capture-idea", "--case", "1", "--level", "smoke", "--repeat", "1", "--resume", runDir, "--run"],
+    { env: { ...process.env, HOME: home } },
+  )
+  assert.equal(r.code, 0, r.err)
+  assert.match(r.out, /capture-idea #1: passed/)
+  assert.equal(existsSync(join(caseDir, "result.json")), true)
+  const manifest = JSON.parse(readFileSync(join(runDir, "manifest.json"), "utf8"))
+  assert.equal(manifest.status, "completed")
 })

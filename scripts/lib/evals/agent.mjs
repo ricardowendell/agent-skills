@@ -4,7 +4,7 @@
 // identical in both: same args, same scrubbed env, same process-group kill.
 // A divergence here would mean the two front ends measure different behaviour.
 
-import { spawn } from "node:child_process"
+import { spawn, spawnSync } from "node:child_process"
 
 // The vars that make `opencode run` attach to the invoking session's server or
 // project instead of the scratch dir.
@@ -28,6 +28,39 @@ export function agentArgs({ prompt, model, agent = "build", standalone = true })
 // `stallMs <= 0` disables the watchdog, matching `--stall-seconds 0`.
 export function isStalled(lastActivityAt, now, stallMs) {
   return Number.isFinite(stallMs) && stallMs > 0 && now - lastActivityAt >= stallMs
+}
+
+// Before a batch, fail on a missing credential instead of paying for a draw that
+// can only abort. This is an auth probe, not a quota probe: it reads the stored
+// integrations and the model list, so it costs no model call. A quota or an
+// upstream failure is classified later by the runner (TASK-52).
+export function authProbe({ model, command = "opencode", spawnFn = spawnSync, env = process.env } = {}) {
+  const ref = String(model ?? "").replace(/ \(config default\)$/, "")
+  const provider = ref.includes("/") ? ref.split("/")[0] : null
+  if (!provider) return { ok: true, provider: null, detail: "no provider prefix; probe skipped" }
+  const call = (args) => {
+    try {
+      return spawnFn(command, args, { encoding: "utf8", env })
+    } catch (e) {
+      return { status: 1, stdout: "", stderr: e.message }
+    }
+  }
+  const auth = call(["auth", "list"])
+  if (auth.status !== 0) {
+    return {
+      ok: false,
+      provider,
+      detail: `${provider}: opencode auth list failed (${(auth.stderr ?? "").trim() || "no output"})`,
+    }
+  }
+  if (!String(auth.stdout ?? "").trim()) {
+    return { ok: false, provider, detail: `${provider}: no credentials stored` }
+  }
+  const models = call(["models"])
+  if (models.status === 0 && !String(models.stdout ?? "").split("\n").map((s) => s.trim()).includes(ref)) {
+    return { ok: false, provider, detail: `${provider}: ${ref} is not in opencode models` }
+  }
+  return { ok: true, provider, detail: `${provider}: credentials present` }
 }
 
 export function runAgent({ args, cwd, env, timeoutMs = 600000, stallMs = 120000, command = "opencode" }) {

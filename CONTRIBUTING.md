@@ -152,6 +152,10 @@ node scripts/run-evals.mjs --skill review-code --case 3 --repeat 3 --run --judge
   requested `--repeat`; use `--stop <n>/0` when a rate claim needs the full
   count. The default is `5/3` for `--repeat` above 5, evaluated between waves, so
   a clean `--concurrency 4` cell can stop at 8 rather than at 5.
+- A run that died before its final write leaves
+  `cases/<case>/draws/r<i>.json` and no `result.json`. It is incomplete evidence,
+  not clean. Resume only the missing draws with `--resume <run-dir>` and the same
+  `--skill`/`--case`/`--repeat`/`--no-skill`; the persisted draws are skipped.
 - Draws share one lane pool; `--concurrency` (default 4) is the number of draws
   in flight, even within one case. Six and eight produced no rate limits — 6
   lanes ran 10/11, 8 lanes 11/11 — but there was no gain from 6 to 8, so the

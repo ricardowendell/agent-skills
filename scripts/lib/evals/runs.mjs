@@ -7,8 +7,8 @@
 // land in the same directory when a flag was not parsed. The fix is not to
 // remember to delete the directory — it is to give every run its own.
 
-import { mkdirSync, writeFileSync, renameSync, existsSync, readdirSync } from "node:fs"
-import { join } from "node:path"
+import { mkdirSync, writeFileSync, readFileSync, renameSync, existsSync, readdirSync } from "node:fs"
+import { dirname, join } from "node:path"
 
 const pad = (n) => String(n).padStart(2, "0")
 
@@ -68,17 +68,56 @@ export function createRun({ root, label, arm = "with-skill", model = null, agent
     stagedSkills: {},
   }
   writeAtomic(join(dir, "manifest.json"), JSON.stringify(manifest, null, 2))
+  return handle(dir, manifest)
+}
 
+// Reopen a run that died before its final write. The manifest goes back to
+// `running`; the per-draw files are the resume map. The caller supplies the same
+// selection and `--repeat` as the original invocation.
+export function openRun(dir) {
+  const manifestPath = join(dir, "manifest.json")
+  if (!existsSync(manifestPath)) throw new Error(`not a run directory (no manifest.json): ${dir}`)
+  let manifest
+  try {
+    manifest = JSON.parse(readFileSync(manifestPath, "utf8"))
+  } catch (e) {
+    throw new Error(`manifest.json is not valid JSON: ${e.message}`)
+  }
+  manifest.status = "running"
+  manifest.finishedAt = null
+  writeAtomic(manifestPath, JSON.stringify(manifest, null, 2))
+  return handle(dir, manifest)
+}
+
+function handle(dir, manifest) {
   const caseKey = (skill, n) => `${slug(skill)}--${pad(n)}`
   const caseDir = (skill, n) => join(dir, "cases", caseKey(skill, n))
+  const drawPath = (skill, n, index) => join(caseDir(skill, n), "draws", `r${index}.json`)
 
   return {
-    id,
+    id: manifest.run,
     dir,
     manifest,
     caseDir,
     resultPath: (skill, n) => join(caseDir(skill, n), "result.json"),
     transcriptPath: (skill, n, rep) => join(caseDir(skill, n), rep ? `transcript.r${rep.index}.md` : "transcript.md"),
+    drawPath,
+    // One file per completed draw, written before the next draw starts. A run
+    // that dies leaves these behind; `--resume` reads them and skips the work.
+    readDraw(skill, n, index) {
+      const file = drawPath(skill, n, index)
+      if (!existsSync(file)) return null
+      try {
+        return JSON.parse(readFileSync(file, "utf8"))
+      } catch {
+        return null
+      }
+    },
+    writeDraw(skill, n, index, result) {
+      const file = drawPath(skill, n, index)
+      mkdirSync(dirname(file), { recursive: true })
+      writeAtomic(file, JSON.stringify(result, null, 2))
+    },
     writeResult(skill, n, result) {
       mkdirSync(caseDir(skill, n), { recursive: true })
       writeAtomic(join(caseDir(skill, n), "result.json"), JSON.stringify(result, null, 2))

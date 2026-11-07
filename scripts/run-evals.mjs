@@ -37,6 +37,8 @@
 //                       passes only when every repetition does
 //   --stop <p>/<f>      stop a repeated case after p clean passes with zero
 //                       failures or f failures (default 5/3 when repeat > 5)
+//   --resume <dir>      reopen a run that died and run only the missing draws;
+//                       same --skill/--case/--repeat/--no-skill as the original
 //   --stall-seconds <n> kill a draw whose event stream is silent for n seconds
 //                       (default 120); recorded as `stalled`, not `timeout`
 //   --min-pass <ratio>  relax that to a rate, explicitly (default 1)
@@ -66,6 +68,11 @@
 // Output: one directory per invocation under
 // ~/.local/share/opencode/evals/runs/<timestamp>--<label>/; each case writes
 // cases/<skill>--<n>/transcript.md (or transcript.r<i>.md) and result.json.
+// Every completed draw is also written to cases/<skill>--<n>/draws/r<i>.json
+// before the next one starts, so a dead run loses no paid work; `--resume`
+// reads those files and re-runs only the missing indexes. Before the first paid
+// draw, `opencode auth list` and `opencode models` are checked and the provider
+// is named on failure (no model call).
 
 import { readdirSync, lstatSync, realpathSync, existsSync, mkdirSync, writeFileSync, appendFileSync, readFileSync } from "node:fs"
 import { spawnSync } from "node:child_process"
@@ -73,14 +80,14 @@ import { join, basename, dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { homedir } from "node:os"
 import { readEvals } from "./lib/evals/parse.mjs"
-import { scrubEnv } from "./lib/evals/agent.mjs"
+import { authProbe, scrubEnv } from "./lib/evals/agent.mjs"
 import { isolateHome } from "./lib/evals/isolation.mjs"
 import { stageFixture, stageSkill, makeScratch, denySkillTool, textHash } from "./lib/evals/fixture.mjs"
 import { summarize, aggregateReps, caseResult, contaminate, PASSED, UNSCORED } from "./lib/evals/result.mjs"
 import { executeCase } from "./lib/evals/execute.mjs"
 import { leaksIn, DETECTOR_VERSION } from "./lib/evals/leak.mjs"
 import { parseStop, runScheduled } from "./lib/evals/schedule.mjs"
-import { createRun } from "./lib/evals/runs.mjs"
+import { createRun, openRun } from "./lib/evals/runs.mjs"
 import { summarizeRun, compareRuns, formatComparison, readRun } from "./lib/evals/report.mjs"
 import { renderHeader, patchStatus } from "./lib/evals/transcript.mjs"
 
@@ -109,9 +116,11 @@ const opt = {
   minPass: 1,
   stop: null,
   stallSeconds: 120,
+  resume: null,
   tags: [],
 }
 const unknown = []
+let repeatSet = false
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i]
   // A flag's value is the next token; a token that starts with `--` is the next
@@ -151,9 +160,13 @@ for (let i = 0; i < argv.length; i++) {
     } else opt.judge = "default"
   }
   else if (a === "--judge-threshold") opt.judgeThreshold = Number(value("--judge-threshold"))
-  else if (a === "--repeat") opt.repeat = Number(value("--repeat"))
+  else if (a === "--repeat") {
+    opt.repeat = Number(value("--repeat"))
+    repeatSet = true
+  }
   else if (a === "--stop") opt.stop = value("--stop")
   else if (a === "--stall-seconds") opt.stallSeconds = Number(value("--stall-seconds"))
+  else if (a === "--resume") opt.resume = value("--resume")
   else if (a === "--tag") opt.tags.push(...value("--tag").split(",").map((t) => t.trim()).filter(Boolean))
   else if (a === "--min-pass") opt.minPass = Number(value("--min-pass"))
   else if (a === "--quick") {
@@ -215,6 +228,46 @@ if (opt.stop !== null && parseStop(opt.stop) === null) {
 }
 if (opt.concurrency === null) opt.concurrency = opt.level === "smoke" ? 1 : 4
 
+// A resumed run carries the arm, level and repeat of the invocation that created
+// it; a different value would index the wrong draws. The repeat is resolved here
+// so the stop rule below sees the run's count, not the CLI default.
+let RESUME = null
+if (opt.resume) {
+  if (!opt.run) {
+    console.error("--resume needs --run")
+    process.exit(1)
+  }
+  const dir = resolve(opt.resume)
+  const manifestPath = join(dir, "manifest.json")
+  if (!existsSync(manifestPath)) {
+    console.error(`--resume: no manifest.json in ${dir}`)
+    process.exit(1)
+  }
+  let manifest
+  try {
+    manifest = JSON.parse(readFileSync(manifestPath, "utf8"))
+  } catch (e) {
+    console.error(`--resume: manifest.json is not valid JSON: ${e.message}`)
+    process.exit(1)
+  }
+  const arm = opt.noSkill ? "without-skill" : "with-skill"
+  if (manifest.arm !== arm) {
+    console.error(`--resume: run used arm ${manifest.arm}, got ${arm}`)
+    process.exit(1)
+  }
+  if (manifest.level !== opt.level) {
+    console.error(`--resume: run used --level ${manifest.level}, got ${opt.level}`)
+    process.exit(1)
+  }
+  const repeat = manifest.params?.repeat ?? 1
+  if (!repeatSet) opt.repeat = repeat
+  else if (opt.repeat !== repeat) {
+    console.error(`--resume: run used --repeat ${repeat}, got ${opt.repeat}`)
+    process.exit(1)
+  }
+  RESUME = { dir, manifest }
+}
+
 // The stop rule is a default, not a claim: enable it only where a rate is not
 // being measured. Above five draws, five clean passes (or three failures) is
 // enough separation; at or below five the full count already is the answer.
@@ -259,10 +312,16 @@ const OUT_ROOT = join(HOME, ".local/share/opencode/evals")
 // One directory per invocation, named after the selection it covers. Created
 // lazily so --list and dry runs never leave an empty run behind.
 const LABEL = opt.skill ?? (opt.tags.length ? opt.tags.join("+") : "all")
+if (RESUME && RESUME.manifest.label !== LABEL) {
+  console.error(`--resume: run selected '${RESUME.manifest.label}', got '${LABEL}'`)
+  process.exit(1)
+}
 let RUN = null
 const run = () =>
-  (RUN ??= createRun({
-    root: OUT_ROOT,
+  (RUN ??= RESUME
+    ? openRun(RESUME.dir)
+    : createRun({
+        root: OUT_ROOT,
     label: LABEL,
     arm: opt.noSkill ? "without-skill" : "with-skill",
     model: opt.model,
@@ -447,6 +506,13 @@ console.log(
 async function runCase(skill, c, rep = null) {
   const scratch = makeScratch(skill.id, c.n)
   const file = run().transcriptPath(skill.id, c.n, rep)
+  const index = rep?.index ?? 1
+  // Persist the draw before the next one starts. A run that dies here leaves the
+  // paid work readable, and `--resume` reads it back instead of re-running it.
+  const save = (result) => {
+    run().writeDraw(skill.id, c.n, index, result)
+    return result
+  }
   mkdirSync(dirname(file), { recursive: true })
   const started = Date.now()
   const meta = { skill: skill.id, case: c.n, repoSha: repoSha(), agent: opt.agent, model: EFFECTIVE_MODEL, level: opt.level }
@@ -474,7 +540,7 @@ async function runCase(skill, c, rep = null) {
       }
     } catch (e) {
       writeFailure("fixture failed to stage", `${e.message}\n${e.stderr ?? ""}`)
-      return caseResult(skill, c, {
+      return save(caseResult(skill, c, {
         status: "failed",
         reason: "fixture failed to stage",
         skillHash: null,
@@ -483,7 +549,7 @@ async function runCase(skill, c, rep = null) {
         detectorVersion: DETECTOR_VERSION,
         assertions: [],
         transcript: file,
-      })
+      }))
     }
     writeFileSync(
       file,
@@ -500,7 +566,7 @@ async function runCase(skill, c, rep = null) {
         `\n\n## Expectations (human-checked)\n\n${c.expect.map((e) => `- [ ] ${e}`).join("\n")}\n\n` +
         `## Assertions (auto-checked)\n\nnot run at --level smoke\n`,
     )
-    return caseResult(skill, c, {
+    return save(caseResult(skill, c, {
       status: "staged",
       reason: "staged only (smoke)",
       skillHash: pinned.hash,
@@ -512,7 +578,7 @@ async function runCase(skill, c, rep = null) {
       execution: { durationMs: Date.now() - started },
       meta: { repoSha: meta.repoSha, agent: meta.agent, model: meta.model, level: meta.level },
       transcript: file,
-    })
+    }))
   }
 
   let exec
@@ -533,7 +599,7 @@ async function runCase(skill, c, rep = null) {
     })
   } catch (e) {
     writeFailure("fixture failed to stage", `${e.message}\n${e.stderr ?? ""}`)
-    return caseResult(skill, c, {
+    return save(caseResult(skill, c, {
       status: "failed",
       reason: "fixture failed to stage",
       skillHash: null,
@@ -542,7 +608,7 @@ async function runCase(skill, c, rep = null) {
       detectorVersion: DETECTOR_VERSION,
       assertions: [],
       transcript: file,
-    })
+    }))
   }
 
   // A retry re-stages in a fresh scratch, so the leak check and the transcript
@@ -602,7 +668,7 @@ async function runCase(skill, c, rep = null) {
     appendFileSync(file, section)
     patchHeader(file, result)
   }
-  return result
+  return save(result)
 }
 
 // The header is written before the judge runs, so the status line has to be
@@ -664,6 +730,18 @@ function finalizeCase(state) {
   }
 }
 
+// Fail on a missing credential before the first paid draw. The probe reads the
+// stored integrations and the model list; it never calls a model. Smoke stages
+// only, so it skips the probe. A quota abort is not an auth failure: it is
+// classified per draw (`infrastructure: provider.*`).
+if (opt.level !== "smoke") {
+  const probe = authProbe({ model: EFFECTIVE_MODEL })
+  if (!probe.ok) {
+    console.error(`auth probe failed: ${probe.detail}`)
+    process.exit(1)
+  }
+}
+
 const startedAt = Date.now()
 // Every selected case enters the pool; a draw is the unit of work, so a single
 // case with --repeat 12 still fills the lanes. Stop is null at smoke.
@@ -676,7 +754,15 @@ const scheduled = await runScheduled({
   cases: items,
   concurrency: opt.concurrency,
   stop: STOP,
-  runDraw: ({ skill, c, rep }) => runCase(skill, c, rep),
+  runDraw: ({ skill, c, rep }) => {
+    // A resumed draw is already paid for: return the persisted result and do not
+    // stage or spawn again. The scheduler still records it in the sequence.
+    if (RESUME) {
+      const cached = run().readDraw(skill.id, c.n, rep?.index ?? 1)
+      if (cached) return cached
+    }
+    return runCase(skill, c, rep)
+  },
 })
 
 const results = []

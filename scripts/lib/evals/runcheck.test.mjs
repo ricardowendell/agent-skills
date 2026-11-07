@@ -710,3 +710,16 @@ test("CLI does not print isolated=yes for a run whose draws all aborted", (t) =>
   assert.doesNotMatch(r.stdout, /isolated=yes/)
   assert.match(r.stdout, /infrastructure implement-from-prompt#1 r1/)
 })
+
+// A dead run now leaves `draws/rN.json` behind, but the case is still incomplete
+// until `result.json` closes it. The persisted draws are readable evidence; they
+// must not make the run look finished or clean.
+test("persisted draws without a case result are incomplete, not clean", (t) => {
+  const dir = makeRun(t, { manifest: modern(), cases: [{ name: "x--01" }] })
+  mkdirSync(join(dir, "cases/x--01/draws"), { recursive: true })
+  writeFileSync(join(dir, "cases/x--01/draws/r1.json"), JSON.stringify({ status: "passed", rep: 1 }))
+  const r = runCli(dir)
+  assert.equal(r.status, 1)
+  assert.match(r.stdout, /incomplete x--01 r0 — case directory has no result\.json/)
+  assert.match(r.stdout, /isolated=unknown/)
+})

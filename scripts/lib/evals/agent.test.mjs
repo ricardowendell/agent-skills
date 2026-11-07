@@ -1,6 +1,6 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { agentArgs, isStalled, runAgent, scrubEnv } from "./agent.mjs"
+import { agentArgs, authProbe, isStalled, runAgent, scrubEnv } from "./agent.mjs"
 
 // Both functions shape what the child process sees. A regression here would not
 // fail an assertion — it would quietly attach the run to the invoking session or
@@ -73,4 +73,49 @@ test("a slow but live stream resets the watchdog and survives", async () => {
   })
   assert.equal(result.code, 0, `expected a clean exit, got ${result.code}`)
   assert.notEqual(result.code, "stalled")
+})
+
+// The probe is an auth check, not a model call: it reads the stored integrations
+// and the model list, and names the provider when it fails. A quota abort is a
+// different class and is recorded per draw by the runner.
+test("authProbe passes when credentials and the model are present", () => {
+  const calls = []
+  const spawnFn = (command, args) => {
+    calls.push(args)
+    if (args[0] === "auth") return { status: 0, stdout: "OpenCode Go  stored\n", stderr: "" }
+    return { status: 0, stdout: "opencode-go/deepseek-v4.1-flash\n", stderr: "" }
+  }
+  const r = authProbe({ model: "opencode-go/deepseek-v4.1-flash", spawnFn })
+  assert.equal(r.ok, true)
+  assert.equal(r.provider, "opencode-go")
+  assert.deepEqual(calls, [["auth", "list"], ["models"]])
+})
+
+test("authProbe fails fast and names the provider when no credential is stored", () => {
+  const spawnFn = () => ({ status: 0, stdout: "", stderr: "" })
+  const r = authProbe({ model: "opencode-go/deepseek-v4.1-flash", spawnFn })
+  assert.equal(r.ok, false)
+  assert.equal(r.provider, "opencode-go")
+  assert.match(r.detail, /opencode-go.*no credentials/)
+})
+
+test("authProbe fails when the model is not in opencode models", () => {
+  const spawnFn = (command, args) =>
+    args[0] === "auth"
+      ? { status: 0, stdout: "OpenCode Go  stored\n", stderr: "" }
+      : { status: 0, stdout: "other/model\n", stderr: "" }
+  const r = authProbe({ model: "opencode-go/deepseek-v4.1-flash", spawnFn })
+  assert.equal(r.ok, false)
+  assert.match(r.detail, /not in opencode models/)
+})
+
+test("authProbe skips a model with no provider prefix", () => {
+  const r = authProbe({
+    model: "default",
+    spawnFn: () => {
+      throw new Error("must not spawn")
+    },
+  })
+  assert.equal(r.ok, true)
+  assert.equal(r.provider, null)
 })

@@ -3,7 +3,7 @@ import assert from "node:assert/strict"
 import { mkdtempSync, readFileSync, existsSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { createRun, runId } from "./runs.mjs"
+import { createRun, openRun, runId } from "./runs.mjs"
 
 const at = new Date("2026-11-01T22:59:00")
 const base = { root: null, agent: "build", level: "behavior", repoSha: "abc", at }
@@ -74,4 +74,29 @@ test("a run that did not finish keeps that status", () => {
   const run = createRun({ ...base, root, label: "review-code" })
   run.finish({ status: "partial", counts: { passed: 0, failed: 0, unscored: 1 } })
   assert.equal(JSON.parse(readFileSync(join(run.dir, "manifest.json"), "utf8")).status, "partial")
+})
+
+// A draw is written before the case finishes, so a dead run still has the paid
+// work. `openRun` reads the same directory back and resets the manifest to
+// running; the caller supplies the same selection and repeat.
+test("a draw is persisted before the case closes, and resume reads it back", () => {
+  const root = mkdtempSync(join(tmpdir(), "runs-"))
+  const run = createRun({ ...base, root, label: "review-code", params: { repeat: 3 } })
+  run.writeDraw("review-code", 1, 1, { rep: 1, status: "passed" })
+  run.writeDraw("review-code", 1, 2, { rep: 2, status: "failed" })
+  assert.equal(existsSync(run.drawPath("review-code", 1, 1)), true)
+
+  const resumed = openRun(run.dir)
+  assert.equal(resumed.dir, run.dir, "resume reuses the directory, it does not create one")
+  assert.deepEqual(resumed.readDraw("review-code", 1, 1), { rep: 1, status: "passed" })
+  assert.deepEqual(resumed.readDraw("review-code", 1, 2), { rep: 2, status: "failed" })
+  assert.equal(resumed.readDraw("review-code", 1, 3), null)
+  const manifest = JSON.parse(readFileSync(join(run.dir, "manifest.json"), "utf8"))
+  assert.equal(manifest.status, "running")
+  assert.equal(manifest.finishedAt, null)
+})
+
+test("openRun refuses a directory that is not a run", () => {
+  const root = mkdtempSync(join(tmpdir(), "runs-"))
+  assert.throws(() => openRun(join(root, "missing")), /not a run directory/)
 })
