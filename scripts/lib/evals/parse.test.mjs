@@ -89,6 +89,45 @@ test("gate: off is parsed, and anything else is rejected", () => {
   assert.ok(bad.errors.some((e) => /unknown gate/.test(e)))
 })
 
+test("an assertion on the skill under review needs no stage", () => {
+  const { errors, warnings } = parseCases(
+    `1. **T.**\n   - prompt: do it\n   - assert: skill demo\n   - assert: notskill demo\n`,
+    "demo",
+  )
+  assert.deepEqual(errors, [])
+  assert.deepEqual(warnings, [])
+})
+
+test("an assertion on an undeclared sibling fails validation", () => {
+  const skill = parseCases(`1. **T.**\n   - prompt: do it\n   - assert: skill other\n`, "demo")
+  assert.ok(skill.errors.some((e) => /assert 'skill other' names a skill the run will not stage/.test(e)))
+  const notskill = parseCases(`1. **T.**\n   - prompt: do it\n   - assert: notskill other\n`, "demo")
+  assert.ok(notskill.errors.some((e) => /assert 'notskill other' names a skill the run will not stage/.test(e)))
+})
+
+test("a declared stage makes the sibling assertion valid", () => {
+  const { errors, warnings } = parseCases(
+    `1. **T.**\n   - prompt: do it\n   - stage: other\n   - assert: skill other\n`,
+    "demo",
+  )
+  assert.deepEqual(errors, [])
+  assert.deepEqual(warnings, [])
+})
+
+test("a stage no assertion uses is a warning", () => {
+  const { errors, warnings } = parseCases(
+    `1. **T.**\n   - prompt: do it\n   - stage: other\n   - assert: skill demo\n`,
+    "demo",
+  )
+  assert.deepEqual(errors, [])
+  assert.ok(warnings.some((w) => /stage 'other' has no skill\/notskill assertion/.test(w)))
+})
+
+test("without the skill id the consistency rule is not applied", () => {
+  const { errors } = parseCases(`1. **T.**\n   - prompt: do it\n   - assert: skill other\n`)
+  assert.deepEqual(errors, [])
+})
+
 test("unquote strips one layer of quotes only", () => {
   assert.equal(unquote('"Review this branch."'), "Review this branch.")
   assert.equal(unquote('"Say "hi"."'), 'Say "hi".')

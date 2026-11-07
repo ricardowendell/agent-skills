@@ -24,6 +24,7 @@
 // the fix — before, the parenthetical was concatenated onto the prompt.
 
 import { readFileSync } from "node:fs"
+import { basename, dirname } from "node:path"
 import { ASSERT_KINDS } from "./kinds.mjs"
 
 const STATUSES = new Set(["run", "manual"])
@@ -91,7 +92,7 @@ function finishCase(c) {
 
 // Parse the markdown body. Returns cases plus validation findings; nothing here
 // throws, so `--list` can report every problem in one pass.
-export function parseCases(md) {
+export function parseCases(md, selfId = null) {
   const cases = []
   let cur = null
   let target = null // field receiving wrapped continuation lines
@@ -184,14 +185,17 @@ export function parseCases(md) {
   }
   close()
 
-  return { cases, ...validate(cases) }
+  return { cases, ...validate(cases, selfId) }
 }
 
-export function readEvals(file) {
-  return parseCases(readFileSync(file, "utf8"))
+// The eval corpus lives at `<skill>/references/evals.md`, so the skill under
+// review is derivable without the caller passing it. An explicit id still wins
+// for a corpus read from somewhere else.
+export function readEvals(file, selfId = basename(dirname(dirname(file)))) {
+  return parseCases(readFileSync(file, "utf8"), selfId)
 }
 
-export function validate(cases) {
+export function validate(cases, selfId = null) {
   const errors = []
   const warnings = []
   const seen = new Set()
@@ -211,6 +215,28 @@ export function validate(cases) {
       if (!arg) errors.push(`${at}: assert '${kind}' has no argument`)
     }
     if (!c.assert.length && c.status !== "manual") warnings.push(`${at}: no assertions — it would score as unscored`)
+
+    // A `skill`/`notskill` assertion can only pass for a skill the run stages:
+    // the one under review, or a sibling the case declares with `stage:`
+    // (SPEC-0029). Without this, a case can assert a skill that is never on the
+    // menu and read 0/N instead of failing at authoring time.
+    if (selfId) {
+      const declaredStages = new Set(c.stage)
+      for (const { kind, arg } of c.assert) {
+        if (kind !== "skill" && kind !== "notskill") continue
+        if (arg !== selfId && !declaredStages.has(arg))
+          errors.push(
+            `${at}: assert '${kind} ${arg}' names a skill the run will not stage (assert '${selfId}' or add "- stage: ${arg}")`,
+          )
+      }
+      const assertedSkills = new Set(
+        c.assert.filter((a) => a.kind === "skill" || a.kind === "notskill").map((a) => a.arg),
+      )
+      for (const id of declaredStages) {
+        if (!assertedSkills.has(id))
+          warnings.push(`${at}: stage '${id}' has no skill/notskill assertion`)
+      }
+    }
   }
 
   const runnable = cases.filter((c) => c.status === "run")

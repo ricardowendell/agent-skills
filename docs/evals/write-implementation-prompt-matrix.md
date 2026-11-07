@@ -1,16 +1,17 @@
 # `write-implementation-prompt` matrix — 2026-11-06
 
 Measured on `opencode-go/deepseek-v4.1-flash`, the config default, with
-deterministic assertions only and no judge. The with-skill cells were taken at
-`8e26cf6`; the control and trigger re-runs were taken at `fff5b96`. Between
-those commits the only change under `skills/` is case #3's `prompt:`/`why:` in
-`references/evals.md`; the rest is this matrix, the coverage row and the spec.
-`stageSkill` excludes `references/evals.md` from `skillHash` and `promptHash`
-covers only the prompt text, so every re-run repeats the `8e26cf6`
-`fixtureHash`, `promptHash`, `detectorVersion` and — for the trigger arm —
-`skillHash`. The assertion sets for #1/#2/#4/#5/#6 are unchanged by that same
-skills diff. Every run carries detector v1 (`a31d58f79a6c7038`); the v2
-correction is in "What clean means" below.
+deterministic assertions only and no judge. The behavioural and trigger cells
+were re-taken at `dcf5177` after the description/boundary change; their
+`skillHash` is `046369c29a8383db…`. The controls are the earlier runs and were
+**not** re-run: they stage no skill, so the description edit cannot move their
+`fixtureHash` or `promptHash`; their `detectorVersion` is still v1 and their
+clean status is governed by the v2 replay below. The new with-skill cells (#1,
+#2, #4), the trigger cells (#5, #6) and the #6-only run carry detector v2
+(`71bfb85a91cd68ab`). `stageSkill` excludes `references/evals.md` from
+`skillHash`; `promptHash` covers only the prompt text, so the fixture and prompt
+hashes repeat the 0.5.0 values. #3 is `status: manual` and produced 0 draws, as
+the corpus intends.
 
 The skill is six cases: `#1`–`#4` are behavioural, `#5`/`#6` are routing
 triggers. Everything below runs under `node scripts/run-evals.mjs --root skills
@@ -32,14 +33,15 @@ one. No judge ran, so there is no judge column.
 
 ## What "clean" means — detector v2 correction
 
-Every measurement in this matrix was written by detector v1
+The 0.5.0 measurements in this matrix were written by detector v1
 (`a31d58f79a6c7038`). V1 saw **no read of an installed skill or a
 `references/evals.md` answer key** outside the scratch, so `findings=0` meant
 that and nothing more: a draw could read the host checkout and still score
 `findings=0`. V2 (`71bfb85a91cd68ab`) adds the `host` finding, including the
 checkout root. The 0.5.0 numbers below are unchanged and remain history; where
 the replay changes a cell, the correction is beside it and the clean five-draw
-measurement is **pending SPEC-0031**.
+measurement is **pending SPEC-0031**. The clean SPEC-0030 cells are v2 and print
+`isolated=yes`; the dirty trigger runs are named with their findings.
 
 `node scripts/replay-evals.mjs --leaks <run-dir>` re-judged the stored
 transcripts with no model. Two control dirs are `dirty(host)`:
@@ -80,14 +82,18 @@ below.
 ```sh
 node scripts/run-evals.mjs --root skills --skill write-implementation-prompt --case 1 --repeat 5 --run
 node scripts/run-evals.mjs --root skills --skill write-implementation-prompt --case 2 --repeat 5 --run
-node scripts/run-evals.mjs --root skills --skill write-implementation-prompt --case 3 --repeat 5 --run
 node scripts/run-evals.mjs --root skills --skill write-implementation-prompt --case 4 --repeat 5 --run
 node scripts/run-evals.mjs --root skills --skill write-implementation-prompt --tag trigger --repeat 5 --run
+node scripts/run-evals.mjs --root skills --skill write-implementation-prompt --case 6 --repeat 5 --run
 ```
 
-Control arm, the same four cases and no triggers, re-run at `fff5b96` for up to
-three attempts — a budget cap, not a spec rule; #1 never produced a clean
-five-draw run and stayed `unresolved`:
+`--case 3` is intentionally absent: the case is `status: manual`, so the same
+command produced 0 runnable draws. The trigger command runs #5 and #6; the
+separate #6-only invocation produced the clean cell.
+
+Control arm, the same four cases and no triggers, was **not re-run** here. The
+0.5.0 attempts at `fff5b96` are the record — a budget cap, not a spec rule; #1
+never produced a clean five-draw run and stayed `unresolved`:
 
 ```sh
 node scripts/run-evals.mjs --root skills --skill write-implementation-prompt --case 1 --repeat 5 --run --no-skill
@@ -98,49 +104,52 @@ node scripts/run-evals.mjs --root skills --skill write-implementation-prompt --c
 
 ### Measurement-surface hashes
 
-| case | fixture (`8e26cf6` = `fff5b96`) | prompt (`8e26cf6` = `fff5b96`) | skill (`8e26cf6` = `fff5b96`) | detector |
+| case | fixture (unchanged) | prompt (unchanged) | skill (`dcf5177`) | detector (new cells) |
 | --- | --- | --- | --- | --- |
-| #1 | `5157bf5f487ddb68…` | `4ac94dfc39d7b122…` | `ab314e2ceb8f793f…` | `a31d58f79a6c7038` |
-| #2 | `2895c3f51c6e8688…` | `01fe5d11c4b8ebe7…` | `ab314e2ceb8f793f…` | `a31d58f79a6c7038` |
-| #3 | `86e79e58590365f7…` | `3bfe07b6f3426982…` | `ab314e2ceb8f793f…` | `a31d58f79a6c7038` |
-| #4 | `633c5197bda8fa0e…` | `a1b3be1ac79040d2…` | `ab314e2ceb8f793f…` | `a31d58f79a6c7038` |
-| #5 | `e3b0c44298fc1c14…` (empty) | `1444109c228bf526…` | `ab314e2ceb8f793f…` | `a31d58f79a6c7038` |
-| #6 | `e3b0c44298fc1c14…` (empty) | `027a1b7b44ed9905…` | `ab314e2ceb8f793f…` | `a31d58f79a6c7038` |
+| #1 | `5157bf5f487ddb68…` | `4ac94dfc39d7b122…` | `046369c29a8383db…` | `71bfb85a91cd68ab` |
+| #2 | `2895c3f51c6e8688…` | `01fe5d11c4b8ebe7…` | `046369c29a8383db…` | `71bfb85a91cd68ab` |
+| #3 | `86e79e58590365f7…` | `3bfe07b6f3426982…` | `046369c29a8383db…` | (manual; no run) |
+| #4 | `633c5197bda8fa0e…` | `a1b3be1ac79040d2…` | `046369c29a8383db…` | `71bfb85a91cd68ab` |
+| #5 | `e3b0c44298fc1c14…` (empty) | `1444109c228bf526…` | `046369c29a8383db…` | `71bfb85a91cd68ab` |
+| #6 | `e3b0c44298fc1c14…` (empty) | `027a1b7b44ed9905…` | `046369c29a8383db…` | `71bfb85a91cd68ab` |
 
-The control draws carry the same `fixtureHash`, `promptHash` and
-`detectorVersion`; they have no `skillHash` because no skill is staged. The
-trigger draws carry the same `skillHash`. The only difference between the two
-commits is `repoSha`. The hashes do not cover the assertion set — `skillHash`
-excludes `references/evals.md` — so the evidence for an unchanged case is the
-skills diff cited at the top, not the table alone.
+`046369c29a8383db…` is the hash of the staged skill after the SPEC-0030
+description and boundary edit. The old `ab314e2ceb8f793f…` cells are history.
+The control draws carry the 0.5.0 `fixtureHash`/`promptHash` and v1 detector;
+they have no `skillHash` because no skill is staged. The hashes do not cover the
+assertion set — `skillHash` excludes `references/evals.md` — so the evidence
+for an unchanged case is the skills diff cited at the top, not the table alone.
 
 ### Behavioural run directories
 
 | case | arm | run directory | repo | checker |
 | --- | --- | --- | --- | --- |
-| #1 | with skill | `2026-11-06T13-56-14--write-implementation-prompt` | `8e26cf6` | `findings=0 warnings=0` |
-| #2 | with skill | `2026-11-06T13-59-48--write-implementation-prompt` | `8e26cf6` | `findings=0 warnings=0` |
-| #3 | with skill | `2026-11-06T14-01-54--write-implementation-prompt` | `8e26cf6` | `findings=0 warnings=0` |
-| #4 | with skill | `2026-11-06T14-04-25--write-implementation-prompt` | `8e26cf6` | `findings=0 warnings=0` |
-| #1 | control (1) | `2026-11-06T15-15-52--write-implementation-prompt--without-skill` | `fff5b96` | `findings=2` |
-| #1 | control (2) | `2026-11-06T15-18-26--write-implementation-prompt--without-skill` | `fff5b96` | `findings=1` |
-| #1 | control (3) | `2026-11-06T15-20-43--write-implementation-prompt--without-skill` | `fff5b96` | `findings=2` |
-| #2 | control (1) | `2026-11-06T15-25-06--write-implementation-prompt--without-skill` | `fff5b96` | `findings=2` |
-| #2 | control (2) | `2026-11-06T15-27-30--write-implementation-prompt--without-skill` | `fff5b96` | `findings=2` |
-| #2 | control (3) | `2026-11-06T15-30-39--write-implementation-prompt--without-skill` | `fff5b96` | v1 `findings=0 warnings=0`; v2 replay `dirty(host)` (`r1`, 0/4 clean) |
-| #3 | control | `2026-11-06T14-32-58--write-implementation-prompt--without-skill` | `8e26cf6` | `findings=1` |
-| #4 | control | `2026-11-06T14-37-23--write-implementation-prompt--without-skill` | `8e26cf6` | v1 `findings=0 warnings=0`; v2 replay `dirty(host)` (`r5`, 4/4 passed clean) |
+| #1 | with skill | `2026-11-06T19-25-26--write-implementation-prompt` | `dcf5177` | `findings=0 warnings=0 isolated=yes` |
+| #2 | with skill | `2026-11-06T19-28-47--write-implementation-prompt` | `dcf5177` | `findings=0 warnings=0 isolated=yes` |
+| #3 | manual | — | — | 0 draws; `14-01-54` is history |
+| #4 | with skill | `2026-11-06T19-30-26--write-implementation-prompt` | `dcf5177` | `findings=0 warnings=0 isolated=yes` |
+| #1 | control | the four attempts in the history below | `fff5b96` | no five-draw clean run — **unresolved** |
+| #2 | control | `2026-11-06T15-30-39--write-implementation-prompt--without-skill` | `fff5b96` | v1 `findings=0`; v2 replay `dirty(host)` (`r1`, 0/4 clean) — **pending SPEC-0031** |
+| #3 | control | `2026-11-06T14-32-58--write-implementation-prompt--without-skill` | `8e26cf6` | `findings=1`; 0/4 clean |
+| #4 | control | `2026-11-06T14-37-23--write-implementation-prompt--without-skill` | `8e26cf6` | v1 `findings=0`; v2 replay `dirty(host)` (`r5`, 4/5 draws clean, 4/4 passed) — **pending SPEC-0031** |
 
-The older #1 control run `2026-11-06T14-28-07` appears only in the #1
-unresolved history; the older #2 runs (`14-30-42`, `14-40-36`) are superseded by
-`15-30-39` under v1 (v2: `dirty(host)`, 0/4 replay-clean) and are not used.
+The three with-skill cells that ran are clean five-draw runs at the new
+`skillHash`. #3 is `status: manual`: the five-draw run at `8e26cf6`
+(`14-01-54`) is the record of the 4/5 split that sent it back to `manual`; it is
+not a re-measurement and no new draws exist. The old with-skill dirs
+(`13-56-14` #1, `13-59-48` #2, `14-04-25` #4) remain history at
+`ab314e2ceb8f793f…`.
 
-The three #1 attempts never produced a clean five-draw run. Their clean counts
-are `0/3` (`15-15-52`), `0/4` (`15-18-26`) and `0/3` (`15-20-43`); every clean
-draw failed. The three #2 attempts are `0/3`, `0/3` and **`0/5`** under v1; the
-third is **0/4 replay-clean** under v2 (`r1` is `dirty(host)`), so it is not a
-five-draw clean cell. The #4 control is **4/5 draws clean (4/4 passed)** under
-v2 (`r5` is `dirty(host)`), not the v1 5/5.
+The controls were not re-run. #1 never produced a clean five-draw run: clean
+subsets are `0/3` (`15-15-52`), `0/4` (`15-18-26`), `0/3` (`15-20-43`) and the
+older `0/4` (`14-28-07`), and every clean draw failed `spec_sha:`; it is
+**unresolved**, not a control. #2 is **0/4 replay-clean** under v2 (`r1` is
+`dirty(host)`) and #4 is **4/5 draws clean (4/4 passed)** (`r5` is
+`dirty(host)`); both are **pending SPEC-0031**, so neither is a five-draw clean
+cell in this matrix. #3's control is a leak-verified 0/4 clean, and the case
+itself is manual. That is why "the controls stay citable" from the spec is
+superseded: the description edit does not move them, but detector v2 already
+removed the two clean five-draw controls.
 
 ### Trigger runs
 
@@ -150,18 +159,38 @@ That is a construction defect of the trigger cases, not an isolation result.
 
 | run directory | repo | #5 | #6 | checker |
 | --- | --- | --- | --- | --- |
+| `2026-11-06T19-32-45--write-implementation-prompt` | `dcf5177` | 1/1 clean scored loaded (`r2`); `r1`/`r4` stalled, `r3`/`r5` contaminated; **5/5 loaded** | **5/5** | `findings=6`, `isolated=no` |
+| `2026-11-06T19-53-34--write-implementation-prompt` | `dcf5177` | 2/2 clean scored loaded (`r1`,`r2`); `r3`/`r5` stalled, `r4` stale copy; **5/5 loaded** | **4/5**; `r3` loaded | `findings=3`, `isolated=no` |
+| `2026-11-06T20-12-15--write-implementation-prompt` | `dcf5177` | — (case 6 only) | **5/5** | `findings=0 warnings=0 isolated=yes` |
+
+The 0.5.0 trigger rows below are history at the old `skillHash`:
+
+| run directory | repo | #5 | #6 | checker |
+| --- | --- | --- | --- | --- |
 | `2026-11-06T14-07-04--write-implementation-prompt` | `8e26cf6` | 4/5, `r5` stalled | 3/5; `r1`,`r2` loaded | `findings=1` |
 | `2026-11-06T14-43-01--write-implementation-prompt` | `8e26cf6` | 2/5; `r1`,`r4` stalled, `r3` contaminated | 5/5 | `findings=3` |
 | `2026-11-06T15-33-16--write-implementation-prompt` | `fff5b96` | 3/3 clean scored loaded; `r1` contaminated+stalled, `r4` contaminated | 5/5 | `findings=2` |
 | `2026-11-06T15-49-43--write-implementation-prompt` | `fff5b96` | 3/3 clean scored loaded; `r1` stalled, `r3` contaminated | 3/5; `r1`,`r2` loaded | `findings=2` |
 | `2026-11-06T16-02-56--write-implementation-prompt` | `fff5b96` | 3/3 clean scored loaded; `r1`,`r2` contaminated | 4/5; `r2` loaded | `findings=2` |
 
-No trigger run reached five clean scored draws for #5: every attempt lost one or
-two draws to contamination, and the first two also lost one to a stall. The
-latest run `16-02-56` is the one to quote: **#5 3/3 clean scored draws loaded**
-(two contaminated, no stall), **#6 4/5** (`r2` loaded). The stalls are
-infrastructure, not a routing verdict; the contamination is a read of the real
-skill or a stale copy.
+`2026-11-06T20-12-15--write-implementation-prompt` is the clean #6 cell: five
+draws, no skill load, `findings=0 warnings=0 isolated=yes`. The two trigger runs
+that also carried #5 are dirty because of #5, not #6: in `19-32-45` #6 was 5/5
+and in `19-53-34` it was 4/5 (`r3` loaded). The near-miss is no longer
+deterministic in five draws; the split (5/5, 5/5, 4/5) is recorded rather than
+rounded.
+
+No trigger run reached a stall-free five-draw #5 cell. In `19-32-45` all five
+draws loaded the skill, but `r1` and `r4` lost the event stream (`r1` last event
+at 161.6 s, `r4` at 27.2 s, then 120 s of silence before the watchdog; both
+retried once), and `r3`/`r5` read the installed skill or host corpus. In
+`19-53-34` all five loaded again; `r3` stalled after its last event at 355.0 s
+and `r5` at 145.0 s (both retried once), and `r4` read a stale copy under
+`/private/var/folders/.../opencode/agent-skills-pr`. `r2` in `19-32-45` also
+took two attempts (a first-attempt stall, then a pass). The stall is provider
+silence after the skill had already loaded, not a routing failure; the
+contamination is the runner letting the child roam to the host. Neither is
+fixed here.
 
 Under v2, `14-07-04` `r1` (#5 and #6) and `15-33-16` `r1` (#6) are also
 `dirty(host)` (checkout-root reads, denied). The v1 columns are unchanged; those
@@ -172,10 +201,10 @@ SPEC-0031.
 
 | case | with skill | with, gate | control | control, gate | classification |
 | --- | --- | --- | --- | --- | --- |
-| #1 create the demo prompt | 5/5 | 5/5 | no clean run; largest clean subset 0/4 | 4/4 no skill loaded | **unresolved** |
-| #2 draft spec | 5/5 | 5/5 | **0/4 replay-clean** (v1 0/5; `r1` host) | 5/5 no skill loaded | **separator**, pending SPEC-0031 |
-| #3 open questions | 4/5 | 5/5 | 0/4 clean (1 contaminated) | 4/4 no skill loaded | **manual** (reverted) |
-| #4 overlapping prompt | 5/5 | 5/5 | **4/4 replay-clean** (v1 5/5; `r5` host, 4/5 draws) | 5/5 no skill loaded | **non-discriminator**, pending SPEC-0031 |
+| #1 create the demo prompt | **5/5** (new) | 5/5 | no clean run; largest clean subset 0/4 | 4/4 no skill loaded | **unresolved** |
+| #2 draft spec | **5/5** (new) | 5/5 | **0/4 replay-clean** (v1 0/5; `r1` host) | 5/5 no skill loaded | **separator**, pending SPEC-0031 |
+| #3 open questions | 4/5 (history) | 5/5 (history) | 0/4 clean (1 contaminated) | 4/4 no skill loaded | **manual** (reverted; not re-run) |
+| #4 overlapping prompt | **5/5** (new) | 5/5 | **4/4 replay-clean** (v1 5/5; `r5` host, 4/5 draws) | 5/5 no skill loaded | **non-discriminator**, pending SPEC-0031 |
 
 The red cells, by assertion or gate reason:
 
@@ -193,8 +222,9 @@ The red cells, by assertion or gate reason:
   same assertion in their three clean draws each; three of the four contaminated
   draws read the real install and one (`15-27-30 r3`) a stale copy under
   `/private/tmp/as-remote/...`.
-- **#3 with skill** — `nodir docs/prompts` failed in `r3`: the draw treated both
-  open questions as non-blocking, turned them into non-goals, and wrote
+- **#3 with skill** — not re-run: the case is `status: manual`. The history is
+  `nodir docs/prompts` failed in `r3` of `14-01-54`: the draw treated both open
+  questions as non-blocking, turned them into non-goals, and wrote
   `docs/prompts/SPEC-0009-audit-log.prompt.md`. The other four stopped.
 - **#3 control** — `nodir docs/prompts` failed in all four clean draws; the
   fifth read the real install and is excluded.
@@ -202,19 +232,28 @@ The red cells, by assertion or gate reason:
   control produced the prompt and the `spec_sha` without the skill; under v2 its
   `r5` is `dirty(host)` (grep of the checkout root, denied), leaving **4/5 draws
   clean (4/4 passed)**, so the clean five-draw cell is pending SPEC-0031.
-- **#5** — no assertion red in any clean scored draw. Stalls: `14-07-04 r5`,
-  `14-43-01 r1`/`r4`, `15-33-16 r1` (also contaminated), `15-49-43 r1`.
-  Contamination: `14-43-01 r3` (stale copy under
+- **#5** — no assertion red in any clean scored draw: all five draws loaded the
+  skill in both new trigger runs. Stalls: `14-07-04 r5`, `14-43-01 r1`/`r4`,
+  `15-33-16 r1` (also contaminated), `15-49-43 r1`; new at `dcf5177`:
+  `19-32-45 r1` (last event 161.6 s, then 120 s silence, retried once) and `r4`
+  (27.2 s, retried once), `19-53-34 r3` (355.0 s, retried once) and `r5`
+  (145.0 s, retried once). `19-32-45 r2` also needed a retry (first attempt
+  stalled) and then passed. Contamination: `14-43-01 r3` (stale copy under
   `/private/var/folders/.../T/opencode`), `15-33-16 r4`, `15-49-43 r3`,
-  `16-02-56 r1`/`r2` (real install).
-- **#6** — `notskill write-implementation-prompt` failed wherever the skill
-  loaded: `14-07-04 r1`,`r2`; `15-49-43 r1`,`r2`; `16-02-56 r2`. The first
-  action in those draws **is** the `skill` call, before any filesystem search:
-  `14-07-04 r1` says "I'll load the skill first, then find the spec" and calls
-  `skill`; `r2` says "this looks like a spec-related request" and calls `skill`;
-  `15-49-43 r2` says "I'll load the skill that handles spec-to-prompt work, then
-  find the spec." The near-miss prompt itself routes to the skill; it is not a
-  consequence of roaming.
+  `16-02-56 r1`/`r2` (real install); new: `19-32-45 r3`/`r5` (installed skill and
+  host corpus), `19-53-34 r4` (stale copy under
+  `/private/var/folders/.../opencode/agent-skills-pr`). No stall-free five-draw
+  #5 cell exists.
+- **#6** — the SPEC-0030 edit changed the failure mode. Before it, the `skill`
+  call was the first action in the failing draws (`14-07-04 r1` says "I'll load
+  the skill first, then find the spec"; `r2` "this looks like a spec-related
+  request"; `15-49-43 r2` "I'll load the skill that handles spec-to-prompt
+  work"). After it, the clean cell `20-12-15` is **5/5 with no skill load**
+  (`findings=0 warnings=0 isolated=yes`), and `19-32-45` is also 5/5. It is not
+  deterministic: `19-53-34 r3` still says "I'll start by loading the skill that
+  governs this kind of request" and calls `skill` before reading the boundary,
+  so that run is 4/5. The split (5/5, 5/5, 4/5 of five) is recorded; the case and
+  its `notskill` assertion are unchanged.
 
 ## Case #3
 
@@ -231,14 +270,16 @@ were stable; it is not, and five draws cannot promote it.
 
 ## Classification
 
-- **#1 — unresolved.** Four control attempts, no five-draw clean run: `15-15-52`
-  0/3 clean, `15-18-26` 0/4 clean, `15-20-43` 0/3 clean, and the older
-  `14-28-07` 0/4 clean. Every clean draw failed `spec_sha:`, but the AC-2 rule
-  forbids promoting a separator from a rejected run, and draws from different
-  runs are not summed into a five-draw cell. Re-measure after the control arm
-  can no longer read the install.
+- **#1 — unresolved.** With the skill it is **5/5 clean at `dcf5177`**
+  (`19-25-26`), but four control attempts still have no five-draw clean run:
+  `15-15-52` 0/3 clean, `15-18-26` 0/4 clean, `15-20-43` 0/3 clean, and the
+  older `14-28-07` 0/4 clean. Every clean draw failed `spec_sha:`, but the AC-2
+  rule forbids promoting a separator from a rejected run, and draws from
+  different runs are not summed into a five-draw cell. Re-measure after the
+  control arm can no longer read the install.
 - **#2 — separator, pending SPEC-0031 under detector v2.** 5/5 with the skill
-  against **0/5** clean without it in `15-30-39` under v1. The v2 replay marks
+  (re-measured 5/5 at `dcf5177`, `19-28-47`) against **0/5** clean without it in
+  `15-30-39` under v1. The v2 replay marks
   `r1` `dirty(host)` (glob of the checkout root, denied), so the reading is
   **0/4 replay-clean**: the direction is unchanged, but the five-draw clean
   control does not exist and must be re-measured. The two earlier attempts are
@@ -246,19 +287,27 @@ were stable; it is not, and five draws cannot promote it.
 - **#3 — manual (reverted).** The five draws split 4/5, so the case carries a
   `why:` instead of a classification. The run pair is cited as the record of
   that split, not as a separator.
-- **#4 — non-discriminator, pending SPEC-0031 under detector v2.** 5/5 in both
-  arms under v1. The control's `r5` is `dirty(host)` (grep of the checkout root,
-  denied), so the v2 reading is **4/5 draws clean (4/4 passed)**: the
+- **#4 — non-discriminator, pending SPEC-0031 under detector v2.** 5/5 with the
+  skill at `dcf5177` (`19-30-26`) and 5/5 in both arms under v1. The control's
+  `r5` is `dirty(host)` (grep of the checkout root, denied), so the v2 reading
+  is **4/5 draws clean (4/4 passed)**: the
   non-discriminator reading holds on the clean subset, but the five-draw clean
   cell is pending. A bare agent mirrors the existing prompt and records
   `spec_sha` as often as the skill does. Keep as a regression case.
-- **#5 and #6 — triggers, not rates.** `#5` loaded in 3/3 clean scored draws in
-  the latest run (`16-02-56`), with two contaminated draws; no #5 run has
-  five scored draws. `#6` is not deterministic: 5/5 in `15-33-16`, 3/5 in
-  `15-49-43` (`r1`,`r2` loaded), 4/5 in `16-02-56` (`r2` loaded), and 3/5 in
-  `14-07-04`. The failing draws load the skill as their first action, so the
-  near-miss prompt itself routes to the skill. Recorded here; no fix in this
-  spec.
+- **#5 — trigger, not a rate; no five-draw clean cell.** `#5` loaded in **5/5
+  draws** in both new runs (`19-32-45`, `19-53-34`), but the saved outcome
+  stalled in four of those ten draws, a fifth stall recovered on retry
+  (`19-32-45 r2`), and contamination took three more. The best clean-scored
+  subsets are 1/1 and 2/2. The stall is provider silence after
+  the skill loaded, not a routing failure; it is named with its event gap above
+  and with the retry count. It is not fixed here.
+- **#6 — near-miss improved, not deterministic.** The clean cell
+  `20-12-15` is **5/5 with no skill load** and `findings=0 warnings=0
+  isolated=yes`; `19-32-45` is also 5/5. `19-53-34` is **4/5** because `r3`
+  still loads the skill before reading the boundary. The pre-fix draws loaded it
+  as their first action; after the edit the clean draws search first and cite
+  the boundary when they do read the staged `SKILL.md`. The case and its
+  `notskill` assertion are unchanged.
 
 ## Integrity
 
@@ -267,6 +316,19 @@ the draw contaminated. The checker findings, by run:
 
 ```sh
 node scripts/check-eval-run.mjs ~/.local/share/opencode/evals/runs/<dir>
+# 2026-11-06T19-25-26--write-implementation-prompt
+#   cases=1 reps=5 findings=0 warnings=0 isolated=yes (#1)
+# 2026-11-06T19-28-47--write-implementation-prompt
+#   cases=1 reps=5 findings=0 warnings=0 isolated=yes (#2)
+# 2026-11-06T19-30-26--write-implementation-prompt
+#   cases=1 reps=5 findings=0 warnings=0 isolated=yes (#4)
+# 2026-11-06T19-32-45--write-implementation-prompt
+#   findings=6 isolated=no — #5 r1,r4 stalled; #5 r3,r5 leak+host; #6 5/5 clean
+# 2026-11-06T19-53-34--write-implementation-prompt
+#   findings=3 isolated=no — #5 r3,r5 stalled; #5 r4 stale copy. Separately,
+#   #6 r3 loaded the skill: a case failure, not a checker finding.
+# 2026-11-06T20-12-15--write-implementation-prompt
+#   cases=1 reps=5 findings=0 warnings=0 isolated=yes (#6)
 # 2026-11-06T13-46-05--write-implementation-prompt   (discarded canary)
 #   8 draws, findings=0 warnings=0, but r8 read .lane/trees/SPEC-0025-.../docs/
 # 2026-11-06T14-07-04--write-implementation-prompt
@@ -307,11 +369,14 @@ The trigger stalls are provider stalls: the event stream went silent past the
 ## Not comparable
 
 The run directories for this skill from 2026-11-02 predate this case set and the
-leak detector; they are not evidence for this table. The with-skill cells are
-`8e26cf6` and the control/trigger re-runs are `fff5b96`; the hash table proves the
-measurement surface is identical. The `#1` control has no five-draw clean run and
-stays `unresolved`. The `#2`, `#3` and `#4` control cells are one run each
-(`15-30-39`, `14-32-58`, `14-37-23`). Under v2 the first and third are
-`dirty(host)` (`15-30-39 r1`, `14-37-23 r5`), so their readings are **0/4** and
-**4/4** replay-verified and the five-draw clean cells are pending SPEC-0031; the
-middle is a leak, read from its clean draws with the leak named.
+leak detector; they are not evidence for this table. The new with-skill and
+trigger cells are `dcf5177` at `skillHash 046369c29a8383db…`; the 0.5.0
+with-skill cells are `8e26cf6` at `ab314e2ceb8f793f…` and the controls are
+`fff5b96`/`8e26cf6`. The hash table proves which fixture and prompt each run
+used. The `#1` control has no five-draw clean run and stays `unresolved`. The
+`#2`, `#3` and `#4` control cells are one run each (`15-30-39`, `14-32-58`,
+`14-37-23`). Under v2 the first and third are `dirty(host)` (`15-30-39 r1`,
+`14-37-23 r5`), so their readings are **0/4** and **4/4** replay-verified and
+the five-draw clean cells are pending SPEC-0031; the middle is a leak, read from
+its clean draws with the leak named. The #5 trigger has no stall-free five-draw
+cell in any wave; it is a trigger direction, not a rate.
