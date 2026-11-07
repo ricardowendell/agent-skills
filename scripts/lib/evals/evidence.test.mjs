@@ -222,6 +222,35 @@ test("the CLI resolves a unique two-segment shorthand and names an ambiguous one
   }
 })
 
+test("a missing store is a warning in normal mode and an error under --strict", () => {
+  const dir = mkdtempSync(join(tmpdir(), "evidence-nostore-"))
+  try {
+    const store = join(dir, "no-such-store")
+    const normal = spawnSync(process.execPath, [cli, "--store", store], { cwd: dir, encoding: "utf8" })
+    assert.equal(normal.status, 0)
+    assert.match(normal.stdout, /warning missing-store/)
+    assert.match(normal.stdout, /0 errors, 1 warnings/)
+
+    const strict = spawnSync(process.execPath, [cli, "--store", store, "--strict"], { cwd: dir, encoding: "utf8" })
+    assert.equal(strict.status, 1)
+    assert.match(strict.stdout, /error missing-store/)
+    assert.match(strict.stdout, /1 errors, 0 warnings/)
+
+    const json = spawnSync(process.execPath, [cli, "--store", store, "--json"], { cwd: dir, encoding: "utf8" })
+    assert.equal(json.status, 0)
+    assert.equal(JSON.parse(json.stdout).summary.warnings, 1)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test("--help names empty-run and missing-store", () => {
+  const result = spawnSync(process.execPath, [cli, "--help"], { encoding: "utf8" })
+  assert.equal(result.status, 0)
+  assert.match(result.stdout, /empty-run/)
+  assert.match(result.stdout, /missing-store/)
+})
+
 test("the CLI never drops an arm: with-arm is exact, missing-arm is an error, empty run is an error", () => {
   const dir = mkdtempSync(join(tmpdir(), "evidence-arm-"))
   try {

@@ -56,34 +56,42 @@ Both are code, both run in seconds, neither spends a model turn.
 
 ## User Outcome
 
-A spec whose `files:` does not match its diff, whose `task:` does not exist, or
-whose `depends_on` is dangling fails before a reviewer sees it. A document that
-cites a run directory which does not exist, is unfinished, or is claimed clean
-while the checker rejects it fails before it lands.
+A spec whose `task:` does not exist, whose `depends_on`/`blocks` points at a
+missing slug, or which touches a file it did not declare fails before a reviewer
+sees it. A spec that declares a file it did not touch, or carries an asymmetric
+dependency link, prints a warning instead: inherited debt stays visible without
+blocking an unrelated edit. A document that cites a run directory which does not
+exist, a completed run with no case results, an unfinished run as complete, or a
+v1 run as `isolated=yes` fails before it lands.
 
 ## Scope
 
-- **`scripts/spec-check.mjs`** — `--spec <path> --base <ref>`; exit 1 per
-  finding, `--json` for an artifact. Rules:
-  - `files:` is non-empty and equals `git diff --name-only <base>...HEAD` (the
-    spec may declare a file it did not touch only when it says so in Results;
-    the check reports both directions).
+- **`scripts/spec-check.mjs`** — `--spec <path> --base <ref>`; errors exit 1,
+  warnings print and exit 0, `--json` for an artifact. Rules:
+  - `files:` is non-empty and equals `git diff --name-only <base>...HEAD`. A
+    declared file the diff did not touch is a warning; a touched file the spec
+    did not declare is an error. Results prose suppresses neither direction.
   - `task:` resolves to a `backlog/tasks/` file with that id.
   - every `depends_on`/`blocks` entry resolves to a spec slug, and the two keys
-    are symmetric (`A blocks B` ⇔ `B depends_on A`).
+    are symmetric (`A blocks B` ⇔ `B depends_on A`). A dangling slug is an
+    error; an asymmetric link is a warning.
   - `status: implemented` leaves no `_Filled during implementation._` and a
     non-empty Results.
   - `status: ready` requires `task:`, `files:` and at least one AC.
 - **`scripts/check-evidence.mjs`** — scans `docs/evals/*.md` for run-directory
   tokens and checks them against the store (`--store`, default the local one):
-  - the directory exists;
+  - the directory exists, by exact name; a two-segment token (timestamp + skill)
+    may stand for one unique `${token}--*` directory, but a token with an arm
+    never drops it;
+  - a `completed` manifest with no `cases/` (or no case results) is an error;
   - its manifest is `completed`, unless the citing line marks it
     `unfinished|running|discard|history|unreadable`;
   - a line claiming `isolated=yes` cites a run whose recorded detector version
     is the current one;
   - warning: a line cites a run the checker rejects (findings > 0) without a
-    marker (`dirty|leak|host|stall|contaminated|discard|history|failure`).
-  `--strict` promotes the warning to an error.
+    marker (`dirty|leak|host|stall|contaminated|discard|history|failure`);
+  - warning: the store itself is absent. `--strict` promotes any warning,
+    including this one, to an error.
 - **Wiring.** `check-evidence` joins the `selftest` line in `docs/pipeline.md`
   (policy change approved at the human gate); `spec-check` runs in CI for the
   specs a pull request changes. `CONTRIBUTING.md` says when to run each.
@@ -162,14 +170,12 @@ line did not carry a completion marker. The warnings are runs with findings
 cited as history without one of the dirty markers; they stay warnings, not
 errors.
 
-The first pass with exact-directory resolution produced 116 "missing" errors.
-Most were shorthands the corpus already uses (`2026-11-06T17-25-52--process-inbox`
-for the `...--without-skill` directory). That was a false positive, so the check
-resolves an exact directory first; only a two-segment token (timestamp + skill)
-may stand for a unique `${token}--*` directory, and an ambiguous one is an error
-that names the candidates. A token with an arm (three or more segments) never
-falls back to a prefix: `...--demo--nonexistent-arm` must not resolve to
-`...--demo`. Two genuinely wrong citations were corrected:
+The first pass with the old token regex (`--[a-z0-9]+(?:-[a-z0-9]+)*`) stopped
+at the second hyphen: `...--audit-code-quality--without-skill` was read as
+`...--audit-code-quality`, and 116 full-name citations looked missing or
+resolved to the sibling run. The corpus cites full names, not two-segment
+shorthands; the two-segment fallback is defensive and tested, not something the
+current corpus needs. Two genuinely wrong citations were corrected:
 `2026-11-04T21-59-17--without-skill` (missing the `--audit-code-quality` label)
 and `2026-11-05T13-22-08--implement-from-prompt--opencode-go-gpt-6-luna` (the
 with-skill directory does not exist; the cited artefact is the control). Neither
@@ -213,6 +219,10 @@ completed run with findings cited without a
 makes it fatal. The warning is advisory in `selftest` so the 97 historical
 citations do not turn the gate red.
 
+A missing store is a warning in the normal mode and an error under `--strict`.
+That is what lets the pre-commit hook run on a machine that never ran an eval;
+the store is an input, not a hard dependency of the repo.
+
 The token cases that used to slip:
 - `...--demo--nonexistent-arm` → `missing-run` (the arm is never dropped);
 - `...--demo--with-skill` (exact directory) → clean;
@@ -231,7 +241,8 @@ The token cases that used to slip:
   commands, the local-`main` base rule, and the `--strict` rule; the CI list and
   the pre-PR checklist now name them.
 - `.githooks/pre-commit`: runs `check-evidence.mjs` after sensor parity, so the
-  hook and the `selftest` line cannot drift.
+  hook runs the same check as the `selftest` line (they are independent lists,
+  not a single source).
 
 ### F5 — the repair list
 
@@ -256,13 +267,14 @@ node scripts/check-evidence.mjs
 case, a git-backed CLI test for errors and `--json`, a non-ASCII path test for
 `-z`, and a usage-error test. `evidence.test.mjs` has the pure rule cases plus a
 synthetic store (existing/clean, running, v1 with `isolated=yes`, dirty,
-completed-without-cases), a two-segment shorthand/ambiguity test, and the
-with-arm cases (exact exists, missing arm, empty run).
+completed-without-cases), a two-segment shorthand/ambiguity test, the with-arm
+cases (exact exists, missing arm, empty run), and a missing-store test in both
+normal and `--strict` modes.
 
 ```text
 node scripts/validate-skills.mjs --root skills                      All clear
 node scripts/run-evals.mjs --root skills --list --check             exit 0
-node --test scripts/lib/evals/*.test.mjs                            333 pass
+node --test scripts/lib/evals/*.test.mjs                            335 pass
 node --test skills/bootstrap-project-harness/scripts/*.test.mjs     pass
 node scripts/check-sensor-parity.mjs                                2/2 fixtures
 node scripts/check-evidence.mjs                                     0 errors

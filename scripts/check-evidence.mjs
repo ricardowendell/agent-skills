@@ -18,15 +18,16 @@ import { checkDocuments, tokenSegments } from "./lib/evals/evidence.mjs"
 const USAGE = `Usage: node scripts/check-evidence.mjs [--store <runs-dir>] [--strict] [--json]
 
 Scan docs/evals/*.md for run-directory tokens and check them against the local
-store. Errors: a missing directory, an unfinished run cited as complete, or a
-line claiming isolated=yes for a run whose recorded detector is not current.
-Warnings: a run with findings cited without a dirty/leak/host/stall marker;
---strict makes a warning fatal.
+store. Errors: a missing directory, a completed run with no cases/ or no case
+results (empty-run), an unfinished run cited as complete, or a line claiming
+isolated=yes for a run whose recorded detector is not current. Warnings: a run
+with findings cited without a dirty/leak/host/stall marker, and a missing eval
+store (missing-store); --strict makes a warning fatal.
 
 Exit codes:
-  0  no errors (warnings may print)
+  0  no errors (warnings may print, including a missing store)
   1  at least one error, or a warning under --strict
-  2  the docs or the store could not be read
+  2  the docs could not be read
 `
 
 function option(argv, name) {
@@ -135,8 +136,42 @@ function main(argv) {
   const json = argv.includes("--json")
   const store = resolve(option(argv, "--store") ?? join(homedir(), ".local", "share", "opencode", "evals", "runs"))
   if (!existsSync(store)) {
-    process.stderr.write(`check-evidence: store not found: ${store}\n`)
-    return 2
+    // A fresh checkout has no eval store. That is not an error in the normal
+    // mode: the hook must not make a commit impossible on a machine that never
+    // ran an eval. --strict turns the same condition into a failure.
+    const level = strict ? "error" : "warning"
+    const findings = [
+      {
+        level,
+        rule: "missing-store",
+        file: "",
+        line: 0,
+        message: `eval store not found: ${store}`,
+      },
+    ]
+    if (json) {
+      process.stdout.write(
+        `${JSON.stringify(
+          {
+            ok: level === "warning",
+            store,
+            strict,
+            currentDetector: DETECTOR_VERSION,
+            summary: { documents: 0, errors: level === "error" ? 1 : 0, warnings: level === "warning" ? 1 : 0 },
+            findings,
+          },
+          null,
+          2,
+        )}\n`,
+      )
+    } else {
+      process.stdout.write(`${level} missing-store — eval store not found: ${store}\n`)
+      process.stdout.write(
+        `0 documents, ${level === "error" ? 1 : 0} errors, ${level === "warning" ? 1 : 0} warnings` +
+          `${strict ? " (strict)" : ""}; current detector ${DETECTOR_VERSION}; store ${store}\n`,
+      )
+    }
+    return strict ? 1 : 0
   }
   const storeNames = readdirSync(store, { withFileTypes: true })
     .filter((e) => e.isDirectory())
