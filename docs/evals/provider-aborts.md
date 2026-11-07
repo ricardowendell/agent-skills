@@ -26,12 +26,12 @@ abort was followed by a successful retry.
 
 | run | case | reps | error | result | disposition |
 | --- | --- | --- | --- | --- | --- |
-| `2026-11-05T07-38-29--review-code` | #4 | r1 | `provider.transport` | failed, exit 1 | cited only in the historical `SPEC-0009` (`2 passed, 1 exit 1`); not touched, recorded here |
-| `2026-11-05T09-05-36--review-code` | #7 | r1 | `provider.transport` | failed, exit 1 | marked in `review-code-matrix.md`: the stream continued and produced `VERDICT: REJECT`; the exit 1 is the transport error, not a behavioural difference |
+| `2026-11-05T07-38-29--review-code` | #4 | r1 | `provider.transport` | failed, exit 1 | dirty (provider abort); cited only in the historical `SPEC-0009` (`2 passed, 1 exit 1`); not touched, recorded here |
+| `2026-11-05T09-05-36--review-code` | #7 | r1 | `provider.transport` | failed, exit 1 | dirty (provider abort); marked in `review-code-matrix.md`: the stream continued and produced `VERDICT: REJECT`; the exit 1 is the transport error, not a behavioural difference |
 | `2026-11-07T02-03-01--write-implementation-prompt--without-skill` | #4 | r4 | `provider.rate-limit` | failed | already marked "1 rep aborted (429)" in `write-implementation-prompt-matrix.md` and `coverage.md` |
 | `2026-11-07T02-51-15--process-inbox--without-skill` | #1 | r3 | `provider.rate-limit` | failed | already marked "1 rep aborted (429), 2 contaminated" in `pipeline-bookends-matrix.md` and `SPEC-0031` |
-| `2026-11-07T03-08-51--process-inbox--without-skill` | #1 | r1–r5 | `provider.go-limit` | failed | already marked "all 5 provider aborts, not evidence" in `pipeline-bookends-matrix.md` and `SPEC-0031` |
-| `2026-11-07T08-14-24--capture-idea` | #1 | r1–r5 | `provider.go-limit` | failed, gate miss | marked in `SPEC-0031`: 5 provider aborts (HTTP 429); the gate missed because the provider aborted before load, not because the skill failed to route |
+| `2026-11-07T03-08-51--process-inbox--without-skill` | #1 | r1–r5 | `provider.go-limit` | failed | dirty (5 provider aborts); already marked "all 5 provider aborts, not evidence" in `pipeline-bookends-matrix.md` and `SPEC-0031` |
+| `2026-11-07T08-14-24--capture-idea` | #1 | r1–r5 | `provider.go-limit` | failed, gate miss | dirty (5 provider aborts); marked in `SPEC-0031`: 5 provider aborts (HTTP 429); the gate missed because the provider aborted before load, not because the skill failed to route |
 
 ## What is not claimed
 
