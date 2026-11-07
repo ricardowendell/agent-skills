@@ -27,8 +27,9 @@ For each expectation decide, from the evidence only:
 - "unverifiable": the evidence does not say either way. Use this freely; do not
   guess from what a good run would look like.
 
-Evidence must be one contiguous passage copied verbatim from the reply or the
-tool calls. Never join two quotes with an ellipsis.
+Evidence must be one or more contiguous passages copied verbatim from the reply or
+the tool calls. When an expectation needs two facts, join the passages with " | ";
+never join two quotes with an ellipsis. Both halves must be quoted, not summarised.
 
 The "Tool calls" section is the run's own log: the tools it called and what they
 changed. It is evidence of what the run did, not text the agent wrote. A read
@@ -39,7 +40,7 @@ Mark it "met" when the reply shows the agent did not fall into it, and "not-met"
 when it did. Do not require the failure to appear.
 
 Answer with one JSON object and nothing else:
-{"expectations":[{"i":1,"verdict":"met|not-met|unverifiable","evidence":"short quote or command"}],"score":0.0}
+{"expectations":[{"i":1,"verdict":"met|not-met|unverifiable","evidence":"short quote | second quote"}],"score":0.0}
 score is met / (met + not-met), ignoring unverifiable.`
 
 // One corpus, built once by the caller: the reply and the ledger, never a

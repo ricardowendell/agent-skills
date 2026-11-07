@@ -261,9 +261,22 @@ editing); expectation 2 is `unverifiable` 5/5 by design (the judge is not shown
 the skill text); expectation 3 is `met` in four draws and `unverifiable` in r4;
 expectation 4 is composite ("creates a test **and** runs verification") against
 the one-contiguous-passage rule and is `met` only in r3; expectation 5 is `met`
-5/5; expectation 6 is `met` in r2–r5 and `unverifiable` in r1. Expectation 1's
-"first" plus the skill's reading order remains the residual (TASK-40), not the
-evidence path.
+5/5; expectation 6 is `met` in r2–r5 and `unverifiable` in r1.
+
+TASK-40 settled the three residuals without a new draw:
+
+- **Expectation 1 — sharpened.** The case now says "Reads `AGENTS.md`, the
+  prompt and its source spec before the first edit." The stored `r5` draw is
+  the n=1 proof: its ledger has `read: AGENTS.md` before the first `edit:`.
+  `r1–r4` never read it, so the sharpened wording stays `not-met` there. This
+  is a case-text change, not an evidence widening; no `assert:` line moved.
+- **Expectation 2 — judge limit.** The judge deliberately does not see the
+  skill text (SPEC-0021 Non-Goals), so "applies Norms" stays human-checked.
+- **Expectation 4 — composite citation.** The judge prompt now allows two
+  verbatim passages separated by ` | `; `verifyEvidence` already checks the
+  segments and still rejects a fabricated join. The reading above is the
+  pre-TASK-40 one (one contiguous passage); a later rejudge is a new instrument
+  reading, not a rewrite of this one.
 
 Both final reports carry `provenance: "partial"`: the runs predate SPEC-0020, so
 they have no `fixtureHash` / `promptHash` / `detectorVersion`. Case 01 records
@@ -396,7 +409,9 @@ and is also clean; it is a precondition, not a measurement.
      evidence blocks, `## Tool calls` (the ledger: `read`/`edit`/`write`/`skill`
      and `$ cmd  [exit]` with output) and `## Reply`; `verifyEvidence` searches
      that same corpus, so the `$ node --test  [exit 1]` quote matches. In the
-     before-reading, #7 control moved 1/5 → 5/5.
+     before-reading, #7 control moved 1/5 → 5/5. A composite expectation may
+     cite two verbatim passages separated by ` | ` (TASK-40); the verifier
+     checks each segment and still rejects a fabricated join.
   2. **`unverifiable` still fails the case.** Supplying the evidence fixed the
      instrument, not the bar: absence of evidence remains a finding, and the
      judge can only fail a deterministic pass, never rescue a deterministic
@@ -406,9 +421,13 @@ and is also clean; it is a precondition, not a measurement.
      `detectorVersion`; the re-judge report labels a run without them `partial`
      and lists what is missing.
 
-  The residual is not the evidence path: expectation 1's "first" plus the
-  skill's reading order, expectation 2 by design, and expectation 4's composite
-  form. Tracked as TASK-40; see *Judge re-measurement — SPEC-0021*.
+  TASK-40 closed the residual as decisions, not a re-measurement: expectation 1
+  was sharpened to "before the first edit" and proved on the stored `r5` ledger
+  (`read: AGENTS.md` before the first `edit:`); expectation 2 is a documented
+  judge limit (the judge never sees the skill text); expectation 4's composite
+  form is now citable with ` | `. The historical exp 1/4 rows above are the
+  pre-TASK-40 reading, not a rewrite. No `assert:` line changed, and the judge
+  still cannot rescue a deterministic failure.
 - **Control-arm isolation** — `--no-skill` denies the skill tool and stages
   nothing, but the child can still read `/Users/wendell/.agents/skills/…` and
   stale copies under `/private/var/folders/…/T/opencode`. Two control transcripts

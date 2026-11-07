@@ -118,6 +118,28 @@ test("compound evidence counts when most of its segments are real", () => {
   assert.equal(out.verdicts[1].verdict, "unverifiable")
 })
 
+// A composite expectation ("adds a test AND runs it") needs two facts. The
+// prompt now allows them separated by ` | `; the verifier already accepts the
+// segments and still rejects a fabricated join.
+test("a composite expectation may cite two passages separated by a pipe", () => {
+  const ledger = "write: tests/demo.test.ts\n$ bun test  [exit 0]"
+  const parsed = {
+    verdicts: [{ i: 1, verdict: "met", evidence: "write: tests/demo.test.ts | $ bun test  [exit 0]" }],
+    met: 1,
+    unmet: 0,
+    score: 1,
+  }
+  const out = verifyEvidence(parsed, ledger)
+  assert.equal(out.verdicts[0].verdict, "met")
+  assert.equal(out.unverified, 0)
+})
+
+test("the judge prompt allows a composite citation but still forbids an ellipsis", () => {
+  const p = judgePrompt(c, { reply: "done" })
+  assert.match(p, /join the passages with "\s*\|\s*"/i)
+  assert.match(p, /never join two quotes with an ellipsis/i)
+})
+
 test("a quote from the ledger verifies, including the #7 `$ node --test  [exit 1]` shape", () => {
   const ledger = "$ node --test  [exit 1]\n  # fail 1"
   const parsed = {

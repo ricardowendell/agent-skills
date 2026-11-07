@@ -10,7 +10,7 @@ machine-checked after the case (see `run-evals.mjs`).
    - prompt: Implement docs/prompts/SPEC-0007-demo.prompt.md.
    - tags: matrix, separator
    - why: fixture: a `ready` spec + its prompt. Measured separator: the skill implements and marks `docs/specs/SPEC-0007-demo.md` `status: implemented` in 5/5; the control leaves it un-implemented in 0/5 (run dirs in `docs/evals/discriminating-cases.md`).
-   - expect: Reads `AGENTS.md`, the prompt, and its source spec first.
+   - expect: Reads `AGENTS.md`, the prompt and its source spec before the first edit.
    - expect: Implements only the Operations; applies Norms and keeps Safeguards visible.
    - expect: Sets the source spec `status: in_progress`, then `implemented`, and populates `tests:`.
    - expect: Adds/updates the required tests and runs the prompt's verification commands.

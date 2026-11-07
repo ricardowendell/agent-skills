@@ -137,6 +137,13 @@ test("the ledger never carries the body of a read", () => {
   assert.ok(!ledger.includes("SECRET BODY"), "a read body leaked into the ledger")
 })
 
+// "Reads AGENTS.md before the first edit" is only checkable if the ledger keeps
+// the stream order. It does: entries are appended, never sorted.
+test("the ledger preserves call order, so a before-the-edit claim is checkable", () => {
+  const ledger = evidenceLedger(ledgerStream)
+  assert.ok(ledger.indexOf("read: src/cart.js") < ledger.indexOf("edit: src/cart.js"))
+})
+
 test("the ledger is deterministic and never exceeds its budget, marker included", () => {
   assert.equal(evidenceLedger(ledgerStream), evidenceLedger(ledgerStream))
   // The old fallback appended `separator + marker` when no room was left for
