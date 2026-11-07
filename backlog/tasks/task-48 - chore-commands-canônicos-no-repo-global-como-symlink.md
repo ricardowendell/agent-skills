@@ -1,9 +1,10 @@
 ---
 id: TASK-48
 title: 'chore: commands canônicos no repo, global como symlink'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-06T21:23:00Z'
+updated_date: '2026-11-07T01:05:00Z'
 labels: []
 dependencies: []
 references:
@@ -21,7 +22,19 @@ Hoje commands/ do repo e ~/.config/opencode/commands são dois diretórios reais
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 ~/.config/opencode/commands aponta para o commands/ do repo, sem cópia divergente.
-- [ ] #2 docs/integrations/opencode.md diz qual é canônico e como instalar/ligar.
-- [ ] #3 Um comando novo no repo aparece no OpenCode sem passo de cópia.
+- [x] #1 ~/.config/opencode/commands aponta para o commands/ do repo, sem cópia divergente.
+- [x] #2 docs/integrations/opencode.md diz qual é canônico e como instalar/ligar.
+- [x] #3 Um comando novo no repo aparece no OpenCode sem passo de cópia.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-11-07T01:05:00Z
+
+---
+
+commands/ e canonico; ~/.config/opencode/commands agora e um symlink unico para ele (13 arquivos, mesmo conteudo de antes). docs/integrations/opencode.md diz o que o kit entrega e o que a maquina liga, com verificacao e o caso do Claude. AC-3 verificado criando .link-probe.md no repo e vendo aparecer/link removido sem copia.
+
+---
+<!-- COMMENTS:END -->

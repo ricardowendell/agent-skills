@@ -281,6 +281,43 @@ test("a single-draw result is the repetition at the root", () => {
   assert.equal(findings[0].rep, 1)
 })
 
+// A stopped case is a real observation of the draws it ran, but the manifest's
+// requested repeat is what says the denominator is short. The canary rule needs
+// this: an eight-draw stop cannot be read as 12/12.
+test("a case that stopped before the requested repeat is a warning, not a 12/12 claim", () => {
+  const reps = Array.from({ length: 8 }, (_, i) => rep({ rep: i + 1 }))
+  const { findings, warnings, counts } = checkRun({
+    arm: "with-skill",
+    cases: [aggregate(reps, { reps: 8, stoppedEarly: true })],
+    isolation: true,
+    requested: 12,
+  })
+  assert.deepEqual(findings, [])
+  assert.equal(warnings.length, 1)
+  assert.equal(warnings[0].kind, "stopped-early")
+  assert.match(warnings[0].detail, /reps=8 of requested 12/)
+  assert.match(warnings[0].detail, /not a 12\/12 claim/)
+  assert.equal(counts.reps, 8)
+})
+
+test("a case that ran the requested repeat has no stopped-early warning", () => {
+  const reps = Array.from({ length: 12 }, (_, i) => rep({ rep: i + 1 }))
+  const { findings, warnings } = checkRun({
+    arm: "with-skill",
+    cases: [aggregate(reps, { reps: 12, stoppedEarly: false })],
+    isolation: true,
+    requested: 12,
+  })
+  assert.deepEqual(findings, [])
+  assert.deepEqual(warnings, [])
+})
+
+test("without a requested repeat the short case cannot be judged and stays silent", () => {
+  const reps = Array.from({ length: 8 }, (_, i) => rep({ rep: i + 1 }))
+  const { warnings } = checkRun({ arm: "with-skill", cases: [aggregate(reps, { reps: 8, stoppedEarly: true })] })
+  assert.deepEqual(warnings, [])
+})
+
 // The CLI is the part that touches the filesystem; the tests above cover the
 // pure rule. These run the real script against synthetic run directories in
 // $TMPDIR so the exit codes and the summary cannot drift.
@@ -446,6 +483,19 @@ test("CLI exits 0 for a clean completed run", (t) => {
   assert.equal(r.status, 0)
   assert.match(r.stdout, /findings=0 warnings=0/)
   assert.match(r.stdout, /skillLeaks=0 hostReads=0 isolated=yes/)
+})
+
+test("CLI reports a stopped canary as warnings, not as 12/12", (t) => {
+  const reps = Array.from({ length: 8 }, (_, i) => rep({ rep: i + 1 }))
+  const dir = makeRun(t, {
+    manifest: modern({ params: { isolate: true, repeat: 12 } }),
+    cases: [{ name: "x--01", result: aggregate(reps, { reps: 8, stoppedEarly: true }) }],
+  })
+  const r = runCli(dir)
+  assert.equal(r.status, 0)
+  assert.match(r.stdout, /warn stopped-early implement-from-prompt#1 — reps=8 of requested 12/)
+  assert.match(r.stdout, /findings=0 warnings=1/)
+  assert.match(r.stdout, /reps=8/)
 })
 
 test("CLI exits 1 and names a leaking draw", (t) => {

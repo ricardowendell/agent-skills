@@ -20,7 +20,8 @@ is neither. The checker reads what the runner already wrote; it does not call a
 model.
 
 Exit codes:
-  0  no findings (isolated may still be "unknown"; pre-detector warnings may print)
+  0  no findings (isolated may still be "unknown"; pre-detector warnings may print;
+     a case that stopped before the requested repeat prints a stopped-early warning)
   1  at least one finding
   2  a path is not a readable eval run directory (no manifest.json and no cases/)
 `
@@ -39,6 +40,7 @@ function readRun(dir) {
   let arm = null
   let startedAt = null
   let isolation = null
+  let requested = null
   const structural = []
   const incomplete = (name, detail) => structural.push({ case: name, rep: 0, kind: "incomplete", detail })
 
@@ -50,6 +52,9 @@ function readRun(dir) {
       // The runner records whether the child got an isolated home and a scratch
       // cwd. Without that record a run cannot claim `isolated=yes`.
       isolation = typeof manifest.params?.isolate === "boolean" ? manifest.params.isolate : null
+      // The requested repeat is what makes a short case readable as a stop,
+      // rather than as a run that was always that size.
+      requested = Number.isInteger(manifest.params?.repeat) ? manifest.params.repeat : null
       if (manifest.status !== "completed") {
         incomplete("manifest", `status ${manifest.status ?? "missing"}; run did not complete`)
       }
@@ -85,7 +90,7 @@ function readRun(dir) {
   // A manifest with no cases, or an empty cases/, is not evidence about anything.
   if (cases.length === 0 && missing === 0) incomplete("cases", "run contains no case results")
 
-  return { ok: true, arm, startedAt, isolation, cases, structural }
+  return { ok: true, arm, startedAt, isolation, requested, cases, structural }
 }
 
 function main(argv) {
@@ -107,21 +112,23 @@ function main(argv) {
     }
 
     const preDetector = isPreDetector(run.cases, run.startedAt)
-    const checked = checkRun({ arm: run.arm, cases: run.cases, isolation: run.isolation })
+    const checked = checkRun({ arm: run.arm, cases: run.cases, isolation: run.isolation, requested: run.requested })
     let findings = [...run.structural, ...checked.findings]
     let counts = { ...checked.counts, findings: findings.length }
     // A run with no `leak` field at all predates SPEC-0017. Warn per draw
     // instead of failing: the historical artefact is citable, not clean.
-    let warnings = []
+    let warnings = [...checked.warnings]
     if (preDetector) {
-      warnings = findings
+      const historical = findings
         .filter((f) => f.kind === "leak-missing")
         .map((f) => ({ ...f, detail: `${f.detail} (pre-SPEC-0017 artefact; run started before the detector)` }))
+      warnings = [...historical, ...warnings]
       findings = findings.filter((f) => f.kind !== "leak-missing")
       counts = { ...counts, findings: findings.length }
     }
     for (const w of warnings) {
-      process.stdout.write(`warn ${w.kind} ${w.case} r${w.rep} — ${w.detail}\n`)
+      const at = w.rep ? ` r${w.rep}` : ""
+      process.stdout.write(`warn ${w.kind} ${w.case}${at} — ${w.detail}\n`)
     }
     for (const f of findings) {
       process.stdout.write(`${f.kind} ${f.case} r${f.rep} — ${f.detail}\n`)

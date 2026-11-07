@@ -32,6 +32,10 @@ Before Gate A, case #1 ran 12 draws with the skill to check the load gate:
 node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 1 --repeat 12 --run
 ```
 
+This invocation predates the `--stop 12/0` rule; the default `5/3` stop never
+fired because the cell passed every draw, so the count is complete. New canaries
+use `--stop 12/0` (see `CONTRIBUTING.md`) so a clean cell cannot stop at eight.
+
 `2026-11-05T11-36-10--implement-from-prompt`: 12/12 passed, 0 skill-gate
 misses. The canary is a precondition, not a case rate; Gate A later showed the
 load defect in #2 and #8.

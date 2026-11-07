@@ -1,9 +1,10 @@
 ---
 id: TASK-47
 title: 'chore: canário sempre com --stop 12/0'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-06T21:23:00Z'
+updated_date: '2026-11-07T01:05:00Z'
 labels: []
 dependencies: []
 references:
@@ -21,6 +22,18 @@ O CONTRIBUTING manda rodar o canário como --case 1 --repeat 12 --run, mas o run
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 O comando do canário no CONTRIBUTING produz 12 draws de fato, e um teste ou nota justifica o 12.
-- [ ] #2 Um canário que para antes de 12 é reconhecido como incompleto, não contado como 12/12.
+- [x] #1 O comando do canário no CONTRIBUTING produz 12 draws de fato, e um teste ou nota justifica o 12.
+- [x] #2 Um canário que para antes de 12 é reconhecido como incompleto, não contado como 12/12.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-11-07T01:05:00Z
+
+---
+
+O CONTRIBUTING manda --stop 12/0 e explica por que: o stop default 5/3 corta um canario limpo em 8 draws (com --concurrency 4), entao o 12/12 precisa desligar a regra. AC-2: check-eval-run le manifest.params.repeat e imprime 'warn stopped-early ... reps=N of requested 12'; o caminho foi exercitado no run real 13-46-05 (8/8, stoppedEarly) e em teste CLI.
+
+---
+<!-- COMMENTS:END -->

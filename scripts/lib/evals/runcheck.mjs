@@ -111,8 +111,9 @@ function leakPaths(result, kind) {
 // incompleteness (manifest status, a missing `result.json`) is a filesystem
 // fact, so the CLI records it as an `incomplete` finding; this module assumes
 // the cases it was given were actually read.
-export function checkRun({ arm = null, cases = [], isolation = null } = {}) {
+export function checkRun({ arm = null, cases = [], isolation = null, requested = null } = {}) {
   const findings = []
+  const warnings = []
   let reps = 0
   let infrastructure = 0
   let skillLeaks = 0
@@ -125,6 +126,24 @@ export function checkRun({ arm = null, cases = [], isolation = null } = {}) {
   for (const c of cases) {
     const name = `${c.skill ?? "unknown"}#${c.case ?? "?"}`
     const list = repetitionsOf(c)
+
+    // A stopped case is real evidence of the draws it ran, but it is not the
+    // requested count. The canary rule asks for twelve precisely so one miss is
+    // visible; an eight-draw stop must not be read as 12/12. The manifest's
+    // requested repeat is the only thing that can say the denominator is short,
+    // so the check fires only when the caller passed it.
+    if (Number.isInteger(requested) && requested > 0) {
+      const ran = Number.isInteger(c.reps) ? c.reps : list.length
+      if (ran < requested) {
+        const why = c.stoppedEarly === true ? "the stop rule fired" : "fewer draws than requested"
+        warnings.push({
+          case: name,
+          rep: 0,
+          kind: "stopped-early",
+          detail: `reps=${ran} of requested ${requested} — ${why}; not a ${requested}/${requested} claim`,
+        })
+      }
+    }
 
     for (let i = 0; i < list.length; i++) {
       const r = list[i]
@@ -199,6 +218,7 @@ export function checkRun({ arm = null, cases = [], isolation = null } = {}) {
       : "unknown"
   return {
     findings,
+    warnings,
     counts: { cases: cases.length, reps, findings: findings.length, infrastructure, skillLeaks, hostReads, isolated },
   }
 }

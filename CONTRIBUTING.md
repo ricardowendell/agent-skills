@@ -162,12 +162,18 @@ node scripts/run-evals.mjs --skill review-code --case 3 --repeat 3 --run --judge
 - Before building a matrix, run the load canary by hand:
 
   ```sh
-  node scripts/run-evals.mjs --skill <id> --case 1 --repeat 12 --run
+  node scripts/run-evals.mjs --skill <id> --case 1 --repeat 12 --stop 12/0 --run
   ```
 
   It answers "does the skill load at all?" before a multi-case matrix spends
   money. It stays manual because behavioural runs call a model and the policy
-  keeps them out of CI.
+  keeps them out of CI. `--stop 12/0` belongs to the rule: the default `5/3`
+  stop fires at the fifth clean pass (eight draws at `--concurrency 4`), so a
+  12-draw canary has to disable it. The canary is a precondition, not a rate — a
+  single miss is a finding about the skill, and twelve draws are what make that
+  miss visible. `check-eval-run` prints
+  `warn stopped-early … reps=N of requested 12` for a case that stopped short, so
+  an eight-draw canary is never read as 12/12.
 - `--save-baseline` stores a run; the next full run compares against it and
   fails on a case that moved `passed` → `failed`, or disappeared.
 - Publish a measured set in `docs/evals/review-code-matrix.md` (or a new doc

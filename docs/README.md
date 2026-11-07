@@ -16,6 +16,7 @@ templates.
 | `specs/active/` | the pdlc work queue; `plan`, `prompt`, `verify` and `merge` read here |
 | `prompts/` | implementation prompts generated from `ready` specs |
 | `evals/` | the `review-code`, `implement-from-prompt`, `write-implementation-prompt` and `pipeline-bookends` matrices, the `harness-health.md` baseline, experiment records, and `coverage.md` |
+| `integrations/` | how each agent host is wired; `opencode.md` is this kit's canonical-vs-link map |
 | `../runs/` | pdlc run records, one per verified cycle |
 
 `evals/coverage.md` is the inventory: cases per skill, how each is staged, and
