@@ -39,7 +39,8 @@ in [`discriminating-cases.md`](discriminating-cases.md).
   - **v2** (`detectorVersion` `71bfb85a91cd68ab`): `node
     scripts/check-eval-run.mjs <run-dir>` reports `findings=0 warnings=0
     skillLeaks=0 hostReads=0 isolated=yes`. That means no skill or host read, no
-    contaminated draw, no lost gate, no missing provenance, no unfinished run,
+    contaminated draw, no aborted draw (timeout, stall, provider limit), no lost
+    gate, no missing provenance, no unfinished run, at least one draw that ran,
     and the manifest records an isolated run (`params.isolate: true`).
   - **v1** (`a31d58f79a6c7038` and earlier): history, never a clean measurement.
     It is citable as replay-verified history only when

@@ -3,7 +3,7 @@ import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import { join, dirname } from "node:path"
 import { fileURLToPath } from "node:url"
-import { events, evidenceLedger, replyText, toolCalls, skillLoads, usageStats } from "./events.mjs"
+import { events, evidenceLedger, providerError, replyText, toolCalls, skillLoads, usageStats } from "./events.mjs"
 import { evaluateAssertions } from "./assertions.mjs"
 
 // A real stream, not a hand-written one. The parser only matters if it matches
@@ -150,4 +150,23 @@ test("the ledger is deterministic and never exceeds its budget, marker included"
   }
   // Comfortably inside the budget, the marker still names the cut.
   assert.match(evidenceLedger(ledgerStream, { budget: 120 }), /\[ledger truncated\]$/)
+})
+
+// A provider abort is the one error that must never be read as a behavioural
+// failure: the agent had no chance to act. The type is on the error event, the
+// `overloaded` signature is the rate-limit message, and a tool error is not a
+// provider abort.
+test("a provider abort is read from the error event, not from the reply", () => {
+  const line = (type, message = "") => JSON.stringify({ type: "error", error: { type, message, status: 429 } })
+  const go = providerError([line("provider.go-limit", "Go usage limit exceeded"), line("text", "ignore")].join("\n"))
+  assert.equal(go.type, "provider.go-limit")
+  assert.equal(go.status, 429)
+  assert.match(go.message, /usage limit/)
+
+  const rate = providerError(line("provider.rate-limit", "Upstream request failed: [overloaded]"))
+  assert.equal(rate.type, "provider.rate-limit")
+  assert.match(rate.message, /overloaded/)
+
+  assert.equal(providerError(line("tool_error", "provider.go-limit in the message")), null)
+  assert.equal(providerError(out), null)
 })

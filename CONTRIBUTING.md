@@ -130,7 +130,8 @@ node scripts/run-evals.mjs --skill review-code --case 3 --repeat 3 --run --judge
   ```
 
   It reads `manifest.json` and `cases/*/result.json` and exits non-zero on a
-  leaked read, a contaminated draw, a lost skill gate, missing provenance, or an
+  leaked read, a contaminated draw, a lost skill gate, missing provenance, an
+  aborted draw (timeout, stall, or a provider limit), or an
   unfinished run (`manifest.status` is not `completed`, or a case directory has
   no `result.json`). A clean claim requires `findings=0 warnings=0` in the
   summary. A directory that fails may still be cited as the record of the

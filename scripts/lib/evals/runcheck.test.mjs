@@ -660,3 +660,53 @@ test("CLI fails a case directory without result.json", (t) => {
   assert.equal(r.status, 1)
   assert.match(r.stdout, /incomplete x--01 r0 — case directory has no result\.json/)
 })
+
+// A provider abort is infrastructure: the draw never reached a verdict, so the
+// run can name it as incomplete but cannot certify isolation from it. Before
+// this rule a go-limit run with trivially green assertions printed isolated=yes.
+const aborted = (type, index) =>
+  rep({
+    rep: index,
+    status: "unscored",
+    infrastructure: true,
+    infrastructureReason: type,
+    execution: { exit: 1, retries: 0 },
+  })
+
+test("a run whose draws all aborted is unknown, never isolated", () => {
+  const cases = [
+    aggregate([aborted("provider.go-limit", 1), aborted("provider.rate-limit", 2), aborted("provider.rate-limit", 3)]),
+  ]
+  const { findings, counts } = checkRun({ arm: "with-skill", cases, isolation: true })
+  assert.equal(counts.isolated, "unknown")
+  assert.equal(counts.infrastructure, 3)
+  assert.deepEqual(kinds(findings), ["infrastructure", "infrastructure", "infrastructure"])
+})
+
+test("one valid draw in an aborted run certifies isolation; the aborts stay findings", () => {
+  const cases = [
+    aggregate([
+      aborted("provider.go-limit", 1),
+      aborted("provider.rate-limit", 2),
+      aborted("provider.rate-limit", 3),
+      rep({ rep: 4 }),
+    ]),
+  ]
+  const { findings, counts } = checkRun({ arm: "with-skill", cases, isolation: true })
+  assert.equal(counts.isolated, "yes")
+  assert.equal(counts.infrastructure, 3)
+  assert.equal(counts.reps, 4)
+  assert.deepEqual(kinds(findings), ["infrastructure", "infrastructure", "infrastructure"])
+})
+
+test("CLI does not print isolated=yes for a run whose draws all aborted", (t) => {
+  const dir = makeRun(t, {
+    manifest: modern(),
+    cases: [{ name: "x--01", result: aggregate([aborted("provider.go-limit", 1), aborted("provider.rate-limit", 2)]) }],
+  })
+  const r = runCli(dir)
+  assert.equal(r.status, 1)
+  assert.match(r.stdout, /isolated=unknown/)
+  assert.doesNotMatch(r.stdout, /isolated=yes/)
+  assert.match(r.stdout, /infrastructure implement-from-prompt#1 r1/)
+})

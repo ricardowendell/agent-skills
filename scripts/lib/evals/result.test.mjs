@@ -31,6 +31,30 @@ test("a stall is its own infrastructure reason, distinct from a timeout", () => 
   assert.equal(r.infrastructureReason, "stalled")
 })
 
+test("a provider abort is infrastructure, never a behavioural failure", () => {
+  const r = classify({
+    exit: 1,
+    asserts: [pass],
+    skillGate: okGate,
+    providerError: { type: "provider.go-limit", message: "weekly limit", status: 429 },
+  })
+  assert.equal(r.status, UNSCORED)
+  assert.equal(r.infrastructure, true)
+  assert.equal(r.infrastructureReason, "provider.go-limit")
+  assert.equal(r.reason, "infrastructure: provider.go-limit")
+})
+
+test("a provider error with a clean exit is a recovered transient, not an abort", () => {
+  const r = classify({
+    exit: 0,
+    asserts: [pass],
+    skillGate: okGate,
+    providerError: { type: "provider.rate-limit", message: "overloaded", status: 429 },
+  })
+  assert.equal(r.status, PASSED)
+  assert.equal(r.infrastructure, undefined)
+})
+
 test("an infrastructure draw is excluded from the pass-rate denominator", () => {
   const agg = aggregateReps([{ status: PASSED }, { status: UNSCORED, infrastructure: true, reason: "infrastructure: timeout" }])
   assert.equal(agg.status, PASSED)

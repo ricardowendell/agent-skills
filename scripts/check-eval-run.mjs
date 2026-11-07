@@ -13,11 +13,12 @@ import { checkRun, isPreDetector } from "./lib/evals/runcheck.mjs"
 const USAGE = `Usage: node scripts/check-eval-run.mjs <run-dir>...
 
 Check one or more eval run directories for leaked reads, contamination, a lost
-skill gate, missing provenance, or a run that never completed. The summary names
+skill gate, missing provenance, an aborted draw (timeout, stall, provider limit)
+or a run that never completed. The summary names
 skillLeaks, hostReads and isolated=yes|no|unknown: "no" means a read was
-detected, "yes" needs a v2 detector and a recorded isolated run, and "unknown"
-is neither. The checker reads what the runner already wrote; it does not call a
-model.
+detected, "yes" needs a v2 detector, a recorded isolated run and at least one
+draw that ran, and "unknown" is neither. The checker reads what the runner
+already wrote; it does not call a model.
 
 Exit codes:
   0  no findings (isolated may still be "unknown"; pre-detector warnings may print;

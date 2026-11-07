@@ -8,7 +8,7 @@
 // measuring.
 
 import { evaluateAssertions, skillGate } from "./assertions.mjs"
-import { evidenceLedger, replyText, skillLoads, toolCalls, usageStats } from "./events.mjs"
+import { evidenceLedger, providerError, replyText, skillLoads, toolCalls, usageStats } from "./events.mjs"
 import { stageFixture, stageSkill, denySkillTool, snapshotTree, textHash, makeScratch } from "./fixture.mjs"
 import { agentArgs, runAgent } from "./agent.mjs"
 import { classify } from "./result.mjs"
@@ -118,7 +118,8 @@ export async function executeCase({
 
   const asserts = evaluateAssertions(c, scratchUsed, out, replyText(out), snapshot)
   const gate = gateFor({ c, out, scratch: scratchUsed, skillId: skill.id, arm })
-  const verdict = classify({ exit: code, asserts, skillGate: gate })
+  const abort = providerError(out)
+  const verdict = classify({ exit: code, asserts, skillGate: gate, providerError: abort })
   const usage = usageStats(out)
 
   let result = {
@@ -142,6 +143,9 @@ export async function executeCase({
       durationMs,
       attempts: infraRetries + 1,
       retries: infraRetries,
+      // The provider error, when the stream carried one; `null` for a clean exit.
+      // It is recorded even if the draw recovered, so an audit can see it.
+      error: abort,
       tokens: usage.tokens,
       cost: usage.cost,
       steps: usage.steps,

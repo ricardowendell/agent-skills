@@ -14,8 +14,9 @@
 // evidence that the cell was isolated.
 //
 // The answer is three-state because two states overclaim. `no` requires a read
-// the checker actually saw. `yes` requires a v2 detector and a manifest that
-// records an isolated run. Everything else — a v1 run, a missing isolation
+// the checker actually saw. `yes` requires a v2 detector, a manifest that
+// records an isolated run, and at least one draw that ran to a verdict.
+// Everything else — a v1 run, a missing isolation
 // record, unproven provenance — is `unknown`, which is neither an accusation nor
 // a clean bill.
 //
@@ -25,8 +26,9 @@
 // repetition that did load a skill is a finding, because the arm is supposed to
 // prove the skill is absent.
 //
-// A timeout or a stall is a third invariant: the draw never ran to a verdict, so
-// it is an `infrastructure` finding (incomplete evidence). It is deliberately not
+// A timeout, a stall, or a provider abort is a third invariant: the draw never
+// ran to a verdict, so it is an `infrastructure` finding (incomplete evidence).
+// It is deliberately not
 // a `gate-miss`: the skill was never given a chance to load, and the kill says
 // nothing about its behaviour.
 //
@@ -46,7 +48,8 @@ const isControl = (arm) => arm === "without-skill" || arm === "control"
 
 const INFRASTRUCTURE_EXITS = new Set(["timeout", "stalled"])
 
-// A timeout or a stall is a harness event, not a draw of behaviour. It is never
+// A timeout, a stall, or a provider abort is a harness/provider event, not a
+// draw of behaviour. It is never
 // clean evidence — the run is incomplete — but it is not a `gate-miss` either:
 // the skill simply never got a chance to load. Infrastructure gets its own kind.
 //
@@ -115,6 +118,7 @@ export function checkRun({ arm = null, cases = [], isolation = null, requested =
   const findings = []
   const warnings = []
   let reps = 0
+  let behavioural = 0
   let infrastructure = 0
   let skillLeaks = 0
   let hostReads = 0
@@ -162,6 +166,7 @@ export function checkRun({ arm = null, cases = [], isolation = null, requested =
         add("infrastructure", `infrastructure: ${infra}${retries ? ` (retried ${retries}x)` : ""}`)
         continue
       }
+      behavioural++
 
       // SPEC-0017 made `leak` mandatory. A missing field is not an empty field:
       // it means this draw cannot be checked, so it fails loudly.
@@ -211,9 +216,12 @@ export function checkRun({ arm = null, cases = [], isolation = null, requested =
   // Everything else — a v1 run, a run with no isolation record, a missing leak
   // field — is `unknown`, which is not the same accusation as `no`.
   const read = skillLeaks > 0 || hostReads > 0
+  // `yes` also needs at least one draw that actually ran. A run where every rep
+  // aborted (timeout, stall, provider limit) has no behaviour to certify, even
+  // when nothing was read: that is `unknown`, not a clean bill.
   const isolated = read
     ? "no"
-    : detectorCurrent && isolation === true && !unproven
+    : detectorCurrent && isolation === true && !unproven && behavioural > 0
       ? "yes"
       : "unknown"
   return {

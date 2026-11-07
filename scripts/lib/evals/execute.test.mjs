@@ -480,3 +480,28 @@ test("the fixture is staged before the agent runs and the skill is pinned", asyn
     rmSync(skill.dir, { recursive: true, force: true })
   }
 })
+
+// The provider error is on the stream, not in the exit code alone: a go-limit
+// aborts after a few steps, so the exit is 1 but the assertions are trivially
+// green. Recording the error is what lets the checker exclude the draw.
+test("a provider abort is recorded and classified as infrastructure", async () => {
+  const { skill, scratch, c, cleanup } = setup({ gate: "off" })
+  try {
+    const abort = JSON.stringify({
+      type: "error",
+      error: { type: "provider.go-limit", message: "Go usage limit exceeded", status: 429 },
+    })
+    const { spawn } = agent({ out: `${abort}\n`, code: 1 })
+    const { result } = await executeCase({ skill, c, scratch, spawnAgent: spawn })
+    assert.equal(result.status, "unscored")
+    assert.equal(result.infrastructure, true)
+    assert.equal(result.infrastructureReason, "provider.go-limit")
+    assert.deepEqual(result.execution.error, {
+      type: "provider.go-limit",
+      message: "Go usage limit exceeded",
+      status: 429,
+    })
+  } finally {
+    cleanup()
+  }
+})

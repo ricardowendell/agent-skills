@@ -27,6 +27,25 @@ export function replyText(out) {
   return parts.join("\n")
 }
 
+// A provider-level abort is not a draw of behaviour: the agent never got a
+// verdict. `opencode` emits a top-level `{ type: "error", error: { type:
+// "provider.go-limit" | "provider.rate-limit", ... } }`; the message names the
+// overloaded upstream when the type is rate-limit. The result records it so the
+// checker can classify the draw without reading the transcript.
+export function providerError(out) {
+  for (const ev of events(out)) {
+    if (ev.type !== "error" || !ev.error) continue
+    const type = typeof ev.error.type === "string" ? ev.error.type : ""
+    if (!type.startsWith("provider.")) continue
+    return {
+      type,
+      message: typeof ev.error.message === "string" ? ev.error.message : "",
+      status: Number.isInteger(ev.error.status) ? ev.error.status : null,
+    }
+  }
+  return null
+}
+
 // Tool calls with what they ran, their exit status and timing. `exit` is absent
 // for non-shell tools, so `undefined` means "not applicable", not "failed".
 export function toolCalls(out) {

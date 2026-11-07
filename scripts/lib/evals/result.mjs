@@ -13,15 +13,28 @@ export const UNSCORED = "unscored"
 // was killed by the harness (or stopped emitting), so the draw is infrastructure.
 // It is unscored on purpose — never a pass, never a behavioural failure — and
 // `reason` names which one so the checker can report it as incomplete evidence.
+// A provider-level abort (`go-limit`, `rate-limit`, `overloaded`) is the same
+// class: the stream carries an `error` and the process exits non-zero, so no
+// case action happened and the green assertions are an artifact.
 const INFRASTRUCTURE_EXITS = new Set(["timeout", "stalled"])
 
 export function infrastructureReason(exit) {
   return INFRASTRUCTURE_EXITS.has(exit) ? `infrastructure: ${exit}` : null
 }
 
-export function classify({ exit, asserts, skillGate = null }) {
+export function classify({ exit, asserts, skillGate = null, providerError = null }) {
   const infra = infrastructureReason(exit)
   if (infra) return { status: UNSCORED, reason: infra, infrastructure: true, infrastructureReason: exit }
+  // Only a non-zero exit is an abort: a provider error followed by a clean exit
+  // and a pass is a recovered transient, not a draw without a verdict.
+  if (exit !== 0 && providerError?.type) {
+    return {
+      status: UNSCORED,
+      reason: `infrastructure: ${providerError.type}`,
+      infrastructure: true,
+      infrastructureReason: providerError.type,
+    }
+  }
   if (exit !== 0) return { status: FAILED, reason: `exit ${exit}` }
   if (!asserts.length) return { status: UNSCORED, reason: "no assertions — nothing was checked" }
   const failed = asserts.filter((a) => !a.pass)
