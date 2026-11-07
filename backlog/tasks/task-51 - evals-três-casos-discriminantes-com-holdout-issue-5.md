@@ -1,9 +1,10 @@
 ---
 id: TASK-51
 title: 'evals: três casos discriminantes com holdout (issue #5)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-07T11:49:00Z'
+updated_date: '2026-11-07T12:23:00Z'
 labels: []
 dependencies: []
 priority: high
@@ -19,7 +20,19 @@ Issue #5 (https://github.com/ricardowendell/agent-skills/issues/5): entregar tr�
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Três casos com n>=3 por braço, asserção filesystem/routing, runs citados com check-eval-run; um holdout designado antes da medição e registrado.
-- [ ] #2 Um doc novo lista os três, o que cada um mede, o run dir de cada braço, o detector e o holdout.
-- [ ] #3 Nenhuma mudança de comportamento em skill/caso além do metadado; nenhum número v1 reescrito.
+- [x] #1 Três casos com n>=3 por braço, asserção filesystem/routing, runs citados com check-eval-run; um holdout designado antes da medição e registrado.
+- [x] #2 Um doc novo lista os três, o que cada um mede, o run dir de cada braço, o detector e o holdout.
+- [x] #3 Nenhuma mudança de comportamento em skill/caso além do metadado; nenhum número v1 reescrito.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-11-07T12:23:00Z
+
+---
+
+Fechada pela SPEC-0033 (merge em main). AC-1: tres separadores, cinco draws por braco, com assercao machine-checkable — implement-from-prompt #1 5/5 vs 0/5 (status: implemented), #8 5/5 vs 0/5 (nofile src/format.js), review-code #7 5/5 vs 0/5 (verdict REJECT). Holdout #7 congelado em 5fe56fc antes do primeiro draw. Todos os seis runs: findings=0 isolated=yes. AC-2: docs/evals/discriminating-cases.md lista os tres, runs, hashes completos, detector, modelo e holdout. AC-3: so tags:/why: mudaram em skills/; nenhum numero v1 reescrito. Nota: o controle do #7 falha o token 5/5, mas 3/5 aprovam e 2/5 so perdem o formato — publicado.
+
+---
+<!-- COMMENTS:END -->
