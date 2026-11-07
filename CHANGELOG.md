@@ -9,6 +9,55 @@ skills, which cases, and which published measurements.
 
 ## [Unreleased]
 
+## [0.6.2] — 2026-11-07
+
+A reliability patch: an aborted run is never clean, a dead run loses no paid
+draw, and a stored transcript can be audited for the abort the old result
+dropped. Zero agent draws.
+
+### Added
+
+- **TASK-52 — a provider abort is infrastructure.** `provider.go-limit`,
+  `provider.rate-limit` and `provider.transport` are classified before behaviour,
+  recorded in `execution.error`, and a run whose draws all aborted no longer
+  prints `isolated=yes`.
+- **TASK-38 — no paid draw is lost.** Every completed draw is written to
+  `cases/<case>/draws/r<i>.json` before the next one starts; `--resume <dir>`
+  reopens a dead run and runs only the missing indexes. An auth probe over
+  `opencode auth list`/`models` fails fast and names the provider before the first
+  paid draw.
+- **TASK-54 — the stored transcripts are audited.** `scripts/audit-provider-aborts.mjs`
+  lists every transcript with a `provider.*` abort and says whether its result
+  recorded it, classified it as infrastructure, or retried. The 0.6.2 scan found
+  14 unrecorded aborts in 1413 transcripts; the cited lines are marked in
+  `docs/evals/provider-aborts.md`.
+
+### Changed
+
+- **TASK-39 — a direct read is a load.** For a behavioural case, reading the
+  staged `SKILL.md` counts as a load and `skillGate.source` records `tool` vs
+  `read`; a trigger case keeps the `skill` tool call as its routing signal, and a
+  read outside the scratch is never a load.
+- **TASK-40 — composite expectations can cite two facts.** The judge prompt
+  allows two verbatim passages joined by ` | `; `verifyEvidence` still rejects a
+  fabricated join. `implement-from-prompt` #1's reading expectation is sharpened
+  to "before the first edit" and proved on the stored `r5` draw, not a new one.
+- **TASK-53 — Done tasks with open ACs are reconciled.** TASK-3, TASK-17,
+  TASK-24 and TASK-27 now name the evidence or the reason an AC stays open;
+  TASK-35 can archive without hiding one.
+- **TASK-36 — the pdlc task binding is documented.** pdlc 1.2.0 resolves
+  `dispatch`/`verify` by the spec slug (`SPEC-NNNN`), not the frontmatter `task:`;
+  the cause and the one-line upstream fix are in the task, and the manual status
+  workaround is in `AGENTS.md`. The upstream test cycle is still blocked.
+
+### Notes
+
+- **TASK-35 deferred.** The Done tasks are reconciled but not yet moved to
+  `backlog/archive/tasks/`; the archive is its own chore.
+- Gates: `lint`, `selftest` (365 eval tests, 17 bootstrap, sensor parity 2/2),
+  `check-evidence` with 0 errors, and `pdlc preflight` over 19 specs. Evals are
+  local evidence, not a CI gate; this release spent no draw.
+
 ## [0.6.1] — 2026-11-07
 
 A correction release: the first measurement attempt was already in the store,

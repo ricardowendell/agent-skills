@@ -5,7 +5,7 @@ pipeline (`docs/pipeline.md`) governs how work runs; this page says what the wor
 is and in which order. A change of direction is a human decision, and the
 releases themselves are the record of what shipped.
 
-Status: **0.6.1 released** on 2026-11-07. The next release is 0.6.2.
+Status: **0.6.2 released** on 2026-11-07. The next release is 0.7.0.
 
 ## Where the bottleneck is
 
@@ -27,7 +27,7 @@ reliability patch comes first.
 
 | release | claim | work | cost |
 | --- | --- | --- | --- |
-| **0.6.2** (patch) | an aborted run is never clean | `TASK-52`, `TASK-38`, `TASK-39`, `TASK-40`, `TASK-36`, `TASK-35` | **0 draws** |
+| **0.6.2** (patch) | an aborted run is never clean | `TASK-52`, `TASK-38`, `TASK-39`, `TASK-40`, `TASK-54`; `TASK-36` documented, `TASK-35` deferred | **0 draws** |
 | **0.7.0** | the first diagnosis skill | vendor Matt Pocock's `diagnosing-bugs`, pinned by commit, never global; five fixtures × five draws × two arms; one fixture held out | **~50 draws** (~0.6 M tokens at the 0.5.0 median) |
 | **0.8.0** | the kit checks its own wiring | `agent-skills doctor`: duplicate ids, broken references, overrides, evaluator compatibility | **0 draws** |
 
@@ -46,9 +46,14 @@ frozen for issue #5.
 3. **`TASK-39` — a direct `SKILL.md` read is a load** in the with-skill arm.
 4. **`TASK-40` — reconcile the #1 expectation with the judge** (zero draws; use
    the stored transcripts).
-5. **`TASK-36` and `TASK-35` — process hygiene.** Fix or document the pdlc task
-   binding; reconcile the Done tasks with open ACs before archiving them.
-6. **`TASK-50` — the post-load stall** is not in the default path. Revisit only
+5. **`TASK-54` — audit the store for the aborts the old results lost.** The
+   read-only scan is the release gate: a run cited as clean with a
+   `provider.*` abort gets a marker, never a rewritten number.
+6. **`TASK-36` and `TASK-35` — process hygiene.** TASK-36 is documented: pdlc
+   1.2.0 resolves the task by slug, and the workaround is in `AGENTS.md`; its
+   test cycle is blocked on the upstream checkout. TASK-35 (archive the Done
+   tasks) is deferred: the tasks are reconciled (TASK-53) but not moved.
+7. **`TASK-50` — the post-load stall** is not in the default path. Revisit only
    if a paid measurement hits it; no draws without a hypothesis.
 
 ## Out of scope until a consumer asks
