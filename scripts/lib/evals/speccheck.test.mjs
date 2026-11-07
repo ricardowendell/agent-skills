@@ -64,7 +64,7 @@ test("a clean ready spec has no findings", () => {
   assert.deepEqual(findings, [])
 })
 
-test("files: reports a declared file the diff did not touch", () => {
+test("a declared file the diff did not touch is a warning", () => {
   const findings = checkSpec({
     text: specText({ files: ["a.md", "b.md"] }),
     path: "spec.md",
@@ -72,7 +72,7 @@ test("files: reports a declared file the diff did not touch", () => {
     tasks,
     specs: [],
   })
-  assert.deepEqual(findings.map((f) => f.rule), ["files-declared-untouched"])
+  assert.deepEqual(findings.map((f) => [f.level, f.rule]), [["warning", "files-declared-untouched"]])
   assert.match(findings[0].message, /b\.md/)
 })
 
@@ -88,7 +88,7 @@ test("files: reports a touched file the spec did not declare", () => {
   assert.match(findings[0].message, /c\.md/)
 })
 
-test("Results can explain a declared file the diff did not touch", () => {
+test("Results prose does not excuse a declared file the diff did not touch", () => {
   const findings = checkSpec({
     text: specText({
       files: ["a.md", "b.md"],
@@ -99,7 +99,7 @@ test("Results can explain a declared file the diff did not touch", () => {
     tasks,
     specs: [],
   })
-  assert.deepEqual(findings, [])
+  assert.deepEqual(findings.map((f) => [f.level, f.rule]), [["warning", "files-declared-untouched"]])
 })
 
 test("Results does not excuse a touched file the spec did not declare", () => {
@@ -168,7 +168,7 @@ test("blocks must be acknowledged by the blocked spec", () => {
       { id: "SPEC-0002", status: "ready", depends_on: [], blocks: [] },
     ]),
   })
-  assert.deepEqual(findings.map((f) => f.rule), ["blocks-asymmetric"])
+  assert.deepEqual(findings.map((f) => [f.level, f.rule]), [["warning", "blocks-asymmetric"]])
 })
 
 test("a dependency must be mirrored by the target's blocks", () => {
@@ -182,7 +182,7 @@ test("a dependency must be mirrored by the target's blocks", () => {
       { id: "SPEC-0002", status: "ready", depends_on: [], blocks: [] },
     ]),
   })
-  assert.deepEqual(findings.map((f) => f.rule), ["depends_on-asymmetric"])
+  assert.deepEqual(findings.map((f) => [f.level, f.rule]), [["warning", "depends_on-asymmetric"]])
 })
 
 test("a dependency on a spec that declares other blockers must be listed", () => {
@@ -196,7 +196,7 @@ test("a dependency on a spec that declares other blockers must be listed", () =>
       { id: "SPEC-0002", status: "ready", depends_on: [], blocks: ["SPEC-0003"] },
     ]),
   })
-  assert.deepEqual(findings.map((f) => f.rule), ["depends_on-asymmetric"])
+  assert.deepEqual(findings.map((f) => [f.level, f.rule]), [["warning", "depends_on-asymmetric"]])
 })
 
 test("an implemented spec may not keep the placeholder", () => {
@@ -218,7 +218,7 @@ test("an implemented spec needs a non-empty Results", () => {
     tasks,
     specs: [],
   })
-  assert.deepEqual(findings.map((f) => f.rule), ["implemented-results-empty"])
+  assert.deepEqual(findings.map((f) => [f.level, f.rule]), [["warning", "implemented-results-empty"]])
 })
 
 test("a ready spec needs a task, files and at least one AC", () => {
@@ -281,4 +281,39 @@ test("the CLI exits 1 and --json matches the text finding", () => {
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
+})
+
+test("the CLI reads non-ASCII paths from git diff -z", () => {
+  const dir = mkdtempSync(join(tmpdir(), "speccheck-unicode-"))
+  try {
+    const git = (...args) => execFileSync("git", args, { cwd: dir, encoding: "utf8" })
+    git("init", "-q")
+    git("config", "user.email", "test@example.com")
+    git("config", "user.name", "Test")
+    mkdirSync(join(dir, "backlog", "tasks"), { recursive: true })
+    writeFileSync(join(dir, "backlog", "tasks", "task-1 - demo.md"), "# task\n")
+    writeFileSync(join(dir, "中.md"), "x\n")
+    writeFileSync(join(dir, "spec.md"), specText({ files: ["中.md"] }))
+    git("add", ".")
+    git("commit", "-qm", "base")
+
+    writeFileSync(join(dir, "中.md"), "changed\n")
+    git("add", ".")
+    git("commit", "-qm", "change")
+
+    const result = spawnSync(process.execPath, [cli, "--spec", "spec.md", "--base", "HEAD~1"], {
+      cwd: dir,
+      encoding: "utf8",
+    })
+    assert.equal(result.status, 0, result.stdout + result.stderr)
+    assert.match(result.stdout, /contract holds/)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test("an option without a value is a usage error, not a missing spec", () => {
+  const result = spawnSync(process.execPath, [cli, "--spec", "--base", "main"], { encoding: "utf8" })
+  assert.equal(result.status, 2)
+  assert.match(result.stderr, /--spec requires a value/)
 })

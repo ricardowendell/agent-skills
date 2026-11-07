@@ -19,10 +19,16 @@
 export const COMPLETE_MARKERS = ["unfinished", "running", "discard", "history", "unreadable"]
 export const DIRTY_MARKERS = ["dirty", "leak", "host", "stall", "contaminated", "discard", "history", "failure"]
 
-// A run id is `2026-11-06T19-06-50--capture-idea`. The `[a-z0-9]` endpoints keep
-// an abbreviated `…22-18-10--matrix--…` from being read as a directory; a
-// trailing hyphen is prose, not an id.
-export const RUN_TOKEN = /20\d\d-\d\d-\d\dT\d\d-\d\d-\d\d--[a-z0-9]+(?:-[a-z0-9]+)*/g
+// A run id is `2026-11-06T19-06-50--capture-idea`. The token must carry every
+// segment of the directory name: `--without-skill` is part of the identity, and
+// a `--matrix--` followed by an ellipsis is prose shorthand, not an id. The
+// `[A-Za-z0-9._-]` class is deliberately wider than the old lowercase-only one:
+// a model segment can contain dots and underscores.
+export const RUN_TOKEN = /\b(20\d{2}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}--[A-Za-z0-9._-]+(?:--[A-Za-z0-9._-]+)*)\b/g
+
+export function tokenSegments(token) {
+  return String(token ?? "").split("--")
+}
 
 const markerRe = (markers) => new RegExp(`\\b(?:${markers.join("|")})\\b`, "i")
 
@@ -74,7 +80,15 @@ export function checkCitation({ line, token, run, currentDetector, tokens = [] }
   const add = (level, rule, message) => findings.push({ level, rule, token, message })
 
   if (!run || run.exists !== true) {
-    add("error", "missing-run", `run directory ${token} does not exist`)
+    const candidates = Array.isArray(run?.candidates) && run.candidates.length
+      ? ` (candidates: ${run.candidates.join(", ")})`
+      : ""
+    add("error", "missing-run", `run directory ${token} does not exist${candidates}`)
+    return findings
+  }
+
+  if (run.unreadable) {
+    add("error", "empty-run", `run ${token} ${run.reason ?? "has no case results"}`)
     return findings
   }
 

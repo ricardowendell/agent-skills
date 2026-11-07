@@ -205,19 +205,23 @@ contract disagrees with its diff, and a document citing evidence that does not
 say what the sentence claims. Run them before review and before a merge:
 
 ```sh
-# the spec's task:, files: vs the branch diff, dependency links, body rules
+# the spec's task:, files: vs the branch diff, dependency links, body rules.
+# `main` is the canonical local base; `origin/main` goes stale by policy (this
+# repo does not push) and produces a flood of phantom diff entries.
 node scripts/spec-check.mjs --spec docs/specs/active/<slug>.md --base main
 # every run-directory citation in docs/evals/*.md against the local store
 node scripts/check-evidence.mjs
 ```
 
-`spec-check` exits 1 with one line per finding. A file may sit on one side of
-the diff and not the other when the Results section names it and says why; the
-check reports the direction instead of hiding it. `check-evidence` exits 1 on a
-missing directory, an unfinished run cited as complete, or `isolated=yes` on a
-run whose recorded detector is not current. It warns when a run with findings is
-cited without a `dirty|leak|host|stall|contaminated|discard|history|failure`
-marker; `--strict` makes those warnings fatal. The local `selftest` runs
+`spec-check` exits 1 on an error and prints one line per finding; warnings (a
+declared file the diff did not touch, an asymmetric dependency) print without
+failing, so an unrelated publication does not block the build. A touched file
+the spec did not declare is always an error. `check-evidence` exits 1 on a
+missing directory, a completed run with no cases, an unfinished run cited as
+complete, or `isolated=yes` on a run whose recorded detector is not current. It
+warns when a run with findings is cited without a
+`dirty|leak|host|stall|contaminated|discard|history|failure` marker; `--strict`
+makes those warnings fatal. The local `selftest` and the pre-commit hook run
 `check-evidence`; CI cannot, because it has no eval store.
 
 ## What CI enforces
@@ -234,8 +238,8 @@ node scripts/check-sensor-parity.mjs
 ```
 
 The same commands are in `.githooks/pre-commit`, except `spec-check` (it needs
-the PR base) and `check-evidence` (it needs the local store). Behavioural runs
-stay local: they need a model provider and cost money.
+the PR base). Behavioural runs stay local: they need a model provider and cost
+money.
 
 ## Third-party skills
 

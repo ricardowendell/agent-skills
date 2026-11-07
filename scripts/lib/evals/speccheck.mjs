@@ -11,9 +11,10 @@
 // corpus (spec frontmatter + task filenames). That keeps every rule testable
 // without a git checkout.
 //
-// A declared file the diff did not touch may be explained in Results. A touched
-// file the spec did not declare is not explainable: that is the scope violation
-// the rule exists to catch.
+// A declared file the diff did not touch is a warning: a plan may name a file
+// the implementation did not need. A touched file the spec did not declare is an
+// error: that is the scope violation the rule exists to catch. Prose in Results
+// is not proof of intent and is not used to suppress either direction.
 
 const LIST_KEYS = new Set(["files", "tests", "depends_on", "blocks", "source_docs", "related_decisions"])
 
@@ -115,25 +116,13 @@ export function asListForCorpus(value) {
 
 const normalizePath = (p) => String(p ?? "").trim().replace(/^\.\//, "").replace(/^\/+/, "")
 
-function resultsText(body) {
-  return section(body, "Results") ?? ""
-}
-
-// A path is explained when Results names it. The exact path is what a reviewer
-// needs; a bare basename is accepted because the corpus sometimes names a file
-// by its short name in a sentence.
-function explained(path, results) {
-  const p = normalizePath(path)
-  return results.includes(p) || results.includes(p.split("/").pop())
-}
-
 // `diff` is the list of paths from `git diff --name-only`; null means the
 // caller has no diff (contract-only mode). `specs` is the corpus as
 // `{ id, slug, status, depends_on, blocks }`; `tasks` is the backlog filename
 // list. Every finding is one line for the CLI.
 export function checkSpec({ text, path = "spec", diff = null, specs = [], tasks = [] } = {}) {
   const findings = []
-  const add = (rule, message) => findings.push({ rule, file: path, message })
+  const add = (rule, message, level = "error") => findings.push({ level, rule, file: path, message })
 
   const { data, body, error } = parseFrontmatter(text)
   if (error) {
@@ -142,7 +131,7 @@ export function checkSpec({ text, path = "spec", diff = null, specs = [], tasks 
   }
 
   const status = String(data.status ?? "").toLowerCase()
-  const results = resultsText(body)
+  const results = section(body, "Results") ?? ""
 
   // --- files: non-empty and equal to the diff, both directions -------------
   const files = asListForCorpus(data.files).map(normalizePath)
@@ -154,15 +143,16 @@ export function checkSpec({ text, path = "spec", diff = null, specs = [], tasks 
     const touched = diff.map(normalizePath).filter(Boolean)
     const touchedSet = new Set(touched)
     const declaredSet = new Set(files)
+    // A declared file the diff did not touch is a warning: the spec may have
+    // planned a file the implementation did not need. Prose in Results is not
+    // proof of intent, so it is never used to suppress a finding.
     for (const file of files) {
-      if (!touchedSet.has(file) && !explained(file, results)) {
-        add("files-declared-untouched", `files: declares ${file}, but the diff does not touch it`)
+      if (!touchedSet.has(file)) {
+        add("files-declared-untouched", `files: declares ${file}, but the diff does not touch it`, "warning")
       }
     }
-    // A touched file the spec did not declare is never explained away in
-    // Results: that is the scope violation the rule exists to catch. The
-    // declared-but-untouched direction is the one Open Questions permits
-    // explaining (a plan may name a file the implementation did not need).
+    // A touched file the spec did not declare is a scope violation, not a
+    // warning.
     for (const file of touched) {
       if (!declaredSet.has(file)) {
         add("files-touched-undeclared", `the diff touches ${file}, but files: does not declare it`)
@@ -193,7 +183,7 @@ export function checkSpec({ text, path = "spec", diff = null, specs = [], tasks 
     }
     const reverse = asListForCorpus(target.blocks).map(specRef)
     if (!reverse.includes(currentId)) {
-      add("depends_on-asymmetric", `depends_on ${ref}, but that spec does not list ${currentId} in blocks:`)
+      add("depends_on-asymmetric", `depends_on ${ref}, but that spec does not list ${currentId} in blocks:`, "warning")
     }
   }
 
@@ -205,7 +195,7 @@ export function checkSpec({ text, path = "spec", diff = null, specs = [], tasks 
     }
     const reverse = asListForCorpus(target.depends_on).map(specRef)
     if (!reverse.includes(currentId)) {
-      add("blocks-asymmetric", `blocks ${ref}, but that spec does not list ${currentId} in depends_on:`)
+      add("blocks-asymmetric", `blocks ${ref}, but that spec does not list ${currentId} in depends_on:`, "warning")
     }
   }
 
@@ -215,7 +205,7 @@ export function checkSpec({ text, path = "spec", diff = null, specs = [], tasks 
       add("implemented-placeholder", "status: implemented still carries the Results placeholder")
     }
     if (!results) {
-      add("implemented-results-empty", "status: implemented requires a non-empty Results section")
+      add("implemented-results-empty", "status: implemented requires a non-empty Results section", "warning")
     }
   }
 

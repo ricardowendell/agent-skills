@@ -73,8 +73,26 @@ test("a polluted run is a warning without a dirty marker", () => {
   assert.deepEqual(cites("leak `2026-01-01T00-00-00--polluted`", run({ findings: 2 })), [])
 })
 
+test("a completed manifest with no case results is an error", () => {
+  const line = "`2026-01-01T00-00-00--empty`"
+  const findings = cites(line, {
+    exists: true,
+    unreadable: true,
+    status: "completed",
+    reason: "has no cases/ directory",
+    detectorVersion: null,
+    findings: 1,
+  })
+  assert.deepEqual(findings.map((f) => [f.level, f.rule]), [["error", "empty-run"]])
+})
+
 test("a run inside an abbreviated range is not a citation", () => {
   assert.deepEqual(scanCitations("2026-11-01 run (`2026-11-01T22-18-10--matrix--…`)"), [])
+})
+
+test("the token keeps the arm segment", () => {
+  const tokens = scanCitations("`2026-11-06T10-00-00--demo--without-skill`")[0].tokens
+  assert.deepEqual(tokens.map((t) => t.token), ["2026-11-06T10-00-00--demo--without-skill"])
 })
 
 test("markers match whole words", () => {
@@ -93,8 +111,20 @@ test("checkDocuments carries the file and line", () => {
   assert.equal(findings[0].line, 2)
 })
 
-function makeRun(store, name, { status = "completed", detectorVersion = current, leak = [], isolate = true } = {}) {
+function makeRun(
+  store,
+  name,
+  { status = "completed", detectorVersion = current, leak = [], isolate = true, cases = true } = {},
+) {
   const dir = join(store, name)
+  if (!cases) {
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(
+      join(dir, "manifest.json"),
+      JSON.stringify({ arm: "with-skill", status, params: { isolate } }, null, 2),
+    )
+    return
+  }
   mkdirSync(join(dir, "cases", "demo--01"), { recursive: true })
   writeFileSync(
     join(dir, "manifest.json"),
@@ -167,7 +197,7 @@ test("the CLI reads a synthetic store: existing, running, v1 and dirty", () => {
   }
 })
 
-test("the CLI resolves a unique shorthand and leaves an ambiguous one missing", () => {
+test("the CLI resolves a unique two-segment shorthand and names an ambiguous one", () => {
   const dir = mkdtempSync(join(tmpdir(), "evidence-short-"))
   try {
     const store = join(dir, "store")
@@ -185,6 +215,42 @@ test("the CLI resolves a unique shorthand and leaves an ambiguous one missing", 
     const parsed = JSON.parse(result.stdout)
     assert.deepEqual(parsed.findings.map((f) => f.token), ["2026-11-06T11-00-00--demo"])
     assert.equal(parsed.findings[0].rule, "missing-run")
+    assert.match(parsed.findings[0].message, /2026-11-06T11-00-00--demo--a/)
+    assert.match(parsed.findings[0].message, /2026-11-06T11-00-00--demo--b/)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test("the CLI never drops an arm: with-arm is exact, missing-arm is an error, empty run is an error", () => {
+  const dir = mkdtempSync(join(tmpdir(), "evidence-arm-"))
+  try {
+    const store = join(dir, "store")
+    mkdirSync(join(dir, "docs", "evals"), { recursive: true })
+    mkdirSync(store, { recursive: true })
+    makeRun(store, "2026-11-06T10-00-00--demo--with-skill")
+    makeRun(store, "2026-11-06T10-01-00--empty", { cases: false })
+
+    writeFileSync(
+      join(dir, "docs", "evals", "test.md"),
+      [
+        "existing `2026-11-06T10-00-00--demo--with-skill`",
+        "missing arm `2026-11-06T10-00-00--demo--nonexistent-arm`",
+        "empty `2026-11-06T10-01-00--empty`",
+        "",
+      ].join("\n"),
+    )
+    const result = spawnSync(process.execPath, [cli, "--store", store, "--json"], { cwd: dir, encoding: "utf8" })
+    assert.equal(result.status, 1)
+    const parsed = JSON.parse(result.stdout)
+    assert.deepEqual(
+      parsed.findings.map((f) => f.rule).sort(),
+      ["empty-run", "missing-run"],
+    )
+    assert.deepEqual(parsed.findings.map((f) => f.token).sort(), [
+      "2026-11-06T10-00-00--demo--nonexistent-arm",
+      "2026-11-06T10-01-00--empty",
+    ])
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }

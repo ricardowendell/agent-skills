@@ -4,6 +4,7 @@
 #   - run-evals.mjs --list --check : every references/evals.md still parses
 #   - node --test : the harness's own tests
 #   - check-sensor-parity.mjs : the JS and Python docs-check sensors agree
+#   - check-evidence.mjs : docs/evals citations exist and match the store
 # Mirrors .github/workflows/skills.yml, scoped to this checkout (`--root skills`)
 # so third-party installs under $HOME never leak warnings into a commit.
 # Enable once with: git config core.hooksPath .githooks
@@ -21,4 +22,5 @@ node scripts/run-evals.mjs --root skills --list --check > /dev/null
 node --test scripts/lib/evals/*.test.mjs > /dev/null
 node --test skills/bootstrap-project-harness/scripts/*.test.mjs > /dev/null
 node scripts/check-sensor-parity.mjs > /dev/null
+node scripts/check-evidence.mjs > /dev/null
 echo "skills pre-commit: ok"

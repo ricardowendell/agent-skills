@@ -16,15 +16,21 @@ Check a spec's contract: files: against the diff, task: against backlog/tasks,
 depends_on/blocks for dangling or asymmetric links, and the body requirements of
 status: ready and status: implemented. Without --base the diff rule is skipped.
 
+Warnings (a declared file the diff did not touch, an asymmetric dependency) print
+but do not fail; errors exit 1.
+
 Exit codes:
-  0  no findings
-  1  at least one finding
-  2  the spec, the repo, or git could not be read
+  0  no errors
+  1  at least one error
+  2  the spec, the repo, or git could not be read, or an option has no value
 `
 
 function option(argv, name) {
   const i = argv.indexOf(name)
-  return i >= 0 ? argv[i + 1] : null
+  if (i < 0) return null
+  const value = argv[i + 1]
+  if (!value || value.startsWith("--")) throw new Error(`${name} requires a value`)
+  return value
 }
 
 function repoRoot() {
@@ -34,12 +40,16 @@ function repoRoot() {
 }
 
 function changedFiles(base) {
-  const r = spawnSync("git", ["diff", "--name-only", `${base}...HEAD`], { encoding: "utf8" })
+  const r = spawnSync("git", ["-c", "core.quotepath=false", "diff", "--name-only", "-z", `${base}...HEAD`], {
+    encoding: "utf8",
+  })
   if (r.status !== 0) {
     const detail = (r.stderr || r.stdout || "git diff failed").trim().split("\n")[0]
     throw new Error(`cannot read git diff against ${base}: ${detail}`)
   }
-  return r.stdout.split("\n").map((l) => l.trim()).filter(Boolean)
+  // `-z` keeps non-ASCII paths raw; without it git C-quotes them and a declared
+  // `中.md` never matches the quoted diff entry.
+  return r.stdout.split("\0").map((l) => l.trim()).filter(Boolean)
 }
 
 function specCorpus(root) {
@@ -105,15 +115,30 @@ function main(argv) {
     tasks: taskFiles(root),
   })
 
+  const errors = findings.filter((f) => f.level === "error")
+  const warnings = findings.filter((f) => f.level === "warning")
+
   if (json) {
-    process.stdout.write(`${JSON.stringify({ ok: findings.length === 0, spec: specPath, base: base ?? null, findings }, null, 2)}\n`)
+    process.stdout.write(
+      `${JSON.stringify(
+        {
+          ok: errors.length === 0,
+          spec: specPath,
+          base: base ?? null,
+          summary: { errors: errors.length, warnings: warnings.length },
+          findings,
+        },
+        null,
+        2,
+      )}\n`,
+    )
   } else if (findings.length === 0) {
     process.stdout.write(`ok ${specPath} — contract holds\n`)
   } else {
-    for (const f of findings) process.stdout.write(`error ${f.rule} ${f.file} — ${f.message}\n`)
+    for (const f of findings) process.stdout.write(`${f.level} ${f.rule} ${f.file} — ${f.message}\n`)
   }
 
-  return findings.length ? 1 : 0
+  return errors.length ? 1 : 0
 }
 
 try {

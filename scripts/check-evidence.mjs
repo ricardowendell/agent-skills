@@ -13,7 +13,7 @@ import { homedir } from "node:os"
 import { join, resolve } from "node:path"
 import { checkRun } from "./lib/evals/runcheck.mjs"
 import { DETECTOR_VERSION } from "./lib/evals/leak.mjs"
-import { checkDocuments } from "./lib/evals/evidence.mjs"
+import { checkDocuments, tokenSegments } from "./lib/evals/evidence.mjs"
 
 const USAGE = `Usage: node scripts/check-evidence.mjs [--store <runs-dir>] [--strict] [--json]
 
@@ -31,7 +31,10 @@ Exit codes:
 
 function option(argv, name) {
   const i = argv.indexOf(name)
-  return i >= 0 ? argv[i + 1] : null
+  if (i < 0) return null
+  const value = argv[i + 1]
+  if (!value || value.startsWith("--")) throw new Error(`${name} requires a value`)
+  return value
 }
 
 function readJson(file) {
@@ -74,9 +77,25 @@ function inspectRun(dir) {
       }
     }
   }
-  if (!manifest && !existsSync(casesDir)) return { exists: true, status: "unreadable", detectorVersion: null, findings: 1 }
+  if (!manifest && !existsSync(casesDir)) {
+    return { exists: true, unreadable: true, reason: "has no manifest.json and no cases/", findings: 1 }
+  }
 
   const status = manifestError ? "unreadable" : (manifest?.status ?? "unfinished")
+  // A completed manifest with no case results is not evidence about anything.
+  // It used to read as a clean 0/0 because checkRun has nothing to reject; the
+  // reviewer's empty-run case is this branch.
+  if (status === "completed" && cases.length === 0) {
+    return {
+      exists: true,
+      unreadable: true,
+      status,
+      reason: existsSync(casesDir) ? "has an empty cases/ (no result.json)" : "has no cases/ directory",
+      detectorVersion: null,
+      findings: 1,
+    }
+  }
+
   const isolation = typeof manifest?.params?.isolate === "boolean" ? manifest.params.isolate : null
   const checked = checkRun({ arm: manifest?.arm ?? null, cases, isolation })
 
@@ -125,29 +144,29 @@ function main(argv) {
 
   const documents = readDocuments(process.cwd())
   const cache = new Map()
-  // The corpus cites a run as `timestamp--label` when the arm is obvious from
-  // the sentence. Resolve an exact directory first; otherwise accept a unique
-  // prefix or a unique timestamp+arm shorthand. An ambiguous token stays
-  // missing: guessing between two runs would turn a citation into evidence it
-  // does not have.
+  // An exact directory always wins. A token with exactly two segments
+  // (timestamp + skill, no arm) may stand for a run whose arm was dropped by the
+  // sentence, but only when the prefix has one candidate; zero or several are an
+  // error that names the candidates. A token with an arm (three or more
+  // segments) never falls back to a prefix: the arm is the identity, and
+  // resolving `...--demo--nonexistent-arm` to `...--demo` is how a broken
+  // citation passed review.
   const resolveDir = (token) => {
     const exact = join(store, token)
-    if (existsSync(exact)) return exact
-    const prefix = storeNames.filter((name) => name.startsWith(token))
-    if (prefix.length === 1) return join(store, prefix[0])
-    const split = token.indexOf("--", token.indexOf("T") + 1)
-    if (split > 0) {
-      const stamp = token.slice(0, split)
-      const suffix = token.slice(split)
-      const shorthand = storeNames.filter((name) => name.startsWith(stamp) && name.endsWith(suffix))
-      if (shorthand.length === 1) return join(store, shorthand[0])
+    if (existsSync(exact)) return { dir: exact }
+    const segments = tokenSegments(token)
+    if (segments.length !== 2) {
+      const near = storeNames.filter((name) => name.startsWith(`${token}--`))
+      return { error: true, candidates: near }
     }
-    return null
+    const candidates = storeNames.filter((name) => name.startsWith(`${token}--`))
+    if (candidates.length === 1) return { dir: join(store, candidates[0]) }
+    return { error: true, candidates }
   }
   const resolveRun = (token) => {
     if (!cache.has(token)) {
-      const dir = resolveDir(token)
-      cache.set(token, dir ? inspectRun(dir) : { exists: false })
+      const resolved = resolveDir(token)
+      cache.set(token, resolved.dir ? inspectRun(resolved.dir) : { exists: false, candidates: resolved.candidates })
     }
     return cache.get(token)
   }
