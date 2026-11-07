@@ -205,14 +205,14 @@ All runs are at `eb9903e`, detector v2 (`71bfb85a91cd68ab`), five draws per arm:
 
 Budget: **86 repetitions scheduled**. **82 produced model work** — 46 in the
 default attempt (50 minus 4 no-call reps) and 36 in the agentworks pass (35 arms
-plus the probe); the other 4 reps made no model call (`03-08-51` r4/r5,
-`02-51-15` r3, `02-03-01` r4). Five of the 82 died mid-run on the provider
-go-limit (3 in `03-08-51`, 1 in `02-51-15`, 1 in `02-03-01`), so they are spent
-draws without a verdict. That is **2 over the 80 cap**; the original Results
-counted only 36 because the first attempt was not cited. AC-5 is not met, and
-the overrun is disclosed rather than redefined. The `08-14-24` 429 run spent
-none. `write` #1 and `capture-idea` #1 were not retried further because their
-clean control does not exist on either route.
+plus the probe). The other 4 reps made no model call (`03-08-51` r4/r5 on the
+go-limit, `02-51-15` r3 and `02-03-01` r4 on an upstream rate-limit). Three of
+the 82 died mid-run on the go-limit (`03-08-51` r1–r3), spent draws without a
+verdict. That is **2 over the 80 cap**; the original Results counted only 36
+because the first attempt was not cited. AC-5 is not met, and the overrun is
+disclosed rather than redefined. The `08-14-24` 429 run spent none. `write` #1
+and `capture-idea` #1 were not retried further because their clean control does
+not exist on either route.
 
 The two non-evidence runs, with their checker lines:
 
