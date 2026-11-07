@@ -79,7 +79,6 @@ wording.
 | `tighten-harness` | Tightens one gate, with evidence and no source changes | `/tighten-harness` |
 | `survey-inflight-work` | Surveys branches, worktrees and PRs; reports overlap, blockers and landing order | `/inflight` |
 | `audit-code-quality` | Read-only audit of coupling, duplication, tests and debt; ranked register, no score | `/quality-check` |
-| `pdlc-orca` | Runs a pdlc cycle inside Orca: dispatch, worktree guard, pinned prompt, review/verify/merge | `/pdlc-orca` |
 
 ## The loop
 
