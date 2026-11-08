@@ -1,6 +1,6 @@
 ---
 name: bootstrap-project-harness
-description: Set up a project's technical harness (git hooks, lint limits, CI) and the product-docs skeleton, for TypeScript/Node or Python (uv). Use when starting a new project, bootstrapping an existing repo, or adding hooks/CI/agent conventions. Seeds docs from existing material or a short interview; delegates classifying existing docs to process-inbox.
+description: Set up a project's technical harness (git hooks, lint limits, CI) and the product-docs skeleton, for TypeScript/Node or Python (uv). Detects and preserves an existing Node/Bun stack; the defaults apply only to an empty repo. Use when starting a new project, bootstrapping an existing repo, or adding hooks/CI/agent conventions. Seeds docs from existing material or a short interview; delegates classifying existing docs to process-inbox.
 ---
 
 # Bootstrapping Project Harnesses
@@ -14,7 +14,9 @@ This skill covers **two harnesses** that must both exist:
 1. **Technical Harness** — sensors, hooks, quality gates (building it right)
 2. **Product Harness** — vision, language, principles, design, voice (building the right thing)
 
-**Scope:** TypeScript/Node (bun) and Python (uv). Detect the stack first (see Detection → Stack) and take technical files from `templates/<stack>/`. Other stacks are out of scope.
+**Scope:** TypeScript/Node and Python (uv). Detect the stack first (see Detection → Stack) and take technical files from `templates/<stack>/`. Other stacks are out of scope.
+
+On TypeScript/Node, **detection is the first decision**: read the runtime, package manager, lockfile, linter, formatter, test runner, hook manager and scripts the repo already has, then preserve them. The default stack in `references/typescript.md` applies only when the repo has no TypeScript/Node stack yet. `templates/ts/` is the default's shape, not a command set to paste into every repo.
 
 ## The Technical Pillars
 
@@ -40,8 +42,9 @@ This skill covers **two harnesses** that must both exist:
 
 ## Principles
 
-- **Additive only.** On an existing repo, never overwrite existing keys, scripts, hooks, or config files. Merge into what is there; on a collision, report it and skip. This applies to `package.json`, `pyproject.toml`, `justfile`, `lefthook.yml`, `eslint.config.js`, and `.opencode/`.
-- **Report competing toolchains.** If the repo already uses a different linter / type checker / test stack (Python: `black`/`flake8`/`isort`/`mypy`/`pre-commit`; TS: `husky`/`tslint`), do **not** add the harness's tools alongside it — report the collision and stop.
+- **Additive only.** On an existing repo, never overwrite existing keys, scripts, hooks, config files, or the toolchain itself. Merge into what is there; on a collision, report it and skip. This applies to `package.json`, `pyproject.toml`, `justfile`, `lefthook.yml`, `eslint.config.js`, `biome.json`, `.oxlintrc.json`, `.prettierrc`, `tsconfig.json`, and `.opencode/`.
+- **TypeScript/Node: preserve the choice.** A detected linter, formatter, test runner, runtime or package manager is the project's decision. Never install a second one, never replace ESLint with Biome (or the reverse), never switch `node:test` to Vitest, never add a `package-lock.json` to a pnpm repo. Fill only the slots that are empty, and say in the report that a fill is not a replacement.
+- **Python: report competing toolchains.** If the repo already uses a different package manager or lint stack (`black`/`flake8`/`isort`/`mypy`/`pre-commit`, `poetry`/`pdm`/`Pipfile`), do **not** add the harness's tools alongside it — report the collision and stop. Python detection and refusal are unchanged.
 - **Never invent product direction.** Product content comes from the user's existing docs or their answers — never from the agent's imagination.
 
 ## Detection
@@ -51,7 +54,7 @@ This skill covers **two harnesses** that must both exist:
 Run in order; stop at the first match:
 
 1. `uv.lock` → **Python (uv)**.
-2. `bun.lock` or `tsconfig.json` → **TS/Node**.
+2. A TypeScript/Node marker (`bun.lock`, `bun.lockb`, `tsconfig.json`) → **TS/Node**. This decides the stack only: `tsconfig.json` proves TypeScript, never Bun. The runtime and tools come from the profile below.
 3. Any Python marker (`pyproject.toml`, `.python-version`, `requirements.txt`) → **Python**. If another package manager owns the repo (`poetry.lock`/`[tool.poetry]`, `pdm.lock`/`[tool.pdm]`, `Pipfile`, `requirements.in`) → **stop and report**; do not impose uv.
 4. `package.json` alone → **TS/Node**.
 5. Nothing → **ask**.
@@ -60,6 +63,64 @@ Record the result in `AGENTS.md` (`## Stack`). A stray `package.json` (frontend
 build, JS tooling) does not make a Python repo a monorepo. If rules 1 and 2 both
 fire, harness the directory whose manifest is nearest the current one; if that
 is ambiguous, **ask which directory**.
+
+### TypeScript/Node profile
+
+Once the stack is TypeScript/Node, detect every slot **before writing or
+installing anything**. The first signal that matches owns the slot; record each
+answer in `AGENTS.md` (`## Stack`) and in the final report.
+
+| Slot | Signal | Action |
+| --- | --- | --- |
+| Runtime | `bunfig.toml`, `packageManager` naming Bun, or a `bun`-run script | **Bun** — keep it |
+| Runtime | `.nvmrc`, `.node-version`, `engines.node`, `volta`, or no Bun signal at all | **Node** — keep the pin; Node is the default runtime |
+| Package manager | `bun.lock`/`bun.lockb` → Bun; `pnpm-lock.yaml` → pnpm; `package-lock.json`/`npm-shrinkwrap.json` → npm; `yarn.lock` → Yarn | Keep the one with a lockfile; `packageManager` confirms |
+| Linter | `.oxlintrc.json` or an `oxlint` dependency → Oxlint; `eslint.config.*`/`.eslintrc*` → ESLint; `biome.json`/a `@biomejs/biome` dependency → Biome; `tslint.json` → TSLint | Keep it; add none |
+| Formatter | `.prettierrc*`/`prettier` dependency → Prettier; `biome.json` → Biome; `.oxfmtrc.json`/`oxfmt` dependency → Oxfmt | Keep it; add none |
+| Test runner | `vitest.config.*`/a `vitest` dependency → Vitest; `jest.config.*`/a `jest` dependency → Jest; `node:test` imports in the tests → `node:test`; a `bun test` script → `bun test` | Keep it; add none |
+| Type checker | `tsconfig.json`, `tsc` in `devDependencies`, or a `typecheck` script | Keep `tsc --noEmit` as the gate; it runs under Node and Bun alike |
+| Hook manager | `lefthook.yml` → Lefthook; `.husky/` or a `husky` dependency → Husky; `.pre-commit-config.yaml` → pre-commit | Keep it; merge the commands into it |
+| Commit messages | `commitlint.config.*`, `.commitlintrc*`, a `commitlint` dependency | Keep it; do not add a second commit linter |
+| Scripts | `package.json.scripts` and any `justfile` recipes | Merge by key; never replace an existing command |
+| Profile | `workspaces` or `pnpm-workspace.yaml` → monorepo; `bin`/`exports` → library or CLI; neither → API/backend | Decide whether `build` is needed |
+
+A single signal does not prove the whole stack. `tsconfig.json` alone says
+TypeScript and nothing about Bun; a `package.json` without a lockfile says the
+manager is not yet visible. When a slot has no signal, it is **empty**, not
+defaulted until the rules below say so.
+
+#### Preserve, fill, skip
+
+1. **Existing choice → preserve.** Copy the project's own command into the
+   report and use it. No second tool, no replacement, no version "upgrade", no
+   config rewrite.
+2. **Empty slot on an existing stack → fill** from the default in
+   `references/typescript.md`, and say it is a fill. Filling a missing formatter
+   does not license replacing an existing linter.
+3. **No TypeScript/Node stack at all (empty repo) → the default**, as decided in
+   `references/typescript.md`: Node 24 + npm, TypeScript 7, Oxlint, Prettier,
+   `node:test`, Lefthook + commitlint. State that this is the fallback for an
+   empty repo, not a claim about an existing one.
+4. **Collision → diagnostic and skip.** Name the case, write nothing for that
+   slot, and continue with the rest:
+   - **Two lockfiles** (`package-lock.json` and `pnpm-lock.yaml`) — ask which
+     manager owns the repo; do not delete either and do not run an install.
+   - **Two owners of one slot** (Oxlint and Biome both configured, Prettier and
+     `biome format` both in scripts, Vitest and `node:test` both present, two
+     commit linters) — ask which is authoritative; do not merge them.
+   - **A package manager the templates do not cover** (`yarn.lock`) — keep it and
+     use its equivalents (`yarn install --frozen-lockfile`, `yarn run <script>`);
+     skip the install command that would create a second lockfile.
+   - **A hook manager other than Lefthook** (Husky, pre-commit) — keep it and skip
+     the Lefthook install. State that `lefthook.yml` will stay in the
+     `missing:` list until the detector learns profiles (SPEC-0044); report that
+     gap rather than install a second hook manager.
+   - **A detected stack that cannot express a limit** (for example Biome's
+     cognitive complexity) — record the replacement rule in the project's own
+     config and in the report; never drop a limit silently.
+5. **Never rewrite a config file.** If the file exists, adding a rule is a
+   reviewable merge into it, or a diagnostic that skips the step — never a fresh
+   copy over the top.
 
 ### Harness state
 
@@ -78,13 +139,17 @@ unreadable directory. It only reads: it never writes, installs or fixes.
 | --- | --- | --- |
 | Empty | `state: empty` | `git init`, full bootstrap |
 | Project, no harness | `state: project-no-harness` | add sensors + docs skeleton |
-| Partial harness | `state: partial` | fix only the `missing:` lines, then re-run |
+| Partial harness | `state: partial` | fix only the `missing:` lines, then re-run — except a slot the repo already owns under another tool: that is a diagnostic, not a fix (see the profile) |
 | Complete harness | `state: complete` | stop |
 
 - **`complete`** — report what the script found and stop. No interview, no
   writes, no pass over the steps below to "verify" it.
-- **`competing: <tool>`** — report and stop. Do not install the harness's tool
-  beside one that already owns that slot.
+- **`competing: <tool>`** — report it and do not install the harness's tool
+  beside one that already owns that slot. Python (`black`, `flake8`, `isort`,
+  `mypy`, `pre-commit`, another manager): stop, as before. TypeScript/Node
+  (`husky`, `tslint`): keep the tool, skip that slot and name the diagnostic,
+  then continue with the other steps — preserving is the outcome, not a full
+  stop.
 - **`ambiguous`** — ask which directory to harness, as the stack rules say. The
   script refuses instead of guessing.
 - **The script cannot run** (no `node`, no permission) — say so, then read the
@@ -151,18 +216,20 @@ docs/
 3. Add `.gitignore` from `templates/.gitignore.template`.
 4. Add `.editorconfig` from `templates/.editorconfig.template` (prevents whitespace wars).
 5. Add `README.md` from `templates/README.template`.
-6. **Hooks.** Install lefthook and the stack's commit-message linter, then copy `templates/<stack>/lefthook.yml`:
-   - TS: `bun add -d @commitlint/cli @commitlint/config-conventional && bun x lefthook install`, plus `templates/ts/commitlint.config.cjs`.
+6. **Hooks.** Install the stack's commit-message linter and use the **detected**
+   hook manager; copy `templates/<stack>/lefthook.yml` only when Lefthook is (or
+   will be) the manager.
+   - TS: install with the detected package manager — `npm install -D @commitlint/cli @commitlint/config-conventional && npx lefthook install`, `pnpm add -D … && pnpm exec lefthook install`, or `bun add -d … && bun x lefthook install` — plus `templates/ts/commitlint.config.cjs` when no commitlint config exists. Husky or pre-commit present → merge the pre-commit/pre-push commands into its config and skip the Lefthook install (diagnostic).
    - Python: `uv add --dev commitizen` (config lives in `pyproject.toml`), then install lefthook per its docs.
-7. **Lint/format config.** TS: add `lint-staged.config.mjs` from `templates/ts/`. Python: nothing here — `ruff` config lives in `pyproject.toml` (step 9).
-8. Add `justfile` from `templates/<stack>/justfile.template`.
-9. **Deps and scripts** (**merge — never overwrite**). TS: ensure `package.json` has `dev`, `build`, `typecheck`, `lint`, `format`, `format:check`, `docs:check`. Python: merge `pyproject.toml` from `templates/python/`, add tool deps with `uv add --dev`, then `uv sync` so `uv.lock` exists and is committed (CI runs `uv sync --locked`).
-10. **Formatter.** TS: add `.prettierrc` from `templates/ts/`. Python: `ruff format` (already configured in step 9). OpenCode's built-in formatter (global `formatter: true`) formats both after edits.
-11. **Linter.** TS: add `eslint.config.js` from `templates/ts/` (flat config, AI limits). Python: `ruff check` (already configured in step 9).
+7. **Lint/format config.** TS: add `lint-staged.config.mjs` from `templates/ts/` when absent; when present, merge the entries for the detected linter/formatter and skip on a collision. Python: nothing here — `ruff` config lives in `pyproject.toml` (step 9).
+8. Add `justfile` from `templates/<stack>/justfile.template`. The template is the default's shape: on an existing stack, keep the project's `justfile`, add only the missing recipes, and make each recipe call the detected package manager and runner (`npm run …`, `pnpm run …`, `bun run …`) instead of the template's `bun`.
+9. **Deps and scripts** (**merge — never overwrite**). TS: ensure the `package.json` script **keys** `dev`, `build`, `typecheck`, `lint`, `format`, `format:check`, `docs:check` exist, adding only the missing ones. A key that already exists keeps its command; when that command differs from the default, report the difference instead of overwriting it. Install with the detected manager (`npm install -D`, `pnpm add -D`, `bun add -d`) and keep the existing lockfile. Python: merge `pyproject.toml` from `templates/python/`, add tool deps with `uv add --dev`, then `uv sync` so `uv.lock` exists and is committed (CI runs `uv sync --locked`).
+10. **Formatter.** TS: add `.prettierrc` from `templates/ts/` **only when no formatter is detected**. A Biome or Oxfmt project keeps its own formatter and its `format`/`format:check` scripts; do not add Prettier. If OpenCode's built-in formatter would disagree with the project's, point it at the project's tool (or disable it) rather than let two formatters rewrite the same file. Python: `ruff format` (already configured in step 9).
+11. **Linter.** TS: add `eslint.config.js` from `templates/ts/` (flat config, AI limits) **only when no linter is detected**. An existing Oxlint, Biome, ESLint or TSLint setup is kept and the four limits are translated into its config (Oxlint and Biome shapes are in `references/typescript.md`); a limit the tool cannot express is recorded, not dropped. Never add a second linter. Python: `ruff check` (already configured in step 9).
 12. Add `docs-check` and `spec-sha`/`spec_sha` from `templates/<stack>/`.
 13. Write `docs/WORKFLOW.md` from `templates/WORKFLOW.md`, write `docs/pipeline.md` from `templates/pipeline.md.template`, and add `.opencode/opencode.json` from `templates/.opencode/opencode.json` at the repo root (**merge — never overwrite**).
 14. (Optional) TS only: add dependency-cruiser from `templates/ts/dependency-cruiser-rules.md`.
-15. (Optional) Add CI from `templates/<stack>/.github/workflows/ci.yml.template`.
+15. (Optional) Add CI from `templates/<stack>/.github/workflows/ci.yml.template`. The template is a **shape**, not a command set: replace its setup/install/run lines with the detected runtime, package manager and runner (`actions/setup-node` + `npm ci`, `pnpm/action-setup`, or `oven-sh/setup-bun`), drop `build` for an API/backend, and if the repo already has a workflow, merge the jobs into it instead of adding a second CI file.
 
 > Optional sidecar: `templates/ts/.nvmrc.template` (TS) or `templates/python/.python-version.template` (Python) for runtime version pinning.
 
@@ -229,7 +296,11 @@ layout above.
 
 Per-stack linter limits, security commands, and language quick reference:
 
-- **TypeScript/Node** → `references/typescript.md`
+- **TypeScript/Node** → `references/typescript.md` — the default for an empty
+  repo (Node 24 + npm, TypeScript 7, Oxlint, Prettier, `node:test`) and the
+  supported alternatives with their conditions (pnpm, Bun, Biome,
+  ESLint + typescript-eslint, Vitest, Oxfmt, tsdown). Detection decides which
+  one applies; the reference records why.
 - **Python (uv)** → `references/python.md`
 
 ## Common Mistakes
@@ -242,6 +313,11 @@ Per-stack linter limits, security commands, and language quick reference:
 | Hooks are optional           | Without hooks, agents skip checks under pressure      |
 | Security checks are overkill | Leaked credentials are irreversible                   |
 | Overwriting existing config  | Additive only — merge, or report a collision and skip |
+| `tsconfig.json` means Bun   | It proves TypeScript; only `bun.lock`/`bunfig.toml` names the runtime |
+| Adding Oxlint next to Biome | A second linter is a replacement in disguise — preserve, or ask |
+| `node:test` → Vitest "upgrade" | The runner is the project's choice; do not migrate its tests |
+| Filling a slot = replacing   | A missing formatter is filled; an existing one is kept |
+| Pasting the default commands | `bun` in an npm repo is a second toolchain — use the detected manager |
 | Treating Python like Node    | Different stack: uv/ruff/mypy/pytest, not bun/eslint  |
 | Adding ruff beside black     | Competing toolchains — report and stop, don't stack   |
 | Imposing uv on a poetry repo | Detect the manager; report and stop if it isn't uv    |
@@ -284,7 +360,8 @@ Run ALL of these and verify the expected output.
 
 ```bash
 git status
-ls AGENTS.md README.md .editorconfig lefthook.yml
+ls AGENTS.md README.md .editorconfig
+ls lefthook.yml .husky .pre-commit-config.yaml 2>/dev/null   # at least the detected hook config
 ls -d .git/hooks/pre-commit .git/hooks/pre-push .git/hooks/commit-msg
 grep -q "check:" justfile && echo "OK" || echo "MISSING"
 ls docs/WORKFLOW.md .opencode/opencode.json docs/pipeline.md
@@ -292,11 +369,17 @@ ls docs/WORKFLOW.md .opencode/opencode.json docs/pipeline.md
 
 **TypeScript/Node:**
 
+Run the project's own scripts with the detected package manager; the default
+commands below are the fallback for an empty repo. Against an existing stack,
+use its linter, formatter and runner — do not run Oxlint/Prettier/`node:test`
+against a Biome or Vitest repo.
+
 ```bash
-ls lint-staged.config.mjs eslint.config.js .prettierrc
-bun x tsc --noEmit 2>&1
-bun run lint 2>&1 | grep "0 errors" || echo "HAS ERRORS"
-bun run build
+ls package.json .prettierrc eslint.config.js biome.json .oxlintrc.json   # whichever detection found
+npm run typecheck        # or pnpm run / bun run
+npm run lint             # the detected linter's script; check its own success line
+npm test                 # the detected runner's script
+npm run build            # library/CLI profile only; skipped and named for an API/backend
 ```
 
 **Python (uv):**
@@ -323,7 +406,9 @@ ls docs/experience/ docs/system/ docs/decisions/
 
 Only after EVERY audit command passes, state the result explicitly: list which
 commands ran, their output, and anything that failed or was skipped. Do not claim
-"done" on a partial pass — report the gap instead.
+"done" on a partial pass — report the gap instead. The result names each detected
+slot (runtime, package manager, linter, formatter, test runner, hook manager) as
+**preserved** or **filled**, and every skipped step carries its diagnostic.
 
 ## Later Sensors
 

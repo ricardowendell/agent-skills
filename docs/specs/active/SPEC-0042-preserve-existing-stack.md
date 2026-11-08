@@ -133,3 +133,58 @@ Bun or a fixed linter. No template, detector or eval change.
 - **Safeguards**: do not touch `templates/` or `scripts/harness-state.mjs`; a
   needed detector change is SPEC-0044.
 - **Tests**: the `tests:` list is model-free; the behavioural cases are SPEC-0045.
+
+## Results
+
+### F0–F2 — the skill text
+
+`skills/bootstrap-project-harness/SKILL.md` now detects before it defaults:
+
+- **Scope and Principles** say detection is the first decision and split the rule
+  per stack: TypeScript/Node preserves a detected linter, formatter, test runner,
+  runtime or package manager; Python keeps its existing report-and-stop rule
+  unchanged.
+- **Detection → TypeScript/Node profile** is a signal table with one row per slot
+  (runtime, package manager, linter, formatter, test runner, type checker, hook
+  manager, commit messages, scripts, profile). Bun needs `bunfig.toml`, a
+  `packageManager` naming Bun, or a `bun` script — `tsconfig.json` is named as
+  TypeScript evidence only.
+- **Preserve, fill, skip** states the four outcomes: preserve an existing choice,
+  fill an empty slot from `references/typescript.md` and name it a fill, apply the
+  default only to an empty repo, and on a collision emit a diagnostic and skip
+  (two lockfiles, two owners of one slot, Yarn, a non-Lefthook hook manager, a
+  limit the tool cannot express). No step rewrites an existing config file.
+- **Steps 6–11, 15 and the audit** branch on detection: install with the detected
+  manager, keep the project's `justfile` recipes and script commands, add
+  Prettier/ESLint only when the slot is empty, and run the detected tool in the
+  gate instead of the default's `bun` commands.
+- The `AGENTS.md`-facing state table keeps the script's answer authoritative; a
+  `competing:` TS tool is now preserved-and-skipped rather than a full stop, while
+  Python still stops.
+
+### F3 — gates
+
+Run from the worktree, Node 24:
+
+| Command | Result |
+| --- | --- |
+| `node scripts/validate-skills.mjs --root skills` | pass — 14 skills, all clear |
+| `node scripts/run-evals.mjs --root skills --list --check` | pass |
+| `node --test scripts/lib/evals/*.test.mjs` | pass — 366/366 |
+| `node --test scripts/lib/*.test.mjs` | pass — 13/13 |
+| `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` | pass — 17/17 |
+| `node scripts/check-sensor-parity.mjs` | pass — 2/2 fixtures |
+| `node scripts/check-evidence.mjs` | pass — 0 errors (97 pre-existing warnings) |
+| `node scripts/spec-check.mjs --spec … --base main` | pass — 0 errors |
+
+### Left out, by design
+
+- `templates/ts/*` still ships the default's `bun` commands; replacing them is
+  SPEC-0043. The skill says the template is a shape to substitute, not a command
+  set.
+- `scripts/harness-state.mjs` still reads `lefthook.yml` as required for TS; a
+  Husky repo therefore keeps that line in `missing:` until SPEC-0044 teaches the
+  detector profiles. The skill names the gap instead of installing a second hook
+  manager.
+- `references/evals.md` case 8 still reads "Uses lefthook + bun only"; revising
+  the behavioural cases is SPEC-0045.
