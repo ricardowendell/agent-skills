@@ -180,9 +180,14 @@ Implemented in the worktree; `status:` is left to the merge.
   pre-commit blocked a staged `.env`, blocked a 5-parameter file after
   formatting and re-staging, and pre-push ran check, build, docs and audit;
   commitlint rejected a non-conventional message.
-- Left out: `SKILL.md` steps still name `bun`/ESLint and do not copy the new
-  files (SPEC-0042 owns the skill text), and the Node 22.18.0 matrix cell was
-  verified with a downloaded runtime, not a second installed Node.
+- Left out: `SKILL.md` steps still name files this spec renamed, and the skill
+  text belongs to SPEC-0042: step 7 copies `templates/ts/lint-staged.config.mjs`
+  (deleted here, because Lefthook owns the staged-file path), step 11 copies
+  `eslint.config.js` (now `.oxlintrc.json.template`), step 9 lists a `dev` key
+  the default has no script for, and the audit checklist greps
+  `eslint.config.js`. Until a skill-text change lands, the empty-repo default
+  path points at two files that no longer exist. The Node 22.18.0 matrix cell in
+  CI was verified with a downloaded runtime, not a second installed Node.
 
 
 ## Prompt Notes
