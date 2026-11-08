@@ -9,12 +9,14 @@ import { spawnSync } from "node:child_process"
 import { existsSync, readFileSync, readdirSync } from "node:fs"
 import { basename, join, resolve } from "node:path"
 import { checkSpec, parseFrontmatter, asListForCorpus } from "./lib/evals/speccheck.mjs"
+import { taskFileNames } from "./lib/backlog-tasks.mjs"
 
 const USAGE = `Usage: node scripts/spec-check.mjs --spec <path> [--base <ref>] [--json]
 
-Check a spec's contract: files: against the diff, task: against backlog/tasks,
-depends_on/blocks for dangling or asymmetric links, and the body requirements of
-status: ready and status: implemented. Without --base the diff rule is skipped.
+Check a spec's contract: files: against the diff, task: against backlog/tasks and
+backlog/archive/tasks, depends_on/blocks for dangling or asymmetric links, and the
+body requirements of status: ready and status: implemented. Without --base the
+diff rule is skipped.
 
 Warnings (a declared file the diff did not touch, an asymmetric dependency) print
 but do not fail; errors exit 1.
@@ -79,12 +81,6 @@ function specCorpus(root) {
   return specs
 }
 
-function taskFiles(root) {
-  const dir = join(root, "backlog", "tasks")
-  if (!existsSync(dir)) return []
-  return readdirSync(dir).filter((name) => name.endsWith(".md"))
-}
-
 function main(argv) {
   if (argv.includes("--help") || argv.includes("-h")) {
     process.stdout.write(USAGE)
@@ -112,7 +108,7 @@ function main(argv) {
     path: specPath,
     diff: base ? changedFiles(base) : null,
     specs: specCorpus(root),
-    tasks: taskFiles(root),
+    tasks: taskFileNames(root),
   })
 
   const errors = findings.filter((f) => f.level === "error")
