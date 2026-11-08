@@ -20,7 +20,7 @@ blocks:
   - SPEC-0045-stack-review-evals
 files:
   - skills/bootstrap-project-harness/references/typescript.md
-  - docs/specs/active/SPEC-0041-typescript-stack-decision.md
+  - docs/specs/SPEC-0041-typescript-stack-decision.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check
