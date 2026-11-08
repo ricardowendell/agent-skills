@@ -1,7 +1,7 @@
 ---
 id: SPEC-0034
 title: A corpus that can see a small change
-status: ready
+status: paused
 priority: P0
 task: TASK-56
 created_at: 2026-11-08
@@ -54,6 +54,14 @@ about a **small change**, three arms reduced to the two the runner already
 supports, and one case held out. The visual and experience cases stay in
 `SPEC-0036` and `SPEC-0038`, blocked on that oracle, rather than being declared
 `manual` and counted as coverage.
+
+**Why paused (2026-11-08).** The first wave spent 30 of 40 draws. The #12
+control draw stalled post-load (`stallMs=120000`, 223 s, one retry), so the
+frozen holdout #11 was never drawn and F5 was not published. The branch
+`pdlc/SPEC-0034-iterative-corpus` at `91ee5ff` keeps the four fixtures and the
+partial Results. Resuming means `--resume` on the #12 control run, then the
+holdout draws; `TASK-50` is reopened with the stall events. The spec returns to
+`ready` only on an explicit decision.
 
 ## User Outcome
 

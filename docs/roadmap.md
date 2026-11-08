@@ -5,7 +5,10 @@ pipeline (`docs/pipeline.md`) governs how work runs; this page says what the wor
 is and in which order. A change of direction is a human decision, and the
 releases themselves are the record of what shipped.
 
-Status: **0.6.2 released** on 2026-11-07. The next release is 0.7.0.
+Status: **0.6.2 released** on 2026-11-07. The next release is 0.7.0, but it is
+paused: the corpus wave stopped at 30/40 draws on a post-load stall and the
+holdout was not drawn. With the corpus parked, the stack review (#12) is the
+next planned work.
 
 ## Inputs
 
@@ -50,6 +53,24 @@ evidence above changes, and **priorities are re-decided in the commit that recor
 `SPEC-0034`'s Results** — not before, because the corpus changes the answer to
 every other question.
 
+## Stack review (#12) — the order
+
+Issue #12 reviews the default TypeScript/Node stack (runtime, compiler, lint,
+tests, build, supply chain, gates, compatibility). It is maintainer-driven, not
+measured demand, and it splits into five specs:
+
+| spec | task | slice | depends on |
+| --- | --- | --- | --- |
+| `SPEC-0041` | `TASK-65` | decision matrix and `references/typescript.md` (the gate) | — |
+| `SPEC-0042` | `TASK-66` | detect and preserve an existing stack in `SKILL.md` | 0041 |
+| `SPEC-0043` | `TASK-67` | templates implement the decision | 0041 |
+| `SPEC-0044` | `TASK-68` | `harness-state` by capability slots | 0041, 0043 |
+| `SPEC-0045` | `TASK-69` | evals, coverage and `CHANGELOG.md` | 0042–0044 |
+
+`SPEC-0041` is `ready` and is the next dispatchable item; the other four start
+`paused`. 0042 and 0043 run in parallel after 0041, then 0044, then 0045. The
+corpus (`SPEC-0034`) stays parked at `91ee5ff` until a human decision.
+
 ## Where the bottleneck is
 
 0.6.2 closed the trust gap in a single run: a provider abort is infrastructure, a
@@ -74,6 +95,7 @@ it.
 | --- | --- | --- | --- |
 | **0.6.2** (released) | an aborted run is never clean | `TASK-52`, `TASK-38`, `TASK-39`, `TASK-40`, `TASK-54`; `TASK-36` documented, `TASK-35` done | 0 draws |
 | **0.7.0** | the corpus can see a small change | `TASK-56` (deterministic slice) and the verdict on `TASK-57` | ~30–40 draws |
+| **unscheduled** | the stack is chosen with numbers | `SPEC-0041`–`SPEC-0045` (#12) | measurement, few or no draws |
 | **unscheduled** | the branch can be synced safely | `TASK-62` (`sync-branch`), after the corpus | ~10–20 draws, mostly deterministic |
 | **unscheduled** | a screen can be reviewed | `TASK-61` (oracle) and then `TASK-58`/`TASK-60` — no consumer today | measurement |
 | **unscheduled** | — | `TASK-59` framing, conditional on a gap the corpus shows | measurement |
@@ -82,6 +104,11 @@ it.
 | unscheduled | — | `agent-skills doctor`: zero draws, rides any release | 0 |
 
 ## 0.7.0 — the order
+
+**Paused 2026-11-08.** The first wave spent 30 of 40 draws; the #12 control
+draw stalled post-load, so the frozen holdout #11 was never drawn. The branch is
+parked and `TASK-50` is reopened. The steps below resume only on an explicit
+decision.
 
 1. **Freeze the holdout before the first draw**, the way `review-code` #7 was
    frozen for issue #5. A holdout chosen after seeing results is not a holdout.
