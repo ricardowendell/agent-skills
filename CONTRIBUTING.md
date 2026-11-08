@@ -28,7 +28,7 @@ and every assertion kind. This file covers only what changes when you contribute
 | `commands/`, `agents/` | OpenCode command stubs and the `spec-reviewer` subagent |
 | `claude/` | Claude Code versions of the same stubs and subagent |
 | `docs/` | this repo's own record; see [`docs/README.md`](docs/README.md) |
-| `backlog/` | the working queue used to build this repo (`task-N`) |
+| `backlog/` | the working queue used to build this repo (`task-N`); `archive/tasks/` holds the Done ones |
 
 ## Editing the backlog
 

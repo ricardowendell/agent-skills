@@ -140,7 +140,12 @@ export function checkSpec({ text, path = "spec", diff = null, specs = [], tasks 
   }
 
   if (diff) {
-    const touched = diff.map(normalizePath).filter(Boolean)
+    // `files:` is the implementation scope. The backlog queue is process
+    // metadata: `backlog task archive` moves every Done task, and a commit that
+    // touches the queue would otherwise report one scope violation per moved
+    // file against every spec (66 on 2026-11-08). No spec declares backlog/ in
+    // `files:`, so dropping it from the diff changes nothing else.
+    const touched = diff.map(normalizePath).filter((path) => path && !path.startsWith("backlog/"))
     const touchedSet = new Set(touched)
     const declaredSet = new Set(files)
     // A declared file the diff did not touch is a warning: the spec may have

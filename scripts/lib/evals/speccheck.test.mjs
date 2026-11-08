@@ -135,6 +135,24 @@ test("a dangling task is a finding", () => {
   assert.match(findings[0].message, /task-999/)
 })
 
+// `backlog task archive` moves every Done task in one commit. The queue is
+// process metadata, not implementation scope, so a move must not read as a
+// touched-but-undeclared file (it produced 66 errors on 2026-11-08).
+test("moving backlog tasks is not a scope violation", () => {
+  const findings = checkSpec({
+    text: specText({ files: ["scripts/a.mjs"] }),
+    path: "spec.md",
+    diff: [
+      "scripts/a.mjs",
+      "backlog/tasks/task-7 - gone.md",
+      "backlog/archive/tasks/task-7 - gone.md",
+    ],
+    tasks,
+    specs: [],
+  })
+  assert.deepEqual(findings, [])
+})
+
 test("a ready spec without task is a finding", () => {
   const findings = checkSpec({
     text: specText({ task: null }),
