@@ -8,7 +8,7 @@ state_dir: .pdlc
 run_records_dir: runs
 agents_dir: .opencode/agents
 lint: node scripts/validate-skills.mjs --root skills
-selftest: node scripts/run-evals.mjs --root skills --list --check && node --test scripts/lib/evals/*.test.mjs && node --test skills/bootstrap-project-harness/scripts/*.test.mjs && node scripts/check-sensor-parity.mjs && node scripts/check-evidence.mjs
+selftest: node scripts/run-evals.mjs --root skills --list --check && node --test scripts/lib/evals/*.test.mjs && node --test scripts/lib/*.test.mjs && node --test skills/bootstrap-project-harness/scripts/*.test.mjs && node scripts/check-sensor-parity.mjs && node scripts/check-evidence.mjs
 pdlc_version: ">=1.0.0"
 ---
 

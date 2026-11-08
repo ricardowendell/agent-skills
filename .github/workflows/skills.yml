@@ -53,6 +53,9 @@ jobs:
         run: |
           node --version
           node --test --experimental-test-coverage scripts/lib/evals/*.test.mjs
+      # Harness-side helpers that are not about evals, e.g. the backlog comment
+      # append that works around the CLI's lossy parser (TASK-55).
+      - run: node --test scripts/lib/*.test.mjs
       # The state script decides "complete" for every repo the bootstrap touches,
       # so its list and the templates must agree.
       - run: node --test skills/bootstrap-project-harness/scripts/*.test.mjs
