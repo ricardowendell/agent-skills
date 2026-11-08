@@ -1,9 +1,10 @@
 ---
 id: TASK-56
 title: 'evals: corpus discriminativo para desenvolvimento iterativo (fatia 0.7.0)'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-11-08T00:48:00Z'
+updated_date: '2026-11-08T09:27:00Z'
 labels: []
 dependencies: []
 references:
