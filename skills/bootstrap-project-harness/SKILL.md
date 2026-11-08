@@ -222,12 +222,42 @@ docs/
    will be) the manager.
    - TS: install with the detected package manager — `npm install -D @commitlint/cli @commitlint/config-conventional && npx lefthook install`, `pnpm add -D … && pnpm exec lefthook install`, or `bun add -d … && bun x lefthook install` — plus `templates/ts/commitlint.config.cjs` when no commitlint config exists. Husky or pre-commit present → merge the pre-commit/pre-push commands into its config and skip the Lefthook install (diagnostic).
    - Python: `uv add --dev commitizen` (config lives in `pyproject.toml`), then install lefthook per its docs.
-7. **Lint/format config.** TS: add `lint-staged.config.mjs` from `templates/ts/` when absent; when present, merge the entries for the detected linter/formatter and skip on a collision. Python: nothing here — `ruff` config lives in `pyproject.toml` (step 9).
+7. **Staged-file config.** Nothing to add on the default path: `lefthook.yml`
+   runs the formatter and linter on `{staged_files}` with `stage_fixed`, so a
+   separate `lint-staged.config.mjs` would be a second tool for the same job.
+   When the project already uses lint-staged (it ships the config or the
+   dependency), leave it in place and do not also add the Lefthook staging
+   commands. Python: nothing here — `ruff` config lives in `pyproject.toml`
+   (step 9).
 8. Add `justfile` from `templates/<stack>/justfile.template`. The template is the default's shape: on an existing stack, keep the project's `justfile`, add only the missing recipes, and make each recipe call the detected package manager and runner (`npm run …`, `pnpm run …`, `bun run …`) instead of the template's `bun`.
-9. **Deps and scripts** (**merge — never overwrite**). TS: ensure the `package.json` script **keys** `dev`, `build`, `typecheck`, `lint`, `format`, `format:check`, `docs:check` exist, adding only the missing ones. A key that already exists keeps its command; when that command differs from the default, report the difference instead of overwriting it. Install with the detected manager (`npm install -D`, `pnpm add -D`, `bun add -d`) and keep the existing lockfile. Python: merge `pyproject.toml` from `templates/python/`, add tool deps with `uv add --dev`, then `uv sync` so `uv.lock` exists and is committed (CI runs `uv sync --locked`).
+9. **Deps and scripts** (**merge — never overwrite**). TS: when the repo has no
+   `package.json`, add it from `templates/ts/package.json.template`; otherwise
+   merge the script **keys** that template carries — `test`, `test:watch`,
+   `coverage`, `typecheck`, `lint`, `format`, `format:check`, `check`,
+   `docs:check`, and `build` for a library/CLI profile — adding only the missing
+   ones. There is no `dev` key: a start/dev command belongs to the project, not
+   to the harness. A key that already exists keeps its command; when that
+   command differs from the default, report the difference instead of
+   overwriting it. Add `tsconfig.json` from `templates/ts/tsconfig.json.template`
+   when the repo has none (without it `tsc --noEmit` typechecks nothing), and
+   `tsconfig.build.json` from `templates/ts/tsconfig.build.json.template` only
+   for a library/CLI. Install with the detected
+   manager (`npm install -D`, `pnpm add -D`, `bun add -d`) and keep the existing
+   lockfile. Python: merge `pyproject.toml` from `templates/python/`, add tool
+   deps with `uv add --dev`, then `uv sync` so `uv.lock` exists and is committed
+   (CI runs `uv sync --locked`).
 10. **Formatter.** TS: add `.prettierrc` from `templates/ts/` **only when no formatter is detected**. A Biome or Oxfmt project keeps its own formatter and its `format`/`format:check` scripts; do not add Prettier. If OpenCode's built-in formatter would disagree with the project's, point it at the project's tool (or disable it) rather than let two formatters rewrite the same file. Python: `ruff format` (already configured in step 9).
-11. **Linter.** TS: add `eslint.config.js` from `templates/ts/` (flat config, AI limits) **only when no linter is detected**. An existing Oxlint, Biome, ESLint or TSLint setup is kept and the four limits are translated into its config (Oxlint and Biome shapes are in `references/typescript.md`); a limit the tool cannot express is recorded, not dropped. Never add a second linter. Python: `ruff check` (already configured in step 9).
-12. Add `docs-check` and `spec-sha`/`spec_sha` from `templates/<stack>/`.
+11. **Linter and ignore lists.** TS: add `.oxlintrc.json` from
+    `templates/ts/.oxlintrc.json.template` (Oxlint, the four AI limits)
+    **only when no linter is detected**; when Prettier was added in step 10, add
+    `.prettierignore` from `templates/ts/.prettierignore.template` too (it keeps
+    the vendored `docs-check.mjs`/`spec-sha.mjs` and generated output out of the
+    formatter). An existing Oxlint, Biome, ESLint or TSLint setup is kept and the
+    four limits are translated into its config (Oxlint and Biome shapes are in
+    `references/typescript.md`); a limit the tool cannot express is recorded, not
+    dropped. Never add a second linter. Python: `ruff check` (already configured
+    in step 9).
+12. Add `docs-check`, `spec-sha`/`spec_sha` and (TS) `audit-gate.mjs` from `templates/<stack>/` (`templates/ts/audit-gate.mjs`) — the audit gate is what the hooks and CI call, so it must land with them.
 13. Write `docs/WORKFLOW.md` from `templates/WORKFLOW.md`, write `docs/pipeline.md` from `templates/pipeline.md.template`, and add `.opencode/opencode.json` from `templates/.opencode/opencode.json` at the repo root (**merge — never overwrite**).
 14. (Optional) TS only: add dependency-cruiser from `templates/ts/dependency-cruiser-rules.md`.
 15. (Optional) Add CI from `templates/<stack>/.github/workflows/ci.yml.template`. The template is a **shape**, not a command set: replace its setup/install/run lines with the detected runtime, package manager and runner (`actions/setup-node` + `npm ci`, `pnpm/action-setup`, or `oven-sh/setup-bun`), drop `build` for an API/backend, and if the repo already has a workflow, merge the jobs into it instead of adding a second CI file.
@@ -308,7 +338,7 @@ Per-stack linter limits, security commands, and language quick reference:
 
 | Mistake                      | Reality                                               |
 | ---------------------------- | ----------------------------------------------------- |
-| Defaults are fine            | ESLint defaults miss AI failure modes                 |
+| Linter defaults are fine     | Bundled Oxlint config carries the four AI limits      |
 | I will add tests later       | Pre-push without tests = broken code                  |
 | Just a small project         | Small projects grow. Start with structure.            |
 | Hooks are optional           | Without hooks, agents skip checks under pressure      |
@@ -338,12 +368,12 @@ Create a TodoWrite with one item per step BEFORE touching code:
 - [ ] Step 4: .editorconfig
 - [ ] Step 5: README.md
 - [ ] Step 6: hooks + commit linter (installed AND configured)
-- [ ] Step 7: lint/format config
+- [ ] Step 7: staged-file config (Lefthook owns it; no lint-staged)
 - [ ] Step 8: justfile
-- [ ] Step 9: deps + scripts (merged) / uv.lock
+- [ ] Step 9: deps + scripts + tsconfig (merged) / uv.lock
 - [ ] Step 10: formatter
-- [ ] Step 11: linter
-- [ ] Step 12: docs-check + spec-hash scripts
+- [ ] Step 11: linter + ignore lists
+- [ ] Step 12: docs-check + spec-hash + audit gate
 - [ ] Step 13: WORKFLOW.md + .opencode config
 - [ ] Step 14: dependency-cruiser (optional)
 - [ ] Step 15: CI (optional)
@@ -377,8 +407,9 @@ use its linter, formatter and runner — do not run Oxlint/Prettier/`node:test`
 against a Biome or Vitest repo.
 
 ```bash
-# replace the list with detection's answer: package.json, plus exactly one lockfile and the config files it named
-for f in package.json package-lock.json .prettierrc eslint.config.js; do ls "$f" 2>/dev/null || echo "MISSING $f"; done
+# replace the list with detection's answer: package.json, tsconfig.json, plus
+# exactly one lockfile and the formatter/linter config files it named
+for f in package.json tsconfig.json .prettierrc .oxlintrc.json; do ls "$f" 2>/dev/null || echo "MISSING $f"; done
 npm run typecheck        # or pnpm run / bun run
 npm run lint             # the detected linter's script; check its own success line
 npm test                 # the detected runner's script

@@ -23,7 +23,7 @@ format:
     true
 
 format-check:
-    true:check
+    true
 
 docs-check:
     node docs-check.mjs

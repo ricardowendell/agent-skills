@@ -18,6 +18,19 @@ blocks:
   - SPEC-0044-harness-state-capabilities
   - SPEC-0045-stack-review-evals
 files:
+  - skills/bootstrap-project-harness/SKILL.md
+  - skills/bootstrap-project-harness/references/evals.md
+  - skills/bootstrap-project-harness/references/evals/14/.nvmrc
+  - skills/bootstrap-project-harness/references/evals/14/.oxlintrc.json
+  - skills/bootstrap-project-harness/references/evals/14/eslint.config.js
+  - skills/bootstrap-project-harness/references/evals/14/justfile
+  - skills/bootstrap-project-harness/references/evals/14/lint-staged.config.mjs
+  - skills/bootstrap-project-harness/references/evals/15/.nvmrc
+  - skills/bootstrap-project-harness/references/evals/15/.oxlintrc.json
+  - skills/bootstrap-project-harness/references/evals/15/eslint.config.js
+  - skills/bootstrap-project-harness/references/evals/15/justfile
+  - skills/bootstrap-project-harness/references/evals/15/lint-staged.config.mjs
+  - skills/bootstrap-project-harness/references/typescript.md
   - skills/bootstrap-project-harness/templates/ts/.github/workflows/ci.yml.template
   - skills/bootstrap-project-harness/templates/ts/.nvmrc.template
   - skills/bootstrap-project-harness/templates/ts/.oxlintrc.json.template
@@ -86,13 +99,24 @@ limits match the decision. A maintainer comparing the templates to
   script (`spec-sha.mjs`) and the Python templates. If a stack change genuinely
   needs one of them, stop and split it out.
 
-**Blast radius.** `templates/ts/` only, plus this spec. No skill text, detector,
-runner or Python template.
+**Blast radius.** `templates/ts/`, this spec, and — approved by the human gate on
+2026-11-08 — the coupled surfaces the rename forces: the `SKILL.md` steps and
+audit checklist that copy or grep the renamed files, the `harness-state.mjs`
+`REQUIRED`/`OPTIONAL` lists (`template-parity.test.mjs` refuses a template it
+cannot classify), eval fixtures 14/15 and the `references/evals.md` note (they
+ship `eslint.config.js`, so the new required `.oxlintrc.json` changes their
+verdict), and the one-line pointer in `references/typescript.md`. Not in scope:
+the detector's capability rewrite (SPEC-0044), the runner, the docs sensor and
+the Python templates.
 
 ## Non-Goals
 
-- No detector change (SPEC-0044).
-- No skill-text change (SPEC-0042).
+- No **capability** rewrite of the detector (SPEC-0044). This spec only keeps the
+  `REQUIRED`/`OPTIONAL` lists in step with the templates, which
+  `template-parity.test.mjs` mechanically forces.
+- No skill-text change beyond the alignment approved for this spec: the copy
+  steps, the script-key list and the audit checklist that name files this spec
+  renames. Detection and preservation stay with SPEC-0042.
 - No new stack, no framework, no bundler without a profile that needs it.
 - No `latest` as a convenience.
 - No removal of a quality gate to make the pipeline faster.
@@ -105,8 +129,9 @@ runner or Python template.
 3. **F2 — lint and format.** One tool per responsibility; move the limits.
 4. **F3 — hooks and pins.** Pre-commit/pre-push/PR split; audit policy; pins and
    frozen lockfile.
-5. **F4 — check.** The templates agree with the reference; `--list --check` and
-   the parity tests pass.
+5. **F4 — check.** The templates agree with the reference; the skill text, the
+   detector lists and fixtures 14/15 agree with the templates; `--list --check`
+   and the parity tests pass.
 
 ## Data
 
@@ -133,6 +158,10 @@ runner or Python template.
    to `files:` before `implemented`, so `spec-check` reports no
    `files-touched-undeclared`.
 8. **No drift.** Every command in `tests:` passes.
+9. **The coupled surfaces name what ships**: no `SKILL.md` step or audit check
+   points at a deleted template, `references/typescript.md` points at the lint
+   config the templates install, and the eval fixtures agree with the detector —
+   fixture 14 reads `complete` and fixture 15 names exactly `lefthook.yml`.
 
 ## Open Questions
 
@@ -165,11 +194,32 @@ Implemented in the worktree; `status:` is left to the merge.
   registry and is run closed (`--fail-on-unavailable`) in CI. Actions are pinned
   by commit SHA, the runtime by `.nvmrc`/`engines`, the tools by exact version,
   and CI installs with `npm ci` against a committed lockfile.
-- **Deviation, declared**: `scripts/harness-state.mjs`'s `REQUIRED`/`OPTIONAL`
-  lists are edited. The parity test is the mechanism that keeps every shipped
-  template classified, so a template rename cannot land without it, and the file
-  says so itself ("drift is a failing test"). Only the file lists change; the
-  capability rewrite remains SPEC-0044.
+- **Deviation, declared (approved 2026-11-08)**: `scripts/harness-state.mjs`'s
+  `REQUIRED`/`OPTIONAL` lists are edited. The parity test is the mechanism that
+  keeps every shipped template classified, so a template rename cannot land
+  without it, and the file says so itself ("drift is a failing test"). This is
+  **not** a list-only change: it changes a verdict. Fixture 14 shipped
+  `eslint.config.js`, which the old list required, and read `complete`; with
+  `.oxlintrc.json` required it read `partial` until the fixture gained the file
+  (and fixture 15 then named two gaps instead of one). The fixtures are updated
+  here, which is why the `12/12` and `3/3` rows in `references/evals.md` are
+  marked as pre-rename history instead of being rewritten. The capability
+  rewrite remains SPEC-0044.
+- **Coupled surfaces (approved)**: `SKILL.md` step 7 no longer copies the
+  removed `lint-staged.config.mjs`, step 9 merges the keys the shipped
+  `package.json.template` carries and no longer asks for a `dev` key, step 11
+  installs `.oxlintrc.json` and `.prettierignore` instead of `eslint.config.js`,
+  step 12 copies `audit-gate.mjs`, and the audit checklist greps the files that
+  actually ship. `references/typescript.md:114` points at
+  `.oxlintrc.json.template`. `package.json.template` drops the `audit` script:
+  nothing called it (the justfile, the hook and CI call `node audit-gate.mjs`
+  directly), and a script that exists to be bypassed is a surface, not a gate.
+- **Fixtures 14/15**: both ship `package.json` and `tsconfig.json`, so those two
+  stay `REQUIRED` in `harness-state.mjs`; `.oxlintrc.json` is added to both,
+  `eslint.config.js` and `lint-staged.config.mjs` are removed, `.nvmrc` pins
+  `24.15.0`, and the `format-check` recipe (a `true:check` typo) runs `true`.
+  Verified: fixture 14 reads `complete` (exit 0) and fixture 15 reads `partial`
+  naming exactly `lefthook.yml`, which is what the two eval cases assert.
 - **Evidence**: the templates were installed into a scratch repository outside
   this one (Node 24.15.0, npm 11.12.1) and every script ran. `npm ci` refused a
   drifted lockfile (`EUSAGE`), oxlint flagged a 5-parameter function (error), a
@@ -180,14 +230,9 @@ Implemented in the worktree; `status:` is left to the merge.
   pre-commit blocked a staged `.env`, blocked a 5-parameter file after
   formatting and re-staging, and pre-push ran check, build, docs and audit;
   commitlint rejected a non-conventional message.
-- Left out: `SKILL.md` steps still name files this spec renamed, and the skill
-  text belongs to SPEC-0042: step 7 copies `templates/ts/lint-staged.config.mjs`
-  (deleted here, because Lefthook owns the staged-file path), step 11 copies
-  `eslint.config.js` (now `.oxlintrc.json.template`), step 9 lists a `dev` key
-  the default has no script for, and the audit checklist greps
-  `eslint.config.js`. Until a skill-text change lands, the empty-repo default
-  path points at two files that no longer exist. The Node 22.18.0 matrix cell in
-  CI was verified with a downloaded runtime, not a second installed Node.
+- Left out: the CI matrix cell for Node 22.18.0 was verified with a downloaded
+  runtime, not a second installed Node; and the eval numbers for cases 14/15
+  still need re-measuring after the fixture change, which is SPEC-0045's work.
 
 
 ## Prompt Notes

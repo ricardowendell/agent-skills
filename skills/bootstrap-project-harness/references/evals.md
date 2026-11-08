@@ -15,6 +15,14 @@ the missing file is added while the checked files stay as they were.
 
 Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `- expect:` (human-checked), `- assert: <kind> <arg>` (machine-checked; the full kind list is in the README), `- status: manual` (recorded, not run), `- needs: gates` (skipped at `--level behavior`).
 
+**Correction, 2026-11-08 (SPEC-0043).** The fixtures for cases 14 and 15 changed
+with the Oxlint rename: `eslint.config.js` and `lint-staged.config.mjs` were
+replaced by `.oxlintrc.json`, and `.nvmrc` now pins `24.15.0`. The pass counts
+recorded in those two cases — **12 of 12** and **3 of 3** — were measured against
+the pre-rename fixtures. They stay here as history and are **not** evidence for
+the current fixtures; re-measuring them is SPEC-0045's work. The fixture must be
+re-run, not re-quoted.
+
 1. **Set up this repo's harness.**
    - prompt: Set up this repo's harness.
    - why: fresh Node/TS project
@@ -96,7 +104,7 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
 8. **Any bootstrap.**
    - status: manual
    - expect: Produces no `docs/superpowers/` paths and no husky files.
-   - expect: Uses lefthook + bun only.
+   - expect: Uses Lefthook with the detected package manager; never husky.
    - expect: Watch for: superpowers paths or husky hooks.
    - assert: nofile .husky
    - assert: nofile docs/superpowers
@@ -116,7 +124,7 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - assert: filematch pyproject.toml name = "existing-py"
    - assert: file docs/experience/README.md
    - assert: nofile package.json
-   - assert: nofile eslint.config.js
+   - assert: nofile .oxlintrc.json
 
 10. **Bootstrap this Python repo.**
    - prompt: Bootstrap this Python repo.
@@ -164,7 +172,7 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - expect: Watch for: installing the toolchain to decide, or re-writing files that already pass the smoke.
    - assert: unchanged lefthook.yml
    - assert: unchanged justfile
-   - assert: unchanged eslint.config.js
+   - assert: unchanged .oxlintrc.json
    - assert: unchanged .github/workflows/ci.yml
    - assert: unchanged AGENTS.md
    - assert: unchanged docs/pipeline.md
@@ -180,7 +188,7 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - expect: Adds that file and re-runs the state check, instead of rebuilding what already passes.
    - expect: Watch for: declaring the repo complete, or rewriting files that were already correct.
    - assert: file lefthook.yml
-   - assert: unchanged eslint.config.js
+   - assert: unchanged .oxlintrc.json
    - assert: unchanged justfile
    - assert: unchanged docs-check.mjs
    - assert: reply lefthook

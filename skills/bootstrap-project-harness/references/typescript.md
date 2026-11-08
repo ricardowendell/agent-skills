@@ -111,7 +111,7 @@ TypeScript and accept a pre-1.0 tool. It is not the default.
 ## Quality limits
 
 The default reproduces the four limits, severities and options that
-`skills/bootstrap-project-harness/templates/ts/eslint.config.js.template` ships
+`skills/bootstrap-project-harness/templates/ts/.oxlintrc.json.template` ships
 today. Nothing in this table is a tightening.
 
 | Limit | Default (Oxlint) | ESLint alternative | Biome alternative |
