@@ -202,7 +202,7 @@ is chosen, not as a free-for-all:
 | Vitest 5.1 | watch mode, browser runner or its reporting is required | test +53–58%; test imports and hooks must be rewritten |
 | Oxfmt 0.77 | only JS/TS is formatted and a pre-1.0 formatter is acceptable | format 144 vs 208 ms |
 | tsdown 0.23.7 | bundling or dual ESM/CJS output is required | build 231 vs 158 ms; 0.x; `.mjs` output |
-| Turbo 2.11 / Nx 24 | a workspace has cacheable outputs large enough to pay for a daemon | 2-package fixture: 178–208 vs 257–278 ms, +36 MB |
+| Turbo 2.11 | a workspace has cacheable outputs large enough to pay for a daemon | 2-package fixture: 178–208 vs 257–278 ms, +36 MB |
 
 Runtime and package manager are independent. Both cross products passed:
 Bun 1.3 running npm-installed dependencies (`bun test` 25 ms, `bun run lint`
@@ -210,6 +210,14 @@ Bun 1.3 running npm-installed dependencies (`bun test` 25 ms, `bun run lint`
 package manager changes install time (npm 824 ms, pnpm 422 ms, Bun 43 ms warm);
 the runtime changes execution time (Bun 25 ms vs Node 174 ms for the same test
 sources).
+
+Bun is therefore the faster runtime and still not the default. Node 24 is an
+LTS line with a published support window; the project's CI images and native
+dependencies are exercised against Node's ABI, while Bun is a different runtime
+contract that would need its own CI coverage. Because no test runner here
+typechecks, `tsc --noEmit` remains the type gate under Bun as well, so
+typechecking does not distinguish the two runtimes; the LTS and CI-ABI contract
+does.
 
 ### Numbers that decided it
 
@@ -227,16 +235,19 @@ reference.
 | Build | `tsc` 158 | `tsdown` 231 | `tsc` is enough for a small library |
 | Install (CLI, warm) | npm 824 | pnpm 422 | pnpm wins install; loses ~120 ms per script |
 | Install (CLI, warm) | npm 824 | Bun 43 | Bun wins install |
-| Runtime (same tests) | Node 174 | Bun 25 | Bun wins execution; still needs `tsc` |
+| Runtime (same tests) | Node 174 | Bun 25 | Bun wins execution; Node is the LTS/CI ABI; `tsc` still required |
 | Security audit | clean exit 0 | real high vuln exit 1 | all three managers fail on a real finding |
 
 ### Dimension by dimension
 
 1. **Runtime and package manager.** Node 24 LTS + npm is the default: one
    installation, one lockfile, `npm ci`, the lowest per-script overhead for a
-   small repo. pnpm and Bun are supported alternatives, independently of the
-   runtime. Node 22.18 is the compatibility floor (type stripping); the pin is
-   24.15.0.
+   small repo, an LTS support window, and the ABI that CI images and native
+   dependencies are exercised against. Bun is faster in every measured cell but
+   is a different runtime contract requiring its own CI coverage, and it does
+   not remove the `tsc` type gate. pnpm and Bun remain supported alternatives,
+   independently of the runtime. Node 22.18 is the compatibility floor (type
+   stripping); the pin is 24.15.0.
 2. **Compiler and modules.** TypeScript 7.0.2 is the default and is 1.9x faster
    than 6.0.3. `NodeNext` + ESM + `.ts` specifiers +
    `rewriteRelativeImportExtensions`; `types: ["node"]` and `rootDir` are
@@ -267,7 +278,7 @@ reference.
    **unavailable**, never as green. No `|| true`. Versions, runtime and Actions
    are pinned; the lockfile is committed and `npm ci` rejects drift (verified
    `EUSAGE`).
-7. **Gate performance.** local-fast 765 ms (format, lint, typecheck, test);
+7. **Gate performance.** local-fast 763 ms (format, lint, typecheck, test);
    pre-push 920 ms (+ build); PR 1.5 s of local commands (+ clean install,
    audit, OSV/CodeQL/Gitleaks on Node 24 and the 22.18 floor); nightly/release
    2.1 s (+ coverage, full audit, semver/tag).
@@ -278,15 +289,32 @@ reference.
 
 ### Quality limits
 
-The four limits are unchanged, not traded: cyclomatic complexity 10, 4
-parameters, 60 lines per function, 200 lines per file. Oxlint and ESLint
-implement them with the same rule semantics; the fixture produced the same four
-findings from both. Biome produced five: its `noExcessiveCognitiveComplexity`
-also flags a five-times-nested function that cyclomatic complexity 6 does not,
-and would miss a wide `switch` that adds many cyclomatic paths but one cognitive
-point. The limits are therefore preserved in the default and explicitly
-replaced — with evidence and a stated gap — in the Biome alternative. Coverage
-stays optional.
+The default reproduces the four limits exactly as the template ships them,
+including severity and options: cyclomatic complexity 10 (`error`), maximum 4
+parameters (`error`), 60 lines per function (`warn`, `skipBlankLines: true`,
+`skipComments: true`) and 200 lines per file (`warn`, `skipBlankLines: true`,
+`skipComments: true`).
+Coverage stays optional. Nothing here raises a warning to an error or stops
+skipping blank/comment lines.
+
+Oxlint and ESLint implement the same rule semantics. On the violation fixture
+both produced the same four findings. On a sparse fixture — a 209-line file with
+30 comment lines and 29 blank lines, and a 67-line function with 8 comments and
+blank lines — both pass with the shipped skip flags and both emit the same two
+warnings without them. Biome produced five findings on the violation fixture
+because `noExcessiveCognitiveComplexity` also flags a five-times-nested function
+that cyclomatic complexity 6 does not, and it would miss a wide `switch` that
+adds many cyclomatic paths but one cognitive point. Biome's line rules agree
+with the shipped skip semantics on the sparse fixture (they pass it and flag the
+dense controls), so the replacement is the complexity rule, not the line
+options. The default therefore preserves the shipped limits, and the Biome
+alternative replaces one of them — with evidence and a stated gap, not
+silently.
+
+Any tightening (for example `warn` to `error`, or counting blank and comment
+lines) is not part of this spec. It would change what the harness installs and
+belongs to `SPEC-0043`, which owns the templates; this spec's table mirrors the
+template so it cannot claim a limit the scaffold does not ship.
 
 ### Supply chain evidence
 
@@ -325,6 +353,9 @@ a finding and an outage.
 - The advisory database changes over time: `lodash@4.17.21` was already reported
   high on the measurement day. Audit results are a snapshot, which is why the
   scheduled run exists.
+- Nx 24 was not installed or timed. The monorepo recommendation rests on the
+  Turbo run and on npm workspaces; Nx would need its own two-package run before
+  it is costed.
 
 ### Not measured
 

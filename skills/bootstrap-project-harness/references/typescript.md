@@ -94,8 +94,9 @@ not compete, and no second linter is added.
 | Oxlint + Oxfmt 0.77 | 145 ms | 144 ms | 289 ms | exact, formatter pre-1.0 |
 
 The default gives up about **77 ms** per full check against Biome to keep the
-four quality limits with the same meaning they have today. Oxlint is 2.6x
-faster than ESLint at linting and, unlike ESLint, has no TypeScript peer cap.
+four quality limits with their shipped severities and options, without adding a
+second linter. Oxlint is 2.6x faster than ESLint at linting and, unlike ESLint,
+has no TypeScript peer cap.
 Prettier is kept over Oxfmt: it is a stable 3.x and formats the Markdown/JSON/YAML
 that a repository also contains. The **64 ms** it costs over Oxfmt is accepted to
 avoid formatter churn and a 0.x dependency.
@@ -109,16 +110,19 @@ TypeScript and accept a pre-1.0 tool. It is not the default.
 
 ## Quality limits
 
-The limits are unchanged: cyclomatic complexity **10**, maximum **4**
-parameters, **60** lines per function, **200** lines per file. Coverage stays
-optional.
+The default reproduces the four limits, severities and options that
+`skills/bootstrap-project-harness/templates/ts/eslint.config.js.template` ships
+today. Nothing in this table is a tightening (the wider rule set is Oxlint's,
+not ESLint's).
 
 | Limit | Default (Oxlint) | ESLint alternative | Biome alternative |
 | --- | --- | --- | --- |
-| Cyclomatic complexity 10 | `complexity: ["error", 10]` | `complexity: ["error", 10]` | `noExcessiveCognitiveComplexity`, `maxAllowedComplexity: 10` |
-| Max parameters 4 | `max-params: ["error", 4]` | `max-params: ["error", 4]` | `useMaxParams`, `max: 4` |
-| Max 60 lines/function | `max-lines-per-function: ["error", { "max": 60 }]` | same | `noExcessiveLinesPerFunction`, `maxLines: 60` |
-| Max 200 lines/file | `max-lines: ["error", { "max": 200 }]` | same | `noExcessiveLinesPerFile`, `maxLines: 200` |
+| Cyclomatic complexity 10 | `error` | `error` | `error`, but cognitive (`noExcessiveCognitiveComplexity`, `maxAllowedComplexity: 10`) |
+| Max parameters 4 | `error` | `error` | `error` (`useMaxParams`, `max: 4`) |
+| Max 60 lines/function | `warn`, `skipBlankLines: true`, `skipComments: true` | same | `warn`, `maxLines: 60`, `skipBlankLines: true` |
+| Max 200 lines/file | `warn`, `skipBlankLines: true`, `skipComments: true` | same | `warn`, `maxLines: 200`, `skipBlankLines: true` |
+
+Coverage stays optional.
 
 `.oxlintrc.json`:
 
@@ -128,10 +132,10 @@ optional.
   "plugins": ["typescript", "unicorn", "oxc"],
   "categories": { "correctness": "error", "suspicious": "warn" },
   "rules": {
-    "complexity": ["error", 10],
+    "complexity": ["error", { "max": 10 }],
     "max-params": ["error", 4],
-    "max-lines-per-function": ["error", { "max": 60 }],
-    "max-lines": ["error", { "max": 200 }]
+    "max-lines-per-function": ["warn", { "max": 60, "skipBlankLines": true, "skipComments": true }],
+    "max-lines": ["warn", { "max": 200, "skipBlankLines": true, "skipComments": true }]
   }
 }
 ```
@@ -147,10 +151,26 @@ five-times-nested function, a five-parameter function, a 73-line function and a
 - Biome: 5 findings — all of the above plus the nested function, because
   cognitive complexity scores nesting.
 
+The shipped warn/skip options were checked separately. A 209-line file with 30
+comment lines and 29 blank lines, and a 67-line function with 8 comment lines
+and blank lines, pass Oxlint and ESLint with the skip flags and pass Biome with
+`skipBlankLines`; Oxlint and ESLint produce the same two warnings when the flags
+are removed. All three flag the dense controls (a 210-line file and a 68-line
+function) with the skip flags on. Biome's line rules already exclude comments,
+so the line-rule options agree on these fixtures. The measured divergence is the
+complexity rule, not the line options.
+
 Cognitive complexity is not a superset of cyclomatic complexity: a wide
 `switch` adds many cyclomatic paths but one cognitive point, so Biome would miss
-it. Choosing Biome therefore replaces the complexity gate; it does not preserve
-it. That is why it is not the default.
+it. Choosing Biome therefore replaces the complexity gate; the line rules behave
+the same on the fixtures. That is why it is not the default.
+
+**Proposed tightening for SPEC-0043 (not decided here).** Raising the two line
+rules from `warn` to `error`, or counting blank and comment lines, would change
+what the harness ships and needs its own baseline. It is not in the table above.
+The table mirrors the template so this reference cannot claim a limit the
+scaffold does not install; if SPEC-0043 adopts a tightening, it must change the
+template and this table in the same diff.
 
 ## Tests and scripts
 
@@ -177,6 +197,7 @@ Bun runtime is chosen.
     "test:watch": "node --test --watch \"test/**/*.test.ts\"",
     "coverage": "node --test --experimental-test-coverage \"test/**/*.test.ts\"",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test",
+    "docs:check": "node docs-check.mjs",
     "build": "tsc -p tsconfig.build.json"
   }
 }
@@ -219,9 +240,12 @@ choices, and the cross-product runs pass in both directions:
   `lint` 265 ms vs 142 ms and `test` 318 ms vs 217 ms in the same window. For a
   small repository the per-gate cost is larger than the install saving.
 - **Bun 1.3** is supported as runtime and package manager. Warm frozen install
-  was 43 ms, `bun test` 24–30 ms, and `bun audit` exists. It does not typecheck:
-  `tsc --noEmit` still runs, and `bun test` is not a replacement for the type
-  gate.
+  was 43 ms, `bun test` 24–30 ms, and `bun audit` exists. Its numbers are the
+  fastest measured, but it is not the default: Node 24 is an LTS line with a
+  published support window, the project's CI images and native dependencies are
+  exercised against Node's ABI, and Bun is a different runtime contract that
+  needs its own CI coverage. No runner here typechecks — `tsc --noEmit` remains
+  the type gate under Node and under Bun alike.
 - **Node floor:** 22.18, where type stripping became available without a flag.
   TypeScript 7's `tsc`, `tsdown` and Vitest have their own floors (see
   [Minimum versions](#minimum-versions)).
@@ -349,7 +373,11 @@ pnpm uses `pnpm install --frozen-lockfile` and `pnpm run <script>`; Bun uses
 ran once cold (first execution after install) and three times warm; the table
 shows cold → warm median (min–max). Clean installs are three warm-cache runs;
 the cold-cache column is one run with an isolated empty cache and is
-network-bound (3.2–22.7 s across cells).
+network-bound (3.2–22.7 s across cells). The CI-total column is a single
+end-to-end sample per cell, the same disclosure as the cold install; only the
+individual commands carry a median and spread. Versions are the pinned set in
+[Minimum versions](#minimum-versions); every cell used exactly those versions,
+except TypeScript 6.0.3 in the ESLint cell because of its peer range.
 
 Host: macOS 27.2, Apple M4 Max, 14 cores, 36 GB, Node 24.15.0 arm64. Load
 average during the sweep was 8–15; that makes absolute medians only comparable
@@ -398,6 +426,12 @@ The interleaved test comparison below is the fair one.
 Each comparison ran round-robin in a single window so load hit every lane in
 that row equally. Medians, n=7 (test/lint/typecheck/install) or n=5
 (format/build/cross-runtime).
+
+The CLI install rows are the one place where the sweep and this window disagree
+in absolute terms: `npm ci` reads 576 ms in the matrix sweep above and 824 ms in
+this window, when the host was under higher load. Within each window the
+ordering is stable (npm > pnpm > Bun), and the 824/422/43 ratios are the ones
+used for the decision. The two numbers are not a change in the stack.
 
 | Lane | Median | Range |
 | --- | --- | --- |
@@ -471,6 +505,10 @@ that row equally. Medians, n=7 (test/lint/typecheck/install) or n=5
 
 - The pre-commit hook is a separate decision; this document does not change
   Lefthook or commitlint.
+- Commit block (unchanged): the pre-commit hook rejects `*.env`, `*.env.*`,
+  `*.db` and `data/*` (`skills/bootstrap-project-harness/templates/ts/lefthook.yml`).
+- Docs sensor (unchanged): `node docs-check.mjs` from `templates/ts/`, installed
+  by `SKILL.md` step 12 and run as `docs:check` in the pre-push tier.
 - OpenCode's built-in **prettier** formatter formats `.ts`/`.js` on edit — expect
   edited files to be reformatted.
 - Optional: dependency-cruiser for modularity (`templates/ts/dependency-cruiser-rules.md`).
