@@ -29,3 +29,15 @@ Origem: issue #6 (P0), criada em 2026-11-08. O pedido completo e um corpus de 8-
 - [ ] #5 Pelo menos 3 casos discriminam com repeticao OU o relatorio admite que nao houve discriminacao, sem ajustar o oraculo para forcar sucesso.
 - [ ] #6 Veredito explicito sobre a issue #7 (TASK-57): estender implement-from-prompt ou criar skill nova, com evidencia.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-11-08T01:40:00Z
+
+---
+
+Groomed em 2026-11-08 para docs/specs/active/SPEC-0034-iterative-corpus.md (status: ready). Fatia da 0.7.0: 4 casos (#9-#12) no implement-from-prompt, dois bracos, 5 draws cada, 40 draws no total. Holdout: caso #11 (pedido inseguro), nomeado na spec antes do primeiro draw. Escopo visual/UX fica fora (SPEC-0036/0038).
+
+---
+<!-- COMMENTS:END -->

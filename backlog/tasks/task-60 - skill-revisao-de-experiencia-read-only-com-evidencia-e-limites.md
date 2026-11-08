@@ -29,3 +29,15 @@ Origem: issue #10 (P1), 2026-11-08. Revisao da experiencia observada, read-only,
 - [ ] #5 Nunca aprova merge, muda policy ou publica.
 - [ ] #6 Cada finding vincula evidencia concreta; unknown continua explicito.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-11-08T01:44:00Z
+
+---
+
+Groomed em 2026-11-08 para docs/specs/active/SPEC-0038-experience-review.md, status: draft. Bloqueio: mesmo oraculo visual da SPEC-0036, mais um contrato de preview autorizado que o repo ainda nao tem.
+
+---
+<!-- COMMENTS:END -->

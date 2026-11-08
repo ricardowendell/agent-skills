@@ -29,3 +29,15 @@ Origem: issue #9 (P1), 2026-11-08. Comparar primeiro com capture-idea, groom-bac
 - [ ] #5 A saida distingue confirmed / assumed / open de forma verificavel.
 - [ ] #6 A medicao sustenta criar ou estender; sem valor incremental, registrar a decisao de nao criar.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-11-08T01:43:00Z
+
+---
+
+Groomed em 2026-11-08 para docs/specs/active/SPEC-0037-solution-framing.md, status: draft. Bloqueio: precisa da evidencia da SPEC-0034 e de uma comparacao contra groom-backlog, capture-idea e find-blind-spots que nomeie uma lacuna real, nao uma reformulacao.
+
+---
+<!-- COMMENTS:END -->

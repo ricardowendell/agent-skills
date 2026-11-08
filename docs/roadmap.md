@@ -14,13 +14,18 @@ AS-ITER program arrived on 2026-11-08 as issues #6–#10; each has a task
 (`TASK-56`–`TASK-60`) that carries the release slice, and the issue keeps the full
 scope and the external references. A spec is written at groom, from the task.
 
-| issue | task | what it is |
-| --- | --- | --- |
-| #6 | `TASK-56` | the discriminating corpus for iterative work (the gate) |
-| #7 | `TASK-57` | spike: a localized refinement path without a full spec |
-| #8 | `TASK-58` | planning a visual change from element and design tokens |
-| #9 | `TASK-59` | light solution framing before a template is chosen |
-| #10 | `TASK-60` | read-only experience review with evidence and limits |
+| issue | task | spec | what it is |
+| --- | --- | --- | --- |
+| #6 | `TASK-56` | `SPEC-0034` (ready) | the discriminating corpus for iterative work (the gate) |
+| #7 | `TASK-57` | `SPEC-0035` (ready) | spike: a localized refinement path without a full spec |
+| #8 | `TASK-58` | `SPEC-0036` (draft) | planning a visual change from element and design tokens |
+| #9 | `TASK-59` | `SPEC-0037` (draft) | light solution framing before a template is chosen |
+| #10 | `TASK-60` | `SPEC-0038` (draft) | read-only experience review with evidence and limits |
+
+The four drafts name their blocker in the spec: `SPEC-0036` and `SPEC-0038` need
+the visual oracle (0.8.0), `SPEC-0037` needs `SPEC-0034`'s evidence, and
+`SPEC-0035` carries a zero-draw stop condition in case the incumbent already
+covers the corpus.
 
 ## Where the bottleneck is
 
