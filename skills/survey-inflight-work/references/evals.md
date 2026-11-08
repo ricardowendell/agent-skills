@@ -51,3 +51,12 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - gate: off
    - expect: Does not pull in `survey-inflight-work` as the procedure for rebasing.
    - assert: notskill survey-inflight-work
+
+5. **Near-miss: the project status, not the work in flight.**
+   - prompt: como está o projeto agora e quais são os próximos passos?
+   - tags: trigger
+   - why: project status and next steps belong to `report-project-status`, which delegates the branch/PR block here; loading the survey would answer a narrower question
+   - gate: off
+   - expect: Loads `report-project-status`, not `survey-inflight-work`.
+   - assert: skill report-project-status
+   - stage: report-project-status

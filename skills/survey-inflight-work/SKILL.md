@@ -1,6 +1,6 @@
 ---
 name: survey-inflight-work
-description: "Survey the work in flight across local branches, worktrees and open GitHub pull requests, then report what overlaps, what is blocked and the order it can land in. Use whenever the user asks what is in flight, which branch or PR conflicts with their current work, what to do next, or how to sequence several branches or pull requests. Read-only: never rebases, merges or pushes; order is indeterminate unless a dependency is declared."
+description: "Survey the work in flight across local branches, worktrees and open GitHub pull requests, then report what overlaps, what is blocked and the order it can land in. Use when the user asks which branch or PR conflicts with their current work, what is blocking a merge, or how to sequence several branches or pull requests. Read-only: never rebases, merges or pushes; order is indeterminate unless a dependency is declared."
 stack-agnostic: true
 ---
 

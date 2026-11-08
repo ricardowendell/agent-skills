@@ -9,6 +9,16 @@ skills, which cases, and which published measurements.
 
 ## [Unreleased]
 
+### Added
+
+- **`report-project-status`** — one-page project status: git/PR state delegated
+  to `survey-inflight-work`, open GitHub issues, backlog and spec readiness, CI
+  health, and at most three next steps. Read-only. Three trigger and near-miss
+  cases plus one manual behavioural case; no fixture yet. The trigger boundary
+  against `survey-inflight-work` is pinned by a near-miss case on each side, and
+  `pdlc plan` is the authoritative backlog order. Source:
+  `docs/analysis/skills-from-sessions-2026-11-07.md`. Also exposes `/status`.
+
 ## [0.6.2] — 2026-11-07
 
 A reliability patch: an aborted run is never clean, a dead run loses no paid
