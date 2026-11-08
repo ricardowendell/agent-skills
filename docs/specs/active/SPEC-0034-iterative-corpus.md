@@ -181,11 +181,19 @@ dispatchable.
 - **Approach**: freeze, build fixtures, measure, then classify; publish once.
 - **Structure**: case metadata and fixture trees; no runner code.
 - **Operations**: `--repeat 5`, `--no-skill` for the control, `--root skills`,
-  one model for all eight runs. Reconcile `files:` with
+  `--tag iterative` — the four new cases only; a bare
+  `--skill implement-from-prompt --repeat 5` would also run the skill's eight
+  existing cases, 120 draws against this contract's 40 — and
+  `--model agentworks/deepseek-v4-1-flash` for all eight runs, the model the
+  existing matrix rows cite. Reconcile `files:` with
   `git diff --name-only main...HEAD` before finishing: the fixture trees are the
   part a reviewer cannot guess from this spec.
 - **Norms**: never pool clean draws across runs; a dirty control is unresolved;
   never lower the five-draw rule.
 - **Safeguards**: the holdout's result is read after the other three are
-  classified; no skill edit in this spec.
+  classified; no skill edit in this spec. A stall in a paid draw stops the wave
+  per `docs/evals/coverage.md`: record the event gap and the attempt, reopen
+  `TASK-50` with those events, and resume only on an explicit human decision —
+  `--resume <dir>` re-runs no completed draw, so a stop costs wall time, never
+  paid draws.
 - **Tests**: the gates are model-free; the draws are evidence.
