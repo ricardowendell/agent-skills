@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "f91564d0-9733-419c-9405-d1c50e32e739",
+  "started_at": "2026-11-06T22:21:36.982Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.2.0"
+  },
+  "base_commit": "ce068a44e6d7aaeea5975f94e59d1dbed912d849",
+  "head_commit": "aefb04d4bc899c1e2647b394e0a8dedc78deed19",
+  "task": "SPEC-0030",
+  "spec_sha": "a6c31ee739fe0ae1be6dfb261ac178164a04d40ac2dcc04df43ea15422fcb0d2",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0030-fix-the-near-miss-trigger.json",
+      "sha256": "c2da05ae868f5a6fc207cbb5f19a8c5b3045a56b084d8f4fc975721311dfa8b8"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0030-fix-the-near-miss-trigger.json",
+      "sha256": "ced23cf299fe949297a8eb4d4086b652ffb8a69331f731dfdc217c84942a3ff4"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "f97c6c25141876ee5d62afcb951d6d068021a554afc25facb84cb1c475f95afb"
+    }
+  ],
+  "attempts": 1,
+  "duration": 7001,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "7fff837db2d4faf326b2c77078755297768eb85d"
+}

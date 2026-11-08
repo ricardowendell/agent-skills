@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "13fca0c1-bc99-4c1c-9984-dadb27ff6c56",
+  "started_at": "2026-11-06T22:03:28.583Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.2.0"
+  },
+  "base_commit": "d982aba04b7da33313418d8072421784e95012d1",
+  "head_commit": "30802b3497cad952f253cf8eb93c4b89ee3fe401",
+  "task": "SPEC-0029",
+  "spec_sha": "8936463c6904eb7e329e148077a4bcc93d3efb97cad04e6b962c153a815c0437",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0029-measure-cross-skill-routing.json",
+      "sha256": "27d7a370a12a3d76f46c80c4f8a1197af85e3f6049d65875ad34afdece688d6e"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0029-measure-cross-skill-routing.json",
+      "sha256": "6ad0b0783218e55eeb166a902e7055ecbc41e8547e86648c08a7199a1fead65a"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "ff0dca22cac1f112d8c26ab308d4b05e9b2e714787a2ab50dbbe33d9cf4d12a5"
+    }
+  ],
+  "attempts": 1,
+  "duration": 1082,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "ce068a44e6d7aaeea5975f94e59d1dbed912d849"
+}
