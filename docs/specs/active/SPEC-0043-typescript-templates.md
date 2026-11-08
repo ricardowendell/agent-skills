@@ -1,7 +1,7 @@
 ---
 id: SPEC-0043
 title: Make the TypeScript templates implement the stack decision
-status: ready
+status: implemented
 priority: P2
 task: TASK-67
 created_at: 2026-11-08
