@@ -1,7 +1,7 @@
 ---
 id: SPEC-0044
 title: Check capabilities, not fixed file names, in harness-state
-status: paused
+status: ready
 priority: P2
 task: TASK-68
 created_at: 2026-11-08
