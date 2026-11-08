@@ -1,7 +1,7 @@
 ---
 id: SPEC-0042
 title: Detect and preserve an existing TypeScript stack
-status: paused
+status: ready
 priority: P2
 task: TASK-66
 created_at: 2026-11-08

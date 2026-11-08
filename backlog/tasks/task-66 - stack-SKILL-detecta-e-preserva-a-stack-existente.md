@@ -1,9 +1,10 @@
 ---
 id: TASK-66
 title: '[stack] SKILL detecta e preserva a stack existente'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-11-08T10:00:00Z'
+updated_date: '2026-11-08T11:15:00Z'
 labels: []
 dependencies:
   - TASK-65
