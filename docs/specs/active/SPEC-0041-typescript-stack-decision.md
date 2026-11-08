@@ -1,7 +1,7 @@
 ---
 id: SPEC-0041
 title: Decide the default TypeScript/Node stack with reproducible numbers
-status: ready
+status: implemented
 priority: P1
 task: TASK-65
 created_at: 2026-11-08
@@ -176,3 +176,171 @@ skill text changes here; those are the dependent specs.
 - **Safeguards**: do not change templates or the detector here; a divergence
   found later is a REJECT in the dependent spec, not a quiet edit.
 - **Tests**: the `tests:` list is model-free; the matrix is the evidence.
+
+## Results
+
+Implemented 2026-11-08. The operational record is
+`skills/bootstrap-project-harness/references/typescript.md`; this section holds
+the rationale, the numbers that decided it and the limits of the measurement.
+
+### Decision
+
+**Default for an empty repository:** Node.js 24 LTS (24.15.0) + npm 11.12.1 +
+TypeScript 7.0.2 + Oxlint 1.92.0 + Prettier 3.9.10 + `node:test`; ESM/`NodeNext`
+with native type stripping; `tsc` build for a library or CLI; npm workspaces
+without Turbo/Nx.
+
+**Supported alternatives.** Each one is named with the condition under which it
+is chosen, not as a free-for-all:
+
+| Alternative | Choose it when | Measured cost |
+| --- | --- | --- |
+| pnpm 11.1 + Node | install size or workspace strictness matters | clean install 422 vs 824 ms; +~120 ms per script |
+| Bun 1.3 | the project wants Bun as runtime and/or package manager | test 25 ms vs 174 ms; warm install 43 ms; `tsc` still needed |
+| Biome 2.6.6 | a single binary matters more than exact cyclomatic semantics | lint+format 276 vs 353 ms; complexity rule is cognitive |
+| ESLint 10 + typescript-eslint 8.72 + Prettier | type-aware lint rules are required | lint 384 vs 145 ms; TypeScript capped at 6.0.3 |
+| Vitest 5.1 | watch mode, browser runner or its reporting is required | test +53–58%; test imports and hooks must be rewritten |
+| Oxfmt 0.77 | only JS/TS is formatted and a pre-1.0 formatter is acceptable | format 144 vs 208 ms |
+| tsdown 0.23.7 | bundling or dual ESM/CJS output is required | build 231 vs 158 ms; 0.x; `.mjs` output |
+| Turbo 2.11 / Nx 24 | a workspace has cacheable outputs large enough to pay for a daemon | 2-package fixture: 178–208 vs 257–278 ms, +36 MB |
+
+Runtime and package manager are independent. Both cross products passed:
+Bun 1.3 running npm-installed dependencies (`bun test` 25 ms, `bun run lint`
+54 ms) and Node 24 running Bun-installed dependencies (`npm test` 178 ms). The
+package manager changes install time (npm 824 ms, pnpm 422 ms, Bun 43 ms warm);
+the runtime changes execution time (Bun 25 ms vs Node 174 ms for the same test
+sources).
+
+### Numbers that decided it
+
+Round-robin, one window per comparison, so machine load hits every lane in a
+row equally. Medians in milliseconds; the full matrix and ranges are in the
+reference.
+
+| Comparison | A | B | Reading |
+| --- | --- | --- | --- |
+| Linter | Oxlint 145 | ESLint 384 | Oxlint is 2.6x faster; Biome 141 is equivalent in speed |
+| Formatter | Prettier 208 | Biome 135 | Biome is 73 ms faster; Prettier is stable 3.x |
+| Test runner (API) | `node:test` 239 | Vitest 365 | `node:test` is 1.5x faster and adds no dependency |
+| Test runner (CLI) | `node:test` 191 | Vitest 301 | 1.6x |
+| Compiler | TypeScript 7.0.2 171 | TypeScript 6.0.3 322 | TS 7 is 1.9x faster at typechecking |
+| Build | `tsc` 158 | `tsdown` 231 | `tsc` is enough for a small library |
+| Install (CLI, warm) | npm 824 | pnpm 422 | pnpm wins install; loses ~120 ms per script |
+| Install (CLI, warm) | npm 824 | Bun 43 | Bun wins install |
+| Runtime (same tests) | Node 174 | Bun 25 | Bun wins execution; still needs `tsc` |
+| Security audit | clean exit 0 | real high vuln exit 1 | all three managers fail on a real finding |
+
+### Dimension by dimension
+
+1. **Runtime and package manager.** Node 24 LTS + npm is the default: one
+   installation, one lockfile, `npm ci`, the lowest per-script overhead for a
+   small repo. pnpm and Bun are supported alternatives, independently of the
+   runtime. Node 22.18 is the compatibility floor (type stripping); the pin is
+   24.15.0.
+2. **Compiler and modules.** TypeScript 7.0.2 is the default and is 1.9x faster
+   than 6.0.3. `NodeNext` + ESM + `.ts` specifiers +
+   `rewriteRelativeImportExtensions`; `types: ["node"]` and `rootDir` are
+   explicit because TS 6/7 stopped auto-including `@types` and require a common
+   source directory. `erasableSyntaxOnly` enforces what Node can strip (an
+   `enum` fails both `tsc` and Node). TS 6.0.3 is the supported compiler when
+   ESLint is chosen, because `typescript-eslint@8.72.1` rejects 7.x with
+   `ERESOLVE`.
+3. **Lint and formatter.** Oxlint (linter) + Prettier (formatter): one tool per
+   responsibility, exact preservation of the four limits, no TypeScript peer
+   cap. Biome and the ESLint stack are supported alternatives; Oxfmt is the
+   pre-1.0 fast formatter. Biome's combined 77 ms advantage was not enough to
+   change the meaning of the complexity gate.
+4. **Tests and scripts.** `node:test` is the default (built in, 1.5–1.6x faster
+   than Vitest). The script surface is `test`, `test:watch`, `coverage`,
+   `typecheck`, `lint`, `format`, `format:check`, `check`, and `build` when the
+   project is a library or CLI. Vitest remains supported for watch/browser
+   workflows; `bun test` only with the Bun runtime.
+5. **Build and monorepo.** No bundler for an API/backend (Node runs the
+   TypeScript; `tsc --noEmit` is the gate). `tsc` for a library or CLI;
+   `tsdown` when bundling or dual output is needed (231 vs 158 ms, pre-1.0,
+   `.mjs` output, TS 7 `tsgo` deprecation warning). npm workspaces, no Turbo/Nx
+   by default: the two-package experiment did not produce a cache hit and cost
+   36 MB.
+6. **Supply chain and CI.** A real high-severity dependency makes all three
+   managers exit 1; a clean one exits 0. An unreachable registry also exits 1,
+   so the gate parses `--json` (or the error text) and reports the audit as
+   **unavailable**, never as green. No `|| true`. Versions, runtime and Actions
+   are pinned; the lockfile is committed and `npm ci` rejects drift (verified
+   `EUSAGE`).
+7. **Gate performance.** local-fast 765 ms (format, lint, typecheck, test);
+   pre-push 920 ms (+ build); PR 1.5 s of local commands (+ clean install,
+   audit, OSV/CodeQL/Gitleaks on Node 24 and the 22.18 floor); nightly/release
+   2.1 s (+ coverage, full audit, semver/tag).
+8. **Compatibility.** Additive only: detect and preserve an existing stack; new
+   repositories get the default; a detected stack that cannot express a limit
+   gets the replacement recorded (for example Biome's cognitive complexity),
+   never a silent removal.
+
+### Quality limits
+
+The four limits are unchanged, not traded: cyclomatic complexity 10, 4
+parameters, 60 lines per function, 200 lines per file. Oxlint and ESLint
+implement them with the same rule semantics; the fixture produced the same four
+findings from both. Biome produced five: its `noExcessiveCognitiveComplexity`
+also flags a five-times-nested function that cyclomatic complexity 6 does not,
+and would miss a wide `switch` that adds many cyclomatic paths but one cognitive
+point. The limits are therefore preserved in the default and explicitly
+replaced — with evidence and a stated gap — in the Biome alternative. Coverage
+stays optional.
+
+### Supply chain evidence
+
+| Case | Command | Result |
+| --- | --- | --- |
+| Real high vulnerability (`lodash@4.17.20`) | `npm audit --audit-level=high` | exit 1, 1 high |
+| Same | `pnpm audit --audit-level high` | exit 1, 2 high + 2 moderate |
+| Same | `bun audit` | exit 1, 2 high + 2 moderate |
+| Clean (`nanoid@5.1.16`) | `npm audit --audit-level=high` | exit 0, `found 0 vulnerabilities` |
+| Registry unreachable | npm/pnpm/Bun with `--registry http://127.0.0.1:1` | exit 1 with `ECONNREFUSED` / `fetch failed` / `ConnectionRefused` |
+| Frozen install drift | `npm ci` after editing `package.json` | exit 1, `EUSAGE`, “package.json and package-lock.json … not in sync” |
+
+Policy: audit absent in local-fast (stated, not green); fail-open on
+network-unavailable only at pre-push; fail-closed at PR and nightly/release.
+The audit is parsed as JSON where available because exit 1 is ambiguous between
+a finding and an outage.
+
+### Measurement limitations
+
+- One host: macOS 27.2, Apple M4 Max, 14 cores, 36 GB, Node 24.15.0 arm64. Load
+  average was 8–15 during the sweep, so absolute medians are only comparable
+  within one sweep; every choice above is backed by a round-robin run in a
+  single window.
+- Three warm runs per command; one cold-cache install per cell. The cold-cache
+  install is network-bound (3.2–22.7 s) and is reported as a single sample.
+- “Cold” means the first execution after a fresh `node_modules`, not a cold OS
+  page cache; tool binaries were already in the OS cache from other cells.
+- The Vitest API cell was fixed after the sweep (Vitest has no `before`/`after`,
+  only `beforeAll`/`afterAll`) and re-measured in a separate window; its install
+  column is not comparable to the other API rows.
+- Turbo reported `Cached: 0` on consecutive runs in the two-package fixture, so
+  its “warm” number is not cache evidence. Only two packages were measured.
+- Oxlint's rule catalogue is not 1:1 with typescript-eslint. The four limits
+  and the correctness category were verified; type-aware rules are only
+  guaranteed by the ESLint alternative.
+- The advisory database changes over time: `lodash@4.17.21` was already reported
+  high on the measurement day. Audit results are a snapshot, which is why the
+  scheduled run exists.
+
+### Not measured
+
+Lefthook and commitlint timing (unchanged, outside the decision); Linux, Windows
+and GitHub-hosted runners; Node 22.18 (the floor is from the official
+type-stripping release, not a local run); OSV-Scanner, CodeQL and Gitleaks
+execution (not installed); network-blocked dependency installation (only the
+audit was tested offline); monorepos larger than two packages.
+
+### Gates
+
+- `node scripts/validate-skills.mjs --root skills` — pass (14 SKILL.md, all clear)
+- `node scripts/run-evals.mjs --root skills --list --check` — pass (dry run)
+- `node --test scripts/lib/evals/*.test.mjs` — pass (366 tests)
+- `node --test scripts/lib/*.test.mjs` — pass (13 tests)
+- `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` — pass (17 tests)
+- `node scripts/check-sensor-parity.mjs` — pass (2/2 fixtures in parity)
+- `node scripts/check-evidence.mjs` — pass, exit 0 (8 documents, 0 errors, 97 pre-existing warnings in `docs/evals/write-implementation-prompt-matrix.md`)
+- `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0041-typescript-stack-decision.md --base main` — pass (contract holds)
