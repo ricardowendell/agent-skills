@@ -1,11 +1,11 @@
 ---
 id: SPEC-0032
 title: Check publication mechanically instead of by review
-status: ready
+status: implemented
 priority: P1
 task: TASK-49
 created_at: 2026-11-06
-updated_at: 2026-11-06
+updated_at: 2026-11-08
 source_docs:
   - docs/evals/coverage.md
   - docs/pipeline.md
@@ -27,7 +27,7 @@ files:
   - docs/evals/coverage.md
   - docs/evals/harness-health.md
   - .githooks/pre-commit
-  - docs/specs/active/SPEC-0032-deterministic-publish-checks.md
+  - docs/specs/SPEC-0032-deterministic-publish-checks.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check
@@ -126,7 +126,7 @@ change. **Zero model draws.**
 
 ## Data
 
-- `docs/specs/active/SPEC-*.md` — frontmatter and body.
+- `docs/specs/SPEC-*.md` — frontmatter and body.
 - `backlog/tasks/task-<n> - *.md` — the task binding.
 - `~/.local/share/opencode/evals/runs/` — manifests and results.
 - `docs/evals/*.md` — the claims.
@@ -282,7 +282,7 @@ node --test scripts/lib/evals/*.test.mjs                            335 pass
 node --test skills/bootstrap-project-harness/scripts/*.test.mjs     pass
 node scripts/check-sensor-parity.mjs                                2/2 fixtures
 node scripts/check-evidence.mjs                                     0 errors
-node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0032-...md --base main
+node scripts/spec-check.mjs --spec docs/specs/SPEC-0032-...md --base main
 ```
 
 `git diff main...HEAD -- skills/` is empty. Zero model draws.

@@ -1,11 +1,11 @@
 ---
 id: SPEC-0031
 title: Re-measure the cells detector v2 invalidates
-status: ready
+status: implemented
 priority: P1
 task: TASK-46
 created_at: 2026-11-06
-updated_at: 2026-11-07
+updated_at: 2026-11-08
 source_docs:
   - docs/evals/coverage.md
   - docs/evals/write-implementation-prompt-matrix.md
@@ -20,9 +20,9 @@ files:
   - docs/evals/write-implementation-prompt-matrix.md
   - docs/evals/pipeline-bookends-matrix.md
   - docs/evals/coverage.md
-  - docs/specs/active/SPEC-0028-detector-host-corpus.md
-  - docs/specs/active/SPEC-0030-fix-the-near-miss-trigger.md
-  - docs/specs/active/SPEC-0031-remeasure-under-detector-v2.md
+  - docs/specs/SPEC-0028-detector-host-corpus.md
+  - docs/specs/SPEC-0030-fix-the-near-miss-trigger.md
+  - docs/specs/SPEC-0031-remeasure-under-detector-v2.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check
@@ -30,7 +30,7 @@ tests:
   - node --test skills/bootstrap-project-harness/scripts/*.test.mjs
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0031-remeasure-under-detector-v2.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0031-remeasure-under-detector-v2.md --base main
 ---
 
 # SPEC-0031: Re-measure the cells detector v2 invalidates

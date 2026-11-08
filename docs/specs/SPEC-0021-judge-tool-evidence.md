@@ -25,7 +25,7 @@ files:
   - scripts/replay-evals.mjs
   - scripts/lib/evals/cli.test.mjs
   - docs/evals/implement-from-prompt-matrix.md
-  - docs/specs/active/SPEC-0021-judge-tool-evidence.md
+  - docs/specs/SPEC-0021-judge-tool-evidence.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check

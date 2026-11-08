@@ -21,7 +21,7 @@ files:
   - docs/evals/implement-from-prompt-matrix.md
   - docs/evals/coverage.md
   - docs/README.md
-  - docs/specs/active/SPEC-0015-implement-from-prompt-matrix.md
+  - docs/specs/SPEC-0015-implement-from-prompt-matrix.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check

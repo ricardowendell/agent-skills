@@ -1,11 +1,11 @@
 ---
 id: SPEC-0030
 title: Fix the near-miss trigger and the stage/assert check
-status: ready
+status: implemented
 priority: P2
 task: TASK-45
 created_at: 2026-11-06
-updated_at: 2026-11-06
+updated_at: 2026-11-08
 source_docs:
   - docs/evals/write-implementation-prompt-matrix.md
   - docs/evals/coverage.md
@@ -22,7 +22,7 @@ files:
   - skills/write-implementation-prompt/references/evals.md
   - docs/evals/write-implementation-prompt-matrix.md
   - docs/evals/coverage.md
-  - docs/specs/active/SPEC-0030-fix-the-near-miss-trigger.md
+  - docs/specs/SPEC-0030-fix-the-near-miss-trigger.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check

@@ -12,13 +12,13 @@ source_docs:
   - docs/evals/review-code-matrix.md
 related_decisions: []
 depends_on:
-  - docs/specs/active/SPEC-0021-judge-tool-evidence.md
-  - docs/specs/active/SPEC-0022-scope-change-fixture.md
+  - docs/specs/SPEC-0021-judge-tool-evidence.md
+  - docs/specs/SPEC-0022-scope-change-fixture.md
 blocks: []
 files:
   - docs/evals/coverage.md
   - docs/evals/review-code-matrix.md
-  - docs/specs/active/SPEC-0023-case-dispositions.md
+  - docs/specs/SPEC-0023-case-dispositions.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check
@@ -220,7 +220,7 @@ post-detector directory is cited as a clean rate.
 
 **Files.** The diff is the three `files:` entries:
 `docs/evals/coverage.md`, `docs/evals/review-code-matrix.md`,
-`docs/specs/active/SPEC-0023-case-dispositions.md`. No draw, no code, no
+`docs/specs/SPEC-0023-case-dispositions.md`. No draw, no code, no
 `skills/` or `scripts/` change.
 
 ## Open Questions

@@ -19,7 +19,7 @@ files:
   - skills/implement-from-prompt/references/evals.md
   - docs/evals/implement-from-prompt-matrix.md
   - docs/evals/coverage.md
-  - docs/specs/active/SPEC-0016-implement-from-prompt-write-target.md
+  - docs/specs/SPEC-0016-implement-from-prompt-write-target.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check

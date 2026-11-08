@@ -1,11 +1,11 @@
 ---
 id: SPEC-0033
 title: Publish three discriminating cases with a holdout
-status: ready
+status: implemented
 priority: P1
 task: TASK-51
 created_at: 2026-11-07
-updated_at: 2026-11-07
+updated_at: 2026-11-08
 source_docs:
   - docs/evals/coverage.md
   - docs/evals/implement-from-prompt-matrix.md
@@ -22,7 +22,7 @@ files:
   - docs/evals/implement-from-prompt-matrix.md
   - docs/evals/review-code-matrix.md
   - docs/README.md
-  - docs/specs/active/SPEC-0033-discriminating-cases.md
+  - docs/specs/SPEC-0033-discriminating-cases.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check
@@ -30,7 +30,7 @@ tests:
   - node --test skills/bootstrap-project-harness/scripts/*.test.mjs
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0033-discriminating-cases.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0033-discriminating-cases.md --base main
 ---
 
 # SPEC-0033: Publish three discriminating cases with a holdout

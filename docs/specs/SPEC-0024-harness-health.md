@@ -21,7 +21,7 @@ files:
   - docs/evals/harness-health.md
   - docs/README.md
   - CONTRIBUTING.md
-  - docs/specs/active/SPEC-0024-harness-health.md
+  - docs/specs/SPEC-0024-harness-health.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check

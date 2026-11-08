@@ -12,13 +12,13 @@ source_docs:
   - docs/evals/coverage.md
 related_decisions: []
 depends_on:
-  - docs/specs/active/SPEC-0020-runner-efficiency.md
+  - docs/specs/SPEC-0020-runner-efficiency.md
 blocks: []
 files:
   - docs/evals/implement-from-prompt-matrix.md
   - docs/evals/coverage.md
   - skills/implement-from-prompt/SKILL.md
-  - docs/specs/active/SPEC-0019-load-per-case.md
+  - docs/specs/SPEC-0019-load-per-case.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check

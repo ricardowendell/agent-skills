@@ -1,11 +1,11 @@
 ---
 id: SPEC-0026
 title: Measure the pipeline bookends and close the coverage hole
-status: ready
+status: implemented
 priority: P2
 task: TASK-32
 created_at: 2026-11-06
-updated_at: 2026-11-06
+updated_at: 2026-11-08
 source_docs:
   - docs/evals/coverage.md
   - docs/evals/write-implementation-prompt-matrix.md
@@ -18,7 +18,7 @@ files:
   - docs/evals/pipeline-bookends-matrix.md
   - docs/evals/coverage.md
   - docs/README.md
-  - docs/specs/active/SPEC-0026-measure-pipeline-bookends.md
+  - docs/specs/SPEC-0026-measure-pipeline-bookends.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check

@@ -26,7 +26,7 @@ files:
   - scripts/run-evals.mjs
   - docs/evals/implement-from-prompt-matrix.md
   - docs/evals/coverage.md
-  - docs/specs/active/SPEC-0017-eval-leak.md
+  - docs/specs/SPEC-0017-eval-leak.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check

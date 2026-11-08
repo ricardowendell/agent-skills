@@ -1,11 +1,11 @@
 ---
 id: SPEC-0028
 title: Make the leak detector see the host corpus
-status: ready
+status: implemented
 priority: P1
 task: TASK-43
 created_at: 2026-11-06
-updated_at: 2026-11-06
+updated_at: 2026-11-08
 source_docs:
   - docs/evals/coverage.md
   - docs/evals/write-implementation-prompt-matrix.md
@@ -26,7 +26,7 @@ files:
   - scripts/check-eval-run.mjs
   - docs/evals/coverage.md
   - docs/evals/write-implementation-prompt-matrix.md
-  - docs/specs/active/SPEC-0028-detector-host-corpus.md
+  - docs/specs/SPEC-0028-detector-host-corpus.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check

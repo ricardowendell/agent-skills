@@ -1,11 +1,11 @@
 ---
 id: SPEC-0027
 title: Name the interpreter the parity check cannot find
-status: ready
+status: implemented
 priority: P2
 task: TASK-42
 created_at: 2026-11-06
-updated_at: 2026-11-06
+updated_at: 2026-11-08
 source_docs:
   - CONTRIBUTING.md
   - docs/pipeline.md
@@ -16,7 +16,7 @@ files:
   - scripts/lib/evals/interpreter.mjs
   - scripts/lib/evals/interpreter.test.mjs
   - scripts/check-sensor-parity.mjs
-  - docs/specs/active/SPEC-0027-sensor-parity-interpreter.md
+  - docs/specs/SPEC-0027-sensor-parity-interpreter.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check

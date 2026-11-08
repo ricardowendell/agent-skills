@@ -12,7 +12,7 @@ source_docs:
   - CONTRIBUTING.md
 related_decisions: []
 depends_on:
-  - docs/specs/active/SPEC-0017-eval-leak.md
+  - docs/specs/SPEC-0017-eval-leak.md
 blocks: []
 files:
   - scripts/check-eval-run.mjs
@@ -20,7 +20,7 @@ files:
   - scripts/lib/evals/runcheck.test.mjs
   - CONTRIBUTING.md
   - docs/evals/coverage.md
-  - docs/specs/active/SPEC-0018-eval-invariants.md
+  - docs/specs/SPEC-0018-eval-invariants.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check

@@ -1,11 +1,11 @@
 ---
 id: SPEC-0022
 title: Make case #3 force the scope change instead of suggesting it
-status: ready
+status: implemented
 priority: P2
 task: TASK-28
 created_at: 2026-11-06
-updated_at: 2026-11-06
+updated_at: 2026-11-08
 source_docs:
   - backlog/tasks/task-28 - evals-caso-3-não-força-a-mudança-de-escopo.md
   - docs/evals/implement-from-prompt-matrix.md
@@ -21,7 +21,7 @@ files:
   - skills/implement-from-prompt/references/evals.md
   - docs/evals/coverage.md
   - docs/evals/implement-from-prompt-matrix.md
-  - docs/specs/active/SPEC-0022-scope-change-fixture.md
+  - docs/specs/SPEC-0022-scope-change-fixture.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check

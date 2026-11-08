@@ -36,7 +36,7 @@ files:
   - CONTRIBUTING.md
   - docs/evals/coverage.md
   - README.md
-  - docs/specs/active/SPEC-0020-runner-efficiency.md
+  - docs/specs/SPEC-0020-runner-efficiency.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check

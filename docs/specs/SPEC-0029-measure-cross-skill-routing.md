@@ -1,11 +1,11 @@
 ---
 id: SPEC-0029
 title: Measure cross-skill routing with a declared stage
-status: ready
+status: implemented
 priority: P2
 task: TASK-44
 created_at: 2026-11-06
-updated_at: 2026-11-06
+updated_at: 2026-11-08
 source_docs:
   - docs/evals/pipeline-bookends-matrix.md
   - docs/evals/coverage.md
@@ -25,7 +25,7 @@ files:
   - CONTRIBUTING.md
   - docs/evals/pipeline-bookends-matrix.md
   - docs/evals/coverage.md
-  - docs/specs/active/SPEC-0029-measure-cross-skill-routing.md
+  - docs/specs/SPEC-0029-measure-cross-skill-routing.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check

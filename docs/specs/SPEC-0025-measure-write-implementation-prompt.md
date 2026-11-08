@@ -1,11 +1,11 @@
 ---
 id: SPEC-0025
 title: Measure write-implementation-prompt
-status: ready
+status: implemented
 priority: P1
 task: TASK-31
 created_at: 2026-11-06
-updated_at: 2026-11-06
+updated_at: 2026-11-08
 source_docs:
   - docs/evals/coverage.md
   - docs/evals/implement-from-prompt-matrix.md
@@ -18,7 +18,7 @@ files:
   - skills/write-implementation-prompt/references/evals.md
   - docs/evals/write-implementation-prompt-matrix.md
   - docs/evals/coverage.md
-  - docs/specs/active/SPEC-0025-measure-write-implementation-prompt.md
+  - docs/specs/SPEC-0025-measure-write-implementation-prompt.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check
