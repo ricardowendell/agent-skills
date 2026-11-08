@@ -1,4 +1,8 @@
+# Pre-commit is fast and offline: staged files plus the type and test gate, all
+# local. Anything that needs the network (the audit) runs on pre-push, so an
+# offline laptop never learns to bypass the hook.
 pre-commit:
+  parallel: true
   commands:
     sensitive-files:
       run: |
@@ -11,32 +15,32 @@ pre-commit:
               ;;
           esac
         done
-    typecheck:
-      run: bun run typecheck
+    format:
+      glob: "*.{ts,tsx,js,jsx,mjs,cjs,json,md,yml,yaml,css}"
+      run: node_modules/.bin/prettier --write {staged_files}
+      stage_fixed: true
     lint:
-      run: bun run lint
-    security:
-      # Block on audit findings when online; skip when the registry is unreachable
-      # so an offline laptop doesn't train people to bypass hooks.
-      run: |
-        if ! bun audit --audit-level=high; then
-          if curl -sI https://registry.npmjs.org >/dev/null 2>&1; then
-            echo "Security audit reported high-severity issues."
-            exit 1
-          fi
-          echo "Offline — skipping security audit."
-        fi
+      glob: "*.{ts,tsx,js,jsx,mjs,cjs}"
+      run: node_modules/.bin/oxlint {staged_files}
+    typecheck:
+      run: npm run typecheck
+    test:
+      run: npm test
 
+# Pre-push runs the full local set, the optional build, the docs sensor and the
+# audit (fail-open when the registry is unreachable, fail on a real finding).
 pre-push:
   commands:
-    test:
-      run: bun test
+    check:
+      run: npm run check
     build:
-      run: bun run build
+      run: npm run build --if-present
     docs-check:
-      run: bun run docs:check
+      run: npm run docs:check
+    audit:
+      run: node audit-gate.mjs
 
 commit-msg:
   commands:
     commitlint:
-      run: bun x commitlint --edit {1}
+      run: node_modules/.bin/commitlint --edit {1}

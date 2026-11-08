@@ -1,7 +1,7 @@
 ---
 id: SPEC-0043
 title: Make the TypeScript templates implement the stack decision
-status: paused
+status: ready
 priority: P2
 task: TASK-67
 created_at: 2026-11-08
@@ -20,14 +20,20 @@ blocks:
 files:
   - skills/bootstrap-project-harness/templates/ts/.github/workflows/ci.yml.template
   - skills/bootstrap-project-harness/templates/ts/.nvmrc.template
-  - skills/bootstrap-project-harness/templates/ts/.prettierrc.template
+  - skills/bootstrap-project-harness/templates/ts/.oxlintrc.json.template
+  - skills/bootstrap-project-harness/templates/ts/.prettierignore.template
+  - skills/bootstrap-project-harness/templates/ts/audit-gate.mjs
   - skills/bootstrap-project-harness/templates/ts/commitlint.config.cjs
-  - skills/bootstrap-project-harness/templates/ts/dependency-cruiser-rules.md
   - skills/bootstrap-project-harness/templates/ts/eslint-ai-rules.md
   - skills/bootstrap-project-harness/templates/ts/eslint.config.js.template
   - skills/bootstrap-project-harness/templates/ts/justfile.template
   - skills/bootstrap-project-harness/templates/ts/lefthook.yml
   - skills/bootstrap-project-harness/templates/ts/lint-staged.config.mjs
+  - skills/bootstrap-project-harness/templates/ts/oxlint-ai-rules.md
+  - skills/bootstrap-project-harness/templates/ts/package.json.template
+  - skills/bootstrap-project-harness/templates/ts/tsconfig.build.json.template
+  - skills/bootstrap-project-harness/templates/ts/tsconfig.json.template
+  - skills/bootstrap-project-harness/scripts/harness-state.mjs
   - docs/specs/active/SPEC-0043-typescript-templates.md
 tests:
   - node scripts/validate-skills.mjs --root skills
@@ -136,6 +142,48 @@ runner or Python template.
 - **Package manifest template**: today the skill merges `package.json` inline.
   If the decision needs a template, add it as a new file and declare it.
 - **Which lockfile**: the decision names it; the template must not assume two.
+
+## Results
+
+Implemented in the worktree; `status:` is left to the merge.
+
+- **Script surface** lives in `package.json.template` exactly as
+  `references/typescript.md` §Tests and scripts states it, with the runtime,
+  package manager and every tool pinned to the reference's exact version.
+  `tsconfig.json.template` and `tsconfig.build.json.template` are new: without
+  them `tsc --noEmit` typechecks nothing and `build` has no config, so the
+  scripts could exist without running.
+- **Lint and format**: `.oxlintrc.json.template` replaces
+  `eslint.config.js.template` with the four limits, severities and options from
+  the reference; `eslint-ai-rules.md` became `oxlint-ai-rules.md` for the same
+  reason. `lint-staged.config.mjs` is gone: Lefthook's `{staged_files}` and
+  `stage_fixed` already own the staged-file path, so keeping it was a second
+  tool for the same job.
+- **Hooks, CI and pins**: pre-commit is staged-only plus typecheck and test and
+  needs no network; pre-push runs the full set, the optional build, the docs
+  sensor and the audit; `audit-gate.mjs` tells a finding from an unreachable
+  registry and is run closed (`--fail-on-unavailable`) in CI. Actions are pinned
+  by commit SHA, the runtime by `.nvmrc`/`engines`, the tools by exact version,
+  and CI installs with `npm ci` against a committed lockfile.
+- **Deviation, declared**: `scripts/harness-state.mjs`'s `REQUIRED`/`OPTIONAL`
+  lists are edited. The parity test is the mechanism that keeps every shipped
+  template classified, so a template rename cannot land without it, and the file
+  says so itself ("drift is a failing test"). Only the file lists change; the
+  capability rewrite remains SPEC-0044.
+- **Evidence**: the templates were installed into a scratch repository outside
+  this one (Node 24.15.0, npm 11.12.1) and every script ran. `npm ci` refused a
+  drifted lockfile (`EUSAGE`), oxlint flagged a 5-parameter function (error), a
+  73-line function and a 205-line file (warnings) while leaving their sparse
+  twins alone, and `audit-gate.mjs` exited 1 on `lodash@4.17.20`, exited 0 (with
+  the skip named) on an unreachable registry, and exited 1 with
+  `--fail-on-unavailable`. The git hooks were installed in that scratch repo:
+  pre-commit blocked a staged `.env`, blocked a 5-parameter file after
+  formatting and re-staging, and pre-push ran check, build, docs and audit;
+  commitlint rejected a non-conventional message.
+- Left out: `SKILL.md` steps still name `bun`/ESLint and do not copy the new
+  files (SPEC-0042 owns the skill text), and the Node 22.18.0 matrix cell was
+  verified with a downloaded runtime, not a second installed Node.
+
 
 ## Prompt Notes
 

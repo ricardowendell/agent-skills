@@ -1,0 +1,32 @@
+{
+  "name": "replace-me",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.12.1",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "lint": "oxlint src test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "test:watch": "node --test --watch \"test/**/*.test.ts\"",
+    "coverage": "node --test --experimental-test-coverage \"test/**/*.test.ts\"",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm test",
+    "docs:check": "node docs-check.mjs",
+    "audit": "node audit-gate.mjs",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "21.2.4",
+    "@commitlint/config-conventional": "21.2.4",
+    "@types/node": "26.6.6",
+    "lefthook": "2.2.2",
+    "oxlint": "1.92.0",
+    "prettier": "3.9.10",
+    "typescript": "7.0.2"
+  }
+}

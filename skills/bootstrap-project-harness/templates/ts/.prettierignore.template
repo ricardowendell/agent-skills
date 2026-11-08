@@ -1,0 +1,9 @@
+# Vendored harness scripts: copied verbatim by the bootstrap, so formatting them
+# here would turn an upgrade into a diff war. Edit them to change them.
+docs-check.mjs
+spec-sha.mjs
+
+# Generated output.
+dist/
+coverage/
+package-lock.json

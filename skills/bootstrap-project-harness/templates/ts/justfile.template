@@ -1,40 +1,75 @@
-dev:
-    bun run dev
+# One surface for humans, hooks and CI: every recipe calls the package script of
+# the same name, so a gate cannot mean two different things. Recipes never
+# install; CI and `fresh` run a frozen install first.
 
+# local gate: format, lint, typecheck and test
 check:
-    bun run typecheck && bun run lint && (bun audit || true)
-    bun run docs:check
+    npm run check
 
-ci: check test
+# check, then the audit fails closed, then docs and the optional build
+ci: check
+    node audit-gate.mjs --fail-on-unavailable
+    npm run docs:check
+    npm run build --if-present
 
+# type gate (tsc --noEmit)
 typecheck:
-    bun run typecheck
+    npm run typecheck
 
+# oxlint src test
 lint:
-    bun run lint
+    npm run lint
 
+# node:test over test/**/*.test.ts
 test:
-    bun test
+    npm test
 
+# node:test in watch mode
 test-watch:
-    bun test --watch
+    npm run test:watch
 
+# node:test with the built-in coverage report
+coverage:
+    npm run coverage
+
+# prettier --write .
 format:
-    bun run format
+    npm run format
 
+# prettier --check .
 format-check:
-    bun run format:check
+    npm run format:check
 
+# docs sensor at the repo root
 docs-check:
-    bun run docs:check
+    npm run docs:check
 
+# dependency audit: a finding fails, an unreachable registry is named and skipped
+audit:
+    node audit-gate.mjs
+
+# per profile: a library or CLI keeps the script and tsconfig.build.json; an
+# API/backend deletes both and this stays a no-op instead of a broken target
+build:
+    npm run build --if-present
+
+# no install needed: parses the sensor and the gate scripts
 smoke:
     node docs-check.mjs
     node --check docs-check.mjs
     node --check spec-sha.mjs
+    node --check audit-gate.mjs
 
+# remove generated output
 clean:
-    rm -rf .next node_modules
+    rm -rf dist coverage node_modules
 
+# first install: writes the lockfile CI installs frozen, then normalizes the
+# seeded docs so the first `check` is green instead of a formatting diff
+install:
+    npm install
+    npm run format
+
+# from scratch with the committed lockfile (the CI install)
 fresh: clean
-    bun install
+    npm ci
