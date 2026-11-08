@@ -188,3 +188,10 @@ Run from the worktree, Node 24:
   manager.
 - `references/evals.md` case 8 still reads "Uses lefthook + bun only"; revising
   the behavioural cases is SPEC-0045.
+- **Known limitation, not fixed here:** the commit-message slot only detects
+  `commitlint.config.*`/`.commitlintrc*`/a `commitlint` dependency. A repo using
+  `commitizen` (the Python set's linter, and a legitimate TS choice) has no
+  detection signal, so step 6 would install commitlint beside it. The slot list
+  in `Prompt Notes` does not name a commit linter, so this is recorded for
+  SPEC-0044 (detector profiles) and SPEC-0045 (the behavioural case), not
+  expanded in this diff.

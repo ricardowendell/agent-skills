@@ -73,7 +73,8 @@ answer in `AGENTS.md` (`## Stack`) and in the final report.
 | Slot | Signal | Action |
 | --- | --- | --- |
 | Runtime | `bunfig.toml`, `packageManager` naming Bun, or a `bun`-run script | **Bun** — keep it |
-| Runtime | `.nvmrc`, `.node-version`, `engines.node`, `volta`, or no Bun signal at all | **Node** — keep the pin; Node is the default runtime |
+| Runtime | `.nvmrc`, `.node-version`, `engines.node`, `volta` | **Node** — keep the pin |
+| Runtime | no runtime signal at all (no Bun marker, no Node pin) | **empty slot** — fill with the default (Node 24) and say it is a fill, per the rules below |
 | Package manager | `bun.lock`/`bun.lockb` → Bun; `pnpm-lock.yaml` → pnpm; `package-lock.json`/`npm-shrinkwrap.json` → npm; `yarn.lock` → Yarn | Keep the one with a lockfile; `packageManager` confirms |
 | Linter | `.oxlintrc.json` or an `oxlint` dependency → Oxlint; `eslint.config.*`/`.eslintrc*` → ESLint; `biome.json`/a `@biomejs/biome` dependency → Biome; `tslint.json` → TSLint | Keep it; add none |
 | Formatter | `.prettierrc*`/`prettier` dependency → Prettier; `biome.json` → Biome; `.oxfmtrc.json`/`oxfmt` dependency → Oxfmt | Keep it; add none |
@@ -361,7 +362,8 @@ Run ALL of these and verify the expected output.
 ```bash
 git status
 ls AGENTS.md README.md .editorconfig
-ls lefthook.yml .husky .pre-commit-config.yaml 2>/dev/null   # at least the detected hook config
+# replace the list with detection's one answer: lefthook.yml | .husky | .pre-commit-config.yaml
+for f in lefthook.yml; do ls -d "$f" 2>/dev/null || echo "MISSING $f"; done
 ls -d .git/hooks/pre-commit .git/hooks/pre-push .git/hooks/commit-msg
 grep -q "check:" justfile && echo "OK" || echo "MISSING"
 ls docs/WORKFLOW.md .opencode/opencode.json docs/pipeline.md
@@ -375,7 +377,8 @@ use its linter, formatter and runner — do not run Oxlint/Prettier/`node:test`
 against a Biome or Vitest repo.
 
 ```bash
-ls package.json .prettierrc eslint.config.js biome.json .oxlintrc.json   # whichever detection found
+# replace the list with detection's answer: package.json, plus exactly one lockfile and the config files it named
+for f in package.json package-lock.json .prettierrc eslint.config.js; do ls "$f" 2>/dev/null || echo "MISSING $f"; done
 npm run typecheck        # or pnpm run / bun run
 npm run lint             # the detected linter's script; check its own success line
 npm test                 # the detected runner's script
