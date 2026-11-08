@@ -1,9 +1,10 @@
 ---
 id: TASK-50
 title: 'evals: o #5 do write-implementation-prompt stalls depois do load'
-status: Done
+status: To Do
 assignee: []
 created_date: '2026-11-07T00:15:00Z'
+updated_date: '2026-11-08T09:53:00Z'
 labels: []
 dependencies: []
 references:
@@ -34,6 +35,14 @@ created: 2026-11-08T01:51:00Z
 ---
 
 Fechada em 2026-11-08 como contingencia, nao como trabalho pendente. AC-3 cumprida como escrita: a pendencia fica registrada (~40% dos draws com stall pos-load, 1 retry cada, 150-355 s por stall). AC-1 e AC-2 ficam abertas com a razao: o padrao aponta provider (sempre depois do load, retry resolve), mas nada exclui o watchdog, e nao houve mudanca de limite. A regra de reabertura esta em docs/evals/coverage.md: se um run pago stallar pos-load de novo, parar a onda, registrar os eventos e reabrir esta task com eles. Sem essa regra, a task ficaria para sempre em 'precisa de groom' sem gatilho.
+
+---
+
+created: 2026-11-08T09:53:49.697Z
+
+---
+
+Reaberta em 2026-11-08 pelo stall da onda do corpus (SPEC-0034). Run de controle #12: 2026-11-08T06-44-22--implement-from-prompt--agentworks-deepseek-v4-1-flash--without-skill, draw r3: exit=stalled, stallMs=120000, durationMs=223091, attempts=2, retries=1, steps=10. check-eval-run confirma 'infrastructure implement-from-prompt#12 r3 — infrastructure: stalled (retried 1x)'. A onda parou em 30/40 draws e o holdout #11 nao foi sorteado, conforme o protocolo. Reabre para diagnostico: provider-side, watchdog ou prompt (AC-1/AC-2 seguem abertas).
 
 ---
 <!-- COMMENTS:END -->
