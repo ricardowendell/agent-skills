@@ -2,7 +2,9 @@
 
 Janela: 2026-10-24 a 2026-11-07 (14 dias)
 Fonte: `~/.local/share/opencode/opencode.db` (SQLite, `session_v2` + `session_message`)
-Script: `~/.agents/scripts/session-intent-report.py --days 14`
+Script: `~/.agents/scripts/session-intent-report.py` — **removido em 2026-11-08**, a
+pedido. A extração rodou uma vez; as contagens abaixo não podem ser reproduzidas
+sem reescrevê-lo.
 
 ## Resumo
 
