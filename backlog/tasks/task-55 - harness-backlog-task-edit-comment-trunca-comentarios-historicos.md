@@ -1,7 +1,7 @@
 ---
 id: TASK-55
 title: 'harness: `backlog task edit --comment` descarta comentários históricos'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-07T23:31:00Z'
 updated_date: '2026-11-07T23:47:00Z'
@@ -39,7 +39,7 @@ Workaround: `node scripts/backlog-comment.mjs TASK-N "texto"` anexa por cirurgia
 - [x] #2 Causa identificada: `---` isolado no bloco COMMENTS trunca o corpo naquele ponto; upstream Backlog.md 1.55.3 (o wrapper `cli.js` só repassa para o binário). `--status`/`--check-ac` não reescrevem o bloco.
 - [x] #3 Workaround implementado em `scripts/backlog-comment.mjs` (+ `scripts/lib/backlog-comment.mjs`), documentado em `CONTRIBUTING.md` e referenciado em `AGENTS.md`; verificado num corpo com `---` e code fence.
 - [x] #4 Issue upstream nao sera aberta: decisao do usuario em 2026-11-08, com o workaround local entregue e no gate. A reproducao fica registrada nesta task para quem precisar reportar depois.
-- [ ] #5 Se `backlog task edit --comment` voltar a ser usado, o `git diff -- backlog/tasks/` é conferido por remoções. O caminho padrão passou a ser o script, então este AC só fecha com um uso real.
+- [ ] #5 Superseded: o caminho padrao deixou de ser `--comment` e a conferencia de `git diff -- backlog/tasks/` virou regra em CONTRIBUTING.md, nao um AC que depende de um uso futuro. Nao ha uso real previsto para fechar.
 <!-- AC:END -->
 
 ## Comments
@@ -84,6 +84,14 @@ created: 2026-11-08T01:10:00Z
 ---
 
 AC-4 fechado como won't do em 2026-11-08, por decisao do usuario: a issue upstream nao sera aberta. O workaround (scripts/backlog-comment.mjs) esta entregue, no gate e documentado; a reproducao detalhada fica na descricao desta task, suficiente para um report futuro. Resta AC-5, que so fecha com uso real de --comment.
+
+---
+
+created: 2026-11-08T01:52:00Z
+
+---
+
+Fechada em 2026-11-08. O workaround (scripts/backlog-comment.mjs) esta entregue e no gate em quatro lugares; a regra de conferir 'git diff -- backlog/tasks/' depois de qualquer edit esta em CONTRIBUTING.md e em AGENTS.md. AC-5 fica aberta como superseded: ela dependia de um uso real de --comment, e o caminho padrao deixou de ser --comment, entao nao ha uso previsto. A issue upstream nao sera aberta (AC-4, decisao do usuario); a reproducao fica na descricao.
 
 ---
 <!-- COMMENTS:END -->

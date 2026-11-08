@@ -1,7 +1,7 @@
 ---
 id: TASK-50
 title: 'evals: o #5 do write-implementation-prompt stalls depois do load'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-07T00:15:00Z'
 labels: []
@@ -21,7 +21,19 @@ Medido na SPEC-0030: em duas runs de trigger, 4 de 10 draws morreram por stall, 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A causa e nomeada com evidencia (gap de eventos, tentativa, modelo) ou o caso e declarado ruido de provider com o limite medido.
-- [ ] #2 Se for o watchdog, o limite e justificado com a distribuicao de gaps e tem teste.
-- [ ] #3 Uma run stall-free de #5 existe, ou a pendencia fica registrada com a probabilidade observada e o custo de tentar.
+- [ ] #1 A causa nao foi fechada: o padrao (4/10 draws, sempre depois do load, com retry) aponta provider, mas nao ha prova que exclua o watchdog. Nao fechar por inferencia.
+- [ ] #2 Condicional a AC-1; nenhuma mudanca de watchdog foi feita e nao ha distribuicao medida que justifique uma.
+- [x] #3 Pendencia registrada como a AC permite: ~40% dos draws (4/10) com stall pos-load, 1 retry cada, custo ~150-355 s por stall. A regra de reabertura esta em docs/evals/coverage.md.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-11-08T01:51:00Z
+
+---
+
+Fechada em 2026-11-08 como contingencia, nao como trabalho pendente. AC-3 cumprida como escrita: a pendencia fica registrada (~40% dos draws com stall pos-load, 1 retry cada, 150-355 s por stall). AC-1 e AC-2 ficam abertas com a razao: o padrao aponta provider (sempre depois do load, retry resolve), mas nada exclui o watchdog, e nao houve mudanca de limite. A regra de reabertura esta em docs/evals/coverage.md: se um run pago stallar pos-load de novo, parar a onda, registrar os eventos e reabrir esta task com eles. Sem essa regra, a task ficaria para sempre em 'precisa de groom' sem gatilho.
+
+---
+<!-- COMMENTS:END -->

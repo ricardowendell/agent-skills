@@ -20,6 +20,10 @@ blocks:
   - SPEC-0038-experience-review
 files:
   - skills/implement-from-prompt/references/evals.md
+  - skills/implement-from-prompt/references/evals/9/AGENTS.md
+  - skills/implement-from-prompt/references/evals/10/AGENTS.md
+  - skills/implement-from-prompt/references/evals/11/AGENTS.md
+  - skills/implement-from-prompt/references/evals/12/AGENTS.md
   - docs/evals/iterative-corpus.md
   - docs/evals/coverage.md
   - docs/README.md
@@ -90,6 +94,12 @@ directories, and one case was never used to tune anything.
 the coverage row, the doc map, this spec, and the draws. No skill text, runner or
 detector change.
 
+**`blocks:` is about evidence, not about unblocking.** It names the specs that
+need this corpus's result; `SPEC-0036` and `SPEC-0038` also wait on `TASK-61`
+(the visual oracle, which has no spec yet) and `SPEC-0037` waits on the
+comparison this corpus makes possible. Merging this spec does not make them
+dispatchable.
+
 ## Non-Goals
 
 - No visual, screenshot or browser assertion; those cases are `SPEC-0036` and
@@ -147,6 +157,10 @@ detector change.
 9. **Nothing published is rewritten.** Coverage gains a row; no earlier number
    changes.
 10. **No drift.** Every command in `tests:` passes.
+11. **`files:` follows the real diff.** The four fixture `AGENTS.md` paths are
+    declared here; any other file the fixtures create is added to `files:` before
+    the spec is marked `implemented`, so `spec-check` reports no
+    `files-touched-undeclared`.
 
 ## Open Questions
 
@@ -167,7 +181,9 @@ detector change.
 - **Approach**: freeze, build fixtures, measure, then classify; publish once.
 - **Structure**: case metadata and fixture trees; no runner code.
 - **Operations**: `--repeat 5`, `--no-skill` for the control, `--root skills`,
-  one model for all eight runs.
+  one model for all eight runs. Reconcile `files:` with
+  `git diff --name-only main...HEAD` before finishing: the fixture trees are the
+  part a reviewer cannot guess from this spec.
 - **Norms**: never pool clean draws across runs; a dirty control is unresolved;
   never lower the five-draw rule.
 - **Safeguards**: the holdout's result is read after the other three are

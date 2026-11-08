@@ -7,6 +7,7 @@ created_date: '2026-11-08T00:48:00Z'
 labels: []
 dependencies:
   - TASK-56
+  - TASK-61
 references:
   - https://github.com/ricardowendell/agent-skills/issues/8
 priority: medium
@@ -17,7 +18,7 @@ ordinal: 58000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Origem: issue #8 (P1), 2026-11-08. Resolver elemento -> componente/arquivo por evidencia observavel; sem correspondencia, responder unresolved em vez de inventar caminho. Bloqueada pela TASK-56 e pela decisao de oraculo visual: enquanto o runner nao tiver caminho de browser, os casos ficam manuais e isso precisa ser declarado, nao escondido.
+Origem: issue #8 (P1), 2026-11-08. Resolver elemento -> componente/arquivo por evidencia observavel; sem correspondencia, responder unresolved em vez de inventar caminho. Bloqueada pela TASK-56 e pela TASK-61 (oraculo visual): enquanto o runner nao tiver caminho de browser, os casos ficam manuais e isso precisa ser declarado, nao escondido.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

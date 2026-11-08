@@ -65,7 +65,8 @@ there is no preview.
 
 ## Blocker: why this is `draft`
 
-Same oracle problem as `SPEC-0036`, plus one of its own:
+Same oracle problem as `SPEC-0036` — the owner is `TASK-61`, which has no
+spec yet — plus one of its own:
 
 1. **No visual or browser assertion** in the runner. Cases would be `manual`,
    which excludes them from a run and cannot separate arms.

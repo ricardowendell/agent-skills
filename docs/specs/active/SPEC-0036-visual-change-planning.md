@@ -69,7 +69,8 @@ or an explicit `unresolved` with what is missing.
 
 ## Blocker: why this is `draft`
 
-The harness has no visual assertion. Its kinds are file, reply, skill and shell;
+The harness has no visual assertion, and the work that would add one
+is `TASK-61` (no spec yet). Its kinds are file, reply, skill and shell;
 `dangerous` cases are declared `manual` and excluded from a run, so they cannot
 separate two arms. Two things must be decided before this becomes `ready`:
 

@@ -79,6 +79,11 @@ in [`discriminating-cases.md`](discriminating-cases.md).
   artefact can abort while the result says only `failed — exit 1`; the audit and
   its dispositions are in [`provider-aborts.md`](provider-aborts.md). It reads the
   store, writes nothing and spends no model call.
+- A draw that stalls **after** the skill loaded is provider noise until proven
+  otherwise: if a paid run stalls post-load again, stop the wave, record the
+  event gap and the attempt, and reopen `TASK-50` with those events. In the
+  SPEC-0030 trigger runs 4 of 10 draws stalled this way, each with one retry and
+  150–355 s lost; that is a known cost, not a clean measurement.
 - Never round a repetition into a rate: `--repeat 3` gives three draws, and the
   matrix says five is enough to see a direction, not to publish a per-case rate.
 

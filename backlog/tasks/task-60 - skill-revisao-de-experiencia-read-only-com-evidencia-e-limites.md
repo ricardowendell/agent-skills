@@ -7,6 +7,7 @@ created_date: '2026-11-08T00:48:00Z'
 labels: []
 dependencies:
   - TASK-56
+  - TASK-61
 references:
   - https://github.com/ricardowendell/agent-skills/issues/10
 priority: medium
@@ -17,7 +18,7 @@ ordinal: 60000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Origem: issue #10 (P1), 2026-11-08. Revisao da experiencia observada, read-only, que nao substitui review-code nem gates deterministicos. Sem browser ou preview, declara cobertura parcial em vez de aprovar. Bloqueada pela TASK-56 e pela decisao de oraculo visual: os achados precisam de evidencia reproduzivel, e o que nao for mensuravel permanece unverifiable.
+Origem: issue #10 (P1), 2026-11-08. Revisao da experiencia observada, read-only, que nao substitui review-code nem gates deterministicos. Sem browser ou preview, declara cobertura parcial em vez de aprovar. Bloqueada pela TASK-56 e pela TASK-61 (oraculo visual): os achados precisam de evidencia reproduzivel, e o que nao for mensuravel permanece unverifiable.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

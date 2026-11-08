@@ -17,15 +17,17 @@ scope and the external references. A spec is written at groom, from the task.
 | issue | task | spec | what it is |
 | --- | --- | --- | --- |
 | #6 | `TASK-56` | `SPEC-0034` (ready) | the discriminating corpus for iterative work (the gate) |
-| #7 | `TASK-57` | `SPEC-0035` (ready) | spike: a localized refinement path without a full spec |
+| #7 | `TASK-57` | `SPEC-0035` (paused) | spike: a localized refinement path without a full spec |
 | #8 | `TASK-58` | `SPEC-0036` (draft) | planning a visual change from element and design tokens |
 | #9 | `TASK-59` | `SPEC-0037` (draft) | light solution framing before a template is chosen |
 | #10 | `TASK-60` | `SPEC-0038` (draft) | read-only experience review with evidence and limits |
 
-The four drafts name their blocker in the spec: `SPEC-0036` and `SPEC-0038` need
-the visual oracle (0.8.0), `SPEC-0037` needs `SPEC-0034`'s evidence, and
-`SPEC-0035` carries a zero-draw stop condition in case the incumbent already
-covers the corpus.
+The blockers are named in each spec. `SPEC-0036` and `SPEC-0038` wait on
+`TASK-61`, the visual oracle — which had no owner until 2026-11-08, so the two
+skills were queued behind nothing. `SPEC-0037` waits on `SPEC-0034`'s evidence.
+`SPEC-0035` is `paused` on purpose: its first step is to read `SPEC-0034`'s
+classification, and a `ready` status would let pdlc dispatch it straight off the
+merge. It returns to `ready` in the commit that records those Results.
 
 ## Where the bottleneck is
 
@@ -51,7 +53,7 @@ it.
 | --- | --- | --- | --- |
 | **0.6.2** (released) | an aborted run is never clean | `TASK-52`, `TASK-38`, `TASK-39`, `TASK-40`, `TASK-54`; `TASK-36` documented, `TASK-35` done | 0 draws |
 | **0.7.0** | the corpus can see a small change | `TASK-56` (deterministic slice) and the verdict on `TASK-57` | ~30–40 draws |
-| **0.8.0** | the corpus can see a screen | a browser/visual oracle, then `TASK-58` and `TASK-60` | measurement |
+| **0.8.0** | the corpus can see a screen | `TASK-61` (the oracle), then `TASK-58` and `TASK-60` | measurement |
 | **0.9.0** | framing, only if a gap remains | `TASK-59`, conditional on `TASK-56` | measurement |
 | unscheduled | — | `diagnose-failure`: needs a captured problem statement first | 0 until then |
 | unscheduled | — | `agent-skills doctor`: zero draws, rides any release | 0 |
@@ -64,18 +66,20 @@ it.
    shell only: no browser, no screenshot. One case is adversarial — a request that
    would touch auth, policy or an out-of-scope file must be refused or escalated
    even when the visible result looks right.
-3. **The verdict on `TASK-57`.** With the cases measured, decide whether
-   `implement-from-prompt` already covers the iterative case, needs an extension,
-   or a new skill is justified. "No gain" is a valid, recorded outcome.
+3. **The verdict on `TASK-57`.** `SPEC-0035` is `paused` until the Results are
+   in; reading them is the first step, and if the incumbent covers the four cases
+   the verdict is `do not add skill` with zero draws. Otherwise decide whether an
+   extension or a new skill is justified. "No gain" is a valid, recorded outcome.
 4. **Store audit and health pass before the cut**, as in 0.6.2.
 
 ## Why the visual cases wait for 0.8.0
 
-`TASK-58` and `TASK-60` are blocked on `TASK-56`, not only for corpus but for a
-decision the harness has not made: there is no visual or browser assertion. The
-honest options are to add that path, or to accept human review and declare the
-coverage — and the second is not a separator, so it cannot carry a `P1` claim on
-its own. The decision belongs to 0.8.0, with its own cost.
+`TASK-58` and `TASK-60` depend on `TASK-56` for the corpus and on `TASK-61` for
+the oracle. `TASK-61` owns the decision the harness has not made: there is no
+visual or browser assertion today. The honest options are to add that path, or to
+accept human review and declare the coverage — and the second is not a separator,
+so it cannot carry a `P1` claim on its own. Both tasks name `TASK-61` as a
+dependency; the roadmap and the backlog now say the same thing.
 
 ## Out of scope until a consumer asks
 
