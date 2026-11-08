@@ -116,6 +116,10 @@ No templates, skill text or eval files.
   root `package.json`? Decide from the `SPEC-0041` decision.
 - **`smoke`**: the existing smoke path must keep working when a dependency is
   intentionally absent; confirm it does not become a false `partial`.
+- **Fixture regression test**: add a `stateOf()` assertion against
+  `references/evals/14` (complete) and `15` (partial, only `lefthook.yml`
+  missing). The SPEC-0043 template rename broke both silently; a fixture
+  assertion would have caught it.
 
 ## Prompt Notes
 

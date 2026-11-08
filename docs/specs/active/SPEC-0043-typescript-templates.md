@@ -69,8 +69,11 @@ config and the commit/lint-staged configuration. Issue #12 requires them to
 follow the decision in `SPEC-0041` as one coherent system, with no surface left
 behind and no quality limit lost.
 
-This spec changes the templates only. The detector that reads them is
-`SPEC-0044`; the skill text that selects them is `SPEC-0042`.
+This spec changes the templates and, through the human-gated amendment, the
+surfaces that must stay in lockstep with them: the `SKILL.md` copy steps and
+audit checklist, the detector's `REQUIRED`/`OPTIONAL` lists, and the eval
+fixtures 14/15 plus their `evals.md` correction. The capability rewrite of the
+detector stays in `SPEC-0044`; detection and preservation stay in `SPEC-0042`.
 
 ## User Outcome
 
