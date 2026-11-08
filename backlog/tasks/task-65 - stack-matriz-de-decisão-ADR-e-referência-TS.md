@@ -1,9 +1,10 @@
 ---
 id: TASK-65
 title: '[stack] matriz de decisão, ADR e referência TS'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-08T10:00:00Z'
+updated_date: '2026-11-08T11:01:00Z'
 labels: []
 dependencies: []
 references:
@@ -22,7 +23,7 @@ Fatia 1 da issue #12 (umbrella TASK-64): matriz de decisao com numeros reproduzi
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Matriz mede CLI, API/backend e lib TS com clean install, cold/warm lint/typecheck/test e execucao CI; comandos, versoes e numeros reproduziveis
-- [ ] #2 ADR registra default, alternativas, trade-offs, versoes minimas e links oficiais; sem claims de benchmark de vendor
-- [ ] #3 references/typescript.md descreve o default e as alternativas suportadas
+- [x] #1 Matriz mede CLI, API/backend e lib TS com clean install, cold/warm lint/typecheck/test e execucao CI; comandos, versoes e numeros reproduziveis
+- [x] #2 ADR registra default, alternativas, trade-offs, versoes minimas e links oficiais; sem claims de benchmark de vendor
+- [x] #3 references/typescript.md descreve o default e as alternativas suportadas
 <!-- AC:END -->
