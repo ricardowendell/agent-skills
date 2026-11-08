@@ -11,7 +11,7 @@ references:
   - docs/roadmap.md
   - docs/specs/active/SPEC-0036-visual-change-planning.md
   - docs/specs/active/SPEC-0038-experience-review.md
-priority: high
+priority: low
 type: task
 ordinal: 61000
 ---
@@ -31,3 +31,15 @@ O roadmap da 0.8.0 diz 'a browser/visual oracle, then TASK-58 and TASK-60', mas 
 - [ ] #5 Nao escrever browser engine do zero: reusar Playwright/axe quando o projeto consumidor ja tiver, e declarar quando nao houver.
 - [ ] #6 So depois desta task fechada a TASK-58 e a TASK-60 saem do bloqueio.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-11-08T02:13:00Z
+
+---
+
+Repriorizada em 2026-11-08: high -> low, e fica deferida. O oraculo so existe para servir a TASK-58 e a TASK-60; com as duas em paused/P3, ele perde consumidor e nao se paga. Nao ha status 'paused' no backlog, entao fica To Do com prioridade low e este registro: reabre quando uma das duas voltar a ready, ou quando a SPEC-0034 mostrar que o determinístico nao enxerga 'mudanca pequena' e um oraculo passar a ser pre-requisito do corpus.
+
+---
+<!-- COMMENTS:END -->

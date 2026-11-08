@@ -1,8 +1,8 @@
 ---
 id: SPEC-0037
 title: Frame a solution before choosing a template
-status: draft
-priority: P1
+status: paused
+priority: P3
 task: TASK-59
 created_at: 2026-11-08
 updated_at: 2026-11-08
@@ -43,6 +43,13 @@ requiring a full specification for an early exploration is excessive.
 
 The repo already has `capture-idea`, `groom-backlog` and `find-blind-spots`.
 A framing skill is justified only if it adds something those three do not.
+
+**Paused on 2026-11-08.** No cluster in the session analysis maps to this skill:
+of 58 human sessions, none is a framing request. Its three neighbours
+(`capture-idea`, `groom-backlog`, `find-blind-spots`) already cover the territory,
+and a fourth skill needs a gap that is not a rewording. It reopens when
+`SPEC-0034` shows the incumbent mishandling an underspecified request in a way
+those three do not cover, **and** a demand signal exists.
 
 ## User Outcome
 

@@ -2,7 +2,7 @@
 id: SPEC-0035
 title: Decide whether the incumbent covers a localized refinement
 status: paused
-priority: P0
+priority: P1
 task: TASK-57
 created_at: 2026-11-08
 updated_at: 2026-11-08

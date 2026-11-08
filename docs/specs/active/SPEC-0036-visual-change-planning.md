@@ -1,8 +1,8 @@
 ---
 id: SPEC-0036
 title: Plan a visual change from an element, not a guess
-status: draft
-priority: P1
+status: paused
+priority: P3
 task: TASK-58
 created_at: 2026-11-08
 updated_at: 2026-11-08
@@ -44,6 +44,13 @@ an edit.
 
 The candidate is a procedure that resolves **element → component → file** by
 observable evidence, and answers `unresolved` instead of inventing a path.
+
+**Paused on 2026-11-08.** The session analysis over 58 human sessions ranks
+this territory as `ui-refactor`: 3 sessions, $6.90, **one project**, and a gap of
+`0` — `impeccable` and `simplify` already cover it. Its cost is the highest in
+the backlog (a new visual oracle plus 20–40 draws) against the weakest measured
+demand. It reopens when a consumer exists: a release claim or an external
+commitment that needs a measured visual change, plus the decision in `TASK-61`.
 
 ## User Outcome
 

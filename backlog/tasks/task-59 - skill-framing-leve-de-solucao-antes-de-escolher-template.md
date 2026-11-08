@@ -9,7 +9,7 @@ dependencies:
   - TASK-56
 references:
   - https://github.com/ricardowendell/agent-skills/issues/9
-priority: medium
+priority: low
 type: task
 ordinal: 59000
 ---
@@ -38,6 +38,14 @@ created: 2026-11-08T01:43:00Z
 ---
 
 Groomed em 2026-11-08 para docs/specs/active/SPEC-0037-solution-framing.md, status: draft. Bloqueio: precisa da evidencia da SPEC-0034 e de uma comparacao contra groom-backlog, capture-idea e find-blind-spots que nomeie uma lacuna real, nao uma reformulacao.
+
+---
+
+created: 2026-11-08T02:11:00Z
+
+---
+
+Repriorizada em 2026-11-08: medium -> low, e a SPEC-0037 foi para paused/P3. Base: nenhum cluster da analise de 58 sessoes mapeia para framing; capture-idea, groom-backlog e find-blind-spots ja cobrem o territorio. Reabre se a SPEC-0034 mostrar que o incumbent erra um pedido mal especificado de um jeito que as tres nao cobrem, e houver sinal de demanda.
 
 ---
 <!-- COMMENTS:END -->

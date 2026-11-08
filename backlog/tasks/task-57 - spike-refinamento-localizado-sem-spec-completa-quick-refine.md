@@ -9,7 +9,7 @@ dependencies:
   - TASK-56
 references:
   - https://github.com/ricardowendell/agent-skills/issues/7
-priority: high
+priority: medium
 type: task
 ordinal: 57000
 ---
@@ -38,6 +38,14 @@ created: 2026-11-08T01:41:00Z
 ---
 
 Groomed em 2026-11-08 para docs/specs/active/SPEC-0035-quick-refine-spike.md (status: ready, depende de SPEC-0034). Condicao de parada: se a SPEC-0034 mostrar que o incumbent cobre os 4 casos, a spec fecha como 'do not add skill' com zero draws. Extensao e a hipotese preferida; skill nova exige razao escrita.
+
+---
+
+created: 2026-11-08T02:14:00Z
+
+---
+
+Repriorizada em 2026-11-08: high -> medium (P0 -> P1), SPEC-0035 P0 -> P1. Nao perde valor: ganha, porque e a unica da lista que pode fechar com zero draw — se a SPEC-0034 mostrar que o incumbent cobre os quatro casos, a decisao e 'do not add skill' sem medir. Segue paused ate os Results da 0034; volta a ready no commit que os registrar.
 
 ---
 <!-- COMMENTS:END -->

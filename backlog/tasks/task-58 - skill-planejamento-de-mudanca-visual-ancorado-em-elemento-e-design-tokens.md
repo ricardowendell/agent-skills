@@ -10,7 +10,7 @@ dependencies:
   - TASK-61
 references:
   - https://github.com/ricardowendell/agent-skills/issues/8
-priority: medium
+priority: low
 type: task
 ordinal: 58000
 ---
@@ -39,6 +39,14 @@ created: 2026-11-08T01:42:00Z
 ---
 
 Groomed em 2026-11-08 para docs/specs/active/SPEC-0036-visual-change-planning.md, status: draft. Bloqueio nomeado na spec: o runner nao tem oraculo visual (sem browser/screenshot/DOM), entao casos visuais viram manual e nao separam braco. Depende da decisao de oraculo da 0.8.0.
+
+---
+
+created: 2026-11-08T02:10:00Z
+
+---
+
+Repriorizada em 2026-11-08: medium -> low, e a SPEC-0036 foi para paused/P3. Base: a analise de 58 sessoes humanas (docs/analysis/skills-from-sessions-2026-11-07.md) classifica esse territorio como 'ui-refactor' — 3 sessoes, $6,90, 1 projeto, lacuna 0, 'impeccable e simplify ja cobrem'. E o maior custo do backlog (oraculo novo + 20-40 draws) contra a menor demanda medida. Reabre com consumidor: um claim de release ou compromisso externo, mais a decisao da TASK-61.
 
 ---
 <!-- COMMENTS:END -->

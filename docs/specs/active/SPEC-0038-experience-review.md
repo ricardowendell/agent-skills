@@ -1,8 +1,8 @@
 ---
 id: SPEC-0038
 title: Review the experience that was actually built
-status: draft
-priority: P1
+status: paused
+priority: P3
 task: TASK-60
 created_at: 2026-11-08
 updated_at: 2026-11-08
@@ -43,6 +43,11 @@ unnamed button, a missing error state, a focus trap, a layout that breaks.
 `review-code` reads a diff against a spec. An experience review reads the built
 surface. The risk is that it becomes an opinion with a severity label, so this
 spec is written around what can be evidenced.
+
+**Paused on 2026-11-08.** Same measured demand as `SPEC-0036` (`ui-refactor`: 3
+sessions, one project, gap `0`), same missing oracle (`TASK-61`), and one extra
+dependency the repo does not have — an authorised preview contract. It reopens
+with the same condition as `SPEC-0036`: a consumer, and the oracle decision.
 
 ## User Outcome
 

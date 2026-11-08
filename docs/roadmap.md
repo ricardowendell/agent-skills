@@ -18,16 +18,37 @@ scope and the external references. A spec is written at groom, from the task.
 | --- | --- | --- | --- |
 | #6 | `TASK-56` | `SPEC-0034` (ready) | the discriminating corpus for iterative work (the gate) |
 | #7 | `TASK-57` | `SPEC-0035` (paused) | spike: a localized refinement path without a full spec |
-| #8 | `TASK-58` | `SPEC-0036` (draft) | planning a visual change from element and design tokens |
-| #9 | `TASK-59` | `SPEC-0037` (draft) | light solution framing before a template is chosen |
-| #10 | `TASK-60` | `SPEC-0038` (draft) | read-only experience review with evidence and limits |
+| #8 | `TASK-58` | `SPEC-0036` (paused) | planning a visual change from element and design tokens |
+| #9 | `TASK-59` | `SPEC-0037` (paused) | light solution framing before a template is chosen |
+| #10 | `TASK-60` | `SPEC-0038` (paused) | read-only experience review with evidence and limits |
 
-The blockers are named in each spec. `SPEC-0036` and `SPEC-0038` wait on
-`TASK-61`, the visual oracle — which had no owner until 2026-11-08, so the two
-skills were queued behind nothing. `SPEC-0037` waits on `SPEC-0034`'s evidence.
-`SPEC-0035` is `paused` on purpose: its first step is to read `SPEC-0034`'s
-classification, and a `ready` status would let pdlc dispatch it straight off the
-merge. It returns to `ready` in the commit that records those Results.
+All five are `paused` as of 2026-11-08, for two different reasons. `SPEC-0035`
+waits on `SPEC-0034`'s classification: a `ready` status would let pdlc dispatch it
+straight off the merge, before anyone read the result. `SPEC-0036`, `0037` and
+`0038` are demoted on measured demand, not on difficulty — see *Priority is
+measured, not asserted* below.
+
+## Priority is measured, not asserted
+
+`docs/analysis/skills-from-sessions-2026-11-07.md` ranks 58 human sessions from a
+14-day window by frequency, effort, repeatability and the size of the gap. It is
+one sample, and it measures the operator's pain rather than a product thesis — but
+it is the only demand data in the repo, and it does not support the queue we had.
+
+- `ui-refactor` — the territory of `TASK-58` and `TASK-60`: 3 sessions, $6.90,
+  **one project**, gap `0` (`impeccable` and `simplify` already cover it).
+- `bootstrap-harness` — the territory of a template/stack picker: 2 sessions,
+  gap `0` (`bootstrap-project-harness` covers it).
+- No cluster maps to framing (`TASK-59`).
+- The top **uncovered** cluster is `sync-branch` (score 10, gap 2, 2 projects),
+  which was not in the backlog at all; it is `TASK-62`, P1, after the corpus.
+- The top cluster overall, `report-project-status`, shipped on 2026-11-08; the
+  stakeholder recap is a mode of it (`TASK-63`), not a second skill.
+
+So the only P0 is `TASK-56`. The rest keep their place in the queue only if the
+evidence above changes, and **priorities are re-decided in the commit that records
+`SPEC-0034`'s Results** — not before, because the corpus changes the answer to
+every other question.
 
 ## Where the bottleneck is
 
@@ -53,8 +74,10 @@ it.
 | --- | --- | --- | --- |
 | **0.6.2** (released) | an aborted run is never clean | `TASK-52`, `TASK-38`, `TASK-39`, `TASK-40`, `TASK-54`; `TASK-36` documented, `TASK-35` done | 0 draws |
 | **0.7.0** | the corpus can see a small change | `TASK-56` (deterministic slice) and the verdict on `TASK-57` | ~30–40 draws |
-| **0.8.0** | the corpus can see a screen | `TASK-61` (the oracle), then `TASK-58` and `TASK-60` | measurement |
-| **0.9.0** | framing, only if a gap remains | `TASK-59`, conditional on `TASK-56` | measurement |
+| **unscheduled** | the branch can be synced safely | `TASK-62` (`sync-branch`), after the corpus | ~10–20 draws, mostly deterministic |
+| **unscheduled** | a screen can be reviewed | `TASK-61` (oracle) and then `TASK-58`/`TASK-60` — no consumer today | measurement |
+| **unscheduled** | — | `TASK-59` framing, conditional on a gap the corpus shows | measurement |
+| unscheduled | — | `TASK-63`: a stakeholder recap as a mode of the status report | 0–20 |
 | unscheduled | — | `diagnose-failure`: needs a captured problem statement first | 0 until then |
 | unscheduled | — | `agent-skills doctor`: zero draws, rides any release | 0 |
 
@@ -72,14 +95,14 @@ it.
    extension or a new skill is justified. "No gain" is a valid, recorded outcome.
 4. **Store audit and health pass before the cut**, as in 0.6.2.
 
-## Why the visual cases wait for 0.8.0
+## Why the visual work has no release
 
 `TASK-58` and `TASK-60` depend on `TASK-56` for the corpus and on `TASK-61` for
-the oracle. `TASK-61` owns the decision the harness has not made: there is no
-visual or browser assertion today. The honest options are to add that path, or to
-accept human review and declare the coverage — and the second is not a separator,
-so it cannot carry a `P1` claim on its own. Both tasks name `TASK-61` as a
-dependency; the roadmap and the backlog now say the same thing.
+the oracle, and `TASK-61` now depends on them having a consumer. With both paused,
+the oracle loses its justification too — a browser path is the most expensive item
+in this backlog and the measured demand for it is a single-project, one-off
+refactor that two installed skills already cover. The chain reopens at the top: a
+consumer first, then the oracle, then the skills. Not the other way around.
 
 ## Out of scope until a consumer asks
 
@@ -94,6 +117,16 @@ dependency; the roadmap and the backlog now say the same thing.
 - **`diagnose-failure`.** It was the planned 0.7.0 and had no task, spec or inbox
   note behind it — only this table. It returns when a real failure is captured
   with its reproduction, not before.
+- **An `app-blueprint-selection` skill.** It would select templates, stack and
+  components, but it needs a catalogue to select from, and the AS-ITER scope
+  explicitly excludes building one (`#9`: no registry, no taxonomy). Stack
+  detection, additive template install and refusal on competing toolchains
+  already live in `bootstrap-project-harness`. The selection rule belongs in
+  `SPEC-0037`'s open questions, not in a skill.
+- **A `delivery-recap` skill.** The cluster it would serve shipped as
+  `report-project-status`; a second skill in the same trigger space is the
+  collision we just removed. It becomes `TASK-63`, a mode of that report, with one
+  hard rule: cite the evidence, never recompute a published number.
 
 ## Rules that do not change
 

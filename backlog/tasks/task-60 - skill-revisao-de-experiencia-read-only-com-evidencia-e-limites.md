@@ -10,7 +10,7 @@ dependencies:
   - TASK-61
 references:
   - https://github.com/ricardowendell/agent-skills/issues/10
-priority: medium
+priority: low
 type: task
 ordinal: 60000
 ---
@@ -39,6 +39,14 @@ created: 2026-11-08T01:44:00Z
 ---
 
 Groomed em 2026-11-08 para docs/specs/active/SPEC-0038-experience-review.md, status: draft. Bloqueio: mesmo oraculo visual da SPEC-0036, mais um contrato de preview autorizado que o repo ainda nao tem.
+
+---
+
+created: 2026-11-08T02:12:00Z
+
+---
+
+Repriorizada em 2026-11-08: medium -> low, e a SPEC-0038 foi para paused/P3. Base: mesma demanda medida da TASK-58 (ui-refactor, 1 projeto, lacuna 0), mesmo oraculo ausente (TASK-61) e um contrato de preview que o repo nao tem. Reabre com consumidor + decisao do oraculo.
 
 ---
 <!-- COMMENTS:END -->
