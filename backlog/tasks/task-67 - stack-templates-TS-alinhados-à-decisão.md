@@ -1,9 +1,10 @@
 ---
 id: TASK-67
 title: '[stack] templates TS alinhados à decisão'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-11-08T10:00:00Z'
+updated_date: '2026-11-08T11:15:00Z'
 labels: []
 dependencies:
   - TASK-65

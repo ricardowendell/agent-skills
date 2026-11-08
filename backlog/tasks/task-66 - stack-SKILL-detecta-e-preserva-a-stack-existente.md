@@ -1,9 +1,10 @@
 ---
 id: TASK-66
 title: '[stack] SKILL detecta e preserva a stack existente'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-08T10:00:00Z'
+updated_date: '2026-11-08T11:24:00Z'
 labels: []
 dependencies:
   - TASK-65
@@ -22,7 +23,7 @@ Fatia 2 da issue #12 (umbrella TASK-64): SKILL.md detecta runtime, package manag
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Deteccao le runtime, package manager, lockfile, linter/formatter e test runner existentes, sem assumir Bun por tsconfig
-- [ ] #2 Ferramentas existentes sao preservadas; conflito gera diagnostico e skip, nunca substituicao silenciosa
-- [ ] #3 Defaults so se aplicam a repo sem stack TS/Node
+- [x] #1 Deteccao le runtime, package manager, lockfile, linter/formatter e test runner existentes, sem assumir Bun por tsconfig
+- [x] #2 Ferramentas existentes sao preservadas; conflito gera diagnostico e skip, nunca substituicao silenciosa
+- [x] #3 Defaults so se aplicam a repo sem stack TS/Node
 <!-- AC:END -->
