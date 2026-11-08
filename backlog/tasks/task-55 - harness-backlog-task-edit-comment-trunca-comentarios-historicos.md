@@ -38,7 +38,7 @@ Workaround: `node scripts/backlog-comment.mjs TASK-N "texto"` anexa por cirurgia
 - [x] #1 A perda é reproduzida de forma determinística e registrada (comandos, entrada e saída). O binário é externo: não há código no pacote para um teste unitário do CLI; o workaround local tem 9 testes próprios.
 - [x] #2 Causa identificada: `---` isolado no bloco COMMENTS trunca o corpo naquele ponto; upstream Backlog.md 1.55.3 (o wrapper `cli.js` só repassa para o binário). `--status`/`--check-ac` não reescrevem o bloco.
 - [x] #3 Workaround implementado em `scripts/backlog-comment.mjs` (+ `scripts/lib/backlog-comment.mjs`), documentado em `CONTRIBUTING.md` e referenciado em `AGENTS.md`; verificado num corpo com `---` e code fence.
-- [ ] #4 Issue aberta no repositório upstream (MrLesk/Backlog.md). Bloqueado por autorização: publicar em nome do usuário exige aprovação explícita.
+- [x] #4 Issue upstream nao sera aberta: decisao do usuario em 2026-11-08, com o workaround local entregue e no gate. A reproducao fica registrada nesta task para quem precisar reportar depois.
 - [ ] #5 Se `backlog task edit --comment` voltar a ser usado, o `git diff -- backlog/tasks/` é conferido por remoções. O caminho padrão passou a ser o script, então este AC só fecha com um uso real.
 <!-- AC:END -->
 
@@ -76,6 +76,14 @@ Workaround implementado e testado em 2026-11-07. Escopo medido: `--status` e `--
 Comando: `node scripts/backlog-comment.mjs TASK-N "texto" [--at ISO] [--dry-run]`. Insere o registro antes de `COMMENTS:END` sem parsear o bloco, entao corpo com regra horizontal e code fence sobrevive. Este proprio comentario e o teste de campo: se a linha abaixo existir, nada foi perdido.
 
 FIM-DO-TESTE-DE-CAMPO
+
+---
+
+created: 2026-11-08T01:10:00Z
+
+---
+
+AC-4 fechado como won't do em 2026-11-08, por decisao do usuario: a issue upstream nao sera aberta. O workaround (scripts/backlog-comment.mjs) esta entregue, no gate e documentado; a reproducao detalhada fica na descricao desta task, suficiente para um report futuro. Resta AC-5, que so fecha com uso real de --comment.
 
 ---
 <!-- COMMENTS:END -->
