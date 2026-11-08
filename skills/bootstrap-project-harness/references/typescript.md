@@ -112,8 +112,7 @@ TypeScript and accept a pre-1.0 tool. It is not the default.
 
 The default reproduces the four limits, severities and options that
 `skills/bootstrap-project-harness/templates/ts/eslint.config.js.template` ships
-today. Nothing in this table is a tightening (the wider rule set is Oxlint's,
-not ESLint's).
+today. Nothing in this table is a tightening.
 
 | Limit | Default (Oxlint) | ESLint alternative | Biome alternative |
 | --- | --- | --- | --- |
@@ -156,9 +155,10 @@ comment lines and 29 blank lines, and a 67-line function with 8 comment lines
 and blank lines, pass Oxlint and ESLint with the skip flags and pass Biome with
 `skipBlankLines`; Oxlint and ESLint produce the same two warnings when the flags
 are removed. All three flag the dense controls (a 210-line file and a 68-line
-function) with the skip flags on. Biome's line rules already exclude comments,
-so the line-rule options agree on these fixtures. The measured divergence is the
-complexity rule, not the line options.
+function) with the skip flags on. Biome passed the same sparse fixture with only
+`skipBlankLines` set and flagged the dense controls; that is an observed match
+on these fixtures, not a claim about why. The measured divergence is the
+complexity rule, not the line-rule results.
 
 Cognitive complexity is not a superset of cyclomatic complexity: a wide
 `switch` adds many cyclomatic paths but one cognitive point, so Biome would miss
@@ -428,10 +428,12 @@ that row equally. Medians, n=7 (test/lint/typecheck/install) or n=5
 (format/build/cross-runtime).
 
 The CLI install rows are the one place where the sweep and this window disagree
-in absolute terms: `npm ci` reads 576 ms in the matrix sweep above and 824 ms in
-this window, when the host was under higher load. Within each window the
-ordering is stable (npm > pnpm > Bun), and the 824/422/43 ratios are the ones
-used for the decision. The two numbers are not a change in the stack.
+in absolute terms: across the npm CLI cells the sweep reads 418–766 ms (418 ms
+on the default Oxlint cell; 576 ms belongs to the Biome cell), while `npm ci`
+reads 824 ms in this window, when the host was under higher load. Within each
+window the ordering is stable (npm > pnpm > Bun), and the 824/422/43 ratios are
+the ones used for the decision. The difference is the window and load, not the
+stack.
 
 | Lane | Median | Range |
 | --- | --- | --- |
