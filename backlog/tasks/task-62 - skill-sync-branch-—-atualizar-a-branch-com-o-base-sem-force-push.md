@@ -30,3 +30,15 @@ Maior demanda medida e nao coberta do repo: na analise de 58 sessoes humanas (do
 - [ ] #5 Roda os gates documentados depois da atualizacao e registra o que rodou e o que nao rodou.
 - [ ] #6 Asserts deterministicos cobrem estado git (branch, ahead/behind, unchanged), com pelo menos um caso adversarial de arvore suja e um de conflito.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-11-08T09:29:32.404Z
+
+---
+
+Groomed em 2026-11-08 para docs/specs/active/SPEC-0039-sync-branch.md (status: paused). Promove o stub; inclui extensao aditiva do fixture git.json (mainPatch + dirty) porque o schema atual nao encena branch atras da base nem arvore suja. Fica paused ate o commit que registra os Results da SPEC-0034: ordem do roadmap, nao dependencia tecnica, por isso nao ha depends_on.
+
+---
+<!-- COMMENTS:END -->

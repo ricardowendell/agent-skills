@@ -27,3 +27,23 @@ Origem: a proposta delivery-recap. O cluster de demanda (report-project-status: 
 - [ ] #4 Nao cria skill nem espaco de gatilho novo; e um modo do report-project-status.
 - [ ] #5 Sem fonte de evidencia disponivel, declara o limite em vez de preencher com narrativa.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-11-08T09:29:32.448Z
+
+---
+
+Groomed em 2026-11-08 para docs/specs/active/SPEC-0040-report-project-status-recap.md (status: ready). Modo recap do report-project-status, nao skill nova; ainda read-only. Tambem corrige a linha ausente do report-project-status na tabela de skills do README.
+
+---
+
+created: 2026-11-08T09:30:12.479Z
+
+---
+
+Status corrigido: paused, nao ready. Dois motivos independentes: (1) o roadmap re-decide prioridades no commit que registra os Results da SPEC-0034; (2) o pdlc groom rejeita a colisao em docs/evals/coverage.md entre specs sem dependencia declarada. A spec flipa para ready nesse commit, nao antes.
+
+---
+<!-- COMMENTS:END -->
