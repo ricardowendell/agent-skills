@@ -38,7 +38,8 @@ in [`discriminating-cases.md`](discriminating-cases.md).
 
 - A run directory cited **as evidence** takes one of two explicit paths:
   - **A detector with the `host-reads` capability** (v2 `71bfb85a91cd68ab`, v3
-    `d8478beab04a4e3e`, v4 `d3e95ef948f983b7`): `node
+    `d8478beab04a4e3e`, v4 `d3e95ef948f983b7`, v5
+    `def64b2d6a1baa6e`): `node
     scripts/check-eval-run.mjs <run-dir>` reports `findings=0 warnings=0
     skillLeaks=0 hostReads=0 isolated=yes deniedDraws=N`. That means no skill or host
     read, no contaminated draw, no aborted draw (timeout, stall, provider
@@ -133,6 +134,19 @@ the path outside a denial) is still a leak. Without enforcement the v3 rule is
 unchanged. Re-judging the 10-59-41 control with the replay yields five clean
 draws and `deniedDraws=1`; its stored v3 artefact still reports the leak it
 recorded, which is why the replay is the citation for that cell.
+
+Detector v5 (`def64b2d6a1baa6e`, SPEC-0051) makes content count only for the
+path it names: under enforcement a corpus hit is a `leak` only when the call
+returned **that path's** content — a non-shell result carrying a body, or a
+shell output line naming the path (or a child) with no error marker
+(`No such file or directory`, `permission denied`, `Operation not permitted`,
+`EPERM`, `EACCES`, `Is a directory`, `Not a directory`) and no ` -> ` symlink
+arrow. Sibling output, an ENOENT line and an `ls` symlink listing are not a read
+of the hit path; they fall to the enforced residual and are `denied`. Without
+enforcement the v4 rule is unchanged. The two SPEC-0050 control runs
+`2026-11-09T12-41-57--capture-idea--…--without-skill` and
+`2026-11-09T12-55-35--groom-backlog--…--without-skill` replay to five clean
+draws each with `isolated=yes`; SPEC-0050 publishes the cell verdicts.
 
 `node scripts/replay-evals.mjs --leaks <run-dir…>` (or `--leaks --all`)
 re-judged the 0.5.0 wave from its transcripts, with no model and no write into
@@ -265,6 +279,12 @@ output changed after the draws.
 
 ## Known holes
 
+- **A successful bare `ls` of a corpus root reads as `denied` under
+  enforcement.** v5's content rule needs a line naming the path, and an `ls`
+  that returns only relative names has none, so the residual is `denied`. That
+  is reachable only if the boundary is broken — the canary proves the corpus
+  read fails first — so the choice is pinned by a test rather than guessing
+  attribution from a relative listing.
 - **Three SPEC-0017 draws are not checkable, not invalid.** The
   `2026-11-05T13-22-08--implement-from-prompt--opencode-go-gpt-6-luna--without-skill`,
   `2026-11-05T12-00-00--implement-from-prompt--without-skill` and

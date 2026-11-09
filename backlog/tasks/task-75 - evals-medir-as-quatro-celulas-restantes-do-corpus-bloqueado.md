@@ -1,9 +1,10 @@
 ---
 id: TASK-75
 title: 'evals: medir as quatro celulas restantes do corpus bloqueado'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-11-09T15:37:00Z'
+updated_date: '2026-11-09T15:38:00Z'
 labels: []
 dependencies: []
 references:

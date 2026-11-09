@@ -11,6 +11,23 @@ skills, which cases, and which published measurements.
 
 ### Added
 
+- **Content counts only for the path it names (SPEC-0051, TASK-76).** The eval
+  detector now credits a corpus hit with content only when the call returned
+  **that path's** content (detector v5, `def64b2d6a1baa6e`). A non-shell result
+  carrying a body counts; a shell call counts only through an output line naming
+  the path (or a child) with no error marker and no ` -> ` symlink arrow. Sibling
+  output, `No such file or directory`, a permission marker and an `ls -l` arrow
+  are not a read of the hit path: under enforcement the residual is `denied`, and
+  without enforcement the v4 rule is unchanged. This fixes two false positives
+  SPEC-0050's control wave published as leaks — `capture-idea` #1 `r1` (the
+  skills listing was empty; the body came from another file and a symlink line)
+  and `groom-backlog` #2 `r2` (`cat …/groom/SKILL.md` returned `No such file or
+  directory`) — both of which had recorded their assertions. Proven by replay, not
+  by a new draw: `2026-11-09T12-41-57--capture-idea--…--without-skill` and
+  `2026-11-09T12-55-35--groom-backlog--…--without-skill` go from
+  `findings=1`/`findings=2` and `isolated=no` to five clean draws each with
+  `isolated=yes`; the cell verdicts are SPEC-0050's. Source:
+  `docs/specs/active/SPEC-0051-content-counts-only-for-the-path-it-names.md`.
 - **The four remaining blocked cells are measured under the enforced boundary
   (SPEC-0050, TASK-75).** Five draws per arm, `agentworks/deepseek-v4-1-flash`,
   detector v4 `d3e95ef948f983b7`; every manifest records

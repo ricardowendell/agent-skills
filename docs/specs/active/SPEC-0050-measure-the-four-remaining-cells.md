@@ -16,6 +16,7 @@ depends_on:
   - SPEC-0046-deny-control-arm-corpus
   - SPEC-0048-a-denied-read-is-not-a-leak
   - SPEC-0049-a-corpus-hit-under-enforcement-is-a-denied-attempt
+  - SPEC-0051-content-counts-only-for-the-path-it-names
 blocks: []
 files:
   - docs/evals/coverage.md
