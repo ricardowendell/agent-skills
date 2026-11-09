@@ -16,6 +16,7 @@ depends_on: []
 blocks:
   - SPEC-0047-remeasure-under-deny-layer
   - SPEC-0048-a-denied-read-is-not-a-leak
+  - SPEC-0049-a-corpus-hit-under-enforcement-is-a-denied-attempt
 files:
   - scripts/lib/evals/isolation.mjs
   - scripts/lib/evals/isolation.test.mjs

@@ -150,6 +150,48 @@ summary's isolation verdict. No boundary, no case, no fixture, no skill.
 7. **Nothing else moves.** No boundary, case, fixture, skill text, template or
    Python change; every `tests:` command passes.
 
+## Results
+
+Replay-only: no draw was run and no run directory was written. Detector v4 is
+`d3e95ef948f983b7` (v3 was `d8478beab04a4e3e`).
+
+**Before (v3).**
+
+```
+# control 10-59-41 — replay --leaks
+bootstrap-project-harness#19 → dirty(leak)  [5 draw(s)]  isolated=no  deniedDraws=1
+# control 10-59-41 — check-eval-run (stored artefact)
+findings=1 skillLeaks=1 hostReads=0 isolated=no deniedDraws=1
+# with-skill 07-37-44 — check-eval-run (stored artefact)
+findings=0 skillLeaks=0 hostReads=0 isolated=unknown deniedDraws=0
+```
+
+**After (v4).**
+
+```
+# control 10-59-41 — replay --leaks
+bootstrap-project-harness#19 → clean  [5 draw(s)]  isolated=yes  deniedDraws=1
+# control 10-59-41 — check-eval-run (stored artefact, read-only)
+findings=1 skillLeaks=1 hostReads=0 isolated=no deniedDraws=1
+# with-skill 07-37-44 — check-eval-run (stored artefact)
+findings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0
+# with-skill 07-37-44 — check-evidence, citing it with isolated=yes
+0 errors, 0 warnings
+```
+
+The control's re-judged leak count is zero (five clean draws, one denied draw);
+its stored v3 `result.json` still records the leak v3 published, because the
+replay is read-only — that artefact is cited through the replay, not through
+`check-eval-run`. The two readers agree on the with-skill run: `isolated=yes`
+from `check-eval-run` and zero `stale-detector` findings from `check-evidence`.
+
+Run directories (read-only):
+
+- `~/.local/share/opencode/evals/runs/2026-11-09T10-59-41--bootstrap-project-harness--agentworks-deepseek-v4-1-flash--without-skill`
+- `~/.local/share/opencode/evals/runs/2026-11-09T07-37-44--bootstrap-project-harness--agentworks-deepseek-v4-1-flash`
+
+No cell verdict is published here; SPEC-0047 owns the remeasurement.
+
 ## Open Questions
 
 - **What counts as "demonstrably returned the content"?** A `read` tool with a

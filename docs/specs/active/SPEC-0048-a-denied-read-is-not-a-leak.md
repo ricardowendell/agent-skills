@@ -16,6 +16,7 @@ depends_on:
   - SPEC-0046-deny-control-arm-corpus
 blocks:
   - SPEC-0047-remeasure-under-deny-layer
+  - SPEC-0049-a-corpus-hit-under-enforcement-is-a-denied-attempt
 files:
   - scripts/lib/evals/leak.mjs
   - scripts/lib/evals/leak.test.mjs
