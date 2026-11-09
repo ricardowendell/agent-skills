@@ -1,9 +1,10 @@
 ---
 id: TASK-68
 title: '[stack] harness-state por capacidades e slots'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-11-08T10:00:00Z'
+updated_date: '2026-11-08T23:46:00Z'
 labels: []
 dependencies:
   - TASK-65
