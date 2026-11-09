@@ -21,6 +21,50 @@ depends_on:
 blocks: []
 files:
   - skills/bootstrap-project-harness/references/evals.md
+  - skills/bootstrap-project-harness/scripts/template-reference-parity.test.mjs
+  - skills/bootstrap-project-harness/references/evals/16/.gitkeep
+  - skills/bootstrap-project-harness/references/evals/17/bun.lock
+  - skills/bootstrap-project-harness/references/evals/17/bunfig.toml
+  - skills/bootstrap-project-harness/references/evals/17/package.json
+  - skills/bootstrap-project-harness/references/evals/17/README.md
+  - skills/bootstrap-project-harness/references/evals/17/src/index.ts
+  - skills/bootstrap-project-harness/references/evals/17/test/index.test.ts
+  - skills/bootstrap-project-harness/references/evals/17/tsconfig.json
+  - skills/bootstrap-project-harness/references/evals/18/.nvmrc
+  - skills/bootstrap-project-harness/references/evals/18/package.json
+  - skills/bootstrap-project-harness/references/evals/18/pnpm-lock.yaml
+  - skills/bootstrap-project-harness/references/evals/18/README.md
+  - skills/bootstrap-project-harness/references/evals/18/src/index.ts
+  - skills/bootstrap-project-harness/references/evals/18/test/index.test.ts
+  - skills/bootstrap-project-harness/references/evals/18/tsconfig.json
+  - skills/bootstrap-project-harness/references/evals/19/package.json
+  - skills/bootstrap-project-harness/references/evals/19/README.md
+  - skills/bootstrap-project-harness/references/evals/19/src/index.ts
+  - skills/bootstrap-project-harness/references/evals/19/tsconfig.json
+  - skills/bootstrap-project-harness/references/evals/20/biome.json
+  - skills/bootstrap-project-harness/references/evals/20/package.json
+  - skills/bootstrap-project-harness/references/evals/20/README.md
+  - skills/bootstrap-project-harness/references/evals/20/src/index.ts
+  - skills/bootstrap-project-harness/references/evals/20/tsconfig.json
+  - skills/bootstrap-project-harness/references/evals/21/package.json
+  - skills/bootstrap-project-harness/references/evals/21/packages/a/package.json
+  - skills/bootstrap-project-harness/references/evals/21/packages/a/src/index.ts
+  - skills/bootstrap-project-harness/references/evals/21/packages/b/package.json
+  - skills/bootstrap-project-harness/references/evals/21/packages/b/src/index.ts
+  - skills/bootstrap-project-harness/references/evals/21/README.md
+  - skills/bootstrap-project-harness/references/evals/21/tsconfig.json
+  - skills/bootstrap-project-harness/references/evals/22/.python-version
+  - skills/bootstrap-project-harness/references/evals/22/package.json
+  - skills/bootstrap-project-harness/references/evals/22/pyproject.toml
+  - skills/bootstrap-project-harness/references/evals/22/README.md
+  - skills/bootstrap-project-harness/references/evals/22/src/index.ts
+  - skills/bootstrap-project-harness/references/evals/22/tsconfig.json
+  - skills/bootstrap-project-harness/references/evals/23/bun.lock
+  - skills/bootstrap-project-harness/references/evals/23/bunfig.toml
+  - skills/bootstrap-project-harness/references/evals/23/package.json
+  - skills/bootstrap-project-harness/references/evals/23/README.md
+  - skills/bootstrap-project-harness/references/evals/23/src/index.ts
+  - skills/bootstrap-project-harness/references/evals/23/tsconfig.json
   - docs/evals/coverage.md
   - CHANGELOG.md
   - docs/specs/active/SPEC-0045-stack-review-evals.md
@@ -131,6 +175,120 @@ the CHANGELOG, plus this spec.
 - **Shared publication files**: `docs/evals/coverage.md` and `CHANGELOG.md` are
   also declared by other paused specs (SPEC-0034/0039/0040). Dispatch one at a
   time, or declare a dependency, so `pdlc groom` does not reject the pair.
+
+## Results
+
+Measured on 2026-11-08 on `agentworks/deepseek-v4-1-flash` (the documented
+measurement route in `docs/evals/coverage.md`), five draws per cell, detector
+`71bfb85a91cd68ab`. Every command below ran from this worktree with `node`; no
+skill text, template, detector or Python file was changed.
+
+### Runs
+
+- **Skill arm** — `2026-11-08T21-52-29--bootstrap-project-harness--agentworks-deepseek-v4-1-flash`.
+  8 cases, 40 draws. `check-eval-run`: `findings=3`, `skillLeaks=0`,
+  `hostReads=1`, `isolated=no`. The findings are the two stalls below and one
+  host read in the trigger case (`#23 r4`, `/Users/wendell/.agents`).
+- **Control** — `2026-11-08T22-51-39--bootstrap-project-harness--agentworks-deepseek-v4-1-flash--without-skill`.
+  7 cases, 35 draws. `check-eval-run`: `findings=40`, `skillLeaks=33`,
+  `hostReads=7`, `isolated=no`. Every behavioural cell read the real install
+  under `/Users/wendell/.agents/skills` or the host checkout; `#19` managed two
+  clean draws and both failed its assertions.
+- **Harness-state re-measure** — `2026-11-08T23-32-34--bootstrap-project-harness--agentworks-deepseek-v4-1-flash`.
+  2 cases, 10 draws. `check-eval-run`: `findings=0`, `skillLeaks=0`,
+  `hostReads=0`, `isolated=yes`.
+
+### Classification
+
+| case | fixture | with skill (clean draws) | control (clean draws) | classification | failing assertion |
+| --- | --- | --- | --- | --- | --- |
+| #16 | empty repo | 4/4 passed, 1 stalled | 0/0 (5 contaminated) | unresolved | — |
+| #17 | existing Bun | 4/4 passed, 1 stalled | 0/0 (5 contaminated) | unresolved | — |
+| #18 | Node + pnpm | 5/5 | 0/0 (5 contaminated) | unresolved | — |
+| #19 | declared ESLint, no config | 5/5 | 0/2 clean (2 failed, 3 contaminated) | unresolved | — |
+| #20 | existing Biome | 0/5 | 0/0 (5 contaminated) | unresolved (red cell) | `unchanged biome.json` |
+| #21 | npm workspace | 5/5 | 0/0 (5 contaminated) | unresolved | — |
+| #22 | ambiguous stack | 5/5 | 0/0 (5 contaminated) | unresolved | — |
+| #23 | Bun trigger | 4/4 clean, 1 contaminated | n/a | unresolved (routing) | — |
+| #14 | complete harness | 5/5 | n/a | measured | — |
+| #15 | nearly complete | 1/5 | n/a | red cell | `unchanged justfile` |
+
+**No cell is a separator, and no cell is a non-discriminator.** A separator
+needs five clean draws in both arms; no behavioural cell reached five clean
+control draws. `#19` reached two clean control draws (`r3`, `r4`:
+`status=failed`, `contaminated=false`, `leak=[]`) and both failed the assertion;
+the other behavioural cells have zero clean control draws. The control still
+reads the real install and the host corpus, so the missing clean draws are the
+deny-layer half of TASK-43, not a behavioural difference; every cell is published
+as `unresolved`, never as a separation.
+
+`#20` is red on `unchanged biome.json`: the draws show the skill merging the
+four Biome limits (`noExcessiveCognitiveComplexity`, `useMaxParams`,
+`noExcessiveLinesPerFunction`, `noExcessiveLinesPerFile`) into the existing
+config, which is step 11's instructed behavior ("translate the four limits into
+its config"), not a rewritten config. The assertion is over-strict; it is
+recorded here rather than edited after the draws. `#15` is red on `unchanged
+justfile`: the draws add the missing `coverage`, `audit`, `build` and `install`
+recipes, which is step 8's instructed behavior for an existing justfile. Both
+cases need a corrected assertion in a follow-up; this spec does not change an
+oracle after seeing draws.
+
+### Stall protocol
+
+Two paid draws stalled after the skill loaded, in the skill arm:
+
+- `#16 r1`: `exit=stalled`, `stallMs=120000`, `durationMs=318637`,
+  `attempts=2`, `retries=1`, `steps=30`, `toolCalls=30`, skill gate
+  `loaded bootstrap-project-harness` (tool). The last event was a `step_start`;
+  the watchdog killed 120 s of silence.
+- `#17 r1`: `exit=stalled`, `stallMs=120000`, `durationMs=395435`,
+  `attempts=2`, `retries=1`, `steps=22`, `toolCalls=38`, skill gate
+  `loaded bootstrap-project-harness` (tool). Same gap and kill rule.
+
+The stalled draws were not resumed and no `--resume` was used. The coordinator
+reopens TASK-50 with these events; the affected cells are unresolved, not
+passes, and the five-draw rule was not lowered.
+
+### Template parity
+
+`node --test skills/bootstrap-project-harness/scripts/template-reference-parity.test.mjs`
+passes 2/2: the shipped `package.json`, `tsconfig.json`, `.oxlintrc.json`,
+`.nvmrc`, package scripts and CI matrix agree with `references/typescript.md`,
+and a deliberate `.nvmrc` divergence is reported.
+
+### Left out
+
+The control's clean five-draw matrix (the deny layer still reads the real
+install, TASK-43); a corrected `#20` and `#15` assertion (not edited after the
+draws); and any change to the skill text, templates, detector or Python. The
+`check-evidence` warnings are pre-existing lines in other matrices; the new
+coverage row adds none.
+
+### Follow-ups
+
+Recorded without editing the measured artifacts:
+
+- `evals/17/bun.lock` and `evals/18/pnpm-lock.yaml` are stub lockfiles (one
+  comment line and `lockfileVersion: '9.0'`). They exercise existence-only
+  detection (`harness-state.mjs` checks that the file exists); a future draw
+  running `bun install --frozen-lockfile` or `pnpm install --frozen-lockfile`
+  would need real lockfiles.
+- `evals/19/package.json` pins `typescript: 7.0.2` with `eslint: 9.39.1` and no
+  `typescript-eslint`; `references/typescript.md` caps `typescript-eslint@8.72.1`
+  at TypeScript `<6.1.0`, so the fixture is not a realistic supported ESLint
+  project even though it exercises the declared-dependency-without-config
+  property correctly. Both points need a re-measure if the fixtures change.
+
+### Blocked
+
+AC-1's comparative half — "with and without the skill ... show" — is not
+demonstrated: the control arm cannot reach five clean draws while `--no-skill`
+still reads the installed skill under `/Users/wendell/.agents/skills`. That is
+the deny layer, it is out of this spec's scope, and it blocks every behavioural
+separator in the repo; the same block is recorded for `capture-idea`,
+`groom-backlog` and `write-implementation-prompt` in `docs/evals/coverage.md`.
+The cells are published as `unresolved` and no cell is promoted. The deny-layer
+follow-up is **TASK-71**.
 
 ## Prompt Notes
 
