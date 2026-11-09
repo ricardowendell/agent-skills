@@ -187,8 +187,9 @@ tool does not deny the text. Denying that read is **SPEC-0046 / TASK-71**: the
 runner probes the host for an OS-level boundary (macOS seatbelt), launches the
 child under it, and records `params.isolation` in the manifest. It does not
 re-measure anything here. Until SPEC-0047 runs, `capture-idea` #1,
-`groom-backlog` #2, `process-inbox` #1 and `write-implementation-prompt` #1 stay
-**unresolved** — not separators, not regression cases.
+`process-inbox` #1, `groom-backlog` #2 and `write-implementation-prompt` #1 —
+plus the `bootstrap-project-harness` stack cells above — stay **unresolved** —
+not separators, not regression cases.
 
 The replay above is the named v1 replay for every 0.5.0 row in the table: a row
 not listed here is `clean` under it and citable as replay-verified history; a

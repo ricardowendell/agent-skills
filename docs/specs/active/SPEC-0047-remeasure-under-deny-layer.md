@@ -1,7 +1,7 @@
 ---
 id: SPEC-0047
 title: Re-measure the blocked cells under the deny layer
-status: draft
+status: ready
 priority: P1
 task: TASK-72
 created_at: 2026-11-09
@@ -36,10 +36,11 @@ tests:
 
 SPEC-0046 makes the control arm unable to read the installed corpus and makes
 `isolated=yes` a claim the manifest has to support. What that unlock is worth is
-still unmeasured. Four behavioural cells are published as `unresolved` only
+still unmeasured. Five behavioural cells are published as `unresolved` only
 because their control was never isolated:
 
 - `capture-idea` #1 — `2026-11-07T08-27-30--capture-idea--agentworks-deepseek-v4-1-flash--without-skill`
+- `process-inbox` #1 — `2026-11-06T17-25-52--process-inbox--without-skill` (dirty: leak + host)
 - `groom-backlog` #2 — `2026-11-06T07-47-34--groom-backlog--without-skill`
 - `write-implementation-prompt` #1 — `2026-11-07T08-17-29--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill`
 - `bootstrap-project-harness` — the eight stack cells in `2026-11-08T22-51-39--bootstrap-project-harness--agentworks-deepseek-v4-1-flash--without-skill`
@@ -84,6 +85,11 @@ no skill behaviour, no fixtures.
 
 1. **F0 — precondition.** Confirm the host reports enforcement available and the
    canary from SPEC-0046 passes. If not, stop: the wave has nothing to measure.
+   Then run **one cell first** (both arms) and read its manifests before
+   committing the remaining draws: SPEC-0046's boundary also hides config
+   entries that symlink into this checkout, and a sandboxed child that cannot
+   start would waste the whole wave. If that first cell fails for an
+   environmental reason, stop and report — do not spend the rest.
 2. **F1 — run.** For each skill, both arms, five draws, one cell. Record every
    run directory and its raw counts.
 3. **F2 — classify.** `separator` only with five clean draws in both arms;
@@ -96,7 +102,7 @@ no skill behaviour, no fixtures.
 - Run directories under `~/.local/share/opencode/evals/runs/`.
 - `docs/evals/coverage.md` — the inventory and the per-skill rows.
 - `CHANGELOG.md` — the release entry.
-- The four published block records quoted in Purpose.
+- The five published block records quoted in Purpose.
 
 ## Acceptance Criteria
 
@@ -122,12 +128,13 @@ no skill behaviour, no fixtures.
 
 ## Open Questions
 
-- **Which cell per skill?** The four named above are the published blocks. If
+- **Which cell per skill?** The five named above are the published blocks. If
   one of them turns out to be the wrong cell to spend draws on, the spec says
   why before spending.
-- **What is the ceiling?** Forty draws is the estimate. If a post-load stall
-  hits, the TASK-50 protocol applies: stop the wave, record the events, reopen
-  the task — do not retry blindly.
+- **What is the ceiling?** Fifty draws is the estimate (five skills × one cell ×
+  five draws × two arms). If a post-load stall hits, the TASK-50 protocol
+  applies: stop the wave, record the events, reopen the task — do not retry
+  blindly.
 - **What if a cell still cannot reach five clean draws?** It stays `unresolved`
   and the reason is published. That is a legitimate outcome, not a failure of
   the spec.
@@ -136,7 +143,7 @@ no skill behaviour, no fixtures.
 
 ## Prompt Notes
 
-- **Requirements:** prove the enforcement first; spend only the draws the four
+- **Requirements:** prove the enforcement first; spend only the draws the five
   cells need; publish every verdict with its run directory; never promote a
   partially clean cell.
 - **Entities:** cell (skill + case number), arm, draw, clean/contaminated,

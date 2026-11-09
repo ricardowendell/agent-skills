@@ -94,7 +94,7 @@ it.
 | release | claim | work | cost |
 | --- | --- | --- | --- |
 | **0.6.2** (released) | an aborted run is never clean | `TASK-52`, `TASK-38`, `TASK-39`, `TASK-40`, `TASK-54`; `TASK-36` documented, `TASK-35` done | 0 draws |
-| **0.7.0** | the corpus can see a small change | `SPEC-0046` (deny layer) as a prerequisite, then `TASK-56` (deterministic slice) and the verdict on `TASK-57` | ~30–40 draws for the corpus plus ~40 for `SPEC-0047` |
+| **0.7.0** | the corpus can see a small change | `SPEC-0046` (deny layer) as a prerequisite, then `TASK-56` (deterministic slice) and the verdict on `TASK-57` | ~30–40 draws for the corpus plus ~50 for `SPEC-0047` |
 | **unscheduled** | the stack is chosen with numbers | `SPEC-0041`–`SPEC-0045` (#12) | measurement, few or no draws |
 | **unscheduled** | the branch can be synced safely | `TASK-62` (`sync-branch`), after the corpus | ~10–20 draws, mostly deterministic |
 | **unscheduled** | a screen can be reviewed | `TASK-61` (oracle) and then `TASK-58`/`TASK-60` — no consumer today | measurement |
