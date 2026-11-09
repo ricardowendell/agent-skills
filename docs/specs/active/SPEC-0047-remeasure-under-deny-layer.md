@@ -43,7 +43,7 @@ because their control was never isolated:
 - `process-inbox` #1 — `2026-11-06T17-25-52--process-inbox--without-skill` (dirty: leak + host)
 - `groom-backlog` #2 — `2026-11-06T07-47-34--groom-backlog--without-skill`
 - `write-implementation-prompt` #1 — `2026-11-07T08-17-29--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill`
-- `bootstrap-project-harness` — the eight stack cells in `2026-11-08T22-51-39--bootstrap-project-harness--agentworks-deepseek-v4-1-flash--without-skill`
+- `bootstrap-project-harness` — one of the eight stack cells. #19 (a declared ESLint dependency with no config) is the candidate: it is the only stack cell where the control reached clean draws (2) and both failed its assertion, so it is the one with a real chance of a verdict either way.
 
 This spec spends the draws to turn each one into a real classification.
 
@@ -131,10 +131,11 @@ no skill behaviour, no fixtures.
 - **Which cell per skill?** The five named above are the published blocks. If
   one of them turns out to be the wrong cell to spend draws on, the spec says
   why before spending.
-- **What is the ceiling?** Fifty draws is the estimate (five skills × one cell ×
-  five draws × two arms). If a post-load stall hits, the TASK-50 protocol
-  applies: stop the wave, record the events, reopen the task — do not retry
-  blindly.
+- **What is the ceiling?** Fifty draws is the estimate: five skills × one cell ×
+  five draws × two arms. The bootstrap cell is #19, not the whole stack matrix;
+  a second stack cell would be a separate decision. If a post-load stall hits,
+  the TASK-50 protocol applies: stop the wave, record the events, reopen the
+  task — do not retry blindly.
 - **What if a cell still cannot reach five clean draws?** It stays `unresolved`
   and the reason is published. That is a legitimate outcome, not a failure of
   the spec.
