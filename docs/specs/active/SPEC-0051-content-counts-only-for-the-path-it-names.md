@@ -51,7 +51,7 @@ false positives in the same afternoon:
   was published as a `leak` because the error line names the path.
 
 Both draws recorded their assertions and passed them (4/4 and 1/1). Reclassified
-as clean, `capture-idea` #1 is a separator (5/5 vs 2/5) and `groom-backlog` #2 is
+as clean, `capture-idea` #1 is a separator (5/5 vs 1/5) and `groom-backlog` #2 is
 a non-discriminator (5/5 vs 5/5). Publishing them as `unresolved` would record a
 detector defect as a result about the skill.
 
@@ -122,8 +122,8 @@ boundary, no case, no fixture, no skill.
 4. **No enforcement, no change.** The same calls with `enforced: false` keep the
    v2 result.
 5. **The replay proves it.** Both SPEC-0050 control runs go from contaminated to
-   five clean draws with `isolated=yes`; `capture-idea` then reads 2/5 passed and
-   `groom-backlog` 5/5. Recorded in `## Results`, with no verdict published here.
+   five clean draws with `isolated=yes`; the resulting pass counts are recorded
+   in `## Results`, with no verdict published here.
 6. **The detector version moved** if the classification changed, and
    `check-evidence` still exits 0 without rewriting a citation.
 7. **Nothing else moves.** No boundary, case, fixture, skill text, template or
@@ -164,10 +164,9 @@ Both controls replay to five clean draws with `isolated=yes`; the stored
 `result.json` still records the v4 contamination, because the replay is
 read-only and is the citation for these cells. Reclassifying the cleared draw
 leaves `groom-backlog` #2 at 5/5 passed (its `r2` reply assertion passed) and
-`capture-idea` #1 at **1/5** passed, not the 2/5 the spec predicted: `r1`'s
-stored assertions are 3/4, red on `filematch docs/inbox/*.md status:
-unprocessed`, so clearing its contamination does not turn it into a pass. The
-detector verdicts are SPEC-0050's to publish.
+`capture-idea` #1 at **1/5** passed: `r1`'s stored assertions are 3/4, red on
+`filematch docs/inbox/*.md status: unprocessed`, so clearing its contamination
+does not turn it into a pass. The detector verdicts are SPEC-0050's to publish.
 
 Run directories (read-only):
 
