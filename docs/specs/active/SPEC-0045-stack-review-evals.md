@@ -214,10 +214,13 @@ skill text, template, detector or Python file was changed.
 | #15 | nearly complete | 1/5 | n/a | red cell | `unchanged justfile` |
 
 **No cell is a separator, and no cell is a non-discriminator.** A separator
-needs five clean draws in both arms; the control has zero clean draws in every
-behavioural cell, because it still reads the real install and the host corpus.
-That is the deny-layer half of TASK-43, not a behavioural difference, and it is
-published as `unresolved`, never as a separation.
+needs five clean draws in both arms; no behavioural cell reached five clean
+control draws. `#19` reached two clean control draws (`r3`, `r4`:
+`status=failed`, `contaminated=false`, `leak=[]`) and both failed the assertion;
+the other behavioural cells have zero clean control draws. The control still
+reads the real install and the host corpus, so the missing clean draws are the
+deny-layer half of TASK-43, not a behavioural difference; every cell is published
+as `unresolved`, never as a separation.
 
 `#20` is red on `unchanged biome.json`: the draws show the skill merging the
 four Biome limits (`noExcessiveCognitiveComplexity`, `useMaxParams`,
@@ -260,6 +263,32 @@ install, TASK-43); a corrected `#20` and `#15` assertion (not edited after the
 draws); and any change to the skill text, templates, detector or Python. The
 `check-evidence` warnings are pre-existing lines in other matrices; the new
 coverage row adds none.
+
+### Follow-ups
+
+Recorded without editing the measured artifacts:
+
+- `evals/17/bun.lock` and `evals/18/pnpm-lock.yaml` are stub lockfiles (one
+  comment line and `lockfileVersion: '9.0'`). They exercise existence-only
+  detection (`harness-state.mjs` checks that the file exists); a future draw
+  running `bun install --frozen-lockfile` or `pnpm install --frozen-lockfile`
+  would need real lockfiles.
+- `evals/19/package.json` pins `typescript: 7.0.2` with `eslint: 9.39.1` and no
+  `typescript-eslint`; `references/typescript.md` caps `typescript-eslint@8.72.1`
+  at TypeScript `<6.1.0`, so the fixture is not a realistic supported ESLint
+  project even though it exercises the declared-dependency-without-config
+  property correctly. Both points need a re-measure if the fixtures change.
+
+### Blocked
+
+AC-1's comparative half — "with and without the skill ... show" — is not
+demonstrated: the control arm cannot reach five clean draws while `--no-skill`
+still reads the installed skill under `/Users/wendell/.agents/skills`. That is
+the deny layer, it is out of this spec's scope, and it blocks every behavioural
+separator in the repo; the same block is recorded for `capture-idea`,
+`groom-backlog` and `write-implementation-prompt` in `docs/evals/coverage.md`.
+The cells are published as `unresolved` and no cell is promoted. The deny-layer
+follow-up is the coordinator's task (TASK-43).
 
 ## Prompt Notes
 

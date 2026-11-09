@@ -1,7 +1,7 @@
 # Evals
 
 Representative prompts and the trajectory this skill should produce. Fixtures for
-cases 1, 2, 3, 5, 7, 9, 10, 11, and 16–22 live in `references/evals/<n>/` and are
+cases 1, 2, 3, 5, 7, 9, 10, 11, and 16–23 live in `references/evals/<n>/` and are
 copied into the scratch repo before the prompt runs. Cases 14 and 15 also ship a
 `git.json` manifest, so their trees are staged as a committed repo.
 
