@@ -150,6 +150,33 @@ test("a clean result records an empty leak and stays as it was", () => {
   assert.equal(r.status, PASSED)
   assert.equal(r.contaminated, false)
   assert.deepEqual(r.leak, [])
+  assert.equal(r.denied, 0)
+})
+
+// SPEC-0048: a draw whose only corpus interactions were denied is clean. The
+// attempt is still recorded and counted, but it is not a finding.
+test("a denied-only draw is clean and keeps the denied count", () => {
+  const leak = [{ tool: "shell", path: "/Users/me/.agents/skills", kind: "denied" }]
+  const r = contaminate({ status: PASSED, reason: "" }, leak)
+  assert.equal(r.status, PASSED)
+  assert.equal(r.contaminated, false)
+  assert.equal(r.denied, 1)
+  assert.deepEqual(r.leak, leak)
+  assert.doesNotMatch(r.reason, /contaminated/)
+})
+
+test("one successful read still contaminates a draw with denied attempts", () => {
+  const leak = [
+    { tool: "shell", path: "/Users/me/.agents/skills", kind: "denied" },
+    { tool: "read", path: "/Users/me/.agents/skills/review-code/SKILL.md" },
+  ]
+  const r = contaminate({ status: PASSED, reason: "" }, leak)
+  assert.equal(r.status, UNSCORED)
+  assert.equal(r.contaminated, true)
+  assert.equal(r.denied, 1)
+  assert.match(r.reason, /contaminated/)
+  assert.match(r.reason, /review-code/)
+  assert.doesNotMatch(r.reason, /read \/Users\/me\/\.agents\/skills,/, "the denied path is not named as read")
 })
 
 test("a contaminated repetition never counts as a pass, even when its assertions are green", () => {

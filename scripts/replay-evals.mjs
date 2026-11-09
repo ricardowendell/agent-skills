@@ -265,12 +265,18 @@ if (opt.leaks) {
         if (opt.skill && parsed.skill !== opt.skill) continue
         if (opt.case !== null && parsed.n !== opt.case) continue
         const key = `${parsed.skill}#${parsed.n}`
-        const entry = byCell.get(key) ?? { draws: 0, leak: false, host: false }
+        // SPEC-0048: a denied corpus attempt is recorded apart from a read. The
+        // replay must apply the same split as a fresh draw, or re-judging a
+        // stored transcript would say `dirty` where the runner said clean.
+        const entry = byCell.get(key) ?? { draws: 0, leak: false, host: false, denied: 0 }
         entry.draws++
+        let drawDenied = false
         for (const hit of leaksIn(parsed.text, parsed.scratch, hostRoots)) {
           if (hit.kind === "host") entry.host = true
+          else if (hit.kind === "denied") drawDenied = true
           else entry.leak = true
         }
+        if (drawDenied) entry.denied++
         byCell.set(key, entry)
       }
     }
@@ -285,7 +291,13 @@ if (opt.leaks) {
       const rules = [entry.leak ? "leak" : "", entry.host ? "host" : ""].filter(Boolean)
       if (rules.length) dirty++
       const verdict = rules.length ? `dirty(${rules.join(",")})` : "clean"
-      console.log(`${name}  ${cell} → ${verdict}  [${entry.draws} draw(s)]`)
+      const denied = entry.denied ? `  denied=${entry.denied}` : ""
+      // The same three-state rule as `runcheck`: a read denies isolation, and a
+      // clean cell is `yes` only when the manifest proves the boundary. The
+      // re-judged with-skill cell can then state it without the stale-detector
+      // guard that the stored v2 artefact fails.
+      const isolated = rules.length ? "no" : iso.state === "enforced" && entry.draws > 0 ? "yes" : "unknown"
+      console.log(`${name}  ${cell} → ${verdict}  [${entry.draws} draw(s)]  isolated=${isolated}${denied}`)
     }
   }
   if (unreadable) {

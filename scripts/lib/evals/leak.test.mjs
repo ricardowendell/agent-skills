@@ -8,8 +8,10 @@ test("the detector version is derived from the rule list and pinned", () => {
   assert.notEqual(detectorVersion([...DETECTOR_RULES, "a-new-rule"]), DETECTOR_VERSION, "a changed rule moves the version")
   // Golden: if a rule changes, the digest changes and this fails until the new
   // value is written here — the signal that an earlier control is no longer
-  // citable. Recompute with `detectorVersion()`.
-  assert.equal(DETECTOR_VERSION, "71bfb85a91cd68ab")
+  // citable. Recompute with `detectorVersion()`. SPEC-0048 added the per-path
+  // denial rule (`per-path-permission-denial`), so v2's `71bfb85a91cd68ab` is
+  // now history.
+  assert.equal(DETECTOR_VERSION, "d8478beab04a4e3e")
 })
 
 const SCRATCH = "/var/folders/aa/T/eval-review-code-1-abc123"
@@ -259,6 +261,89 @@ test("an empty or missing transcript is not a leak and does not throw", () => {
   assert.deepEqual(leaksIn("", SCRATCH), [])
   assert.deepEqual(leaksIn(undefined, SCRATCH), [])
   assert.deepEqual(leaksIn(null, SCRATCH), [])
+})
+
+// SPEC-0048: a corpus path the call's output shows refused is `denied`, not a
+// read. The F0.1 control probed the installed corpus under the seatbelt and the
+// old detector still called the draws contaminated.
+const DENIED_OUTPUT = (path) => `cat: ${path}: Operation not permitted\n`
+const deniedRead = (path, output = DENIED_OUTPUT(path)) => ({ tool: "read", input: { path }, meta: {}, output })
+const shell = (command, output, exit = 0) => ({ tool: "shell", input: { command }, meta: {}, output, exit })
+
+test("a corpus path whose call is refused is denied, not a leak", () => {
+  const hits = findLeaks([deniedRead("/Users/me/.agents/skills/review-code/SKILL.md")], SCRATCH)
+  assert.deepEqual(hits, [
+    { tool: "read", path: "/Users/me/.agents/skills/review-code/SKILL.md", kind: "denied" },
+  ])
+})
+
+test("the same path read successfully is still a leak", () => {
+  const path = "/Users/me/.agents/skills/review-code/SKILL.md"
+  const hits = findLeaks([{ tool: "read", input: { path }, meta: {}, output: "# review-code\nread this" }], SCRATCH)
+  assert.deepEqual(hits, [{ tool: "read", path }])
+  assert.equal(hits[0].kind, undefined, "no kind is the v1 leak shape")
+})
+
+test("a mixed shell call is denied on A and keeps B as a leak", () => {
+  const a = "/Users/me/.agents/skills/alpha/SKILL.md"
+  const b = "/Users/me/.agents/skills/beta/SKILL.md"
+  const hits = findLeaks(
+    [shell(`cat ${a} ${b}`, `cat: ${a}: Operation not permitted\nBETA SKILL BODY\n`, 1)],
+    SCRATCH,
+  )
+  assert.deepEqual(hits, [
+    { tool: "shell", path: a, kind: "denied" },
+    { tool: "shell", path: b },
+  ])
+})
+
+test("a denial for a different path does not deny this one", () => {
+  const a = "/Users/me/.agents/skills/alpha/SKILL.md"
+  const b = "/Users/me/.agents/skills/beta/SKILL.md"
+  // Non-zero exit, but the output names an absolute path (A), so the no-path
+  // fallback must not fire and B stays a leak.
+  const hits = findLeaks([shell(`ls ${a} ${b}`, `ls: ${a}: Operation not permitted\n`, 1)], SCRATCH)
+  assert.deepEqual(hits, [
+    { tool: "shell", path: a, kind: "denied" },
+    { tool: "shell", path: b },
+  ])
+})
+
+test("a denied host-corpus read is denied too, not a host finding", () => {
+  const path = `${HOST}/docs/specs/SPEC-0012-demo.md`
+  const hits = findLeaks([shell(`cat ${path}`, `cat: ${path}: Operation not permitted\n`, 1)], SCRATCH, HOST_ROOTS)
+  assert.deepEqual(hits, [{ tool: "shell", path, kind: "denied" }])
+})
+
+test("the path denied in one call is denied wherever the transcript names it", () => {
+  // The F0.1 shape: one probe pipes stderr to /dev/null (its own output proves
+  // nothing), a later call for the same path shows the denial.
+  const path = "/Users/me/.agents/skills"
+  const silent = shell(`ls ${path} 2>/dev/null | head`, "unrelated output\n", 0)
+  const explicit = shell(`ls ${path}`, `ls: ${path}: Operation not permitted\n`, 0)
+  assert.deepEqual(findLeaks([silent, explicit], SCRATCH), [
+    { tool: "shell", path, kind: "denied" },
+  ])
+})
+
+test("a later successful read of a denied path is still a leak", () => {
+  const path = "/Users/me/.agents/skills/review-code/SKILL.md"
+  const denied = { tool: "read", input: { path }, meta: {}, output: `read: ${path}: Operation not permitted`, status: "error" }
+  const success = { tool: "read", input: { path }, meta: {}, output: "# review-code", status: "completed" }
+  assert.deepEqual(findLeaks([denied, success], SCRATCH), [
+    { tool: "read", path, kind: "denied" },
+    { tool: "read", path },
+  ])
+})
+
+test("the no-path fallback needs a non-zero exit and an output with no content", () => {
+  const path = "/Users/me/.agents/skills/review-code/SKILL.md"
+  const denied = shell(`cat ${path}`, "Operation not permitted\n", 1)
+  assert.deepEqual(findLeaks([denied], SCRATCH), [{ tool: "shell", path, kind: "denied" }])
+  const succeeded = shell(`cat ${path}`, "Operation not permitted\n", 0)
+  assert.deepEqual(findLeaks([succeeded], SCRATCH), [{ tool: "shell", path }])
+  const content = shell(`cat ${path}`, "Operation not permitted\nSKILL BODY\n", 1)
+  assert.deepEqual(findLeaks([content], SCRATCH), [{ tool: "shell", path }])
 })
 
 test("duplicates collapse and the transcript stream is read through events", () => {

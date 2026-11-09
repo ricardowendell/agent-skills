@@ -155,6 +155,55 @@ boundary, no fixture, no case.
 8. **Nothing else moves.** No boundary, case, fixture, skill text, template or
    Python change; every `tests:` command passes.
 
+## Results
+
+**Detector v3.** `DETECTOR_RULES` gained `per-path-permission-denial`;
+`DETECTOR_VERSION` moved from `71bfb85a91cd68ab` (v2) to `d8478beab04a4e3e`. The
+classifier is per path: a hit whose call output names the path (or its directory)
+on a line carrying `Operation not permitted`, `permission denied`, `EPERM` or
+`EACCES` is `{ kind: "denied" }`. The denial is gathered from the transcript, so
+a probe that discarded its own stderr is still classified from the call that
+showed the refusal. A mixed call keeps the successful path as a leak; when the
+output names no path at all, the fallback also needs a non-zero exit and an
+output that carries no content. `contaminate` ignores `denied` and records the
+count, `check-eval-run` prints `denied=N`, and `isolated=yes` still requires zero
+`leak`/`host`.
+
+**Replay proof (AC-7).** Read-only re-judge of the two stored SPEC-0047 F0.1
+runs; no model, no write, no paid draw.
+
+| run | arm | before (v2 `71bfb85a`) | after (v3 `d8478beab0`) |
+| --- | --- | --- | --- |
+| `2026-11-09T07-37-44--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` | with-skill | `skillLeaks=0 hostReads=0 isolated=yes`, 5/5 passed | `clean [5 draw(s)] isolated=yes`, `denied=0` |
+| `2026-11-09T07-52-50--bootstrap-project-harness--agentworks-deepseek-v4-1-flash--without-skill` | control | `skillLeaks=3 hostReads=1 contaminated=3 isolated=no` (r3–r5 contaminated) | `clean [5 draw(s)] isolated=yes`, `denied=3` (r3–r5 denied-clean) |
+
+`node scripts/replay-evals.mjs --leaks <the two dirs>` prints
+`Detector d8478beab04a4e3e: 2 cell(s), 0 dirty. No model, no write.` The control's
+`r3`–`r5` probes — `/Users/wendell/.agents/skills`,
+`/Users/wendell/.config/opencode/skills`, `/Users/wendell/.agents/` and
+`/Users/wendell/.agents/commands` — are now three denied draws with no
+`leak`/`host`, so the case has five clean control draws and both arms replay
+`isolated=yes` against the manifest's enforced seatbelt record. The with-skill
+run's stored artefact recorded `isolated=yes` under v2; its transcripts still
+carry zero leaks and zero host reads.
+
+The stored `result.json` is not rewritten: the replay is the evidence, and the
+old artefact keeps the detector it ran under. `check-eval-run` on that artefact
+therefore still echoes `skillLeaks=3 hostReads=1` (v2 record) and reports
+`isolated=unknown` for the with-skill run (its recorded detector is not the
+current one); the re-judged counts are the replay output above.
+
+**Gate status.** Seven of the eight `tests:` commands pass. `check-evidence`
+reports 21 `stale-detector` errors for `isolated=yes` citations carried by
+pre-v3 runs: six in `docs/evals/coverage.md` and fifteen in
+`docs/evals/pipeline-bookends-matrix.md` and
+`docs/evals/write-implementation-prompt-matrix.md`. The last two are outside
+this spec's `files:`, so updating them would fail `spec-check`'s
+`files-touched-undeclared` rule. The repository's `.githooks/pre-commit` runs the
+same `check-evidence`, so it refuses the commit until the citation set and the
+declared scope agree. The spec scope (or a compatibility rule for a prior
+detector's `isolated=yes` claims) has to be amended before that gate can pass.
+
 ## Open Questions
 
 - **How precise must the path match be?** The denial line usually names the exact

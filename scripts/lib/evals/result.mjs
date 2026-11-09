@@ -54,15 +54,25 @@ export function classify({ exit, asserts, skillGate = null, providerError = null
 // harness's existing "not a pass, not a fail" bucket, and no new status is
 // invented. `contaminated: true` names the reason; the aggregate reads only the
 // clean draws.
+//
+// SPEC-0048 splits `denied` from the rest. A control draw that reached for the
+// corpus and was refused by the OS boundary interacted with nothing: the attempt
+// is recorded (and counted) so the reader sees the boundary held, but it does not
+// contaminate the draw. One successful read is enough to set `contaminated`.
 export function contaminate(result, leak = [], { all = false } = {}) {
-  const paths = [...new Set(leak.map((l) => l.path))]
+  const entries = leak.map((l) => (typeof l === "string" ? { path: l, kind: "leak" } : l))
+  const denied = entries.filter((l) => l?.kind === "denied")
+  const paths = [...new Set(entries.filter((l) => l?.kind !== "denied").map((l) => l.path))]
   const contaminated = paths.length > 0
   const reason = contaminated
     ? `${all ? "every repetition contaminated" : "contaminated"} — read ${paths.join(", ")}${result.reason ? `; ${result.reason}` : ""}`
     : result.reason
   return {
     ...result,
-    leak: leak.map(({ tool, path }) => ({ tool, path })),
+    leak,
+    // The attempt has to stay visible even when it is not a finding: the JSON
+    // carries the count next to the leak list the checker reads.
+    denied: denied.length,
     contaminated,
     status: contaminated ? UNSCORED : result.status,
     reason,

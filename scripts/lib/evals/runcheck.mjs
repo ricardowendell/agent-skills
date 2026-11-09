@@ -93,13 +93,18 @@ export function isPreDetector(cases = [], startedAt = null) {
 
 // Before the host rules every entry was `{ tool, path }`; an entry without a
 // kind is therefore a skill/corpus leak. A `host` entry carries the root that
-// matched, so the finding can name what was read.
+// matched, so the finding can name what was read. A `denied` entry (SPEC-0048)
+// is an attempt the boundary refused: it is counted, never a finding.
 function leakEntries(result) {
   return (result.leak ?? [])
     .map((l) =>
       typeof l === "string"
         ? { path: l, kind: "leak" }
-        : { path: l?.path, kind: l?.kind === "host" ? "host" : "leak", root: l?.root },
+        : {
+            path: l?.path,
+            kind: l?.kind === "host" ? "host" : l?.kind === "denied" ? "denied" : "leak",
+            root: l?.root,
+          },
     )
     .filter((e) => e.path)
 }
@@ -135,6 +140,10 @@ export function checkRun({ arm = null, cases = [], isolation = null, requested =
   let infrastructure = 0
   let skillLeaks = 0
   let hostReads = 0
+  // SPEC-0048: a denied corpus attempt is evidence that the boundary held, not a
+  // finding. It is counted per draw so the reader sees the probe without the
+  // cell losing `isolated=yes`.
+  let denied = 0
   // A cell is isolated only when the detector that judged it already looked for
   // host reads. Pre-SPEC-0028 artefacts (a different or missing version) are
   // history: no host finding was possible, so silence cannot be a clean bill.
@@ -197,6 +206,7 @@ export function checkRun({ arm = null, cases = [], isolation = null, requested =
           const named = host.map((e) => (e.root ? `${e.path} (${e.root})` : e.path))
           add("host", `read host corpus ${named.join(", ")}`)
         }
+        if (leakPaths(r, "denied").length) denied++
       }
 
       // Contamination is its own finding even when no path survived (an old
@@ -229,6 +239,8 @@ export function checkRun({ arm = null, cases = [], isolation = null, requested =
   // Everything else — a v1 run, a run with no isolation record, a missing leak
   // field — is `unknown`, which is not the same accusation as `no`.
   const read = skillLeaks > 0 || hostReads > 0
+  // `denied` is deliberately absent from `read`: a refused attempt is not a
+  // read, and counting it would make an enforced control unable to be clean.
   // SPEC-0046: an isolation record is enforced only when it says so. A legacy
   // boolean still certifies a throwaway home, because rewriting history would
   // turn every earlier `isolated=yes` into an error. A record with
@@ -242,6 +254,6 @@ export function checkRun({ arm = null, cases = [], isolation = null, requested =
   return {
     findings,
     warnings,
-    counts: { cases: cases.length, reps, findings: findings.length, infrastructure, skillLeaks, hostReads, isolated },
+    counts: { cases: cases.length, reps, findings: findings.length, infrastructure, skillLeaks, hostReads, denied, isolated },
   }
 }

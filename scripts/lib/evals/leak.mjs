@@ -19,6 +19,17 @@
 // never touches the filesystem, so a transcript can be re-read without the run
 // that made it.
 //
+// A fourth kind exists: `denied`. SPEC-0047's F0.1 control reached for the
+// installed corpus under SPEC-0046's seatbelt and got `Operation not permitted`
+// on every read, yet the detector recorded the path from the tool *input* and
+// called the draw contaminated, so no probing control could ever be clean. The
+// transcript is the record: when the call's output shows the denial for that
+// path, the hit is an attempt the boundary stopped, not a read. The classifier
+// is per path and per call, never per draw — a mixed shell call that is denied
+// on one path and returns another keeps the successful read as a leak. A false
+// `denied` would hide a real leak, so the fallback (no path named at all) also
+// requires a non-zero exit and an output that carries no content.
+//
 // Two paths deliberately do not count. `~/…` does not reach the real install:
 // `isolateHome` gives the child a throwaway `HOME`, so `~/.agents/skills` is a
 // directory that does not exist — a `glob` there finds nothing, and flagging it
@@ -49,6 +60,10 @@ const RULES = {
   // The roots themselves are machine-specific and passed by the caller; this
   // rule pins the semantics: an absolute read inside one of them is a finding.
   hostCorpus: "absolute-host-corpus-read",
+  // A corpus hit whose own call shows the denial for that path is an attempt,
+  // not a read (SPEC-0048). It is a separate rule because it changes what
+  // "clean" means, so a control from another detector is not citable.
+  denied: "per-path-permission-denial",
 }
 
 export const DETECTOR_RULES = Object.freeze([
@@ -58,6 +73,7 @@ export const DETECTOR_RULES = Object.freeze([
   ...RULES.skillRoots,
   RULES.corpus,
   RULES.hostCorpus,
+  RULES.denied,
 ])
 
 export function detectorVersion(rules = DETECTOR_RULES) {
@@ -132,6 +148,85 @@ function classifies(path, scratch, hostRoots = []) {
 // `read` input, a shell command line, and a tool's metadata with one scanner.
 const TOKEN = /[^\s"'`()[\]{}<>;,|&]+/g
 
+// The denial markers a permission layer writes. The marker alone says nothing
+// about *which* path was refused, so it only counts when the same line names the
+// hit path (or the directory that contains it). `cat a b` can be denied on `a`
+// and return `b`; calling both `denied` would hide the successful read.
+const DENIAL = /Operation not permitted|permission denied|\bEPERM\b|\bEACCES\b/i
+
+// A path occurrence counts only on a token boundary: `/a/b` inside `/a/b/c` is a
+// child, not the path, and must not borrow its denial.
+function namesPath(line, path) {
+  if (!path) return false
+  const needle = norm(path)
+  if (!needle) return false
+  const hay = norm(line)
+  let from = 0
+  for (;;) {
+    const at = hay.indexOf(needle, from)
+    if (at < 0) return false
+    const before = at === 0 ? "" : hay[at - 1]
+    const after = hay[at + needle.length] ?? ""
+    const afterSlash = hay[at + needle.length + 1] ?? ""
+    const edge = (c) => c === "" || !/[A-Za-z0-9._/-]/.test(c)
+    // A directory named with a trailing separator (`…/skills/:`) is the same
+    // path as `…/skills`; a child (`…/skills/review-code`) is not.
+    if (edge(before) && (edge(after) || (after === "/" && edge(afterSlash)))) return true
+    from = at + 1
+  }
+}
+
+function outputOf(call) {
+  return typeof call.output === "string" ? call.output : ""
+}
+
+function denialLines(call) {
+  return outputOf(call)
+    .split("\n")
+    .filter((line) => DENIAL.test(line))
+}
+
+// The conservative fallback from the spec's open question: when the output names
+// no path at all, accept `denied` only for a non-zero exit, a denial marker, and
+// an output that carries nothing but denial lines. Any content, or any other
+// absolute path, disables the fallback — the read may have succeeded.
+function denialWithoutPath(call) {
+  const exit = call.exit
+  if (!Number.isInteger(exit) || exit === 0) return false
+  const lines = denialLines(call)
+  if (!lines.length) return false
+  const text = outputOf(call)
+  for (const m of text.matchAll(TOKEN)) if (m[0].startsWith("/")) return false
+  return text
+    .split("\n")
+    .filter((line) => line.trim())
+    .every((line) => DENIAL.test(line))
+}
+
+// A non-shell tool that completed with content did return the path's contents,
+// so it is a successful read even when another call in the transcript was
+// refused. `read`/`glob`/`grep` are the tools whose output is the result; a
+// shell call's merged output cannot be attributed to one path, so it never
+// overrides a recorded denial here.
+function returnedContent(call) {
+  return call.tool !== "shell" && call.status === "completed" && outputOf(call).trim() !== ""
+}
+
+// Was this corpus hit refused by the call that named it? Only the call's own
+// output can say so; the path being unreadable now is not evidence.
+function isDenied(call, path) {
+  const lines = denialLines(call)
+  if (!lines.length) return false
+  if (lines.some((line) => namesPath(line, path) || namesPath(line, dirOf(path)))) return true
+  return denialWithoutPath(call)
+}
+
+const dirOf = (path) => {
+  const clean = norm(path)
+  const at = clean.lastIndexOf("/")
+  return at > 0 ? clean.slice(0, at) : clean
+}
+
 function strings(value, out = []) {
   if (typeof value === "string") out.push(value)
   else if (Array.isArray(value)) for (const v of value) strings(v, out)
@@ -143,8 +238,30 @@ function strings(value, out = []) {
 // skill (`<scratch>/.opencode/skills/<id>`) and the fixture stay inside the
 // scratch, so neither ever appears. A `host` hit carries its `kind` and the
 // matching `root`; a `leak` hit keeps the original shape, which is also what
-// every artefact written before the host rules contains.
+// every artefact written before the host rules contains. A `denied` hit is the
+// same shape plus `kind: "denied"`.
+//
+// A denial is a property of the path within the transcript, not of the token in
+// one call. The stored F0.1 control has two calls for `…/.agents/skills`: one
+// pipes stderr to /dev/null (so its own output proves nothing) and a later one
+// shows `Operation not permitted`. Classifying the first from its silent output
+// would keep the draw contaminated for a read the boundary refused, which is
+// the defect this spec fixes. The denial set is therefore gathered from every
+// call first: a path the transcript shows refused is `denied` wherever it is
+// named. A path read successfully and never refused has no denial line, so it
+// stays a leak (AC-2).
 export function findLeaks(calls, scratch, hostRoots = []) {
+  // First pass: every corpus path some call's output shows a denial for.
+  const denied = new Set()
+  for (const call of calls) {
+    const text = [...strings(call.input ?? {}), ...strings(call.meta ?? {})].join("\n")
+    for (const m of text.matchAll(TOKEN)) {
+      const path = m[0].replace(/[.:]+$/, "")
+      if (!classifies(path, scratch, hostRoots)) continue
+      if (isDenied(call, path)) denied.add(norm(path))
+    }
+  }
+
   const hits = []
   const seen = new Set()
   for (const call of calls) {
@@ -153,14 +270,15 @@ export function findLeaks(calls, scratch, hostRoots = []) {
       const path = m[0].replace(/[.:]+$/, "")
       const hit = classifies(path, scratch, hostRoots)
       if (!hit) continue
-      const key = `${call.tool}\u0000${path}`
+      const kind = denied.has(norm(path)) && !returnedContent(call) ? "denied" : hit.kind
+      // The kind is part of the identity: a later classification must not be
+      // dropped just because an earlier call named the same path.
+      const key = `${call.tool}\u0000${path}\u0000${kind}`
       if (seen.has(key)) continue
       seen.add(key)
-      hits.push(
-        hit.kind === "host"
-          ? { tool: call.tool, path, kind: "host", root: hit.root }
-          : { tool: call.tool, path },
-      )
+      if (kind === "denied") hits.push({ tool: call.tool, path, kind: "denied" })
+      else if (hit.kind === "host") hits.push({ tool: call.tool, path, kind: "host", root: hit.root })
+      else hits.push({ tool: call.tool, path })
     }
   }
   return hits

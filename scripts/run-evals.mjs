@@ -755,6 +755,7 @@ function finalizeCase(state) {
     reps: agg.total,
     contaminated: agg.contaminated,
     infrastructure: agg.infrastructure,
+    denied: reps.reduce((n, r) => n + (r.denied ?? 0), 0),
     stoppedEarly: state.stoppedEarly,
     sequence: state.sequence,
     ...provenance,

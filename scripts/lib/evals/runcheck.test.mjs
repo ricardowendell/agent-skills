@@ -44,7 +44,7 @@ test("a clean with-skill run at 5/5 has no findings", () => {
   const cases = [aggregate(Array.from({ length: 5 }, (_, i) => rep({ rep: i + 1 })))]
   const { findings, counts } = checkRun({ arm: "with-skill", cases, isolation: true })
   assert.deepEqual(findings, [])
-  assert.deepEqual(counts, { cases: 1, reps: 5, findings: 0, infrastructure: 0, skillLeaks: 0, hostReads: 0, isolated: "yes" })
+  assert.deepEqual(counts, { cases: 1, reps: 5, findings: 0, infrastructure: 0, skillLeaks: 0, hostReads: 0, denied: 0, isolated: "yes" })
 })
 
 test("a clean control run at 0/5 is not dirty just because it failed", () => {
@@ -53,7 +53,7 @@ test("a clean control run at 0/5 is not dirty just because it failed", () => {
   )
   const { findings, counts } = checkRun({ arm: "without-skill", cases: [aggregate(reps, { contaminated: 0 })], isolation: true })
   assert.deepEqual(findings, [])
-  assert.deepEqual(counts, { cases: 1, reps: 5, findings: 0, infrastructure: 0, skillLeaks: 0, hostReads: 0, isolated: "yes" })
+  assert.deepEqual(counts, { cases: 1, reps: 5, findings: 0, infrastructure: 0, skillLeaks: 0, hostReads: 0, denied: 0, isolated: "yes" })
 })
 
 test("a control repetition that loaded a skill is a gate miss", () => {
@@ -112,7 +112,7 @@ test("a run with no leak field at all is recognised as pre-detector", () => {
   // historical artefact so the old run remains citable.
   const { findings, counts } = checkRun({ arm: "with-skill", cases, isolation: true })
   assert.deepEqual(kinds(findings), Array(12).fill("leak-missing"))
-  assert.deepEqual(counts, { cases: 1, reps: 12, findings: 12, infrastructure: 0, skillLeaks: 0, hostReads: 0, isolated: "unknown" })
+  assert.deepEqual(counts, { cases: 1, reps: 12, findings: 12, infrastructure: 0, skillLeaks: 0, hostReads: 0, denied: 0, isolated: "unknown" })
 })
 
 test("a run that carries leak somewhere must carry it everywhere", () => {
@@ -250,6 +250,46 @@ test("a skill leak and a host read in one draw are two findings", () => {
   assert.equal(counts.isolated, "no")
 })
 
+// SPEC-0048: a denied corpus attempt is evidence that the boundary held. It is
+// counted per draw, never a finding, and does not deny isolation.
+const denied = (path) => ({ tool: "shell", path, kind: "denied" })
+
+test("a denied-only control draw is clean and counted, not a finding", () => {
+  const cases = [
+    aggregate([
+      rep({ rep: 1, arm: "without-skill", status: "failed", skillGate: controlGate(), leak: [denied("/Users/me/.agents/skills")] }),
+      rep({ rep: 2, arm: "without-skill", status: "failed", skillGate: controlGate() }),
+    ]),
+  ]
+  const { findings, counts } = checkRun({
+    arm: "without-skill",
+    cases,
+    isolation: { enforced: true, mechanism: "seatbelt", reason: "available" },
+  })
+  assert.deepEqual(findings, [])
+  assert.equal(counts.denied, 1)
+  assert.equal(counts.skillLeaks, 0)
+  assert.equal(counts.hostReads, 0)
+  assert.equal(counts.isolated, "yes")
+})
+
+test("a denied attempt beside a real leak keeps the leak a finding", () => {
+  const cases = [
+    aggregate([
+      rep({
+        rep: 1,
+        leak: [denied("/Users/me/.agents/skills"), { tool: "read", path: "/Users/me/.agents/skills/x/SKILL.md" }],
+        contaminated: true,
+      }),
+    ]),
+  ]
+  const { findings, counts } = checkRun({ arm: "with-skill", cases })
+  assert.deepEqual(kinds(findings), ["leak"])
+  assert.equal(counts.denied, 1)
+  assert.equal(counts.skillLeaks, 1)
+  assert.equal(counts.isolated, "no")
+})
+
 test("a run written by an older detector is unknown, not dirty and not isolated", () => {
   const cases = [aggregate([rep({ rep: 1, detectorVersion: "a31d58f79a6c7038" })])]
   const { findings, counts } = checkRun({ arm: "with-skill", cases, isolation: true })
@@ -311,7 +351,7 @@ test("an unenforced isolation record is unknown, never isolated", () => {
 test("a single-draw result is the repetition at the root", () => {
   const root = rep({ rep: 1, skillGate: gate({ ok: false, loaded: [], reason: "MISSING" }) })
   const { findings, counts } = checkRun({ arm: "with-skill", cases: [root], isolation: true })
-  assert.deepEqual(counts, { cases: 1, reps: 1, findings: 1, infrastructure: 0, skillLeaks: 0, hostReads: 0, isolated: "yes" })
+  assert.deepEqual(counts, { cases: 1, reps: 1, findings: 1, infrastructure: 0, skillLeaks: 0, hostReads: 0, denied: 0, isolated: "yes" })
   assert.deepEqual(kinds(findings), ["gate-miss"])
   assert.equal(findings[0].rep, 1)
 })
@@ -373,7 +413,13 @@ function makeRun(t, { manifest, cases = [] } = {}) {
 
 const runCli = (dir) => spawnSync(process.execPath, [CLI, dir], { encoding: "utf8" })
 
-function transcriptMd({ skill = "demo", n = 1, scratch, command }) {
+function transcriptMd({ skill = "demo", n = 1, scratch, command, output = null, exit = null }) {
+  const state = {
+    status: "completed",
+    input: { command },
+    metadata: { metadata: exit === null ? {} : { exit } },
+  }
+  if (output !== null) state.output = output
   return [
     `# Eval: ${skill} case ${n}`,
     "",
@@ -387,10 +433,7 @@ function transcriptMd({ skill = "demo", n = 1, scratch, command }) {
     "## Transcript",
     "",
     "```",
-    JSON.stringify({
-      type: "tool_use",
-      part: { id: `${n}`, tool: "shell", state: { status: "completed", input: { command }, metadata: { metadata: {} } } },
-    }),
+    JSON.stringify({ type: "tool_use", part: { id: `${n}`, tool: "shell", state } }),
     "```",
     "",
   ].join("\n")
@@ -438,6 +481,39 @@ test("replay --leaks re-judges stored transcripts and writes nothing", (t) => {
   assert.match(r.stdout, /demo#1 → dirty\(host\)  \[2 draw\(s\)\]/)
   assert.match(r.stdout, /demo#2 → clean  \[1 draw\(s\)\]/)
   assert.deepEqual(snapshot(run), before, "the replay writes nothing into the run directory")
+})
+
+// SPEC-0048: a denied probe is clean, a successful read is dirty, and the
+// replay states the isolation verdict against the manifest's enforced record.
+test("replay --leaks splits denied attempts and reports the isolation verdict", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pdlc-replay-denied-"))
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+  const scratch = "/var/folders/aa/T/eval-demo-1-abc"
+  const run = join(root, "run-denied")
+  const manifest = {
+    status: "completed",
+    arm: "without-skill",
+    params: { isolation: { enforced: true, mechanism: "seatbelt", reason: "available" }, hostRoots: [] },
+  }
+  mkdirSync(run, { recursive: true })
+  writeFileSync(join(run, "manifest.json"), JSON.stringify(manifest))
+  const deniedCommand = "ls /Users/me/.agents/skills"
+  const deniedOutput = "ls: /Users/me/.agents/skills: Operation not permitted"
+  const cleanDir = join(run, "cases", "demo--01")
+  mkdirSync(cleanDir, { recursive: true })
+  writeFileSync(join(cleanDir, "transcript.r1.md"), transcriptMd({ n: 1, scratch, command: deniedCommand, output: deniedOutput }))
+  writeFileSync(join(cleanDir, "transcript.r2.md"), transcriptMd({ n: 1, scratch, command: deniedCommand, output: deniedOutput }))
+  const dirtyDir = join(run, "cases", "demo--02")
+  mkdirSync(dirtyDir, { recursive: true })
+  writeFileSync(
+    join(dirtyDir, "transcript.r1.md"),
+    transcriptMd({ n: 2, scratch, command: "cat /Users/me/.agents/skills/x/SKILL.md", output: "SKILL BODY" }),
+  )
+
+  const r = spawnSync(process.execPath, [REPLAY, "--leaks", run], { encoding: "utf8" })
+  assert.equal(r.status, 0, r.stderr)
+  assert.match(r.stdout, /demo#1 → clean  \[2 draw\(s\)\]  isolated=yes  denied=2/)
+  assert.match(r.stdout, /demo#2 → dirty\(leak\)  \[1 draw\(s\)\]  isolated=no/)
 })
 
 test("replay --leaks exits 2 for a path that is not a run dir", () => {
@@ -588,6 +664,33 @@ test("CLI names a host-corpus read and denies isolation", (t) => {
   assert.match(r.stdout, /host implement-from-prompt#1 r2/)
   assert.match(r.stdout, /read host corpus/)
   assert.match(r.stdout, /skillLeaks=0 hostReads=1 isolated=no/)
+})
+
+test("CLI prints denied without a finding and keeps isolation", (t) => {
+  const leak = [denied("/Users/me/.agents/skills"), denied("/Users/.config/opencode/skills")]
+  const dir = makeRun(t, {
+    manifest: modern({
+      arm: "without-skill",
+      params: { isolate: true, isolation: { enforced: true, mechanism: "seatbelt", reason: "available" } },
+    }),
+    cases: [
+      {
+        name: "x--01",
+        result: aggregate(
+          [
+            rep({ rep: 1, arm: "without-skill", status: "failed", skillGate: controlGate(), leak }),
+            rep({ rep: 2, arm: "without-skill", status: "failed", skillGate: controlGate() }),
+          ],
+          { arm: "without-skill", status: "failed" },
+        ),
+      },
+    ],
+  })
+  const r = runCli(dir)
+  assert.equal(r.status, 0)
+  assert.match(r.stdout, /findings=0 warnings=0/)
+  assert.match(r.stdout, /skillLeaks=0 hostReads=0 isolated=yes denied=1/)
+  assert.doesNotMatch(r.stdout, /leak implement-from-prompt/)
 })
 
 test("CLI does not credit an old-detector run as isolated", (t) => {

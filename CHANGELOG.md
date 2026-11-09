@@ -11,6 +11,20 @@ skills, which cases, and which published measurements.
 
 ### Added
 
+- **A denied read is not a leak (SPEC-0048, TASK-73).** The eval detector now
+  classifies a corpus path whose call output shows a permission denial for that
+  path as `denied` instead of `leak`/`host` (detector v3,
+  `d8478beab04a4e3e`). `contaminate` ignores `denied` and records the count, so a
+  control draw that probed the installed corpus and was refused by SPEC-0046's
+  seatbelt boundary is clean and scorable; `check-eval-run` prints `denied=N`
+  without making it a finding, and `isolated=yes` still requires zero
+  `leak`/`host`. A successful read of the same path remains a leak. The change is
+  proven by replay, not by a new draw: SPEC-0047's control
+  `2026-11-09T07-52-50--bootstrap-project-harness--…--without-skill` goes from
+  `skillLeaks=3 hostReads=1 contaminated=3` to zero leaks/hosts, three denied
+  draws and five clean draws, while the with-skill run stays clean. Re-judging is
+  `node scripts/replay-evals.mjs --leaks <run-dir>`. Source:
+  `docs/specs/active/SPEC-0048-a-denied-read-is-not-a-leak.md`.
 - **The control arm is denied the installed corpus (SPEC-0046, TASK-71).** The
   eval runner now probes whether the host can deny corpus reads below the tool
   layer, and on macOS launches the child under a seatbelt profile that denies the

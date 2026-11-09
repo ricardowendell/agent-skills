@@ -37,23 +37,26 @@ in [`discriminating-cases.md`](discriminating-cases.md).
 ## Evidence rules
 
 - A run directory cited **as evidence** takes one of two explicit paths:
-  - **v2** (`detectorVersion` `71bfb85a91cd68ab`): `node
+  - **v3** (`detectorVersion` `d8478beab04a4e3e`): `node
     scripts/check-eval-run.mjs <run-dir>` reports `findings=0 warnings=0
-    skillLeaks=0 hostReads=0 isolated=yes`. That means no skill or host read, no
-    contaminated draw, no aborted draw (timeout, stall, provider limit), no lost
-    gate, no missing provenance, no unfinished run, at least one draw that ran,
-    and the manifest records an isolated run (`params.isolate: true`).
+    skillLeaks=0 hostReads=0 isolated=yes denied=N`. That means no skill or host
+    read, no contaminated draw, no aborted draw (timeout, stall, provider
+    limit), no lost gate, no missing provenance, no unfinished run, at least one
+    draw that ran, and the manifest records an isolated run (`params.isolate:
+    true`). `denied=N` counts draws that probed the corpus and were refused; it
+    is not a finding and does not deny isolation (SPEC-0048).
     A run that also carries `params.isolation` needs `enforced: true` there:
     `params.isolate` alone is a throwaway home, not a proven boundary. A
     manifest without `params.isolation` is legacy and keeps the boolean rule,
     so the historical `isolated=yes` citations stay valid. A manifest with
     `enforced: false` can never print `isolated=yes`; it prints `unknown`.
-  - **v1** (`a31d58f79a6c7038` and earlier): history, never a clean measurement.
-    It is citable as replay-verified history only when
-    `node scripts/replay-evals.mjs --leaks <run-dir>` prints `clean`, and the
-    citation names that replay. A v1 run never prints `isolated=yes`; with no
-    read detected it prints `isolated=unknown`, because v1 did not look for host
-    reads.
+  - **v2** (`71bfb85a91cd68ab`) and **v1** (`a31d58f79a6c7038` and earlier):
+    history, never a clean measurement under the current detector. Citable as
+    replay-verified history only when
+    `node scripts/replay-evals.mjs --leaks <run-dir>` prints `clean` (or
+    `clean … denied=N`), and the citation names that replay. A pre-v3 run never
+    prints `isolated=yes` under v3; with no read detected it prints
+    `isolated=unknown`, because the version moved when the denied rule landed.
   A directory that fails may still be cited **as the record of the failure
   itself**, with the finding named; it cannot supply a clean pass rate.
   `isolated=no` means the checker saw a skill or host read; `unknown` is neither
@@ -104,6 +107,13 @@ finding keeps its v1 meaning (installed skill or answer key). The numbers above
 are unchanged. The 0.5.0 rows are **replay-verified v1 history**, not v2
 measurements: none of them can print `isolated=yes`, and each is citable only
 through the replay below.
+
+Detector v3 (`d8478beab04a4e3e`, SPEC-0048) adds `denied`: a corpus path whose
+call's output shows a permission denial for that path is a refused attempt, not
+a read. It is recorded and counted, but it neither contaminates the draw nor
+makes `isolated=no`; a successful read of the same path is still `leak`/`host`.
+The v2 rows above keep their numbers as history, but only the v3 detector can
+print `isolated=yes` for a new run.
 
 `node scripts/replay-evals.mjs --leaks <run-dir…>` (or `--leaks --all`)
 re-judged the 0.5.0 wave from its transcripts, with no model and no write into
@@ -165,8 +175,16 @@ and the two agentworks controls replay clean, so not every 0.5.0 control reads
 the host; the deny-layer question (SPEC-0028) stayed open until SPEC-0046 /
 TASK-71 added the OS boundary. The 12-draw canary at
 `2026-11-06T13-51-35` is clean and remains citable as replay-verified v1
-history. A denied read still counts: detection is the guarantee, denial is the
-permission layer's separate decision.
+history.
+
+A denied read is no longer a leak (SPEC-0048). Detection is still the
+guarantee — a successful read is `leak`/`host` — but a path whose own call
+output shows the permission denial is recorded as `denied`, counted on the
+result and in the summary, and does not contaminate the draw. Denial is the
+permission layer's decision, and the transcript is the record of it; the old
+rule made a control that probed the corpus impossible to clean even when the
+boundary held. The F0.1 control of SPEC-0047 is the worked example: its `r3`–`r5`
+probes now replay clean with three denied draws and no `leak`/`host`.
 
 A cell-level dirty verdict does not by itself shrink every published clean
 subset: where a row above cites a subset (for example,
