@@ -1,7 +1,7 @@
 ---
 id: SPEC-0048
 title: A denied read is not a leak
-status: ready
+status: implemented
 priority: P1
 task: TASK-73
 created_at: 2026-11-09
