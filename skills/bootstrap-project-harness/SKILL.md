@@ -113,9 +113,10 @@ defaulted until the rules below say so.
      use its equivalents (`yarn install --frozen-lockfile`, `yarn run <script>`);
      skip the install command that would create a second lockfile.
    - **A hook manager other than Lefthook** (Husky, pre-commit) — keep it and skip
-     the Lefthook install. State that `lefthook.yml` will stay in the
-     `missing:` list until the detector learns profiles (SPEC-0044); report that
-     gap rather than install a second hook manager.
+     the Lefthook install. It fills the `hooks` slot (`hooks=husky`), so
+     `lefthook.yml` is not a gap; the script reports `competing: husky` and the
+     state stays `partial`. Preserve the manager and name the diagnostic rather
+     than install a second hook manager.
    - **A detected stack that cannot express a limit** (for example Biome's
      cognitive complexity) — record the replacement rule in the project's own
      config and in the report; never drop a limit silently.
@@ -131,16 +132,18 @@ The state is the script's answer, not a judgement:
 node scripts/harness-state.mjs .     # scripts/ sits next to this file
 ```
 
-It prints `state:` last, one `missing:` line per absent file and one
-`competing:` line per tool that already owns a slot, and exits `0` complete,
-`1` partial, `2` empty, `3` project without harness, `4` ambiguous stack, `64`
-unreadable directory. It only reads: it never writes, installs or fixes.
+It prints `state:` last, one `missing:` line per absent requirement, one
+`competing:` line per tool that already owns a slot and one `conflict:` line per
+conflicting choice, and exits `0` complete, `1` partial, `2` empty, `3` project
+without harness, `4` ambiguous stack, `5` conflict, `64` unreadable directory. It
+only reads: it never writes, installs or fixes.
 
 | State | Signal | Action |
 | --- | --- | --- |
 | Empty | `state: empty` | `git init`, full bootstrap |
 | Project, no harness | `state: project-no-harness` | add sensors + docs skeleton |
 | Partial harness | `state: partial` | fix only the `missing:` lines, then re-run — except a slot the repo already owns under another tool: that is a diagnostic, not a fix (see the profile) |
+| Conflicting harness | `state: conflict` | ask which choice is authoritative — two owners of one slot or two package managers; keep both files untouched |
 | Complete harness | `state: complete` | stop |
 
 - **`complete`** — report what the script found and stop. No interview, no
@@ -153,6 +156,9 @@ unreadable directory. It only reads: it never writes, installs or fixes.
   stop.
 - **`ambiguous`** — ask which directory to harness, as the stack rules say. The
   script refuses instead of guessing.
+- **`conflict`** — two owners of one slot or two package managers. Ask which is
+  authoritative, keep both files untouched and run no install; nothing is written
+  for that slot.
 - **The script cannot run** (no `node`, no permission) — say so, then read the
   state from the table by hand.
 
