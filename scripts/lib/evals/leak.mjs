@@ -84,6 +84,32 @@ export function detectorVersion(rules = DETECTOR_RULES) {
 // run only when this matches (SPEC-0020 AC-3).
 export const DETECTOR_VERSION = detectorVersion()
 
+// What a detector can prove, in order of what a claim needs. A version only
+// answers "was this checked?" if it already had the capability the claim rests
+// on; the digest alone is stricter than the claim (SPEC-0048). `host-reads` is
+// what `isolated=yes` needs. `denied-split` is the v3 rule: it can only move a
+// finding from `leak`/`host` to `denied`, so a v2 clean claim stays true.
+export const DETECTOR_CAPABILITIES = Object.freeze(["host-reads", "denied-split"])
+
+// Known legacy digests and the capabilities they actually had. v1 never looked
+// for the host checkout; v2 added it. An unknown digest has no map entry and is
+// not credited with anything.
+const LEGACY_CAPABILITIES = Object.freeze({
+  a31d58f79a6c7038: Object.freeze([]),
+  "71bfb85a91cd68ab": Object.freeze(["host-reads"]),
+})
+
+export function capabilitiesOf(version) {
+  if (typeof version !== "string" || version === "") return null
+  if (version === DETECTOR_VERSION) return DETECTOR_CAPABILITIES
+  return LEGACY_CAPABILITIES[version] ?? null
+}
+
+export function hasCapability(version, capability) {
+  const capabilities = capabilitiesOf(version)
+  return Array.isArray(capabilities) && capabilities.includes(capability)
+}
+
 // macOS reports the same tmp dir as both `/var/…` and `/private/var/…`; the
 // scratch header usually records one and the tool the other.
 const norm = (p) => String(p).replace(/^\/private(?=\/)/, "").replace(/\/+$/, "")

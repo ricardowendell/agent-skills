@@ -1,6 +1,16 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { DETECTOR_RULES, DETECTOR_VERSION, detectorVersion, findLeaks, leak, leaksIn } from "./leak.mjs"
+import {
+  DETECTOR_CAPABILITIES,
+  DETECTOR_RULES,
+  DETECTOR_VERSION,
+  capabilitiesOf,
+  detectorVersion,
+  findLeaks,
+  hasCapability,
+  leak,
+  leaksIn,
+} from "./leak.mjs"
 
 test("the detector version is derived from the rule list and pinned", () => {
   assert.match(DETECTOR_VERSION, /^[0-9a-f]{16}$/)
@@ -12,6 +22,22 @@ test("the detector version is derived from the rule list and pinned", () => {
   // denial rule (`per-path-permission-denial`), so v2's `71bfb85a91cd68ab` is
   // now history.
   assert.equal(DETECTOR_VERSION, "d8478beab04a4e3e")
+})
+
+// SPEC-0048: a claim is judged by what the detector could prove, not by its
+// digest. The map is pinned so a new legacy digest is a conscious edit.
+test("the capability map is pinned", () => {
+  assert.deepEqual([...DETECTOR_CAPABILITIES], ["host-reads", "denied-split"])
+  assert.deepEqual([...capabilitiesOf(DETECTOR_VERSION)], ["host-reads", "denied-split"])
+  assert.deepEqual(capabilitiesOf("a31d58f79a6c7038"), [], "v1 saw skill roots but not the host corpus")
+  assert.deepEqual(capabilitiesOf("71bfb85a91cd68ab"), ["host-reads"], "v2 added the host corpus")
+  assert.equal(capabilitiesOf("deadbeefdeadbeef"), null, "an unknown digest is credited with nothing")
+  assert.equal(capabilitiesOf(undefined), null)
+  assert.equal(capabilitiesOf(""), null)
+  assert.equal(hasCapability("71bfb85a91cd68ab", "host-reads"), true)
+  assert.equal(hasCapability("71bfb85a91cd68ab", "denied-split"), false)
+  assert.equal(hasCapability("a31d58f79a6c7038", "host-reads"), false)
+  assert.equal(hasCapability("deadbeefdeadbeef", "host-reads"), false)
 })
 
 const SCRATCH = "/var/folders/aa/T/eval-review-code-1-abc123"

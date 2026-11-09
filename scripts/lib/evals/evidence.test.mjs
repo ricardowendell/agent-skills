@@ -50,7 +50,30 @@ test("isolated=yes on a v1 run is an error", () => {
   const line = "`2026-01-01T00-00-00--v1` `isolated=yes`"
   const findings = cites(line, run({ detectorVersion: "v1old" }))
   assert.deepEqual(findings.map((f) => f.rule), ["stale-detector"])
+  assert.match(findings[0].message, /host-reads/)
   assert.deepEqual(cites(line, run()), [])
+})
+
+// SPEC-0048: capability, not hash equality. v2 already looked for host reads, so
+// its clean verdict survives v3's reclassification of some findings to `denied`.
+test("isolated=yes is accepted from the v1/v2 digests by capability", () => {
+  const line = "`2026-01-01T00-00-00--run` `isolated=yes`"
+  const v1 = cites(line, run({ detectorVersion: "a31d58f79a6c7038" }))
+  assert.deepEqual(v1.map((f) => f.rule), ["stale-detector"], "v1 never looked for host reads")
+  assert.match(v1[0].message, /host-reads/)
+  assert.deepEqual(cites(line, run({ detectorVersion: "71bfb85a91cd68ab" })), [], "v2 had host-reads")
+  assert.deepEqual(cites(line, run({ detectorVersion: current })), [], "the current detector has it")
+})
+
+test("an unknown detector digest fails closed and a missing one is left to provenance", () => {
+  const line = "`2026-01-01T00-00-00--run` `isolated=yes`"
+  const unknown = cites(line, run({ detectorVersion: "deadbeefdeadbeef" }))
+  assert.deepEqual(unknown.map((f) => f.rule), ["stale-detector"])
+  assert.match(unknown[0].message, /host-reads/)
+  // No digest at all is not a stale-detector finding here; the provenance rules
+  // own that path (the run may predate the field).
+  assert.deepEqual(cites(line, run({ detectorVersion: undefined })), [])
+  assert.deepEqual(cites(line, run({ detectorVersion: null })), [])
 })
 
 test("the run nearest the isolated=yes claim is the one checked", () => {

@@ -19,6 +19,8 @@ blocks:
 files:
   - scripts/lib/evals/leak.mjs
   - scripts/lib/evals/leak.test.mjs
+  - scripts/lib/evals/evidence.mjs
+  - scripts/lib/evals/evidence.test.mjs
   - scripts/lib/evals/result.mjs
   - scripts/lib/evals/result.test.mjs
   - scripts/lib/evals/runcheck.mjs
@@ -132,6 +134,20 @@ boundary, no fixture, no case.
   and `2026-11-09T07-52-50--bootstrap-project-harness--agentworks-deepseek-v4-1-flash--without-skill`.
 - `docs/evals/coverage.md`, `CHANGELOG.md`.
 
+### Detector capability
+
+`DETECTOR_CAPABILITIES` names what a detector can prove, in order. An
+`isolated=yes` citation needs `host-reads`: without it, silence about the host
+checkout is not evidence of isolation. The current detector (v3) is
+`["host-reads", "denied-split"]`; the legacy map pins v1 (`a31d58f79a6c7038`) to
+none and v2 (`71bfb85a91cd68ab`) to `["host-reads"]`. `capabilitiesOf(version)`
+returns the current set for `DETECTOR_VERSION`, the mapped set for a known
+legacy digest, and `null` for an unknown digest; an unknown digest fails closed.
+`denied-split` is recorded but not yet required by any claim: a v2
+`isolated=yes` was already true when v3 reclassifies some findings to `denied`,
+because the new rule can only move a finding away from `leak`/`host`, never
+toward one.
+
 ## Acceptance Criteria
 
 1. **Denied is its own kind.** A corpus path whose call output shows a
@@ -146,8 +162,11 @@ boundary, no fixture, no case.
 5. **The attempt stays visible.** The result and the summary carry a `denied`
    count; `check-eval-run` prints it; it is not a finding and does not force
    `isolated=no`.
-6. **The detector version moved.** `DETECTOR_VERSION` changes with the rules,
-   and `check-evidence` still exits 0 on the current inventory.
+6. **The detector version moved and old claims stay honest.** `DETECTOR_VERSION`
+   changes with the rules. A citation of `isolated=yes` is accepted when the
+   detector that judged the run already had the capability the claim needs
+   (`host-reads`); a detector without it stays stale. `check-evidence` exits 0 on
+   the current inventory without rewriting a published citation.
 7. **The replay proves it end to end.** Re-judging the SPEC-0047 control run
    turns `r3`–`r5` into denied-clean (the case then has five clean control
    draws), and the with-skill run still reports `isolated=yes`. The result is
@@ -193,16 +212,13 @@ therefore still echoes `skillLeaks=3 hostReads=1` (v2 record) and reports
 `isolated=unknown` for the with-skill run (its recorded detector is not the
 current one); the re-judged counts are the replay output above.
 
-**Gate status.** Seven of the eight `tests:` commands pass. `check-evidence`
-reports 21 `stale-detector` errors for `isolated=yes` citations carried by
-pre-v3 runs: six in `docs/evals/coverage.md` and fifteen in
-`docs/evals/pipeline-bookends-matrix.md` and
-`docs/evals/write-implementation-prompt-matrix.md`. The last two are outside
-this spec's `files:`, so updating them would fail `spec-check`'s
-`files-touched-undeclared` rule. The repository's `.githooks/pre-commit` runs the
-same `check-evidence`, so it refuses the commit until the citation set and the
-declared scope agree. The spec scope (or a compatibility rule for a prior
-detector's `isolated=yes` claims) has to be amended before that gate can pass.
+**Gate status.** All eight `tests:` commands pass. The v3 digest no longer
+invalidates a v2 `isolated=yes` citation by hash equality: `check-evidence`
+accepts a claim when the recording detector had `host-reads` (v1 has none, v2 has
+it, v3 adds `denied-split`), and an unknown digest fails closed. That is sound
+because the v3 rule only reclassifies `leak`/`host` hits to `denied`; it cannot
+turn a clean draw dirty. No published citation was rewritten to make the gate
+pass.
 
 ## Open Questions
 

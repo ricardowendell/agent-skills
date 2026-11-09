@@ -16,6 +16,8 @@
 // `unreadable` on the line, or the next reader copies the citation without the
 // heading. Warnings use a wider set because "dirty" has several shapes.
 
+import { capabilitiesOf } from "./leak.mjs"
+
 export const COMPLETE_MARKERS = ["unfinished", "running", "discard", "history", "unreadable"]
 export const DIRTY_MARKERS = ["dirty", "leak", "host", "stall", "contaminated", "discard", "history", "failure"]
 
@@ -104,13 +106,21 @@ export function checkCitation({ line, token, run, currentDetector, tokens = [] }
   if (claim >= 0) {
     const subject = subjectToken(tokens, claim)
     if (subject?.token === token) {
-      if (run.detectorVersion !== currentDetector) {
-        const recorded = run.detectorVersion ?? "none"
-        add(
-          "error",
-          "stale-detector",
-          `line claims isolated=yes for ${token}, recorded detector ${recorded} is not ${currentDetector ?? "current"}`,
-        )
+      // SPEC-0048: a claim is judged by capability, not hash equality. A v2 run
+      // already looked for host reads, so v3's reclassification of some findings
+      // to `denied` cannot turn its clean verdict dirty. v1 never looked, so it
+      // stays stale. An unknown digest is credited with nothing. A record with
+      // no detector version is left to the existing provenance rules.
+      const recorded = run.detectorVersion
+      if (recorded !== undefined && recorded !== null) {
+        const capabilities = capabilitiesOf(recorded)
+        if (!capabilities || !capabilities.includes("host-reads")) {
+          add(
+            "error",
+            "stale-detector",
+            `line claims isolated=yes for ${token}, recorded detector ${recorded} lacks the host-reads capability`,
+          )
+        }
       }
       // SPEC-0046: only an explicit object with `enforced: true` proves the
       // boundary. A record that says false, is malformed, or is partial cannot
