@@ -1,7 +1,7 @@
 ---
 id: SPEC-0047
 title: Re-measure the blocked cells under the deny layer
-status: ready
+status: paused
 priority: P1
 task: TASK-72
 created_at: 2026-11-09
@@ -285,6 +285,13 @@ artefact will see the old verdict by design.
 draws each — **40 draws**. Do not re-run #19. The branch of the second attempt is
 preserved as tag `parked/SPEC-0047-remeasure-wave-2`; a new dispatch starts from
 main.
+
+**Moved to SPEC-0050 on 2026-11-09.** This spec's dispatch budget is spent
+(`retry_budget: 1`, attempts `2/1`) after the three halts, so the remaining four
+cells are carried by `SPEC-0050-measure-the-four-remaining-cells.md` with its own
+budget instead of overriding the policy. This spec stays `paused` as the record
+of the #19 measurement and the reason the wave stopped; TASK-72 remains its
+binding and closes when SPEC-0050 lands.
 
 ## Open Questions
 
