@@ -22,6 +22,7 @@ files:
   - docs/evals/coverage.md
   - CHANGELOG.md
   - docs/specs/active/SPEC-0050-measure-the-four-remaining-cells.md
+  - backlog/tasks/task-70 - evals-medir-e-publicar-a-cobertura-da-report-project-status-issue-11.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check
