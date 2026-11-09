@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "e23a394e-cc25-4799-a615-b3f41dcf58ef",
+  "started_at": "2026-11-08T23:46:15.001Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.4.0"
+  },
+  "base_commit": "2536c72e4a3869e8ad1396bfa291648d94a4e69f",
+  "head_commit": "c6c832434700737ad943f13218d17d135576d349",
+  "task": "SPEC-0044",
+  "spec_sha": "37f8b68f5758f509e96963b1cce87342d2e038917a2872ced0a7093adec43808",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0044-harness-state-capabilities.json",
+      "sha256": "da967a021e3a5240de89b11f3aaa5485d832325829365cd0f5c3f965c0590f5d"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0044-harness-state-capabilities.json",
+      "sha256": "a8270f2c024df5a00c27dd6b26cb391b72e09902bacb10ae89f30a61d71864ca"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "4abc002af2798cf05357e8e62c8c28f2f2e8b9b25d44dd0ecabdd4a7c91b82b5"
+    }
+  ],
+  "attempts": 1,
+  "duration": 1038,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "ad70ca661a554e663981fcd00a08057d1a74c9bd"
+}
