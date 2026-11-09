@@ -288,7 +288,7 @@ the deny layer, it is out of this spec's scope, and it blocks every behavioural
 separator in the repo; the same block is recorded for `capture-idea`,
 `groom-backlog` and `write-implementation-prompt` in `docs/evals/coverage.md`.
 The cells are published as `unresolved` and no cell is promoted. The deny-layer
-follow-up is the coordinator's task (TASK-43).
+follow-up is **TASK-71**.
 
 ## Prompt Notes
 
