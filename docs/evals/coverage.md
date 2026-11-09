@@ -8,18 +8,18 @@ directories; they are not estimates.
 | Skill | Cases | Trigger | Manual | Fixture | Evidence recorded |
 | --- | --- | --- | --- | --- | --- |
 | `audit-docs` | 4 | 2 | 0 | tree 1; tree 3 staged via `git.json`; tree 4 drift fixture | case 3: 3/3, skill loaded 3/3 (`why:`, no run dir); case 4: 3/3, defect + intentional evolution + future filtered, no writes (`2026-11-05T08-46-00--audit-docs`) |
-| `bootstrap-project-harness` | 23 | 3 | 1 | trees 1, 2, 3, 5, 7, 9, 10, 11, 14, 15, 16–23; 14 and 15 via `git.json` | case 14: 12/12 re-judged (first pass 9/12 on a reply regex); case 15: 3/3 (`why:`, no run dir). Re-measured after the Oxlint rename (SPEC-0045, `agentworks/deepseek-v4-1-flash`, five draws): case 14 5/5 and case 15 1/5 (failing `unchanged justfile`) in `2026-11-08T23-32-34--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` (clean, `findings=0`, `isolated=yes`). Stack review, skill arm: #16 4/4 clean (1 stalled), #17 4/4 clean (1 stalled), #18 5/5, #19 5/5, #20 0/5 on `unchanged biome.json` (the skill merged the four Biome limits), #21 5/5, #22 5/5, #23 trigger 4/4 clean + 1 contaminated (host read), all in `2026-11-08T21-52-29--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` (dirty: 2 stalls + 1 host read, `isolated=no`). Control: no cell reached five clean draws; #19 reached 2 clean draws and both failed, the other cells 0 clean with 5 contaminated each, in `2026-11-08T22-51-39--bootstrap-project-harness--agentworks-deepseek-v4-1-flash--without-skill` (dirty: 33 skill leaks + 7 host reads, `isolated=no`); the control still reads the real install, so every behavioural cell is **unresolved**, not a separator |
-| `capture-idea` | 3 | 2 | 0 | trees 1–3 | published matrix: #1 5/5 with the skill; control **unresolved** under v2 (`2026-11-07T08-27-30--capture-idea--agentworks-deepseek-v4-1-flash--without-skill`: 0/0 clean, 5 contaminated — every draw read the install under `/Users/wendell/.agents/skills` (`r1` the directory, the rest the `SKILL.md`)), after v1 clean subsets 0/2, 0/2 and 0/0 (every clean draw failed `status: unprocessed`; dirs `2026-11-06T16-40-32--capture-idea`, `…17-07-09--without-skill`, `…17-23-44…`, `…17-32-50…`, all dirty); #2 trigger 5/5; #3 routing **5/5** with `process-inbox` staged as the declared sibling in `2026-11-06T19-06-50--capture-idea` (v2, `isolated=yes`), replacing the pre-fix 0/4 clean cross-skill-staging record `2026-11-06T16-50-30--capture-idea` (findings=1); see `pipeline-bookends-matrix.md` |
+| `bootstrap-project-harness` | 23 | 3 | 1 | trees 1, 2, 3, 5, 7, 9, 10, 11, 14, 15, 16–23; 14 and 15 via `git.json` | case 14: 12/12 re-judged (first pass 9/12 on a reply regex); case 15: 3/3 (`why:`, no run dir). Re-measured after the Oxlint rename (SPEC-0045, `agentworks/deepseek-v4-1-flash`, five draws): case 14 5/5 and case 15 1/5 (failing `unchanged justfile`) in `2026-11-08T23-32-34--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` (clean, `findings=0`, `isolated=yes`). Stack review, skill arm: #16 4/4 clean (1 stalled), #17 4/4 clean (1 stalled), #18 5/5, #19 5/5, #20 0/5 on `unchanged biome.json` (the skill merged the four Biome limits), #21 5/5, #22 5/5, #23 trigger 4/4 clean + 1 contaminated (host read), all in `2026-11-08T21-52-29--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` (dirty: 2 stalls + 1 host read, `isolated=no`). Control: no cell reached five clean draws; #19 reached 2 clean draws and both failed, the other cells 0 clean with 5 contaminated each, in `2026-11-08T22-51-39--bootstrap-project-harness--agentworks-deepseek-v4-1-flash--without-skill` (dirty: 33 skill leaks + 7 host reads, `isolated=no`); the control still reads the real install, so every behavioural cell is **unresolved**, not a separator. **#19 is measured without another draw (SPEC-0047):** with-skill `2026-11-09T07-37-44--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` is 5/5 passed and `isolated=yes`; the control `2026-11-09T10-59-41--bootstrap-project-harness--…--without-skill` replays under detector v4 (`node scripts/replay-evals.mjs --leaks`) to five clean draws, `deniedDraws=1`, with 1/5 passed and four red on `file AGENTS.md`, `file justfile`, `filematch eslint.config.js` and `filematch justfile eslint` — a **separator** on the rule (5/5 vs 1/5). The stored control `result.json` still records the older v3 contamination (`skillLeaks=1`, `isolated=no`) by design; the replay is the evidence, not the artefact |
+| `capture-idea` | 3 | 2 | 0 | trees 1–3 | published matrix: #1 5/5 with the skill; control **unresolved** under v2 (`2026-11-07T08-27-30--capture-idea--agentworks-deepseek-v4-1-flash--without-skill`: 0/0 clean, 5 contaminated — every draw read the install under `/Users/wendell/.agents/skills` (`r1` the directory, the rest the `SKILL.md`)), after v1 clean subsets 0/2, 0/2 and 0/0 (every clean draw failed `status: unprocessed`; dirs `2026-11-06T16-40-32--capture-idea`, `…17-07-09--without-skill`, `…17-23-44…`, `…17-32-50…`, all dirty); #2 trigger 5/5; #3 routing **5/5** with `process-inbox` staged as the declared sibling in `2026-11-06T19-06-50--capture-idea` (v2, `isolated=yes`), replacing the pre-fix 0/4 clean cross-skill-staging record `2026-11-06T16-50-30--capture-idea` (findings=1); re-measured under the enforced boundary (SPEC-0050, `agentworks/deepseek-v4-1-flash`, five draws): #1 is 5/5 clean with the skill (`2026-11-09T12-39-33--capture-idea--agentworks-deepseek-v4-1-flash`, `findings=0 isolated=yes`), but the control `2026-11-09T12-41-57--capture-idea--…--without-skill` is only 4/5 clean — r1 records `skillLeaks=1` on `/Users/wendell/.config/opencode/skills` — with `deniedDraws=2`, 1/4 clean passed and the rest red on `filematch docs/inbox/*.md status: unprocessed`; **unresolved**, no five-clean control. See `pipeline-bookends-matrix.md` |
 | `find-blind-spots` | 4 | 2 | 0 | tree 4 | case 4: 3/3, skill loaded 3/3 (`why:`, no run dir) |
-| `groom-backlog` | 7 | 2 | 0 | trees 1, 3, 4, 5 | ablation on 4 fixture cases, 2026-11-05: both arms 4/4; index-first not promoted (tokens +65% on the adversarial case) (`09-32-51`, `09-34-43`, `09-39-15`, `09-43-45`); #2: pre-detector 3/3 with and 3/3 without at `3d38b31` (`2026-11-05T17-09-40--groom-backlog`, `2026-11-05T17-13-34--groom-backlog--without-skill`); re-run under the leak detector at `8777e0b`: with skill 3/3 clean (`2026-11-06T07-53-16--groom-backlog`), without it 0/3 with 2 contaminated — clean control 0/1 (`2026-11-06T07-47-34--groom-backlog--without-skill`), so #2 is unresolved, not a regression case |
+| `groom-backlog` | 7 | 2 | 0 | trees 1, 3, 4, 5 | ablation on 4 fixture cases, 2026-11-05: both arms 4/4; index-first not promoted (tokens +65% on the adversarial case) (`09-32-51`, `09-34-43`, `09-39-15`, `09-43-45`); #2: pre-detector 3/3 with and 3/3 without at `3d38b31` (`2026-11-05T17-09-40--groom-backlog`, `2026-11-05T17-13-34--groom-backlog--without-skill`); re-run under the leak detector at `8777e0b`: with skill 3/3 clean (`2026-11-06T07-53-16--groom-backlog`), without it 0/3 with 2 contaminated — clean control 0/1 (`2026-11-06T07-47-34--groom-backlog--without-skill`), so #2 is unresolved, not a regression case; re-measured under the enforced boundary (SPEC-0050, five draws): the skill arm is 5/5 clean (`2026-11-09T12-50-37--groom-backlog--agentworks-deepseek-v4-1-flash`, `findings=0 isolated=yes`), but the control `2026-11-09T12-55-35--groom-backlog--…--without-skill` has 4/4 clean passed plus one contaminated draw — r2 records `skillLeaks=1` for `skills/groom/SKILL.md` and `hostReads=1` for `/Users/wendell/.agents/commands`, `deniedDraws=2` — so the control has four clean draws and the cell stays **unresolved** (non-discriminator direction, not a five-draw rate) |
 | `implement-from-prompt` | 8 | 2 | 0 | trees 1, 2, 3, 4, 7, 8 | discriminating set (SPEC-0033, v2, `agentworks/deepseek-v4-1-flash`): #1 **5/5 vs 0/5** (`2026-11-07T08-57-39--implement-from-prompt--agentworks-deepseek-v4-1-flash`, `…08-59-39--without-skill`, `findings=0 isolated=yes`) and #8 **5/5 vs 0/5** (`…09-01-25…`, `…09-04-41--without-skill`, clean); see `discriminating-cases.md`. Published matrix: #1 and #8 separate 12/12 vs 0/12 on the default (`2026-11-05T12-35-30--implement-from-prompt`, `2026-11-05T12-42-05--implement-from-prompt--without-skill`, `2026-11-05T12-48-46--implement-from-prompt`, `2026-11-05T12-56-03--implement-from-prompt--without-skill`; these four predate the leak field, so `check-eval-run` reports `warnings=12` — pre-detector history, the rates stand); on `gpt-6-luna` #1 is 5/5 vs **0/5** (the old 1/5 control pass read the installed `SKILL.md`; re-measured at `2026-11-06T07-05-38--implement-from-prompt--opencode-go-gpt-6-luna--without-skill`) and #8 is 5/5 vs 1/5 (`2026-11-05T13-18-27--implement-from-prompt--opencode-go-gpt-6-luna`, `2026-11-05T13-22-08--implement-from-prompt--opencode-go-gpt-6-luna--without-skill`, `2026-11-05T13-25-10--implement-from-prompt--opencode-go-gpt-6-luna`, `2026-11-05T13-28-38--implement-from-prompt--opencode-go-gpt-6-luna--without-skill`; the one #1 control pass read the real `SKILL.md`); #7 non-discriminator 5/5 both arms; #2 readable after SPEC-0019: gate 12/12 at `07f4fe6`, 11/12 passed (`2026-11-06T10-38-39--implement-from-prompt`), so the Gate A 2/5 did not reproduce (the delta includes the SPEC-0016 rule change, so the cause is not isolated); its control re-read under the detector is **0/3 draws**, 1 contaminated (`r3`) and the two clean draws failed the reply assertion (**0/2 clean**) at `2026-11-06T07-31-00--implement-from-prompt--without-skill`; the load across #1/#2/#5/#8 at n=12 was 45 of 46 clean draws loaded the skill (`2026-11-06T10-34-26`, `…10-38-39`, `…10-45-29`, `…10-53-13`); the one miss is #5 r9, which read the staged SKILL.md directly without calling the skill tool (a trigger case, so the tool call stays the routing signal — TASK-39), and #5's two exclusions are one contamination and one stall; #4 re-measured after SPEC-0016 (write target vs read dependency + fixture `package.json`): 5/5 with vs 3/5 without at `6dd38aa` (`2026-11-05T15-00-48--implement-from-prompt`, `2026-11-05T15-06-58--implement-from-prompt--without-skill`; two control reds are 600 s provider timeouts), so #4 is a non-discriminator and stays as a regression case; #1/#7/#8 kept 5/5 with skill (`2026-11-05T15-30-10--implement-from-prompt`, `2026-11-05T15-36-40--implement-from-prompt`, `2026-11-05T15-44-35--implement-from-prompt`); #3 is no longer `manual` after SPEC-0022: 1/1 with skill (`2026-11-06T11-28-49--implement-from-prompt`), no control, so it is a regression case, not a separator; trigger #5 4/5, #6 5/5 (`2026-11-05T11-52-43--implement-from-prompt`) |
-| `process-inbox` | 3 | 2 | 0 | tree 1 | published matrix: #1 5/5 with the skill; control **unresolved** — default `02-51-15` is 0/2 valid clean (1 abort, 2 contaminated), and `03-08-51` is 5 provider aborts, not evidence; agentworks 0/2. v1 subsets 0/1, 0/1 and 0/1 are history. #2 trigger 4/4 clean scored draws loaded (`2026-11-06T16-55-11--process-inbox`, findings=1); #3 routing **5/5** with `capture-idea` staged as the declared sibling in `2026-11-06T19-09-27--process-inbox` (v2, `isolated=yes`), replacing the pre-fix 0/5 cross-skill-staging record; see `pipeline-bookends-matrix.md` |
+| `process-inbox` | 3 | 2 | 0 | tree 1 | published matrix: #1 5/5 with the skill; control **unresolved** under v2 — default `02-51-15` is 0/2 valid clean (1 abort, 2 contaminated), and `03-08-51` is 5 provider aborts, not evidence; agentworks 0/2. v1 subsets 0/1, 0/1 and 0/1 are history. #2 trigger 4/4 clean scored draws loaded (`2026-11-06T16-55-11--process-inbox`, findings=1); #3 routing **5/5** with `capture-idea` staged as the declared sibling in `2026-11-06T19-09-27--process-inbox` (v2, `isolated=yes`), replacing the pre-fix 0/5 cross-skill-staging record; re-measured under the enforced boundary (SPEC-0050, five draws): #1 is 5/5 clean with the skill (`2026-11-09T12-44-11--process-inbox--agentworks-deepseek-v4-1-flash`, `findings=0 isolated=yes`) and the control `2026-11-09T12-46-48--process-inbox--…--without-skill` is 0/5 clean (`deniedDraws=3`, `isolated=yes`), every draw red on `unchanged docs/inbox/2026-01-01-digest-email.md` and `nodir docs/backlog` — **separator** (5/5 vs 0/5). See `pipeline-bookends-matrix.md` |
 | `record-decision` | 5 | 2 | 0 | trees 1–5 | published matrix: #1 separator 4/5 vs **1/5** (`2026-11-06T16-43-33--record-decision`, `2026-11-06T17-11-37--record-decision--without-skill`); #2 separator 4/5 vs **0/5** (`2026-11-06T16-45-46--record-decision`, `2026-11-06T17-28-10--record-decision--without-skill`); #3 non-discriminator 4/5 vs 5/5 (`2026-11-06T16-48-00--record-decision`, `2026-11-06T17-20-53--record-decision--without-skill`); triggers #4/#5 5/5 in `2026-11-06T17-04-07--record-decision`; see `pipeline-bookends-matrix.md` |
 | `review-code` | 7 | 2 | 0 | trees 1–7 plus `base/` and `base-red/`; 1–4 and 7 via `git.json` | discriminating set (SPEC-0033, v2): #7 **5/5 vs 0/5** (`2026-11-07T09-07-52--review-code--agentworks-deepseek-v4-1-flash`, `…09-11-14--without-skill`, clean; the control fails `verdict REJECT` 5/5, 3 approve and 2 miss the token), the **holdout**; see `discriminating-cases.md`. Published matrix; #4 fixture revised 2026-11-05: 5/5 with, 3/5 without (`2026-11-05T07-34-32--review-code`, `…07-47-21--review-code--without-skill`); #7 red gate: 3/3 with, 0/3 without (`…09-05-36`, `…09-32-10--without-skill`) |
 | `survey-inflight-work` | 5 | 3 | 0 | tree 1 via `git.json` with a local bare `origin`; tree 2 without a remote | iteration 1, 1 draw/case: with-skill 4/4 (`2026-11-04T21-49-16`); control case 1 0/1, only the `unknown` PR state separated (`…21-45-26`); control case 2 0/1, only the no-remote line separated (`…21-57-53`). Case 5 (near-miss against `report-project-status`) added 2026-11-08, not measured |
 | `audit-code-quality` | 4 | 2 | 0 | trees 1 and 4 via `git.json` | iteration 1: with-skill 4/4 (`2026-11-04T21-55-53`); control case 1 0/1, only coverage `unknown` separated (`…21-47-51`); case 4 on the final 8-assertion version 1/1 with skill (`2026-11-04T21-59-17`) against 0/1 without (`2026-11-04T21-59-17--audit-code-quality--without-skill`) on `SCOPE:`/`rule`/`CAPTURE OPTIONS` — one draw per arm, so it does not separate reliably (`…21-57-53` is the pre-contract 5-assertion version) |
 | `tighten-harness` | 6 | 2 | 0 | trees 1, 2, 3, 5, 6 | case 5: 3/3 passed, skill loaded 0/3 (`why:`, no run dir) |
-| `write-implementation-prompt` | 6 | 2 | 1 | trees 1–4 | SPEC-0030 re-measure at `dcf5177` (`skillHash 046369c2…`, detector v2; the clean behavioural cells are `isolated=yes`, the trigger runs carry their findings): #1 5/5 clean (`2026-11-06T19-25-26--write-implementation-prompt`), control **unresolved** under v2: default 0/3 clean in two runs (`2026-11-07T01-46-26--write-implementation-prompt--without-skill`, `…02-58-14…`) and agentworks 0/2 (`08-17-29`); every clean draw failed `spec_sha:`. Four v1 attempts are history; #2 5/5 clean (`2026-11-06T19-28-47--write-implementation-prompt`), control **separator** under v2 on the default model (`2026-11-07T03-01-29--write-implementation-prompt--without-skill`: 5/5 clean, **0/5 passed**); the agentworks control (`08-20-10`) only reached 0/4 clean, a route difference. The v1 `15-30-39` 0/4 replay-clean is history; #4 5/5 clean (`2026-11-06T19-30-26--write-implementation-prompt`), control **non-discriminator** under v2: default **4/4 valid passed** (`2026-11-07T02-03-01--write-implementation-prompt--without-skill`; 1 rep aborted), agentworks 2/2 (`08-22-28`); the v1 `14-37-23` 4/4 passed is history; #3 `manual` (history `14-01-54` split 4/5; not re-run); triggers: #5 loaded 5/5 in both `2026-11-06T19-32-45` and `2026-11-06T19-53-34` but has no stall-free five-draw cell (stalls r1/r4 and r3/r5, event gaps in the matrix; contamination; best clean subsets 1/1 and 2/2); #6 clean 5/5 in `2026-11-06T20-12-15--write-implementation-prompt` (`findings=0 warnings=0 isolated=yes`), 5/5 in `19-32-45`, 4/5 in `19-53-34` (r3 loaded) — improved but not deterministic; canary 12/12 `13-51-35`; `13-46-05` discarded (`r8` read `.lane/trees`); see `write-implementation-prompt-matrix.md` |
+| `write-implementation-prompt` | 6 | 2 | 1 | trees 1–4 | SPEC-0030 re-measure at `dcf5177` (`skillHash 046369c2…`, detector v2; the clean behavioural cells are `isolated=yes`, the trigger runs carry their findings): #1 5/5 clean (`2026-11-06T19-25-26--write-implementation-prompt`), control **unresolved** under v2: default 0/3 clean in two runs (`2026-11-07T01-46-26--write-implementation-prompt--without-skill`, `…02-58-14…`) and agentworks 0/2 (`08-17-29`); every clean draw failed `spec_sha:`. Four v1 attempts are history; #2 5/5 clean (`2026-11-06T19-28-47--write-implementation-prompt`), control **separator** under v2 on the default model (`2026-11-07T03-01-29--write-implementation-prompt--without-skill`: 5/5 clean, **0/5 passed**); the agentworks control (`08-20-10`) only reached 0/4 clean, a route difference. The v1 `15-30-39` 0/4 replay-clean is history; #4 5/5 clean (`2026-11-06T19-30-26--write-implementation-prompt`), control **non-discriminator** under v2: default **4/4 valid passed** (`2026-11-07T02-03-01--write-implementation-prompt--without-skill`; 1 rep aborted), agentworks 2/2 (`08-22-28`); the v1 `14-37-23` 4/4 passed is history; #3 `manual` (history `14-01-54` split 4/5; not re-run); triggers: #5 loaded 5/5 in both `2026-11-06T19-32-45` and `2026-11-06T19-53-34` but has no stall-free five-draw cell (stalls r1/r4 and r3/r5, event gaps in the matrix; contamination; best clean subsets 1/1 and 2/2); #6 clean 5/5 in `2026-11-06T20-12-15--write-implementation-prompt` (`findings=0 warnings=0 isolated=yes`), 5/5 in `19-32-45`, 4/5 in `19-53-34` (r3 loaded) — improved but not deterministic; canary 12/12 `13-51-35`; `13-46-05` discarded (`r8` read `.lane/trees`); re-measured under the enforced boundary (SPEC-0050, five draws): #1 is 5/5 clean with the skill (`2026-11-09T13-07-02--write-implementation-prompt--agentworks-deepseek-v4-1-flash`, `findings=0 isolated=yes`) and the control `2026-11-09T13-11-33--write-implementation-prompt--…--without-skill` is 0/5 clean (`deniedDraws=1`, `isolated=yes`), every draw red on `filematch docs/prompts/SPEC-0007-*.prompt.md spec_sha:` — **separator** (5/5 vs 0/5). See `write-implementation-prompt-matrix.md` |
 | `report-project-status` | 4 | 3 | 1 | none | declared, not measured: three trigger/near-miss cases and one manual behavioural case (#3); no fixture and no run dir. Source: issue #11 (2026-11-08), skill merged in `fca9c78` |
 | **total** | **89** | **31** | **3** | | |
 
@@ -223,14 +223,45 @@ reads the real install under `/Users/wendell/.agents/skills`; denying the `skill
 tool does not deny the text. Denying that read is **SPEC-0046 / TASK-71**: the
 runner probes the host for an OS-level boundary (macOS seatbelt), launches the
 child under it, and records `params.isolation` in the manifest. It does not
-re-measure anything here. Until SPEC-0047 runs, `capture-idea` #1,
-`process-inbox` #1, `groom-backlog` #2 and `write-implementation-prompt` #1 —
-plus the `bootstrap-project-harness` stack cells above — stay **unresolved** —
-not separators, not regression cases.
+re-measure anything here. SPEC-0050 measured the four cells under the enforced
+boundary at n=5 (separate rows above): `process-inbox` #1 and
+`write-implementation-prompt` #1 are **separators** (5/5 vs 0/5, both arms
+clean); `capture-idea` #1 (control 4/5 clean, one leak) and `groom-backlog` #2
+(control 4/4 clean passed, r2 contaminated) stay **unresolved** — not separators,
+not regression cases — and `bootstrap-project-harness` #19 is a separator on the
+rule from SPEC-0047's replay evidence.
 
 The replay above is the named v1 replay for every 0.5.0 row in the table: a row
 not listed here is `clean` under it and citable as replay-verified history; a
 row listed here is not a clean measurement.
+
+### SPEC-0050 wave (five draws per arm, enforced boundary)
+
+Measured 2026-11-09 on `agentworks/deepseek-v4-1-flash`, concurrency 4, detector
+v4 `d3e95ef948f983b7`. Every manifest records `params.isolation.enforced: true`
+(seatbelt); `check-eval-run` prints `isolated=yes` for every run below. The #19
+row is SPEC-0047's evidence, re-judged by replay, not a new draw; its stored
+control artefact still records the v3 contamination.
+
+| cell | arm | run directory | clean draws | passed | deniedDraws | red assertion(s) | verdict |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `bootstrap-project-harness` #19 | with-skill (SPEC-0047) | `2026-11-09T07-37-44--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 0 | — | **separator** (5/5 vs 1/5) |
+| `bootstrap-project-harness` #19 | control (SPEC-0047, replay) | `2026-11-09T10-59-41--bootstrap-project-harness--…--without-skill` | 5/5 | 1/5 | 1 | `file AGENTS.md`, `file justfile`, `filematch eslint.config.js`, `filematch justfile eslint` | **separator** (5/5 vs 1/5) |
+| `capture-idea` #1 | with-skill | `2026-11-09T12-39-33--capture-idea--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 0 | — | **unresolved** (control 4/5 clean) |
+| `capture-idea` #1 | control | `2026-11-09T12-41-57--capture-idea--…--without-skill` | 4/5 (r1 `skillLeaks=1`) | 1/4 clean | 2 | `filematch docs/inbox/*.md status: unprocessed` | **unresolved** (control 4/5 clean) |
+| `process-inbox` #1 | with-skill | `2026-11-09T12-44-11--process-inbox--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 0 | — | **separator** (5/5 vs 0/5) |
+| `process-inbox` #1 | control | `2026-11-09T12-46-48--process-inbox--…--without-skill` | 5/5 | 0/5 | 3 | `unchanged docs/inbox/2026-01-01-digest-email.md`, `nodir docs/backlog` | **separator** (5/5 vs 0/5) |
+| `groom-backlog` #2 | with-skill | `2026-11-09T12-50-37--groom-backlog--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 0 | — | **unresolved** (control 4/5 clean) |
+| `groom-backlog` #2 | control | `2026-11-09T12-55-35--groom-backlog--…--without-skill` | 4/5 (r2 `skillLeaks=1`, `hostReads=1`) | 4/4 clean | 2 | — (r2 contaminated) | **unresolved** (control 4/5 clean) |
+| `write-implementation-prompt` #1 | with-skill | `2026-11-09T13-07-02--write-implementation-prompt--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 0 | — | **separator** (5/5 vs 0/5) |
+| `write-implementation-prompt` #1 | control | `2026-11-09T13-11-33--write-implementation-prompt--…--without-skill` | 5/5 | 0/5 | 1 | `filematch docs/prompts/SPEC-0007-*.prompt.md spec_sha:` | **separator** (5/5 vs 0/5) |
+
+The two separators are new clean five-draw pairs. The two unresolved cells are
+unresolved for the control-arm reason named in the table (one contaminated draw
+each), not for a red with-skill assertion; their clean subsets point at a
+separator (`capture-idea`) and a non-discriminator (`groom-backlog`), but a
+subset is not a five-draw rate. No oracle, fixture, `why:` line or expected
+output changed after the draws.
 
 ## Known holes
 
@@ -240,25 +271,37 @@ row listed here is not a clean measurement.
   `2026-11-05T17-13-34--groom-backlog--without-skill` artefacts predate the
   `leak` field. The checker cannot re-judge them; it reports `warn leak-missing`.
   Their published numbers stay as historical evidence, not as a clean rate.
-- **`groom-backlog` #2 is unresolved, not a non-discriminator.** The earlier
+- **`groom-backlog` #2 is unresolved; its clean subset points at a
+  non-discriminator, not a separator.** The earlier
   reading — 3/3 in both arms — was measured before the runner detected external
   reads. Re-run at `8777e0b` with the detector: with the skill 3/3 clean
   (`2026-11-06T07-53-16--groom-backlog`); without it, 0/3, of which **2/3 were
   contaminated** by the installed `SKILL.md`/`evals.md`
-  (`2026-11-06T07-47-34--groom-backlog--without-skill`). The one clean control
-  draw failed the split assertion, so the case may separate, but one draw cannot
-  carry the claim. Re-measure after the control arm can no longer read the
-  install, then classify.
-- **`write-implementation-prompt` #1 is unresolved.** Four v1 control attempts
-  never produced a five-draw clean run: clean subsets 0/3
+  (`2026-11-06T07-47-34--groom-backlog--without-skill`). SPEC-0050 re-measured
+  both arms under the enforced boundary: the skill is 5/5 clean
+  (`2026-11-09T12-50-37--groom-backlog--agentworks-deepseek-v4-1-flash`), and the
+  control is 4/4 clean passed with r2 contaminated (`skillLeaks=1` for
+  `skills/groom/SKILL.md`, `hostReads=1` for `/Users/wendell/.agents/commands`,
+  `deniedDraws=2`) in
+  `2026-11-09T12-55-35--groom-backlog--…--without-skill`. The clean control
+  subset passes at the same rate as the skill, so the case cannot separate the
+  arms; with only four clean control draws it stays **unresolved**, not a
+  five-draw non-discriminator. A re-measure is the follow-up.
+- **`write-implementation-prompt` #1 is a separator (SPEC-0050).** Four v1
+  control attempts never produced a five-draw clean run: clean subsets 0/3
   (`2026-11-06T15-15-52--write-implementation-prompt--without-skill`), 0/4
   (`2026-11-06T15-18-26--write-implementation-prompt--without-skill`), 0/3
   (`2026-11-06T15-20-43--write-implementation-prompt--without-skill`) and 0/4
-  (`2026-11-06T14-28-07--write-implementation-prompt--without-skill`). The v2
+  (`2026-11-06T14-28-07--write-implementation-prompt--without-skill`); the v2
   re-measure
   (`2026-11-07T08-17-29--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill`) (dirty)
-  is 0/2 clean with 3 contaminated; both clean draws failed `spec_sha:`. No run
-  has five clean draws, so it stays unresolved, not a separator. See
+  was 0/2 clean with 3 contaminated. SPEC-0050 measured it under the enforced
+  boundary: 5/5 clean with the skill
+  (`2026-11-09T13-07-02--write-implementation-prompt--agentworks-deepseek-v4-1-flash`)
+  against 0/5 clean without it
+  (`2026-11-09T13-11-33--write-implementation-prompt--…--without-skill`,
+  `deniedDraws=1`), all five control draws red on
+  `filematch docs/prompts/SPEC-0007-*.prompt.md spec_sha:` — **separator**. See
   `write-implementation-prompt-matrix.md`.
 - **`write-implementation-prompt` #4 is a non-discriminator.** 5/5 in both arms
   under v1 (`2026-11-06T14-04-25--write-implementation-prompt`,
@@ -270,30 +313,40 @@ row listed here is not a clean measurement.
   subset is not a five-draw rate. A bare agent mirrors the existing prompt and
   records `spec_sha` as often as the skill. Recorded as a regression case; see
   `write-implementation-prompt-matrix.md`.
-- **`capture-idea` #1 is unresolved.** 5/5 with the skill under v2
+- **`capture-idea` #1 stays unresolved; the direction is a separator.** 5/5 with
+  the skill under v2
   (`2026-11-07T08-25-21--capture-idea--agentworks-deepseek-v4-1-flash`); the v2
   control
   (`2026-11-07T08-27-30--capture-idea--agentworks-deepseek-v4-1-flash--without-skill`) (dirty)
   is 0/0 clean with 5 contaminated. The v1 attempts were 0/2, 0/2 and 0/0
   (`2026-11-06T17-07-09--capture-idea--without-skill`, `…17-23-44…`,
-  `…17-32-50…`), and every clean draw failed `status: unprocessed`. The direction
-  is a separator, but no control run has five clean draws; it stays unresolved,
-  not a regression case. See `pipeline-bookends-matrix.md`.
-- **`process-inbox` #1 is unresolved, not the expected non-discriminator.** 5/5
-  with the skill under v2 on both routes
+  `…17-32-50…`), and every clean draw failed `status: unprocessed`. SPEC-0050
+  re-measured both arms under the enforced boundary: the skill is 5/5 clean
+  (`2026-11-09T12-39-33--capture-idea--agentworks-deepseek-v4-1-flash`); the
+  control `2026-11-09T12-41-57--capture-idea--…--without-skill` is 4/5 clean
+  (r1 `skillLeaks=1` on `/Users/wendell/.config/opencode/skills`,
+  `deniedDraws=2`), 1/4 clean passed, the rest red on
+  `filematch docs/inbox/*.md status: unprocessed`. The direction is a separator,
+  but no control run has five clean draws; it stays unresolved, not a regression
+  case. See `pipeline-bookends-matrix.md`.
+- **`process-inbox` #1 is a separator (SPEC-0050), not the expected
+  non-discriminator.** 5/5 with the skill under v2 on both routes
   (`2026-11-07T02-45-54--process-inbox`,
   `2026-11-07T08-29-45--process-inbox--agentworks-deepseek-v4-1-flash`). The
-  default control `02-51-15` is 0/2 valid clean (1 abort, 2 contaminated); the
+  default control `02-51-15` was 0/2 valid clean (1 abort, 2 contaminated); the
   agentworks control
   (`2026-11-07T08-31-34--process-inbox--agentworks-deepseek-v4-1-flash--without-skill`) (dirty)
-  is 0/2 clean with 3 contaminated. `03-08-51` is **not evidence**: all five
+  was 0/2 clean with 3 contaminated. `03-08-51` is **not evidence**: all five
   reps aborted on the provider go-limit, so its assertions are trivially green.
   The v1 controls were 0/1 in each of
   `2026-11-06T17-08-43--process-inbox--without-skill`, `…17-25-52…` and
-  `…17-34-41…`. Every valid clean control draw marked the note processed and
-  created `docs/backlog`, failing `unchanged` and `nodir`; the case was not
-  redesigned. It stays unresolved, not a regression case. See
-  `pipeline-bookends-matrix.md`.
+  `…17-34-41…`. SPEC-0050 measured both arms under the enforced boundary: the
+  skill is 5/5 clean
+  (`2026-11-09T12-44-11--process-inbox--agentworks-deepseek-v4-1-flash`); the
+  control `2026-11-09T12-46-48--process-inbox--…--without-skill` is 0/5 clean
+  (`deniedDraws=3`, `isolated=yes`), every draw red on
+  `unchanged docs/inbox/2026-01-01-digest-email.md` and `nodir docs/backlog` —
+  **separator** (5/5 vs 0/5). See `pipeline-bookends-matrix.md`.
 - **`record-decision` #3 is a non-discriminator.** 4/5 with the skill against
   5/5 without it (`2026-11-06T16-48-00--record-decision`,
   `2026-11-06T17-20-53--record-decision--without-skill`): a bare agent performs
@@ -405,9 +458,10 @@ as a task here.
 
 The `record-decision` separators are paired at `db7c49a` with matching
 `fixtureHash`, `promptHash` and `detectorVersion`: #1
-(`16-43-33`/`17-11-37`) and #2 (`16-45-46`/`17-28-10`). `capture-idea` #1 and
-`process-inbox` #1 have no clean control pair, so they are not claimed as
-separators, and `record-decision` #3 is the non-discriminator.
+(`16-43-33`/`17-11-37`) and #2 (`16-45-46`/`17-28-10`). `process-inbox` #1 now
+has a clean control pair from SPEC-0050 (5/5 vs 0/5) and is a separator;
+`capture-idea` #1 still has no five-draw clean control (4/5), so it is not
+claimed as one, and `record-decision` #3 is the non-discriminator.
 
 ## How to update
 
