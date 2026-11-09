@@ -36,11 +36,15 @@ skills, which cases, and which published measurements.
   docs/inbox/2026-01-01-digest-email.md` and `nodir docs/backlog`) and
   `write-implementation-prompt` #1 (5/5 vs 0/5 on
   `filematch docs/prompts/SPEC-0007-*.prompt.md spec_sha:`). One is a
-  **non-discriminator**: `groom-backlog` #2 (5/5 vs 5/5). The `capture-idea` and
-  `groom-backlog` controls were measured under detector v4 and re-judged
-  read-only under v5 (`def64b2d6a1baa6e`, SPEC-0051): their stored artefacts still
-  record the v4 contamination, while the `replay-evals --leaks` result — five
-  clean draws each, `isolated=yes`, `deniedDraws=2` — is the evidence.
+  **non-discriminator**: `groom-backlog` #2 (5/5 vs 5/5). One `groom-backlog`
+  control draw read prior run artefacts in the eval store (answer key and prior
+  transcripts) and is excluded from the evidentiary base; the other four control
+  draws pass, so the verdict stands, and **TASK-77** owns the boundary/detector
+  fix. The `capture-idea` and `groom-backlog` controls were measured under
+  detector v4 and re-judged read-only under v5 (`def64b2d6a1baa6e`, SPEC-0051):
+  their stored artefacts still record the v4 contamination, while the
+  `replay-evals --leaks` result — five clean draws each, `isolated=yes`,
+  `deniedDraws=2` — is the evidence.
   `bootstrap-project-harness` #19 is cited from SPEC-0047, not re-run: 5/5 vs
   1/5, a separator on the rule, with the same artefact-vs-replay caveat. No rate
   is recomputed and no oracle, fixture or `why:` line changed. Source:

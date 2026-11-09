@@ -157,7 +157,7 @@ held before any draw; the #19 replay is unchanged under v5.
 | `process-inbox` #1 | with-skill | `2026-11-09T12-44-11--process-inbox--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 0 | — | **separator** |
 | `process-inbox` #1 | control | `2026-11-09T12-46-48--process-inbox--…--without-skill` | 5/5 | 0/5 | 3 | `unchanged docs/inbox/2026-01-01-digest-email.md`, `nodir docs/backlog` | **separator** |
 | `groom-backlog` #2 | with-skill | `2026-11-09T12-50-37--groom-backlog--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 0 | — | **non-discriminator** |
-| `groom-backlog` #2 | control | `2026-11-09T12-55-35--groom-backlog--…--without-skill` | 5/5 (v5 replay; stored r2 `skillLeaks=1`, `hostReads=1`) | 5/5 | 2 | — (stored r2 contaminated; replay passes) | **non-discriminator** |
+| `groom-backlog` #2 | control | `2026-11-09T12-55-35--groom-backlog--…--without-skill` | 4/5 evidentiary (r2 read the eval store and is excluded; v5 replay 5/5; stored r2 `skillLeaks=1`, `hostReads=1`) | 4/4 | 2 | — (r2 excluded; TASK-77) | **non-discriminator** |
 | `write-implementation-prompt` #1 | with-skill | `2026-11-09T13-07-02--write-implementation-prompt--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 0 | — | **separator** |
 | `write-implementation-prompt` #1 | control | `2026-11-09T13-11-33--write-implementation-prompt--…--without-skill` | 5/5 | 0/5 | 1 | `filematch docs/prompts/SPEC-0007-*.prompt.md spec_sha:` | **separator** |
 
@@ -170,7 +170,14 @@ held before any draw; the #19 replay is unchanged under v5.
   `write-implementation-prompt` #1 (5/5 vs 0/5; control red on `filematch
   docs/prompts/SPEC-0007-*.prompt.md spec_sha:`). Both arms clean.
 - **non-discriminator:** `groom-backlog` #2 — 5/5 in both arms; the control
-  passes the same way the skill does.
+  passes the same way the skill does. **Disclosure:** the control's `r2` read
+  prior run artefacts in the eval store — `evals/groom-backlog/2.md`, the
+  previous `result.json` and prior `2.r*.md` transcripts from the with-skill and
+  control arms — and its reply mirrors the prior answer. Neither v4 nor v5 flags
+  that path, so it is **excluded from the evidentiary base**; the control's
+  evidence is the other four draws, all passed (4/4), with `deniedDraws=2` as
+  reported. The classification is unchanged because those four draws also pass.
+  **TASK-77** owns the boundary/detector fix; it is not implemented here.
 - **Reclassification (SPEC-0051).** Two control artefacts were flagged by
   detector v4 and are clean under v5; no draw was re-run. Replay lines:
   - `2026-11-09T12-41-57--capture-idea--…--without-skill`: `clean [5 draw(s)]
@@ -194,7 +201,8 @@ held before any draw; the #19 replay is unchanged under v5.
 **Follow-ups.** No with-skill cell is red and no oracle moved; every assertion,
 fixture and `why:` line is untouched. No cell remains unresolved: the two
 reclassified cells are a separator and a non-discriminator, with the run
-directories and counts above.
+directories and counts above. The `groom-backlog` control's eval-store read is
+**TASK-77** (boundary/detector), carried outside this spec.
 
 **Left out.** No re-run of #19, no harness change, no fixture or oracle edit, no
 second case per skill. No stall occurred: all 40 draws completed (the four
