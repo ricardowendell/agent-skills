@@ -271,7 +271,7 @@ if (opt.leaks) {
         const entry = byCell.get(key) ?? { draws: 0, leak: false, host: false, denied: 0 }
         entry.draws++
         let drawDenied = false
-        for (const hit of leaksIn(parsed.text, parsed.scratch, hostRoots)) {
+        for (const hit of leaksIn(parsed.text, parsed.scratch, hostRoots, { enforced: iso.state === "enforced" })) {
           if (hit.kind === "host") entry.host = true
           else if (hit.kind === "denied") drawDenied = true
           else entry.leak = true

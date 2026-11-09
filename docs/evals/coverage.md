@@ -37,7 +37,8 @@ in [`discriminating-cases.md`](discriminating-cases.md).
 ## Evidence rules
 
 - A run directory cited **as evidence** takes one of two explicit paths:
-  - **v3** (`detectorVersion` `d8478beab04a4e3e`): `node
+  - **A detector with the `host-reads` capability** (v2 `71bfb85a91cd68ab`, v3
+    `d8478beab04a4e3e`, v4 `d3e95ef948f983b7`): `node
     scripts/check-eval-run.mjs <run-dir>` reports `findings=0 warnings=0
     skillLeaks=0 hostReads=0 isolated=yes deniedDraws=N`. That means no skill or host
     read, no contaminated draw, no aborted draw (timeout, stall, provider
@@ -45,23 +46,26 @@ in [`discriminating-cases.md`](discriminating-cases.md).
     draw that ran, and the manifest records an isolated run (`params.isolate:
     true`). `deniedDraws=N` counts draws that probed the corpus and were refused
     (`denied` on a draw's `result.json` is the entry count, not the draw count);
-    it is not a finding and does not deny isolation (SPEC-0048).
+    it is not a finding and does not deny isolation (SPEC-0048). The isolation
+    verdict is **capability-based, not digest equality** (SPEC-0049): a v2 run
+    already looked for host reads, so a clean one is `isolated=yes`, and
+    `check-evidence` accepts the same run by the same capability.
     A run that also carries `params.isolation` needs `enforced: true` there:
     `params.isolate` alone is a throwaway home, not a proven boundary. A
     manifest without `params.isolation` is legacy and keeps the boolean rule,
     so the historical `isolated=yes` citations stay valid. A manifest with
     `enforced: false` can never print `isolated=yes`; it prints `unknown`.
-  - **v2** (`71bfb85a91cd68ab`) and **v1** (`a31d58f79a6c7038` and earlier):
-    history, never a clean measurement under the current detector. Citable as
-    replay-verified history only when
-    `node scripts/replay-evals.mjs --leaks <run-dir>` prints `clean` (or
-    `clean … deniedDraws=N`) and, when the manifest records an enforced
-    boundary, `isolated=yes`; the citation names that replay. The replay
-    re-judges the stored transcripts under the current detector. The other
-    reader, `node scripts/check-eval-run.mjs <run-dir>`, reports the stored
-    artefact and prints `isolated=unknown` for a pre-v3 run, because the
-    artefact still records the digest it ran under; that is not the replay's
-    verdict.
+  - **v1** (`a31d58f79a6c7038` and earlier), an unknown digest, or a run whose
+    stored artefact predates the rule that would clear it (a v3 control that
+    probed the corpus with `2>/dev/null`, the 10-59-41 case): history, never a
+    clean measurement under the stored artefact. Citable as replay-verified
+    history only when `node scripts/replay-evals.mjs --leaks <run-dir>` prints
+    `clean` (or `clean … deniedDraws=N`) and, when the manifest records an
+    enforced boundary, `isolated=yes`; the citation names that replay. The
+    replay re-judges the stored transcripts under the current detector. The
+    other reader, `node scripts/check-eval-run.mjs <run-dir>`, reports the stored
+    artefact and prints `isolated=unknown` for a v1 run, because the artefact
+    still records the digest it ran under; that is not the replay's verdict.
   A directory that fails may still be cited **as the record of the failure
   itself**, with the finding named; it cannot supply a clean pass rate.
   `isolated=no` means the checker saw a skill or host read; `unknown` is neither
@@ -117,8 +121,18 @@ Detector v3 (`d8478beab04a4e3e`, SPEC-0048) adds `denied`: a corpus path whose
 call's output shows a permission denial for that path is a refused attempt, not
 a read. It is recorded and counted, but it neither contaminates the draw nor
 makes `isolated=no`; a successful read of the same path is still `leak`/`host`.
-The v2 rows above keep their numbers as history, but only the v3 detector can
-print `isolated=yes` for a new run.
+
+Detector v4 (`d3e95ef948f983b7`, SPEC-0049) closes the suppressed-probe gap.
+Under an enforced run (`params.isolation.enforced: true`), a corpus hit whose
+call returned nothing for that path and whose output carries no denial naming it
+is a `denied` attempt, not a `leak`/`host`: `ls … 2>/dev/null` discards the only
+line that would name the refusal, and the boundary plus its canary — not the
+transcript — is what proves the read could not succeed. A call that demonstrably
+returned the path's content (a non-shell result, or a shell output line naming
+the path outside a denial) is still a leak. Without enforcement the v3 rule is
+unchanged. Re-judging the 10-59-41 control with the replay yields five clean
+draws and `deniedDraws=1`; its stored v3 artefact still reports the leak it
+recorded, which is why the replay is the citation for that cell.
 
 `node scripts/replay-evals.mjs --leaks <run-dir…>` (or `--leaks --all`)
 re-judged the 0.5.0 wave from its transcripts, with no model and no write into

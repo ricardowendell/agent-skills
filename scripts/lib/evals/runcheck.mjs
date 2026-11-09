@@ -41,7 +41,7 @@
 // the CLI warns per draw and keeps the historical artefact citable. It never
 // calls those draws clean.
 
-import { DETECTOR_VERSION } from "./leak.mjs"
+import { hasCapability } from "./leak.mjs"
 
 const isContaminated = (result) =>
   result.contaminated === true || (typeof result.contaminated === "number" && result.contaminated > 0)
@@ -145,8 +145,11 @@ export function checkRun({ arm = null, cases = [], isolation = null, requested =
   // cell losing `isolated=yes`.
   let deniedDraws = 0
   // A cell is isolated only when the detector that judged it already looked for
-  // host reads. Pre-SPEC-0028 artefacts (a different or missing version) are
-  // history: no host finding was possible, so silence cannot be a clean bill.
+  // host reads. This is a capability question, not digest equality (SPEC-0049):
+  // a v2 or v3 run that looked for host reads and found none is `yes` under an
+  // enforced manifest, and it is the same rule `evidence.mjs` uses, so the two
+  // readers cannot disagree about one run. An unknown digest has no capability
+  // and fails closed to `unknown`.
   const versions = []
 
   for (const c of cases) {
@@ -230,7 +233,7 @@ export function checkRun({ arm = null, cases = [], isolation = null, requested =
     }
   }
 
-  const detectorCurrent = versions.length > 0 && versions.every((v) => v === DETECTOR_VERSION)
+  const detectorCurrent = versions.length > 0 && versions.every((v) => hasCapability(v, "host-reads"))
   // A missing `leak` field, or contamination with no named path, leaves the
   // question open; an open question is not isolation.
   const unproven = findings.some((f) => f.kind === "leak-missing" || f.kind === "contaminated")

@@ -62,6 +62,7 @@ test("isolated=yes is accepted from the v1/v2 digests by capability", () => {
   assert.deepEqual(v1.map((f) => f.rule), ["stale-detector"], "v1 never looked for host reads")
   assert.match(v1[0].message, /host-reads/)
   assert.deepEqual(cites(line, run({ detectorVersion: "71bfb85a91cd68ab" })), [], "v2 had host-reads")
+  assert.deepEqual(cites(line, run({ detectorVersion: "d8478beab04a4e3e" })), [], "v3 had host-reads")
   assert.deepEqual(cites(line, run({ detectorVersion: current })), [], "the current detector has it")
 })
 
