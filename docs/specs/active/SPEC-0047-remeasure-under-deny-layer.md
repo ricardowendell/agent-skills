@@ -1,7 +1,7 @@
 ---
 id: SPEC-0047
 title: Re-measure the blocked cells under the deny layer
-status: paused
+status: ready
 priority: P1
 task: TASK-72
 created_at: 2026-11-09
@@ -84,12 +84,11 @@ no skill behaviour, no fixtures.
 
 ## Flow
 
-1. **F0 — precondition.** Confirm the host reports enforcement available and the
-   canary from SPEC-0046 passes. If not, stop: the wave has nothing to measure.
-   Then run **one cell first** and read its manifest before committing the rest:
-   `bootstrap-project-harness` #19, **control arm only** — its with-skill arm
-   (`2026-11-09T07-37-44`) is already valid evidence. If that control run fails
-   for an environmental reason, stop and report — do not spend the rest.
+1. **F0 — precondition, no #19 draw.** Confirm the host reports enforcement
+   available and the canary from SPEC-0046 passes. Then confirm from the stored
+   evidence that #19 is measured: the with-skill run `07-37-44` is 5/5 and the
+   control `10-59-41` replays to five clean draws. **Do not re-run #19.** If the
+   replay no longer reproduces, stop and report.
 2. **F1 — run.** For each skill, both arms, five draws, one cell. Record every
    run directory and its raw counts.
 3. **F2 — classify.** `separator` only with five clean draws in both arms;
@@ -267,33 +266,35 @@ current `deniedElsewhere`/`dirDenial` are per-call and per exact path); and
 `check-eval-run`'s `isolated` column is not the gate for a reused arm and the
 capability rule in `check-evidence` is. Neither is invented here.
 
-**Paused again 2026-11-09, both decisions taken.** They go to
-`SPEC-0049-a-corpus-hit-under-enforcement-is-a-denied-attempt.md`. The detector
-learns the invariant the boundary already guarantees: under `enforced: true` the
-corpus is unreadable by construction and the canary proves the profile is
-complete, so a corpus hit is a denied attempt unless the call demonstrably
-returned that path's content. And `check-eval-run` adopts the same capability
-rule as `check-evidence`, so a v2 `host-reads` run reports `isolated=yes` and the
-reused with-skill arm stays valid without five extra draws.
+**Resumed again 2026-11-09, after SPEC-0049.** The enforced rule and the
+capability verdict are merged (detector v4 `d3e95ef948f983b7`). The #19 cell is
+now **measured without another draw**: the with-skill run `07-37-44` is 5/5
+passed and reports `isolated=yes`; the control run `10-59-41`, re-judged under
+v4, is five clean draws with `deniedDraws=1`, one passed and four red on `file
+AGENTS.md`, `file justfile`, `filematch eslint.config.js` and `filematch justfile
+eslint`. That is a separator on the rule (5/5 vs 1/5, both arms clean).
 
-**What the second halt bought.** The #19 control is already measured under v3:
-four clean draws red on `file AGENTS.md`, `file justfile`, `filematch
-eslint.config.js` and `filematch justfile eslint`, and one draw that passed every
-assertion once its suppressed probe is classified as denied. The with-skill arm
-is 5/5. So #19 needs no further draw after SPEC-0049: the resume spends only the
-four remaining cells, **40 draws**. The branch is preserved as tag
-`parked/SPEC-0047-remeasure-wave-2`.
+**How to cite it.** The control artefact is not rewritten: its stored
+`result.json` still records the v3 contamination (`skillLeaks=1`,
+`isolated=no`). The evidence for this cell is the replay under v4, and the
+coverage row must say that — a reader who runs `check-eval-run` on the stored
+artefact will see the old verdict by design.
+
+**What remains.** Only the four other cells: `capture-idea` #1, `process-inbox`
+#1, `groom-backlog` #2 and `write-implementation-prompt` #1, both arms, five
+draws each — **40 draws**. Do not re-run #19. The branch of the second attempt is
+preserved as tag `parked/SPEC-0047-remeasure-wave-2`; a new dispatch starts from
+main.
 
 ## Open Questions
 
 - **Which cell per skill?** The five named above are the published blocks. If
   one of them turns out to be the wrong cell to spend draws on, the spec says
   why before spending.
-- **What is the ceiling?** Forty-five draws: the four remaining cells at both
-  arms (40) plus the #19 control (5), because its with-skill arm is reused. The
-  bootstrap cell is #19, not the whole stack matrix; a second stack cell would be
-  a separate decision. If a post-load stall hits, the TASK-50 protocol applies:
-  stop the wave, record the events, reopen the task — do not retry blindly.
+- **What is the ceiling?** Forty draws: the four remaining cells at both arms.
+  The bootstrap cell #19 is already measured and is not re-run. If a post-load
+  stall hits, the TASK-50 protocol applies: stop the wave, record the events,
+  reopen the task — do not retry blindly.
 - **What if a cell still cannot reach five clean draws?** It stays `unresolved`
   and the reason is published. That is a legitimate outcome, not a failure of
   the spec.

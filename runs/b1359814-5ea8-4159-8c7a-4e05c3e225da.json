@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "b1359814-5ea8-4159-8c7a-4e05c3e225da",
+  "started_at": "2026-11-09T14:19:29.094Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.5.0"
+  },
+  "base_commit": "0309e0ddd2cb3deed5a9f8548d42b689f551bc95",
+  "head_commit": "18a5b50101f5dd089f08c7c57e4d3c8074a75a34",
+  "task": "SPEC-0049",
+  "spec_sha": "de43a5ed6ac43a6347c1f8fd9f4935d0dff964d8a3bb8b115ab46e79404c26fe",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0049-a-corpus-hit-under-enforcement-is-a-denied-attempt.json",
+      "sha256": "62e6d907a36f7a5987a4d5531067bfb2fe312e182d99fd685677e0707bc8c6aa"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0049-a-corpus-hit-under-enforcement-is-a-denied-attempt.json",
+      "sha256": "637803622a816a939f05008eff877d013adc243d43ff865f9af4c8f95912dd74"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "04856c2ea97482a43296aab0841d167539a7c67d5981f16f400291fedbf551f1"
+    }
+  ],
+  "attempts": 1,
+  "duration": 1588,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "8538dbedd79d36b60fae63b8592fbba050c425cf"
+}
