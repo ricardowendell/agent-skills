@@ -165,6 +165,15 @@ test("CI is a capability: another provider fills the slot", () => {
   assert.equal(r.slots.ci, "gitlab-ci")
 })
 
+test("yarn is labelled as an unsupported manager, never relabelled npm", () => {
+  const pkg = { ...DEFAULT_PKG, packageManager: "yarn@4.5.0" }
+  const r = stateOf(tsHarness({ pkg, files: { "yarn.lock": "" } }))
+  assert.equal(r.state, "partial")
+  assert.equal(r.profile.packageManager, "yarn")
+  assert.deepEqual(r.competing, ["yarn"])
+  assert.deepEqual(r.missing, [])
+})
+
 test("an existing ESLint + Prettier choice is preserved, not rewritten", () => {
   const pkg = {
     ...DEFAULT_PKG,

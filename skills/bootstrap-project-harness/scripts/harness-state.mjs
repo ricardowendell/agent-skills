@@ -361,13 +361,15 @@ function detectProfile(dir, signals) {
   if (managers.length > 1) conflicts.push(`package manager: ${managers.join(", ")}`)
 
   const supported = managers.filter((m) => m === "npm" || m === "pnpm" || m === "bun")
-  const packageManager = supported[0] ?? "npm"
+  // A manager the templates do not cover is named as itself and left alone; it is
+  // never relabelled as the npm default. `competingFor` reports it as a diagnostic.
+  const packageManager = supported[0] ?? managers[0] ?? "npm"
   const runtime =
     managers.includes("bun") || has(dir, "bunfig.toml") || /\bbun\s+(run|test|install)\b/.test(signals.scripts)
       ? "bun"
       : "node"
   const workspaces = signals.pkg?.workspaces ? "npm" : has(dir, "pnpm-workspace.yaml") ? "pnpm" : null
-  return { runtime, packageManager, workspaces, conflicts, competing: [] }
+  return { runtime, packageManager, workspaces, conflicts }
 }
 
 function candidatePresent(dir, candidate, signals) {
@@ -440,6 +442,11 @@ export function competingFor(dir, stack) {
     if (has(dir, "tslint.json")) found.push("tslint")
     if (has(dir, ".husky") || has(dir, "husky.config.js") || has(dir, ".huskyrc")) found.push("husky")
     if (has(dir, ".pre-commit-config.yaml")) found.push("pre-commit")
+    let declared = ""
+    try {
+      declared = String(JSON.parse(read(dir, "package.json")).packageManager ?? "")
+    } catch {}
+    if (has(dir, "yarn.lock") || /^yarn(@|$)/.test(declared)) found.push("yarn")
   }
   if (stack === "python") {
     for (const f of PYTHON_PACKAGE_MANAGERS) if (has(dir, f)) found.push(f)
@@ -567,7 +574,7 @@ export function stateOf(dir) {
   }
 
   const missing = resolved.missing
-  const competing = [...new Set([...competingFor(dir, stack), ...(profile?.competing ?? [])])]
+  const competing = [...new Set(competingFor(dir, stack))]
   const smokeResult = smoke(dir, stack)
   const complete = !missing.length && !competing.length && smokeResult.ok
   return {
