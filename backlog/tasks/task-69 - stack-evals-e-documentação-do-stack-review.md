@@ -1,9 +1,10 @@
 ---
 id: TASK-69
 title: '[stack] evals e documentação do stack review'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-11-08T10:00:00Z'
+updated_date: '2026-11-09T00:46:00Z'
 labels: []
 dependencies:
   - TASK-66

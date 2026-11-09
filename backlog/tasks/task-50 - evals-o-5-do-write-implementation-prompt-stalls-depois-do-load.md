@@ -45,4 +45,12 @@ created: 2026-11-08T09:53:49.697Z
 Reaberta em 2026-11-08 pelo stall da onda do corpus (SPEC-0034). Run de controle #12: 2026-11-08T06-44-22--implement-from-prompt--agentworks-deepseek-v4-1-flash--without-skill, draw r3: exit=stalled, stallMs=120000, durationMs=223091, attempts=2, retries=1, steps=10. check-eval-run confirma 'infrastructure implement-from-prompt#12 r3 — infrastructure: stalled (retried 1x)'. A onda parou em 30/40 draws e o holdout #11 nao foi sorteado, conforme o protocolo. Reabre para diagnostico: provider-side, watchdog ou prompt (AC-1/AC-2 seguem abertas).
 
 ---
+
+created: 2026-11-09T02:46:35.666Z
+
+---
+
+Reaberta em 2026-11-08 pelo stall pos-load da onda da SPEC-0045 (stack review). Skill arm, run 2026-11-08T21-52-29--bootstrap-project-harness--agentworks-deepseek-v4-1-flash, 2 de 40 draws: #16 r1 exit=stalled, stallMs=120000, durationMs=318637, attempts=2, retries=1, steps=30, toolCalls=30, gate 'loaded bootstrap-project-harness'; #17 r1 exit=stalled, stallMs=120000, durationMs=395435, attempts=2, retries=1, steps=22, toolCalls=38, same gate. Padrao identico ao registrado (pos-load, 1 retry, watchdog de 120 s). DESVIO DE PROTOCOLO: a onda NAO foi parada; o runner seguiu apos o retry automatico e completou 38/40 draws uteis, e a arm de controle rodou em seguida. O resultado foi publicado como unresolved (as duas celulas tem 4 draws limpos + 1 stall, nao 5), sem --resume e sem retry manual. Decidir com evidencia se a causa e provider-side, watchdog ou prompt (AC-1/AC-2 seguem abertas).
+
+---
 <!-- COMMENTS:END -->
