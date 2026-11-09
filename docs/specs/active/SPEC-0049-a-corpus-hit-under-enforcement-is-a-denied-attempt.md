@@ -1,7 +1,7 @@
 ---
 id: SPEC-0049
 title: A corpus hit under enforcement is a denied attempt
-status: ready
+status: implemented
 priority: P1
 task: TASK-74
 created_at: 2026-11-09
