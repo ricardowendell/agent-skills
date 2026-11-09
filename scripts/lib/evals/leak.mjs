@@ -64,6 +64,14 @@ const RULES = {
   // not a read (SPEC-0048). It is a separate rule because it changes what
   // "clean" means, so a control from another detector is not citable.
   denied: "per-path-permission-denial",
+  // Under an enforced boundary a corpus hit that came back with nothing for
+  // that path is an attempt too, even when the transcript cannot name the
+  // refusal: SPEC-0047's resumed control ran `ls … 2>/dev/null` and discarded
+  // the only line that would have said `Operation not permitted`, so the v3
+  // rule published a leak from a probe the profile stopped. The boundary, not
+  // the transcript, is what makes the attempt impossible to succeed; the
+  // canary proves it covers every root (SPEC-0049).
+  enforcedAttempt: "enforced-corpus-attempt-is-denied",
 }
 
 export const DETECTOR_RULES = Object.freeze([
@@ -74,6 +82,7 @@ export const DETECTOR_RULES = Object.freeze([
   RULES.corpus,
   RULES.hostCorpus,
   RULES.denied,
+  RULES.enforcedAttempt,
 ])
 
 export function detectorVersion(rules = DETECTOR_RULES) {
@@ -88,15 +97,18 @@ export const DETECTOR_VERSION = detectorVersion()
 // answers "was this checked?" if it already had the capability the claim rests
 // on; the digest alone is stricter than the claim (SPEC-0048). `host-reads` is
 // what `isolated=yes` needs. `denied-split` is the v3 rule: it can only move a
-// finding from `leak`/`host` to `denied`, so a v2 clean claim stays true.
+// finding from `leak`/`host` to `denied`, so a v2 clean claim stays true. The
+// v4 enforced rule (SPEC-0049) only extends that same direction, so it needs no
+// new capability for `isolated=yes`.
 export const DETECTOR_CAPABILITIES = Object.freeze(["host-reads", "denied-split"])
 
 // Known legacy digests and the capabilities they actually had. v1 never looked
-// for the host checkout; v2 added it. An unknown digest has no map entry and is
-// not credited with anything.
+// for the host checkout; v2 added it; v3 added the per-path `denied` split. An
+// unknown digest has no map entry and is not credited with anything.
 const LEGACY_CAPABILITIES = Object.freeze({
   a31d58f79a6c7038: Object.freeze([]),
   "71bfb85a91cd68ab": Object.freeze(["host-reads"]),
+  d8478beab04a4e3e: Object.freeze(["host-reads", "denied-split"]),
 })
 
 export function capabilitiesOf(version) {
@@ -305,7 +317,16 @@ function strings(value, out = []) {
 // denial recorded for the same path elsewhere may classify it as denied — that
 // is the F0.1 control shape. A path with any successful read wins over a denied
 // entry, because a read happened.
-export function findLeaks(calls, scratch, hostRoots = []) {
+//
+// SPEC-0049 threads the run's enforcement state. Under `enforced: true` the
+// residual case — a corpus hit the call returned nothing for, with no denial
+// line that names it — is the suppressed probe the boundary measured on
+// 2026-11-09T10-59-41: an attempt, `denied`, not a leak. Without enforcement the
+// v2 rule stands: the read could have succeeded, so the attempt counts as a
+// leak. A call that did return something for the path (content override) is
+// still a leak in both modes; the enforced rule never promotes a read to
+// `denied`.
+export function findLeaks(calls, scratch, hostRoots = [], { enforced = false } = {}) {
   // First pass: every corpus path any call shows an exact denial for. This is
   // only the fallback input; it never overrides a call that returned content.
   const deniedElsewhere = new Set()
@@ -333,7 +354,11 @@ export function findLeaks(calls, scratch, hostRoots = []) {
       else if (dirDenial(call, path) && nothing) kind = "denied"
       else if (!nothing) kind = "leak"
       else if (deniedElsewhere.has(norm(path))) kind = "denied"
-      else kind = "leak"
+      // Nothing came back for this path and no denial proof names it. Under
+      // enforcement that is the boundary doing its job: the suppressed probe is
+      // an attempt (`denied`), not a read. Without enforcement the read could
+      // have succeeded, so it stays a leak (SPEC-0049).
+      else kind = enforced ? "denied" : "leak"
 
       const key = norm(path)
       const entry = byPath.get(key) ?? { path, tool: call.tool, kind: "denied", root: hit.root, seen: false }
@@ -363,14 +388,14 @@ export function findLeaks(calls, scratch, hostRoots = []) {
 // A missing or non-string stream is an empty transcript, not a crash: a run that
 // never produced output still has to be scored (and must not be called clean by
 // accident).
-export function leaksIn(out, scratch, hostRoots = []) {
+export function leaksIn(out, scratch, hostRoots = [], { enforced = false } = {}) {
   if (typeof out !== "string" || out === "") return []
-  return findLeaks(toolCalls(out), scratch, hostRoots)
+  return findLeaks(toolCalls(out), scratch, hostRoots, { enforced })
 }
 
 // The caller's form named in the spec: `leak({ calls, scratch, hostRoots })`.
 // It is the same pure detector, with the arguments named so the runner, the
 // replay and the tests cannot disagree about their order.
-export function leak({ calls = [], scratch = null, hostRoots = [] } = {}) {
-  return findLeaks(calls, scratch, hostRoots)
+export function leak({ calls = [], scratch = null, hostRoots = [], enforced = false } = {}) {
+  return findLeaks(calls, scratch, hostRoots, { enforced })
 }

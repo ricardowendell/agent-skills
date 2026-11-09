@@ -19,9 +19,10 @@ test("the detector version is derived from the rule list and pinned", () => {
   // Golden: if a rule changes, the digest changes and this fails until the new
   // value is written here — the signal that an earlier control is no longer
   // citable. Recompute with `detectorVersion()`. SPEC-0048 added the per-path
-  // denial rule (`per-path-permission-denial`), so v2's `71bfb85a91cd68ab` is
-  // now history.
-  assert.equal(DETECTOR_VERSION, "d8478beab04a4e3e")
+  // denial rule (`per-path-permission-denial`); SPEC-0049 added the enforced
+  // attempt rule (`enforced-corpus-attempt-is-denied`), so v2's
+  // `71bfb85a91cd68ab` and v3's `d8478beab04a4e3e` are now history.
+  assert.equal(DETECTOR_VERSION, "d3e95ef948f983b7")
 })
 
 // SPEC-0048: a claim is judged by what the detector could prove, not by its
@@ -31,6 +32,7 @@ test("the capability map is pinned", () => {
   assert.deepEqual([...capabilitiesOf(DETECTOR_VERSION)], ["host-reads", "denied-split"])
   assert.deepEqual(capabilitiesOf("a31d58f79a6c7038"), [], "v1 saw skill roots but not the host corpus")
   assert.deepEqual(capabilitiesOf("71bfb85a91cd68ab"), ["host-reads"], "v2 added the host corpus")
+  assert.deepEqual(capabilitiesOf("d8478beab04a4e3e"), ["host-reads", "denied-split"], "v3 added the denied split")
   assert.equal(capabilitiesOf("deadbeefdeadbeef"), null, "an unknown digest is credited with nothing")
   assert.equal(capabilitiesOf(undefined), null)
   assert.equal(capabilitiesOf(""), null)
@@ -415,4 +417,84 @@ test("duplicates collapse and the transcript stream is read through events", () 
     line("b", "read", { path: "/Users/me/.agents/skills/review-code/SKILL.md" }),
   ].join("\n")
   assert.deepEqual(leaksIn(out, SCRATCH), [{ tool: "read", path: "/Users/me/.agents/skills/review-code/SKILL.md" }])
+})
+
+// SPEC-0049: the resumed #19 control ran `ls /Users/wendell/.agents/skills
+// 2>/dev/null`; stderr was discarded and only the parent `/Users/wendell/.agents/`
+// was reported as `Operation not permitted`, so v3 published a leak. Under
+// enforcement the boundary makes that a denied attempt; without enforcement the
+// same call is still the v2 leak.
+const SUPPRESSED_PROBE = (path = "/Users/wendell/.agents/skills") =>
+  shell(
+    `ls ${path} 2>/dev/null; echo "---CMDS---"; ls /Users/wendell/.config/opencode 2>/dev/null`,
+    "/Users/wendell/.config/zsh/.zshenv: no such file or directory\n---CMDS---\ntotal 248\nAGENTS.md\n",
+    1,
+  )
+
+test("a suppressed probe is denied under enforcement", () => {
+  const path = "/Users/wendell/.agents/skills"
+  assert.deepEqual(findLeaks([SUPPRESSED_PROBE(path)], SCRATCH, [], { enforced: true }), [
+    { tool: "shell", path, kind: "denied" },
+  ])
+})
+
+test("the same suppressed probe without enforcement is still a leak", () => {
+  const path = "/Users/wendell/.agents/skills"
+  assert.deepEqual(findLeaks([SUPPRESSED_PROBE(path)], SCRATCH, [], { enforced: false }), [
+    { tool: "shell", path },
+  ])
+  // The default is the v2 meaning; every caller that does not thread the flag
+  // keeps it.
+  assert.deepEqual(findLeaks([SUPPRESSED_PROBE(path)], SCRATCH), [{ tool: "shell", path }])
+})
+
+test("a suppressed host-corpus probe is denied, not a host read, under enforcement", () => {
+  const path = `${HOST}/docs/specs/SPEC-0012-demo.md`
+  const probe = shell(`test -f ${path} 2>/dev/null; echo done`, "done\n", 0)
+  assert.deepEqual(findLeaks([probe], SCRATCH, HOST_ROOTS, { enforced: true }), [
+    { tool: "shell", path, kind: "denied" },
+  ])
+  assert.deepEqual(findLeaks([probe], SCRATCH, HOST_ROOTS), [
+    { tool: "shell", path, kind: "host", root: `${HOST}/docs` },
+  ])
+})
+
+test("a non-shell read that returned content stays a leak under enforcement", () => {
+  const path = "/Users/me/.agents/skills/review-code/SKILL.md"
+  const read = { tool: "read", input: { path }, meta: {}, output: "# review-code\nread this" }
+  assert.deepEqual(findLeaks([read], SCRATCH, [], { enforced: true }), [{ tool: "read", path }])
+})
+
+test("a shell output line naming the path outside a denial stays a leak under enforcement", () => {
+  const path = "/Users/me/.agents/skills/review-code/SKILL.md"
+  const content = shell(`cat ${path}`, `${path}: SKILL BODY\n`, 0)
+  assert.deepEqual(findLeaks([content], SCRATCH, [], { enforced: true }), [{ tool: "shell", path }])
+})
+
+test("an exact denial is still denied under enforcement", () => {
+  const path = "/Users/me/.agents/skills/review-code/SKILL.md"
+  assert.deepEqual(findLeaks([deniedRead(path)], SCRATCH, [], { enforced: true }), [
+    { tool: "read", path, kind: "denied" },
+  ])
+})
+
+test("leaksIn and leak({ enforced }) carry the state", () => {
+  const path = "/Users/wendell/.agents/skills"
+  const line = JSON.stringify({
+    type: "tool_use",
+    part: {
+      id: "a",
+      tool: "shell",
+      state: {
+        status: "completed",
+        input: { command: `ls ${path} 2>/dev/null; echo done` },
+        output: "done\n",
+        metadata: { metadata: { exit: 0 } },
+      },
+    },
+  })
+  assert.deepEqual(leaksIn(line, SCRATCH, [], { enforced: true }), [{ tool: "shell", path, kind: "denied" }])
+  assert.deepEqual(leak({ calls: [SUPPRESSED_PROBE(path)], scratch: SCRATCH, enforced: true }), [
+    { tool: "shell", path, kind: "denied" },
+  ])
 })

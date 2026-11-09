@@ -11,6 +11,27 @@ skills, which cases, and which published measurements.
 
 ### Added
 
+- **A corpus hit under enforcement is a denied attempt (SPEC-0049, TASK-74).**
+  The eval detector now receives the run's enforcement state, and under
+  `params.isolation.enforced: true` a corpus hit that returned nothing for the
+  path and carries no denial naming it is `denied`, not `leak`/`host` (detector
+  v4, `d3e95ef948f983b7`). This is the suppressed-probe shape SPEC-0047's
+  resumed control measured: `ls /Users/wendell/.agents/skills 2>/dev/null`
+  discarded the only line that would name the refusal, and v3 published a leak.
+  The boundary and its canary prove the read could not succeed; the detector
+  classifies attempts. A call that demonstrably returned the path's content — a
+  non-shell result, or a shell output line naming the path outside a denial — is
+  still a leak, and without enforcement the v3 rule is unchanged. In the same
+  change, `check-eval-run` decides `isolated` by the detector's `host-reads`
+  capability rather than by digest equality, so it agrees with `check-evidence`
+  about the same run: a clean v2 run is `isolated=yes`, v1 and an unknown digest
+  stay `unknown`. Proven by replay, not by a new draw: the control
+  `2026-11-09T10-59-41--bootstrap-project-harness--…--without-skill` goes from
+  `leak`/`isolated=no` to five clean draws with `deniedDraws=1` and
+  `isolated=yes`, and the v2 with-skill run
+  `2026-11-09T07-37-44--bootstrap-project-harness--…` goes from
+  `isolated=unknown` to `isolated=yes` with zero findings. Source:
+  `docs/specs/active/SPEC-0049-a-corpus-hit-under-enforcement-is-a-denied-attempt.md`.
 - **A denied read is not a leak (SPEC-0048, TASK-73).** The eval detector now
   classifies a corpus path whose call output shows a permission denial for that
   path as `denied` instead of `leak`/`host` (detector v3,

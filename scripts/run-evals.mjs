@@ -664,7 +664,7 @@ async function runCase(skill, c, rep = null) {
   // The leak is a property of this repetition's transcript and scratch, so it is
   // recorded here, per draw, not inferred later from a run summary. A single draw
   // is the whole case, so its reason says "every repetition contaminated".
-  const leaks = leaksIn(out, finalScratch ?? scratch, HOST_ROOTS)
+  const leaks = leaksIn(out, finalScratch ?? scratch, HOST_ROOTS, { enforced: ISOLATION_RECORD?.enforced === true })
   const clean = contaminate(core, leaks, { all: !rep })
   const skillLabel = opt.noSkill
     ? `**Skill:** ${gate.ok ? "not loaded (control arm)" : "LOADED — the control arm is broken"} (${gate.reason})`

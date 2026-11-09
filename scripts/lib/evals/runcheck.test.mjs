@@ -7,6 +7,11 @@ import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { checkRun, isPreDetector } from "./runcheck.mjs"
 import { DETECTOR_VERSION } from "./leak.mjs"
+import { checkCitation, scanCitations } from "./evidence.mjs"
+
+const V1 = "a31d58f79a6c7038"
+const V2 = "71bfb85a91cd68ab"
+const V3 = "d8478beab04a4e3e"
 
 const gate = ({ ok = true, loaded = ["implement-from-prompt"], reason = "loaded implement-from-prompt" } = {}) => ({
   ok,
@@ -291,12 +296,67 @@ test("a denied attempt beside a real leak keeps the leak a finding", () => {
 })
 
 test("a run written by an older detector is unknown, not dirty and not isolated", () => {
-  const cases = [aggregate([rep({ rep: 1, detectorVersion: "a31d58f79a6c7038" })])]
+  const cases = [aggregate([rep({ rep: 1, detectorVersion: V1 })])]
   const { findings, counts } = checkRun({ arm: "with-skill", cases, isolation: true })
   assert.deepEqual(findings, [])
   assert.equal(counts.skillLeaks, 0)
   assert.equal(counts.hostReads, 0)
   assert.equal(counts.isolated, "unknown", "the old detector did not look for host reads")
+})
+
+// SPEC-0049: `isolated` is a capability question, not digest equality. A v2 or
+// v3 detector already looked for host reads, so its clean enforced run is `yes`;
+// an unknown digest is credited with nothing and stays `unknown`.
+test("a clean v2 run under enforcement is isolated=yes by capability", () => {
+  for (const detectorVersion of [V2, V3]) {
+    const cases = [aggregate([rep({ rep: 1, detectorVersion })])]
+    const { findings, counts } = checkRun({
+      arm: "with-skill",
+      cases,
+      isolation: { enforced: true, mechanism: "seatbelt", reason: "available" },
+    })
+    assert.deepEqual(findings, [], detectorVersion)
+    assert.equal(counts.isolated, "yes", detectorVersion)
+  }
+})
+
+test("a clean run with an unknown detector digest stays isolated=unknown", () => {
+  const cases = [aggregate([rep({ rep: 1, detectorVersion: "deadbeefdeadbeef" })])]
+  const { findings, counts } = checkRun({
+    arm: "with-skill",
+    cases,
+    isolation: { enforced: true, mechanism: "seatbelt", reason: "available" },
+  })
+  assert.deepEqual(findings, [])
+  assert.equal(counts.isolated, "unknown")
+})
+
+test("runcheck and check-evidence agree about the same v2 run", () => {
+  const detectorVersion = V2
+  const cases = [aggregate([rep({ rep: 1, detectorVersion })])]
+  const { counts } = checkRun({
+    arm: "with-skill",
+    cases,
+    isolation: { enforced: true, mechanism: "seatbelt", reason: "available" },
+  })
+  assert.equal(counts.isolated, "yes")
+
+  const line = "`2026-01-01T00-00-00--run` `isolated=yes`"
+  const tokens = scanCitations(line)[0].tokens
+  const findings = checkCitation({
+    line,
+    token: tokens[0].token,
+    run: {
+      exists: true,
+      status: "completed",
+      detectorVersion,
+      findings: 0,
+      isolationRecord: { enforced: true, mechanism: "seatbelt", reason: "available" },
+    },
+    currentDetector: DETECTOR_VERSION,
+    tokens,
+  })
+  assert.deepEqual(findings, [], "the evidence reader accepts the same run")
 })
 
 test("a v2 run with no isolation record is unknown, not yes", () => {
@@ -514,6 +574,30 @@ test("replay --leaks splits denied attempts and reports the isolation verdict", 
   assert.equal(r.status, 0, r.stderr)
   assert.match(r.stdout, /demo#1 → clean  \[2 draw\(s\)\]  isolated=yes  deniedDraws=2/)
   assert.match(r.stdout, /demo#2 → dirty\(leak\)  \[1 draw\(s\)\]  isolated=no/)
+})
+
+test("replay --leaks treats a suppressed probe as denied only under enforcement", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "pdlc-replay-suppressed-"))
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+  const scratch = "/var/folders/aa/T/eval-demo-1-abc"
+  const command = `ls /Users/me/.agents/skills 2>/dev/null; echo done`
+  const output = "done\n"
+  const make = (name, isolation) => {
+    const run = join(root, "runs", name)
+    mkdirSync(join(run, "cases", "demo--01"), { recursive: true })
+    writeFileSync(
+      join(run, "manifest.json"),
+      JSON.stringify({ status: "completed", arm: "without-skill", params: { isolation, hostRoots: [] } }),
+    )
+    writeFileSync(join(run, "cases", "demo--01", "transcript.r1.md"), transcriptMd({ n: 1, scratch, command, output }))
+  }
+  make("enforced", { enforced: true, mechanism: "seatbelt", reason: "available" })
+  make("unenforced", { enforced: false, mechanism: null, reason: "platform linux" })
+
+  const r = spawnSync(process.execPath, [REPLAY, "--leaks", "--all", "--dir", root], { encoding: "utf8" })
+  assert.equal(r.status, 0, r.stderr)
+  assert.match(r.stdout, /enforced  demo#1 → clean  \[1 draw\(s\)\]  isolated=yes  deniedDraws=1/)
+  assert.match(r.stdout, /unenforced  demo#1 → dirty\(leak\)  \[1 draw\(s\)\]  isolated=no/)
 })
 
 test("replay --leaks exits 2 for a path that is not a run dir", () => {
