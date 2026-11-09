@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "979e582f-3870-49a7-977b-d1f348f706e2",
+  "started_at": "2026-11-09T09:17:46.973Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.4.0"
+  },
+  "base_commit": "37bb506f6f63dbf2befdda835d2aa5f0fd331638",
+  "head_commit": "6d3beb0a648148807d4c636fa13314226a7f73a4",
+  "task": "SPEC-0046",
+  "spec_sha": "376a782c1af948038b11732228dceeb4d18b9d3837912cd2c7167f11b6c6b392",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0046-deny-control-arm-corpus.json",
+      "sha256": "d8168e6fe2a75646fd0efd4ba7e914dd95a5865cda6ed154393dce125fe86da5"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0046-deny-control-arm-corpus.json",
+      "sha256": "4db4b9c30bf066b080a9a0937c3100db7090ebf11be1c217b0d549e301cea158"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "b548699ce66748796b96b3fb4700894400a6cf190b478d99ec7fdd54d9d0720b"
+    }
+  ],
+  "attempts": 1,
+  "duration": 4415,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "6d3beb0a648148807d4c636fa13314226a7f73a4"
+}

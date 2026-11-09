@@ -1,9 +1,10 @@
 ---
 id: TASK-71
 title: 'evals: negar a skill instalada na arm de controle (deny layer)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-09T02:52:00Z'
+updated_date: '2026-11-09T10:31:00Z'
 labels: []
 dependencies: []
 references:
@@ -21,9 +22,9 @@ O runner aceita --no-skill, mas a arm de controle ainda le a skill instalada em 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A arm --no-skill nao consegue ler /Users/wendell/.agents/skills nem references/evals.md, e um draw que tenta produz finding nomeado
-- [ ] #2 Um controle forcado a ler a skill instalada falha, provando que o deny e efetivo (canario)
-- [ ] #3 docs/evals/coverage.md deixa de atribuir o bloqueio a TASK-43 e aponta para esta task
+- [x] #1 A arm --no-skill nao consegue ler /Users/wendell/.agents/skills nem references/evals.md, e um draw que tenta produz finding nomeado
+- [x] #2 Um controle forcado a ler a skill instalada falha, provando que o deny e efetivo (canario)
+- [x] #3 docs/evals/coverage.md deixa de atribuir o bloqueio a TASK-43 e aponta para esta task
 <!-- AC:END -->
 
 ## Comments
@@ -34,6 +35,14 @@ created: 2026-11-09T09:06:31.126Z
 ---
 
 Groomed em 2026-11-09 e partida em duas specs porque o pdlc mapeia 1 spec -> 1 task. SPEC-0046-deny-control-arm-corpus (ready) cobre AC-1, AC-2 e o antigo AC-4 (agora AC-3): enforcement no boundary do SO onde existir, probe de capacidade no manifest, canario deterministico nao-vacuo, isolated=yes derivado de enforcement + zero findings, e a correcao da atribuicao no coverage.md. A re-medicao das 4 skills saiu para TASK-72 / SPEC-0047 (draft, depends_on SPEC-0046), porque juntar mudanca de harness com onda paga impede separar 'o deny funciona' de 'a skill separa'. Roadmap: deny layer promovido para 0.7.0 como pre-requisito da claim do corpus.
+
+---
+
+created: 2026-11-09T10:31:37.223Z
+
+---
+
+Fechada em 2026-11-09 pelo merge da SPEC-0046 (656340e). AC-1: o corpus roots inclui sempre as quatro raizes instaladas + --root + HOST_ROOTS + os irmaos .retired-skills, com realpath e dedupe; o reviewer provou com sandbox-exec real que ~/.agents/skills, ~/.claude/skills, ~/.codex/skills, ~/.config/opencode/skills e ~/.config/opencode/.retired-skills dao EPERM. AC-2: canario sintetico e canario sobre arquivo real do corpus, ambos com assercao de stderr de permissao negada; 390 testes, 0 skip. AC-3: coverage.md nao cita mais TASK-43 para o deny layer e aponta SPEC-0046/TASK-71. Tres rodadas de review; P1 inicial (deny list perdia as raizes instaladas sob --root) provado corrigido. A re-medicao continua na TASK-72/SPEC-0047.
 
 ---
 <!-- COMMENTS:END -->
