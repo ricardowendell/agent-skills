@@ -1,7 +1,7 @@
 ---
 id: SPEC-0050
 title: Measure the four remaining blocked cells
-status: ready
+status: implemented
 priority: P1
 task: TASK-75
 created_at: 2026-11-09
