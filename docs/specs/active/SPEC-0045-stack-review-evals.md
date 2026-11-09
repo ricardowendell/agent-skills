@@ -58,8 +58,9 @@ claim and the alternatives.
   - a bootstrap on an empty repo produces a runnable configuration;
   - an existing project is preserved (no replacement, no second toolchain);
   - an ambiguous or conflicting stack is refused with a diagnostic.
-- **Fixtures**: empty repo, existing Bun, Node + pnpm/npm, an existing
-  linter/formatter, a monorepo, and a conflict/ambiguous stack.
+- **Fixtures**: empty repo, existing Bun, Node + pnpm/npm, a declared dependency
+  without its config, an existing linter/formatter, a monorepo, and a
+  conflict/ambiguous stack.
 - **Template parity**: a check that the templates and
   `references/typescript.md` agree; a deliberate divergence must fail.
 - **The five-draw rule** for any behavioural cell; a dirty or infrastructure
@@ -103,8 +104,9 @@ the CHANGELOG, plus this spec.
 1. **Behavioural cases exist with and without the skill** and show that a
    bootstrap produces a runnable configuration, preserves an existing project and
    introduces no parallel toolchain.
-2. **Fixtures cover** an empty repo, existing Bun, Node + pnpm/npm, an existing
-   linter/formatter, a monorepo, and a conflict/ambiguous stack.
+2. **Fixtures cover** an empty repo, existing Bun, Node + pnpm/npm, a declared
+   dependency without its config, an existing linter/formatter, a monorepo, and
+   a conflict/ambiguous stack.
 3. **Template parity is checked**: a deliberate divergence between the templates
    and `references/typescript.md` fails.
 4. **Every behavioural cell follows the five-draw rule**; a dirty or

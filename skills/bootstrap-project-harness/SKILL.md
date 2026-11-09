@@ -151,7 +151,7 @@ only reads: it never writes, installs or fixes.
 - **`competing: <tool>`** — report it and do not install the harness's tool
   beside one that already owns that slot. Python (`black`, `flake8`, `isort`,
   `mypy`, `pre-commit`, another manager): stop, as before. TypeScript/Node
-  (`husky`, `tslint`): keep the tool, skip that slot and name the diagnostic,
+  (`husky`, `tslint`, `yarn`): keep the tool, skip that slot and name the diagnostic,
   then continue with the other steps — preserving is the outcome, not a full
   stop.
 - **`ambiguous`** — ask which directory to harness, as the stack rules say. The
