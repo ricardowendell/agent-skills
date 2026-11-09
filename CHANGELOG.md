@@ -29,21 +29,21 @@ skills, which cases, and which published measurements.
   `isolated=yes`; the cell verdicts are SPEC-0050's. Source:
   `docs/specs/active/SPEC-0051-content-counts-only-for-the-path-it-names.md`.
 - **The four remaining blocked cells are measured under the enforced boundary
-  (SPEC-0050, TASK-75).** Five draws per arm, `agentworks/deepseek-v4-1-flash`,
-  detector v4 `d3e95ef948f983b7`; every manifest records
-  `params.isolation.enforced: true` and `check-eval-run` prints `isolated=yes`.
-  Two cells separate: `process-inbox` #1 (5/5 vs 0/5 on `unchanged
+  (SPEC-0050, TASK-75).** Five draws per arm, `agentworks/deepseek-v4-1-flash`;
+  every manifest records `params.isolation.enforced: true`. Three cells separate:
+  `capture-idea` #1 (5/5 vs 1/5 on `filematch docs/inbox/*.md status:
+  unprocessed`), `process-inbox` #1 (5/5 vs 0/5 on `unchanged
   docs/inbox/2026-01-01-digest-email.md` and `nodir docs/backlog`) and
   `write-implementation-prompt` #1 (5/5 vs 0/5 on
-  `filematch docs/prompts/SPEC-0007-*.prompt.md spec_sha:`). Two stay
-  **unresolved** because the control did not produce five clean draws:
-  `capture-idea` #1 (control 4/5 clean, r1 leak, 1/4 clean passed on `filematch
-  docs/inbox/*.md status: unprocessed`) and `groom-backlog` #2 (control 4/4 clean
-  passed, r2 leak + host read). `bootstrap-project-harness` #19 is cited from
-  SPEC-0047, not re-run: 5/5 vs 1/5, a separator on the rule, with the control's
-  stored artefact still showing the older contamination while the v4 replay is
-  the evidence. No rate is recomputed and no oracle, fixture or `why:` line
-  changed. Source:
+  `filematch docs/prompts/SPEC-0007-*.prompt.md spec_sha:`). One is a
+  **non-discriminator**: `groom-backlog` #2 (5/5 vs 5/5). The `capture-idea` and
+  `groom-backlog` controls were measured under detector v4 and re-judged
+  read-only under v5 (`def64b2d6a1baa6e`, SPEC-0051): their stored artefacts still
+  record the v4 contamination, while the `replay-evals --leaks` result — five
+  clean draws each, `isolated=yes`, `deniedDraws=2` — is the evidence.
+  `bootstrap-project-harness` #19 is cited from SPEC-0047, not re-run: 5/5 vs
+  1/5, a separator on the rule, with the same artefact-vs-replay caveat. No rate
+  is recomputed and no oracle, fixture or `why:` line changed. Source:
   `docs/specs/active/SPEC-0050-measure-the-four-remaining-cells.md`.
 - **A corpus hit under enforcement is a denied attempt (SPEC-0049, TASK-74).**
   The eval detector now receives the run's enforcement state, and under

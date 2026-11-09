@@ -134,7 +134,9 @@ no skill behaviour, no fixtures.
 ## Results
 
 **Measured 2026-11-09.** Five draws per arm, `agentworks/deepseek-v4-1-flash`,
-concurrency 4, detector v4 `d3e95ef948f983b7`. Forty draws spent; #19 was not
+concurrency 4, detector v4 `d3e95ef948f983b7`; the two control artefacts that v4
+flagged were re-judged read-only under detector v5 `def64b2d6a1baa6e`
+(SPEC-0051). Forty draws spent; no model call in the re-judgment; #19 was not
 re-run.
 
 **F0 — precondition.** `node --test scripts/lib/evals/isolation.test.mjs` passes
@@ -145,46 +147,53 @@ re-run.
 `2026-11-09T07-37-44--bootstrap-project-harness--agentworks-deepseek-v4-1-flash`
 and `clean [5 draw(s)] isolated=yes deniedDraws=1` for
 `2026-11-09T10-59-41--bootstrap-project-harness--…--without-skill`. Both checks
-held before any draw.
+held before any draw; the #19 replay is unchanged under v5.
 
 | cell | arm | run directory | clean draws | passed | deniedDraws | red assertion(s) | verdict |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `capture-idea` #1 | with-skill | `2026-11-09T12-39-33--capture-idea--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 0 | — | **unresolved** |
-| `capture-idea` #1 | control | `2026-11-09T12-41-57--capture-idea--…--without-skill` | 4/5 (r1 `skillLeaks=1`) | 1/4 clean | 2 | `filematch docs/inbox/*.md status: unprocessed` | **unresolved** |
+| `capture-idea` #1 | with-skill | `2026-11-09T12-39-33--capture-idea--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 0 | — | **separator** |
+| `capture-idea` #1 | control | `2026-11-09T12-41-57--capture-idea--…--without-skill` | 5/5 (v5 replay; stored r1 `skillLeaks=1`) | 1/5 | 2 | `filematch docs/inbox/*.md status: unprocessed` | **separator** |
 | `process-inbox` #1 | with-skill | `2026-11-09T12-44-11--process-inbox--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 0 | — | **separator** |
 | `process-inbox` #1 | control | `2026-11-09T12-46-48--process-inbox--…--without-skill` | 5/5 | 0/5 | 3 | `unchanged docs/inbox/2026-01-01-digest-email.md`, `nodir docs/backlog` | **separator** |
-| `groom-backlog` #2 | with-skill | `2026-11-09T12-50-37--groom-backlog--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 0 | — | **unresolved** |
-| `groom-backlog` #2 | control | `2026-11-09T12-55-35--groom-backlog--…--without-skill` | 4/5 (r2 `skillLeaks=1`, `hostReads=1`) | 4/4 clean | 2 | — (r2 contaminated) | **unresolved** |
+| `groom-backlog` #2 | with-skill | `2026-11-09T12-50-37--groom-backlog--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 0 | — | **non-discriminator** |
+| `groom-backlog` #2 | control | `2026-11-09T12-55-35--groom-backlog--…--without-skill` | 5/5 (v5 replay; stored r2 `skillLeaks=1`, `hostReads=1`) | 5/5 | 2 | — (stored r2 contaminated; replay passes) | **non-discriminator** |
 | `write-implementation-prompt` #1 | with-skill | `2026-11-09T13-07-02--write-implementation-prompt--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 0 | — | **separator** |
 | `write-implementation-prompt` #1 | control | `2026-11-09T13-11-33--write-implementation-prompt--…--without-skill` | 5/5 | 0/5 | 1 | `filematch docs/prompts/SPEC-0007-*.prompt.md spec_sha:` | **separator** |
 
 **Verdicts.**
 
-- **separator:** `process-inbox` #1 (5/5 vs 0/5; control red on `unchanged
+- **separator:** `capture-idea` #1 (5/5 vs 1/5; control red on `filematch
+  docs/inbox/*.md status: unprocessed` in four draws and passing the fifth),
+  `process-inbox` #1 (5/5 vs 0/5; control red on `unchanged
   docs/inbox/2026-01-01-digest-email.md` and `nodir docs/backlog`) and
   `write-implementation-prompt` #1 (5/5 vs 0/5; control red on `filematch
   docs/prompts/SPEC-0007-*.prompt.md spec_sha:`). Both arms clean.
-- **unresolved:** `capture-idea` #1 — control 4/5 clean, r1 records
-  `skillLeaks=1` on `/Users/wendell/.config/opencode/skills`; among the four
-  clean draws 1 passed and three failed `filematch docs/inbox/*.md status:
-  unprocessed`. `groom-backlog` #2 — control 4/4 clean passed but r2 records
-  `skillLeaks=1` for `skills/groom/SKILL.md` and `hostReads=1` for
-  `/Users/wendell/.agents/commands`. Neither has five clean control draws, so no
-  verdict is promoted; the clean subsets point at a separator (`capture-idea`)
-  and a non-discriminator (`groom-backlog`), but a subset is not a rate.
+- **non-discriminator:** `groom-backlog` #2 — 5/5 in both arms; the control
+  passes the same way the skill does.
+- **Reclassification (SPEC-0051).** Two control artefacts were flagged by
+  detector v4 and are clean under v5; no draw was re-run. Replay lines:
+  - `2026-11-09T12-41-57--capture-idea--…--without-skill`: `clean [5 draw(s)]
+    isolated=yes deniedDraws=2` (stored `result.json` still shows r1
+    `skillLeaks=1`; v5 classifies it `denied` — the listing was empty and the
+    content came from another file).
+  - `2026-11-09T12-55-35--groom-backlog--…--without-skill`: `clean [5 draw(s)]
+    isolated=yes deniedDraws=2` (stored `result.json` still shows r2
+    `skillLeaks=1` and `hostReads=1`; v5 classifies it `denied` — the `cat`
+    returned `No such file or directory`).
+  The replay is the evidence; `check-eval-run` on either stored artefact prints
+  the old verdict by design, exactly as with #19.
 - **#19 (cited, not re-run):** SPEC-0047's with-skill run `07-37-44` is 5/5 and
-  `isolated=yes`; the control `10-59-41` replays under v4 to five clean draws
-  with `deniedDraws=1`, 1/5 passed and four red on `file AGENTS.md`,
+  `isolated=yes`; the control `10-59-41` replays (v5, same result as v4) to five
+  clean draws with `deniedDraws=1`, 1/5 passed and four red on `file AGENTS.md`,
   `file justfile`, `filematch eslint.config.js` and `filematch justfile eslint`
   — **separator** on the rule (5/5 vs 1/5). The control's stored `result.json`
   still records the older v3 contamination (`skillLeaks=1`, `isolated=no`); the
-  replay is the evidence, and `check-eval-run` on the stored artefact prints the
-  old verdict by design.
+  replay is the evidence.
 
 **Follow-ups.** No with-skill cell is red and no oracle moved; every assertion,
-fixture and `why:` line is untouched. The two unresolved cells need a fresh
-control arm (a contaminated draw in each) and are carried by the open wave task
-TASK-72; no new task is created here.
+fixture and `why:` line is untouched. No cell remains unresolved: the two
+reclassified cells are a separator and a non-discriminator, with the run
+directories and counts above.
 
 **Left out.** No re-run of #19, no harness change, no fixture or oracle edit, no
 second case per skill. No stall occurred: all 40 draws completed (the four
