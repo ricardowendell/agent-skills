@@ -248,6 +248,12 @@ row listed here is not a clean measurement.
 
 ## Known holes
 
+- **A successful bare `ls` of a corpus root reads as `denied` under
+  enforcement.** v5's content rule needs a line naming the path, and an `ls`
+  that returns only relative names has none, so the residual is `denied`. That
+  is reachable only if the boundary is broken — the canary proves the corpus
+  read fails first — so the choice is pinned by a test rather than guessing
+  attribution from a relative listing.
 - **Three SPEC-0017 draws are not checkable, not invalid.** The
   `2026-11-05T13-22-08--implement-from-prompt--opencode-go-gpt-6-luna--without-skill`,
   `2026-11-05T12-00-00--implement-from-prompt--without-skill` and

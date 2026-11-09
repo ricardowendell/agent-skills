@@ -36,6 +36,7 @@ test("the capability map is pinned", () => {
   assert.deepEqual(capabilitiesOf("a31d58f79a6c7038"), [], "v1 saw skill roots but not the host corpus")
   assert.deepEqual(capabilitiesOf("71bfb85a91cd68ab"), ["host-reads"], "v2 added the host corpus")
   assert.deepEqual(capabilitiesOf("d8478beab04a4e3e"), ["host-reads", "denied-split"], "v3 added the denied split")
+  assert.deepEqual(capabilitiesOf("d3e95ef948f983b7"), ["host-reads", "denied-split"], "v4 kept the v3 capabilities")
   assert.equal(capabilitiesOf("deadbeefdeadbeef"), null, "an unknown digest is credited with nothing")
   assert.equal(capabilitiesOf(undefined), null)
   assert.equal(capabilitiesOf(""), null)
@@ -586,5 +587,62 @@ test("contentFor: a non-shell result carrying a body is content (AC-3)", () => {
   // An errored or empty non-shell result carries no content.
   assert.equal(contentFor({ ...read, status: "error" }, GROOM_SKILL), false)
   assert.equal(contentFor({ ...read, output: "" }, GROOM_SKILL), false)
+})
+
+// The shell opens with this unrelated error on every draw. It matches the ENOENT
+// marker, and v5's first cut tested it against the whole output, so a real body
+// was denied. Markers are per line now; these three repros pin that.
+const ZSHENV =
+  "/Users/wendell/.config/zsh/.zshenv:source:28: no such file or directory: /var/folders/aa/T/opencode-eval-home-x/.config/zsh/lib/path.zsh"
+
+test("content: a real body after a sibling denial stays a leak under enforcement (repro 2)", () => {
+  const a = "/Users/me/.agents/skills/alpha/SKILL.md"
+  const b = "/Users/me/.agents/skills/beta/SKILL.md"
+  const mixed = shell(`cat ${a} ${b}`, `cat: ${a}: Operation not permitted\nBETA SKILL BODY\n`, 1)
+  assert.equal(contentFor(mixed, b), true)
+  assert.deepEqual(findLeaks([mixed], SCRATCH, [], { enforced: true }), [
+    { tool: "shell", path: a, kind: "denied" },
+    { tool: "shell", path: b },
+  ])
+})
+
+test("content: a child body after a refused parent listing stays a leak under enforcement (repro 3)", () => {
+  const dir = "/Users/me/.agents/skills/alpha"
+  const child = `${dir}/SKILL.md`
+  const mixed = shell(`ls ${dir}; cat ${child}`, `ls: ${dir}: Operation not permitted\n# alpha body\n`, 0)
+  assert.deepEqual(findLeaks([mixed], SCRATCH, [], { enforced: true }), [
+    { tool: "shell", path: dir, kind: "denied" },
+    { tool: "shell", path: child },
+  ])
+})
+
+test("content: a real cat body after zshenv noise stays a leak under enforcement", () => {
+  const cat = shell(`cat ${GROOM_SKILL}`, `${ZSHENV}\n# beta body\n`, 0)
+  assert.equal(contentFor(cat, GROOM_SKILL), true)
+  assert.deepEqual(findLeaks([cat], SCRATCH, [], { enforced: true }), [{ tool: "shell", path: GROOM_SKILL }])
+})
+
+test("contentFor: the measured capture-idea grep/find call is not content", () => {
+  const probe = shell(
+    `grep -rl "capture" ${CAPTURE_SKILLS} 2>/dev/null | head; find ${CAPTURE_SKILLS} -maxdepth 2 -name SKILL.md 2>/dev/null | head -40`,
+    `${ZSHENV}\n`,
+    0,
+  )
+  assert.equal(contentFor(probe, CAPTURE_SKILLS), false)
+  assert.deepEqual(findLeaks([probe], SCRATCH, [], { enforced: true }), [
+    { tool: "shell", path: CAPTURE_SKILLS, kind: "denied" },
+  ])
+  assert.deepEqual(findLeaks([probe], SCRATCH, [], { enforced: false }), [{ tool: "shell", path: CAPTURE_SKILLS }])
+})
+
+// SPEC-0051 P1: a bare `ls` of a corpus root returns only names, so it names no
+// path. The canary catches a broken boundary first; the detector pins the choice
+// rather than inventing attribution from relative output.
+test("contentFor: a bare listing with no path-naming result is denied under enforcement", () => {
+  const path = "/Users/me/.agents/skills"
+  const bare = shell(`ls ${path}`, "review-code\naudit\n", 0)
+  assert.equal(contentFor(bare, path), false)
+  assert.deepEqual(findLeaks([bare], SCRATCH, [], { enforced: true }), [{ tool: "shell", path, kind: "denied" }])
+  assert.deepEqual(findLeaks([bare], SCRATCH, [], { enforced: false }), [{ tool: "shell", path }])
 })
 
