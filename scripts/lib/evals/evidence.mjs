@@ -112,17 +112,23 @@ export function checkCitation({ line, token, run, currentDetector, tokens = [] }
           `line claims isolated=yes for ${token}, recorded detector ${recorded} is not ${currentDetector ?? "current"}`,
         )
       }
-      // SPEC-0046: a manifest that says the corpus boundary was not enforced
-      // cannot underwrite `isolated=yes`. A legacy manifest carries no record
-      // and is deliberately not judged by this rule — it never claimed the
-      // boundary in the first place.
-      const record = run.isolation && typeof run.isolation === "object" ? run.isolation : null
-      if (record && record.enforced === false) {
-        add(
-          "error",
-          "unenforced-isolation",
-          `line claims isolated=yes for ${token}, but the manifest records an unenforced run (${record.reason ?? "no reason recorded"})`,
-        )
+      // SPEC-0046: only an explicit object with `enforced: true` proves the
+      // boundary. A record that says false, is malformed, or is partial cannot
+      // underwrite `isolated=yes`. A legacy manifest carries no field at all
+      // and is deliberately not judged here — it never claimed the boundary.
+      const record = run.isolationRecord
+      if (record !== undefined && record !== null) {
+        const provesEnforcement =
+          typeof record === "object" && !Array.isArray(record) && record.enforced === true
+        if (!provesEnforcement) {
+          const detail =
+            typeof record === "object" && !Array.isArray(record)
+              ? record.enforced === false
+                ? `the manifest records an unenforced run (${record.reason ?? "no reason recorded"})`
+                : "the isolation record does not say enforced: true"
+              : "the isolation record is not an object"
+          add("error", "unenforced-isolation", `line claims isolated=yes for ${token}, but ${detail}`)
+        }
       }
     }
   }

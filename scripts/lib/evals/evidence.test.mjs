@@ -73,16 +73,24 @@ test("isolated=yes on an unenforced manifest is an error", () => {
   const line = "`2026-01-01T00-00-00--unenforced` `isolated=yes`"
   const findings = cites(
     line,
-    run({ isolation: { enforced: false, mechanism: null, reason: "platform linux" } }),
+    run({ isolationRecord: { enforced: false, mechanism: null, reason: "platform linux" } }),
   )
   assert.deepEqual(findings.map((f) => [f.level, f.rule]), [["error", "unenforced-isolation"]])
   assert.match(findings[0].message, /unenforced run/)
   assert.match(findings[0].message, /platform linux/)
 })
 
+test("a malformed or partial isolation record cannot underwrite isolated=yes", () => {
+  const line = "`2026-01-01T00-00-00--run` `isolated=yes`"
+  for (const isolationRecord of [{}, { mechanism: "seatbelt" }, "enforced", { enforced: "yes" }]) {
+    const findings = cites(line, run({ isolationRecord }))
+    assert.deepEqual(findings.map((f) => f.rule), ["unenforced-isolation"], JSON.stringify(isolationRecord))
+  }
+})
+
 test("an enforced manifest allows isolated=yes and a legacy one is not judged", () => {
   const line = "`2026-01-01T00-00-00--run` `isolated=yes`"
-  assert.deepEqual(cites(line, run({ isolation: { enforced: true, mechanism: "seatbelt", reason: "available" } })), [])
+  assert.deepEqual(cites(line, run({ isolationRecord: { enforced: true, mechanism: "seatbelt", reason: "available" } })), [])
   assert.deepEqual(cites(line, run()), [], "a manifest without the record is legacy")
 })
 

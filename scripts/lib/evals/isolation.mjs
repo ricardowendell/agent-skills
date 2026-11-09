@@ -15,9 +15,22 @@
 // behind. Nothing is copied except directories, and cleanup removes links, never
 // their targets.
 
-import { accessSync, constants, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs"
+import {
+  accessSync,
+  constants,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  statSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs"
 import { homedir, tmpdir } from "node:os"
-import { join } from "node:path"
+import { join, resolve } from "node:path"
 
 // What a run may legitimately need from the real home: provider auth and state
 // (`~/.local/share/opencode`), the credentials file the config points at, the
@@ -82,6 +95,73 @@ export function isolateHome(env = process.env, { home = homedir(), base = tmpdir
     // rmSync does not follow symlinks, so the real home survives this.
     cleanup: () => rmSync(dir, { recursive: true, force: true }),
   }
+}
+
+// Where OpenCode discovers installed skills. The control arm must be denied all
+// four regardless of which root the runner was pointed at: `--root skills` is the
+// documented invocation and only changes discovery, never what counts as corpus.
+export function installedSkillRoots(home = homedir()) {
+  return [
+    join(home, ".agents/skills"),
+    join(home, ".claude/skills"),
+    join(home, ".codex/skills"),
+    join(home, ".config/opencode/skills"),
+  ]
+}
+
+// The full deny list: every installed root (always), the explicit `--root` when
+// given, and the host roots the runner already records. Deduplicated by both the
+// typed path and its real path, because seatbelt matches the resolved path and a
+// symlinked root (`~/.claude/skills`) would otherwise miss its target.
+export function corpusRoots({
+  home = homedir(),
+  root = null,
+  hostRoots = [],
+  exists = existsSync,
+  realpath = realpathSync,
+} = {}) {
+  const seen = new Set()
+  const out = []
+  for (const candidate of [...installedSkillRoots(home), ...(root ? [root] : []), ...hostRoots]) {
+    if (!candidate) continue
+    const absolute = resolve(candidate)
+    if (!exists(absolute)) continue
+    let real = absolute
+    try {
+      real = realpath(absolute)
+    } catch {}
+    for (const path of [absolute, real]) {
+      if (seen.has(path)) continue
+      seen.add(path)
+      out.push(path)
+    }
+  }
+  return out
+}
+
+// The manifest record. `enforced: true` is a claim that a mechanism was actually
+// applied, so a caller that asks for it without one is downgraded rather than
+// allowed to write a lie.
+export function isolationRecord({ enforced = false, mechanism = null, reason = "" } = {}) {
+  if (enforced === true && mechanism) return { enforced: true, mechanism, reason }
+  if (enforced === true) {
+    return { enforced: false, mechanism: null, reason: `${reason || "enforcement claimed"}; no mechanism was applied` }
+  }
+  return { enforced: false, mechanism: null, reason: reason || "not enforced" }
+}
+
+// A resumed run whose manifest predates `params.isolation` must not mix earlier
+// unenforced draws with new ones. Record the weaker truth for the whole run; an
+// existing record is left alone. The manifest is persisted by `finish()`.
+export const RESUMED_LEGACY_REASON = "resumed legacy run — earlier draws were not enforced"
+
+export function resumeIsolation(manifest) {
+  if (!manifest || typeof manifest !== "object") return null
+  if (!manifest.params || typeof manifest.params !== "object") manifest.params = {}
+  const params = manifest.params
+  if (params.isolation && typeof params.isolation === "object" && !Array.isArray(params.isolation)) return params.isolation
+  params.isolation = { enforced: false, mechanism: null, reason: RESUMED_LEGACY_REASON }
+  return params.isolation
 }
 
 // SPEC-0045 measured the cost of a throwaway home without a boundary: 33 of 35

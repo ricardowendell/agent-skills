@@ -2,9 +2,17 @@ import test from "node:test"
 import assert from "node:assert/strict"
 import { spawnSync } from "node:child_process"
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs"
-import { tmpdir } from "node:os"
+import { homedir, tmpdir } from "node:os"
 import { join } from "node:path"
-import { isolateHome, probeIsolation, wrapCommand } from "./isolation.mjs"
+import {
+  corpusRoots,
+  installedSkillRoots,
+  isolateHome,
+  isolationRecord,
+  probeIsolation,
+  resumeIsolation,
+  wrapCommand,
+} from "./isolation.mjs"
 
 // A home shaped like the real one: skills next to the config, and the state the
 // child is allowed to keep.
@@ -188,4 +196,123 @@ test("the canary reads a known corpus path: denied under the boundary, allowed w
   } finally {
     rmSync(base, { recursive: true, force: true })
   }
+})
+
+// SPEC-0046 P1: `--root skills` changes discovery, not what counts as corpus.
+// The old ROOTS construction dropped the four installed roots whenever a root
+// was passed, so the documented control invocation wrote `enforced: true` while
+// `~/.config/opencode/skills/*/SKILL.md` stayed readable.
+test("corpusRoots keeps every installed root when an explicit --root is given", () => {
+  const home = mkdtempSync(join(tmpdir(), "iso-corpus-root-"))
+  try {
+    for (const root of installedSkillRoots(home)) mkdirSync(root, { recursive: true })
+    const repoSkills = join(home, "repo/skills")
+    const hostDocs = join(home, "repo/docs")
+    mkdirSync(repoSkills, { recursive: true })
+    mkdirSync(hostDocs, { recursive: true })
+
+    const roots = corpusRoots({ home, root: repoSkills, hostRoots: [hostDocs] })
+
+    for (const installed of installedSkillRoots(home)) {
+      assert.ok(roots.includes(realpathSync(installed)), `missing installed root ${installed}: ${roots.join(", ")}`)
+    }
+    assert.ok(roots.includes(realpathSync(repoSkills)), "the explicit --root is added")
+    assert.ok(roots.includes(realpathSync(hostDocs)), "the host roots are added")
+  } finally {
+    rmSync(home, { recursive: true, force: true })
+  }
+})
+
+test("corpusRoots deduplicates repeated and symlinked roots", () => {
+  const home = mkdtempSync(join(tmpdir(), "iso-corpus-dedup-"))
+  try {
+    for (const root of installedSkillRoots(home)) mkdirSync(root, { recursive: true })
+    const repeated = join(home, ".agents/skills")
+    const roots = corpusRoots({
+      home,
+      hostRoots: [repeated, repeated, join(home, ".agents/skills")],
+    })
+    assert.equal(new Set(roots).size, roots.length, `duplicate paths: ${roots.join(", ")}`)
+    assert.equal(roots.filter((r) => r === repeated).length, 1, "the typed path appears once")
+  } finally {
+    rmSync(home, { recursive: true, force: true })
+  }
+})
+
+// SPEC-0046 P2: the manifest writer must not be able to claim a boundary with
+// no mechanism, and a resumed legacy run must not look enforced.
+test("an isolation record cannot claim enforcement without a mechanism", () => {
+  const bogus = isolationRecord({ enforced: true, mechanism: null, reason: "claimed" })
+  assert.equal(bogus.enforced, false)
+  assert.equal(bogus.mechanism, null)
+  assert.match(bogus.reason, /no mechanism was applied/)
+  assert.deepEqual(isolationRecord(), { enforced: false, mechanism: null, reason: "not enforced" })
+
+  const real = isolationRecord({ enforced: true, mechanism: "seatbelt", reason: "available" })
+  assert.equal(real.enforced, true)
+  assert.notEqual(real.mechanism, null, "enforced: true implies a mechanism")
+})
+
+test("a resumed legacy manifest records that its earlier draws were unenforced", () => {
+  const manifest = { params: { isolate: true } }
+  const record = resumeIsolation(manifest)
+  assert.deepEqual(record, {
+    enforced: false,
+    mechanism: null,
+    reason: "resumed legacy run — earlier draws were not enforced",
+  })
+  assert.deepEqual(manifest.params.isolation, record)
+
+  const enforced = { params: { isolate: true, isolation: { enforced: true, mechanism: "seatbelt", reason: "available" } } }
+  assert.equal(resumeIsolation(enforced).enforced, true, "an existing record is not rewritten")
+
+  const bare = {}
+  assert.equal(resumeIsolation(bare).enforced, false, "a manifest with no params still gets the weaker record")
+  assert.equal(bare.params.isolation.mechanism, null)
+})
+
+// SPEC-0046 P2: the synthetic canary proves the profile shape; this one proves
+// the profile is broad enough for the real corpus on this host. It skips with a
+// reason when no installed skill is present, never passes silently.
+test("the canary denies a real installed corpus file", (t) => {
+  const probe = probeIsolation()
+  if (!probe.enforced) {
+    t.skip(`the boundary is not available on this host: ${probe.reason}; cannot prove the real deny`)
+    return
+  }
+  const roots = corpusRoots({ home: homedir(), hostRoots: [] })
+  let target = null
+  for (const root of roots) {
+    let entries
+    try {
+      entries = readdirSync(root, { withFileTypes: true })
+    } catch {
+      continue
+    }
+    for (const entry of entries) {
+      const candidate = join(root, entry.name, "SKILL.md")
+      if (existsSync(candidate)) {
+        target = candidate
+        break
+      }
+    }
+    if (target) break
+  }
+  if (!target) {
+    t.skip(`no installed corpus file under ${roots.join(", ")}; cannot prove the real deny`)
+    return
+  }
+  const script = 'process.stdout.write(require("node:fs").readFileSync(process.argv[1], "utf8"))'
+  const allowed = spawnSync(process.execPath, ["-e", script, target], { encoding: "utf8" })
+  assert.equal(allowed.status, 0, `installed corpus ${target} must be readable without the boundary: ${allowed.stderr}`)
+
+  const wrapped = wrapCommand({
+    command: process.execPath,
+    args: ["-e", script, target],
+    roots,
+    mechanism: probe.mechanism,
+  })
+  const denied = spawnSync(wrapped.command, wrapped.args, { encoding: "utf8" })
+  assert.notEqual(denied.status, 0, `reading installed corpus ${target} must fail under the boundary`)
+  assert.doesNotMatch(denied.stdout, /^---/)
 })

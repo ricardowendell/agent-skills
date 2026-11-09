@@ -117,9 +117,11 @@ function inspectRun(dir) {
     exists: true,
     status,
     detectorVersion,
-    // The citation guard needs the record, not only its summary: an unenforced
-    // run is a manifest fact that must be able to refute `isolated=yes`.
+    // The summary derivation can use the legacy boolean, but the citation guard
+    // needs the raw field: only an explicit `enforced: true` object proves the
+    // boundary, and a malformed record must be able to refute `isolated=yes`.
     isolation,
+    isolationRecord: manifest?.params?.isolation,
     findings: checked.counts.findings + structural,
   }
 }

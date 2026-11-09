@@ -81,7 +81,7 @@ import { fileURLToPath } from "node:url"
 import { homedir } from "node:os"
 import { readEvals } from "./lib/evals/parse.mjs"
 import { authProbe, scrubEnv } from "./lib/evals/agent.mjs"
-import { isolateHome, probeIsolation, wrapCommand } from "./lib/evals/isolation.mjs"
+import { corpusRoots, isolateHome, isolationRecord, probeIsolation, resumeIsolation, wrapCommand } from "./lib/evals/isolation.mjs"
 import { stageFixture, stageSkill, makeScratch, denySkillTool, textHash } from "./lib/evals/fixture.mjs"
 import { summarize, aggregateReps, caseResult, contaminate, PASSED, UNSCORED } from "./lib/evals/result.mjs"
 import { executeCase } from "./lib/evals/execute.mjs"
@@ -315,18 +315,10 @@ const ROOTS = (
 // reads the corpus to verify. `params.isolate` alone is not enforcement, so the
 // real answer is recorded separately and a run without it keeps the old rule.
 const PROBE = probeIsolation()
-const CORPUS_ROOTS = [
-  ...new Set(
-    [...ROOTS, ...HOST_ROOTS].flatMap((root) => {
-      const absolute = resolve(root)
-      try {
-        return [absolute, realpathSync(absolute)]
-      } catch {
-        return [absolute]
-      }
-    }),
-  ),
-]
+// `ROOTS` is the discovery set and shrinks to `--root`; the corpus is never just
+// that set. `corpusRoots` always keeps the four installed roots, adds `--root`
+// when given, and adds every host root (SPEC-0046 P1).
+const CORPUS_ROOTS = corpusRoots({ home: HOME, root: opt.root, hostRoots: HOST_ROOTS })
 const ENFORCE =
   opt.run && PROBE.enforced && opt.isolate && opt.standalone && opt.level !== "smoke" && CORPUS_ROOTS.length > 0
 let WRAPPER = null
@@ -347,8 +339,8 @@ const NOT_APPLIED = !PROBE.enforced
             ? "not applied: no corpus roots found on this host"
             : "not applied: enforcement was not required"
 const ISOLATION_RECORD = WRAPPER
-  ? { enforced: true, mechanism: PROBE.mechanism, reason: PROBE.reason }
-  : { enforced: false, mechanism: null, reason: NOT_APPLIED }
+  ? isolationRecord({ enforced: true, mechanism: PROBE.mechanism, reason: PROBE.reason })
+  : isolationRecord({ reason: NOT_APPLIED })
 const OUT_ROOT = join(HOME, ".local/share/opencode/evals")
 // One directory per invocation, named after the selection it covers. Created
 // lazily so --list and dry runs never leave an empty run behind.
@@ -358,35 +350,43 @@ if (RESUME && RESUME.manifest.label !== LABEL) {
   process.exit(1)
 }
 let RUN = null
-const run = () =>
-  (RUN ??= RESUME
+const run = () => {
+  if (RUN) return RUN
+  RUN = RESUME
     ? openRun(RESUME.dir)
     : createRun({
         root: OUT_ROOT,
-    label: LABEL,
-    arm: opt.noSkill ? "without-skill" : "with-skill",
-    model: opt.model,
-    agent: opt.agent,
-    level: opt.level,
-    repoSha: repoSha(),
-    params: {
-      concurrency: opt.concurrency,
-      repeat: opt.repeat,
-      stop: STOP,
-      stallMs: opt.stallSeconds * 1000,
-      // The checker may only say `isolated=yes` when the run itself records that
-      // the child got a scratch cwd and a throwaway home. `--shared` or
-      // `--no-isolate` writes false, and the verdict stays `unknown`.
-      isolate: opt.isolate && opt.standalone,
-      // SPEC-0046: the richer record. `enforced` is true only when the wrapper
-      // was actually applied to the child; a host without the boundary records
-      // the explicit unenforced marker and the summary says `unknown`.
-      isolation: ISOLATION_RECORD,
-      // Machine-specific, so the run carries them: the replay must judge the
-      // transcript against the checkout that produced it, not its own.
-      hostRoots: HOST_ROOTS,
-    },
-  }))
+        label: LABEL,
+        arm: opt.noSkill ? "without-skill" : "with-skill",
+        model: opt.model,
+        agent: opt.agent,
+        level: opt.level,
+        repoSha: repoSha(),
+        params: {
+          concurrency: opt.concurrency,
+          repeat: opt.repeat,
+          stop: STOP,
+          stallMs: opt.stallSeconds * 1000,
+          // The checker may only say `isolated=yes` when the run itself records
+          // that the child got a scratch cwd and a throwaway home. `--shared` or
+          // `--no-isolate` writes false, and the verdict stays `unknown`.
+          isolate: opt.isolate && opt.standalone,
+          // SPEC-0046: the richer record. `enforced` is true only when the
+          // wrapper was actually applied to the child; a host without the
+          // boundary records the explicit unenforced marker and the summary
+          // says `unknown`.
+          isolation: ISOLATION_RECORD,
+          // Machine-specific, so the run carries them: the replay must judge the
+          // transcript against the checkout that produced it, not its own.
+          hostRoots: HOST_ROOTS,
+        },
+      })
+  // A legacy manifest has no isolation record and its earlier draws were not
+  // enforced. Record that for the whole run instead of letting this invocation's
+  // wrapper make the mixed run look clean. `finish()` persists it.
+  if (RESUME) resumeIsolation(RUN.manifest)
+  return RUN
+}
 
 // Without --model the child inherits the config's `model`, so the artifact would
 // say "default" and a matrix row would be unattributable. Resolve it by hand.

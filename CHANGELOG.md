@@ -14,7 +14,10 @@ skills, which cases, and which published measurements.
 - **The control arm is denied the installed corpus (SPEC-0046, TASK-71).** The
   eval runner now probes whether the host can deny corpus reads below the tool
   layer, and on macOS launches the child under a seatbelt profile that denies the
-  installed skill roots and every host root it already records. The answer is
+  installed skill roots and every host root it already records, applied to both
+  arms: `isolated=yes` requires the boundary, so limiting it to `--no-skill`
+  would force every with-skill run to `unknown`. The with-skill behaviour under
+  the sandbox is unmeasured (no draw was run). The answer is
   written to the run manifest as `params.isolation = { enforced, mechanism,
   reason }`; a host without the boundary writes an explicit unenforced marker and
   the summary reports `isolated=unknown`, never `yes`. A deterministic canary
