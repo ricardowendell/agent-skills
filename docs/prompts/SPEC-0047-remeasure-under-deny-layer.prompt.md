@@ -1,13 +1,13 @@
 ---
 spec: SPEC-0047
-spec_sha: ea054aa3631ef6916bea0e7153e12d3678a9b591335a0551e1722c5dc95966a4
+spec_sha: 62354bf96f33b213b168d8f06d1288c738ceef30e0b36cddbc191fbebb7c947f
 ---
 
 # Implementation Prompt: SPEC-0047 Re-measure the blocked cells under the deny layer
 
 ## Source Spec
 
-- `docs/specs/active/SPEC-0047-remeasure-under-deny-layer.md` (pin `ea054aa3…`)
+- `docs/specs/active/SPEC-0047-remeasure-under-deny-layer.md` (pin `62354bf9…`)
 - Prerequisite: `docs/specs/active/SPEC-0046-deny-control-arm-corpus.md` (implemented)
 - Inventory: `docs/evals/coverage.md`
 
@@ -96,15 +96,17 @@ not add a tag that collides with another case.
    scripts/lib/evals/isolation.test.mjs`) and confirm `probeIsolation()` reports
    `enforced: true` with `mechanism: "seatbelt"`. If it does not, stop and
    report: the wave has nothing to measure.
-2. **F0.1 — the #19 control first, alone.** The with-skill arm is already valid
-   evidence (`2026-11-09T07-37-44--bootstrap-project-harness--agentworks-deepseek-v4-1-flash`,
-   5/5, `isolated=yes`) and is reused, not re-run: the halt left `r3`–`r5`
-   unscored with empty `assertions`, and `file`/`unchanged` cannot be replayed
-   because the scratch is gone. Run **only the control arm** for #19 (5 draws)
-   under the new detector v3. Read its manifest: `params.isolation.enforced:
-   true`, `skillLeaks: 0`, `hostReads: 0`, `deniedDraws > 0`, and no crash from
-   the sandbox. If a draw fails for an environmental reason, stop and report
-   before spending the rest.
+2. **F0.1 — confirm #19 from the stored evidence, do not re-run it.** #19 is
+   fully measured: the with-skill run
+   `2026-11-09T07-37-44--bootstrap-project-harness--agentworks-deepseek-v4-1-flash`
+   is 5/5 passed, and the control
+   `2026-11-09T10-59-41--bootstrap-project-harness--agentworks-deepseek-v4-1-flash--without-skill`
+   replays under v4 to five clean draws (`deniedDraws=1`), with one pass and four
+   red on `file AGENTS.md`, `file justfile`, `filematch eslint.config.js` and
+   `filematch justfile eslint`. Reproduce both with `replay-evals --leaks` and
+   stop if they no longer hold. **Spend zero draws on #19.** Note in the coverage
+   row that the control's stored `result.json` still records the v3
+   contamination; the replay is the evidence.
 3. **F1 — the remaining four cells.** `capture-idea` #1, `process-inbox` #1,
    `groom-backlog` #2, `write-implementation-prompt` #1, each in both arms, five
    draws. Record every run directory.
