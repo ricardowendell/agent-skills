@@ -1,7 +1,7 @@
 ---
 id: SPEC-0047
 title: Re-measure the blocked cells under the deny layer
-status: ready
+status: paused
 priority: P1
 task: TASK-72
 created_at: 2026-11-09
@@ -196,6 +196,93 @@ because the scratch is gone. The **with-skill** run at
 `2026-11-09T07-37-44` is valid (5/5, `isolated=yes`) and is reused; only the
 #19 **control** is re-run (5 draws). The remaining four cells cost 40, so the
 resume is **45 draws**, not 50.
+
+### Resume attempt 2026-11-09 — halted again at F0.1
+
+**No verdict was published.** The resume spent the #19 control only (5 draws);
+F1's four cells (40 draws) were not run.
+
+**F0 held.** `probeIsolation()` reports `enforced: true`,
+`mechanism: "seatbelt"` (`macOS seatbelt available via
+/usr/bin/sandbox-exec`) and `node --test scripts/lib/evals/isolation.test.mjs`
+passes 18/18, including the denied/allowed canary pair.
+
+**F0.1 — #19 control, five draws, `agentworks/deepseek-v4-1-flash`,
+concurrency 4, from `cf5f258`.** The with-skill arm is the reused
+`07-37-44` run; only the control was drawn:
+
+| arm | run directory | detector | `enforced` | `skillLeaks` | `hostReads` | `deniedDraws` | clean draws | `isolated` |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| with-skill (reused) | `2026-11-09T07-37-44--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` | `71bfb85a91cd68ab` (v2) | `true` (seatbelt) | 0 | 0 | 0 | 5/5 | `unknown` |
+| control (new) | `2026-11-09T10-59-41--bootstrap-project-harness--agentworks-deepseek-v4-1-flash--without-skill` | `d8478beab04a4e3e` (v3) | `true` (seatbelt) | 1 | 0 | 1 | 4/5 | `no` |
+
+`node scripts/check-eval-run.mjs` for the control prints
+`cases=1 reps=5 findings=1 warnings=0 skillLeaks=1 hostReads=0 isolated=no
+deniedDraws=1`; `node scripts/replay-evals.mjs --leaks` over the same directory
+prints `dirty(leak) [5 draw(s)] isolated=no deniedDraws=1`. For the reused
+with-skill run it prints `cases=1 reps=5 findings=0 warnings=0 skillLeaks=0
+hostReads=0 isolated=unknown deniedDraws=0`. Draw status: r1 unscored
+(contaminated, all 8 assertions satisfied), r2–r5 failed with the same four
+assertions red: `file AGENTS.md`, `file justfile`, `filematch eslint.config.js
+complexity|max-params|max-lines`, `filematch justfile eslint`. No infrastructure
+failure, no stall, no sandbox crash; every draw started, resolved its config and
+completed.
+
+**Why the wave stops — two independent AC-1 failures.**
+
+1. **The fresh control re-created the unproven-denial shape.** r1 contains the
+   call `ls /Users/wendell/.agents/skills 2>/dev/null; …`. The `2>/dev/null`
+   discards the line that would prove the refusal, and no other call in that
+   draw names `/Users/wendell/.agents/skills` with `Operation not permitted`
+   (the only denials name the parent `/Users/wendell/.agents/` and
+   `/Users/wendell/.agents/commands`). `findLeaks()` therefore records a `leak`:
+   `suppressedProbe()` can only fall back to a denial recorded for the **same**
+   path, and `dirDenial()` is scoped to the same call. The OS did refuse the read
+   — the parent is denied and nothing came back — but the detector cannot prove
+   it from the transcript, and the published rule says an unproven read is not
+   clean. The old control still replays clean under v3 (`clean [5 draw(s)]
+   isolated=yes deniedDraws=3`, matching the pause note); a fresh draw can
+   regenerate the shape v3 does not cover. r2–r5 are clean, so the cell is
+   4/5 clean, not 5/5.
+2. **The reused with-skill arm is no longer `isolated=yes` under the detector
+   that now judges it.** It was recorded with v2 `71bfb85a91cd68ab`; the current
+   detector is v3 `d8478beab04a4e3e`, so `check-eval-run` reports
+   `isolated=unknown`, not `yes` — a later wave may cite an earlier run only
+   when the detector matches. `check-evidence`'s capability rule would accept a
+   v2 `host-reads` digest, but the spec's Verification row and the resume
+   premise require `isolated=yes` from `check-eval-run`. Re-running that arm
+   under v3 costs 5 draws beyond the authorised 45.
+
+**Consequence.** AC-1 cannot be met by this resume: the control has a `leak`
+finding and the reused arm has no v3 `isolated=yes`. F2–F4 did not run: no
+coverage row, no `CHANGELOG` entry, no comment on issue #12 or TASK-70. No file
+outside this spec changed. This is an enforcement/measurement failure recorded
+instead of a verdict, per AC-1.
+
+**What would unblock the wave.** Two decisions this spec cannot make:
+(a) a detector rule for a suppressed probe whose **parent** directory is denied
+but whose own path is never named in a denial line (a SPEC-0048 successor; the
+current `deniedElsewhere`/`dirDenial` are per-call and per exact path); and
+(b) either re-run the #19 with-skill arm under v3 (5 extra draws) or state that
+`check-eval-run`'s `isolated` column is not the gate for a reused arm and the
+capability rule in `check-evidence` is. Neither is invented here.
+
+**Paused again 2026-11-09, both decisions taken.** They go to
+`SPEC-0049-a-corpus-hit-under-enforcement-is-a-denied-attempt.md`. The detector
+learns the invariant the boundary already guarantees: under `enforced: true` the
+corpus is unreadable by construction and the canary proves the profile is
+complete, so a corpus hit is a denied attempt unless the call demonstrably
+returned that path's content. And `check-eval-run` adopts the same capability
+rule as `check-evidence`, so a v2 `host-reads` run reports `isolated=yes` and the
+reused with-skill arm stays valid without five extra draws.
+
+**What the second halt bought.** The #19 control is already measured under v3:
+four clean draws red on `file AGENTS.md`, `file justfile`, `filematch
+eslint.config.js` and `filematch justfile eslint`, and one draw that passed every
+assertion once its suppressed probe is classified as denied. The with-skill arm
+is 5/5. So #19 needs no further draw after SPEC-0049: the resume spends only the
+four remaining cells, **40 draws**. The branch is preserved as tag
+`parked/SPEC-0047-remeasure-wave-2`.
 
 ## Open Questions
 
