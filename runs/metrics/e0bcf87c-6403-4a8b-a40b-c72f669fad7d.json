@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "external_run_id": "e0bcf87c-6403-4a8b-a40b-c72f669fad7d",
+  "slug": "SPEC-0043-typescript-templates",
+  "events": [
+    {
+      "stage": "audit",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-09T17:45:43.554Z",
+      "ended_at": "2026-11-09T17:45:43.913Z",
+      "duration_ms": 359,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "f68d40a5a57183af8f301deb6593b69cfc6914fcc6934073bba701223ac3afeb",
+        "head_sha": "ad9a9343d1b5d4231518107159a5998fdc7132d8",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      },
+      "metrics": {
+        "tokens_in": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_out": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_cache": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "calls": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "cost": {
+          "value": null,
+          "provenance": "unknown"
+        }
+      },
+      "adapter": {
+        "source": "unavailable"
+      }
+    }
+  ]
+}

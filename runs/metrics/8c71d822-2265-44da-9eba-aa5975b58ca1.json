@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "external_run_id": "8c71d822-2265-44da-9eba-aa5975b58ca1",
+  "slug": "SPEC-0024-harness-health",
+  "events": [
+    {
+      "stage": "audit",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-09T17:45:43.554Z",
+      "ended_at": "2026-11-09T17:45:43.732Z",
+      "duration_ms": 178,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "c7fee947402f4cd476a7d0b32853db1c91b6fa62c1fc7454852c642dc5485405",
+        "head_sha": "edc6b548423a45b1e430e3941b0ef7e9130cae9f",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      },
+      "metrics": {
+        "tokens_in": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_out": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_cache": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "calls": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "cost": {
+          "value": null,
+          "provenance": "unknown"
+        }
+      },
+      "adapter": {
+        "source": "unavailable"
+      }
+    }
+  ]
+}

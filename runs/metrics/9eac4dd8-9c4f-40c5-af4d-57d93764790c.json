@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "external_run_id": "9eac4dd8-9c4f-40c5-af4d-57d93764790c",
+  "slug": "SPEC-0028-detector-host-corpus",
+  "events": [
+    {
+      "stage": "audit",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-09T17:45:43.554Z",
+      "ended_at": "2026-11-09T17:45:43.796Z",
+      "duration_ms": 242,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "42b9690afb9779acb15b684d6e58d7b6a724eaa121277dbaacdd9899d3f458c6",
+        "head_sha": "d982aba04b7da33313418d8072421784e95012d1",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      },
+      "metrics": {
+        "tokens_in": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_out": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_cache": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "calls": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "cost": {
+          "value": null,
+          "provenance": "unknown"
+        }
+      },
+      "adapter": {
+        "source": "unavailable"
+      }
+    }
+  ]
+}

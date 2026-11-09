@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "external_run_id": "0eba910c-7747-4ecb-a163-95709272339c",
+  "slug": "SPEC-0020-runner-efficiency",
+  "events": [
+    {
+      "stage": "audit",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-09T17:45:43.554Z",
+      "ended_at": "2026-11-09T17:45:43.654Z",
+      "duration_ms": 100,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "47e4c958eb8759b414b93d4fb7d57f599f06c71971d18feb236c63c83d8ad679",
+        "head_sha": "701657d23de48984f7f029249ab69c536014a781",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      },
+      "metrics": {
+        "tokens_in": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_out": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_cache": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "calls": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "cost": {
+          "value": null,
+          "provenance": "unknown"
+        }
+      },
+      "adapter": {
+        "source": "unavailable"
+      }
+    }
+  ]
+}

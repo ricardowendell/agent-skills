@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "external_run_id": "f025872f-2490-45a9-9603-2ae9b4428a6f",
+  "slug": "SPEC-0045-stack-review-evals",
+  "events": [
+    {
+      "stage": "audit",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-09T17:45:43.554Z",
+      "ended_at": "2026-11-09T17:45:43.945Z",
+      "duration_ms": 391,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "a65dda21ca3419714bc8822a798ec59b7913d32579ea826e1e219cf0ced5f150",
+        "head_sha": "7d41fe9c27ad53786b6f36dad97d3aaabec21aa0",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      },
+      "metrics": {
+        "tokens_in": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_out": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_cache": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "calls": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "cost": {
+          "value": null,
+          "provenance": "unknown"
+        }
+      },
+      "adapter": {
+        "source": "unavailable"
+      }
+    }
+  ]
+}

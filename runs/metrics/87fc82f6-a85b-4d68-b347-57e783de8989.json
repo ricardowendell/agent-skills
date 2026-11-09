@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "external_run_id": "87fc82f6-a85b-4d68-b347-57e783de8989",
+  "slug": "SPEC-0031-remeasure-under-detector-v2",
+  "events": [
+    {
+      "stage": "audit",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-09T17:45:43.554Z",
+      "ended_at": "2026-11-09T17:45:43.855Z",
+      "duration_ms": 301,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "132b6a69098a7386042ff62ce629a0f2cc45b3f0699a553973645c633c13687d",
+        "head_sha": "c8f5ec6aefe4376fd9f2793e80b6da21faa0a34f",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      },
+      "metrics": {
+        "tokens_in": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_out": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_cache": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "calls": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "cost": {
+          "value": null,
+          "provenance": "unknown"
+        }
+      },
+      "adapter": {
+        "source": "unavailable"
+      }
+    }
+  ]
+}

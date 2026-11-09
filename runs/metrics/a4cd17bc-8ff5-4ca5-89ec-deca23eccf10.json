@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "external_run_id": "a4cd17bc-8ff5-4ca5-89ec-deca23eccf10",
+  "slug": "SPEC-0019-load-per-case",
+  "events": [
+    {
+      "stage": "audit",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-09T17:45:43.554Z",
+      "ended_at": "2026-11-09T17:45:43.670Z",
+      "duration_ms": 116,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "46058981bf2660361bd062a6b85db0dce05542d510ae285863c9a5ccecb8d78c",
+        "head_sha": "53e3e682d0d5f3da0057a6c02070d1aacd85df1a",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      },
+      "metrics": {
+        "tokens_in": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_out": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_cache": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "calls": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "cost": {
+          "value": null,
+          "provenance": "unknown"
+        }
+      },
+      "adapter": {
+        "source": "unavailable"
+      }
+    }
+  ]
+}

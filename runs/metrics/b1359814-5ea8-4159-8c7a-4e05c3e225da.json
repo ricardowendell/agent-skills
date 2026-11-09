@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "external_run_id": "b1359814-5ea8-4159-8c7a-4e05c3e225da",
+  "slug": "SPEC-0049-a-corpus-hit-under-enforcement-is-a-denied-attempt",
+  "events": [
+    {
+      "stage": "audit",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-09T17:45:43.554Z",
+      "ended_at": "2026-11-09T17:45:43.989Z",
+      "duration_ms": 435,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "de43a5ed6ac43a6347c1f8fd9f4935d0dff964d8a3bb8b115ab46e79404c26fe",
+        "head_sha": "18a5b50101f5dd089f08c7c57e4d3c8074a75a34",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      },
+      "metrics": {
+        "tokens_in": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_out": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_cache": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "calls": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "cost": {
+          "value": null,
+          "provenance": "unknown"
+        }
+      },
+      "adapter": {
+        "source": "unavailable"
+      }
+    }
+  ]
+}

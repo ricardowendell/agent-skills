@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "external_run_id": "13fca0c1-bc99-4c1c-9984-dadb27ff6c56",
+  "slug": "SPEC-0029-measure-cross-skill-routing",
+  "events": [
+    {
+      "stage": "audit",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-09T17:45:43.554Z",
+      "ended_at": "2026-11-09T17:45:43.811Z",
+      "duration_ms": 257,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "8936463c6904eb7e329e148077a4bcc93d3efb97cad04e6b962c153a815c0437",
+        "head_sha": "30802b3497cad952f253cf8eb93c4b89ee3fe401",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      },
+      "metrics": {
+        "tokens_in": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_out": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_cache": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "calls": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "cost": {
+          "value": null,
+          "provenance": "unknown"
+        }
+      },
+      "adapter": {
+        "source": "unavailable"
+      }
+    }
+  ]
+}

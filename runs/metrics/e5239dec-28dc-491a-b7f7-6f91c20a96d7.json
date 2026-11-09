@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "external_run_id": "e5239dec-28dc-491a-b7f7-6f91c20a96d7",
+  "slug": "SPEC-0018-eval-invariants",
+  "events": [
+    {
+      "stage": "audit",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-09T17:45:43.554Z",
+      "ended_at": "2026-11-09T17:45:43.634Z",
+      "duration_ms": 80,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "717a8f6b79deb8b44bf458b6b23999d8e765ba685c101c291e0758a098570873",
+        "head_sha": "1320c27e0d28ab8fa25f4755fabce2d611fad771",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      },
+      "metrics": {
+        "tokens_in": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_out": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_cache": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "calls": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "cost": {
+          "value": null,
+          "provenance": "unknown"
+        }
+      },
+      "adapter": {
+        "source": "unavailable"
+      }
+    }
+  ]
+}

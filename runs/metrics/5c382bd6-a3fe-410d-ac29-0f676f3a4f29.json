@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "external_run_id": "5c382bd6-a3fe-410d-ac29-0f676f3a4f29",
+  "slug": "SPEC-0048-a-denied-read-is-not-a-leak",
+  "events": [
+    {
+      "stage": "audit",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-09T17:45:43.554Z",
+      "ended_at": "2026-11-09T17:45:43.975Z",
+      "duration_ms": 421,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "00826ba50571bb002abb5578bd45fe0eee63874b65f16b4f7c532ff4e94b2ea8",
+        "head_sha": "6c07ce31cfee615ca1660f709c07380d96c5001b",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      },
+      "metrics": {
+        "tokens_in": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_out": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_cache": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "calls": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "cost": {
+          "value": null,
+          "provenance": "unknown"
+        }
+      },
+      "adapter": {
+        "source": "unavailable"
+      }
+    }
+  ]
+}

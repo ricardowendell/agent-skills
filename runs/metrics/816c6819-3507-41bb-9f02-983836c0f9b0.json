@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "external_run_id": "816c6819-3507-41bb-9f02-983836c0f9b0",
+  "slug": "SPEC-0025-measure-write-implementation-prompt",
+  "events": [
+    {
+      "stage": "audit",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-09T17:45:43.554Z",
+      "ended_at": "2026-11-09T17:45:43.748Z",
+      "duration_ms": 194,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "cd29653b45f939dc5735a673e31abb4ac7ba9c441df5affb4cc6d0cfd805405a",
+        "head_sha": "d7178768579a33c04fe4209d4977c92799dfdc83",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      },
+      "metrics": {
+        "tokens_in": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_out": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_cache": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "calls": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "cost": {
+          "value": null,
+          "provenance": "unknown"
+        }
+      },
+      "adapter": {
+        "source": "unavailable"
+      }
+    }
+  ]
+}

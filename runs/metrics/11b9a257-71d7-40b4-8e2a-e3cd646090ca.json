@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "external_run_id": "11b9a257-71d7-40b4-8e2a-e3cd646090ca",
+  "slug": "SPEC-0041-typescript-stack-decision",
+  "events": [
+    {
+      "stage": "audit",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-09T17:45:43.554Z",
+      "ended_at": "2026-11-09T17:45:43.884Z",
+      "duration_ms": 330,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "c83d296ea6c974bb71d89eabcdfc601807adfe091ab854bcc5fb434a1ac737cd",
+        "head_sha": "d34bc46ed6da25563d6cc7d2b1151d2c89814d8d",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      },
+      "metrics": {
+        "tokens_in": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_out": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_cache": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "calls": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "cost": {
+          "value": null,
+          "provenance": "unknown"
+        }
+      },
+      "adapter": {
+        "source": "unavailable"
+      }
+    }
+  ]
+}

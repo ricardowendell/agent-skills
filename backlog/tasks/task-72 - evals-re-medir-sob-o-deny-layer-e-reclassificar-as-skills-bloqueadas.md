@@ -4,7 +4,7 @@ title: 'evals: re-medir sob o deny layer e reclassificar as skills bloqueadas'
 status: In Progress
 assignee: []
 created_date: '2026-11-09T09:05:00Z'
-updated_date: '2026-11-09T10:36:00Z'
+updated_date: '2026-11-09T17:45:00Z'
 labels: []
 dependencies:
   - TASK-71
@@ -23,10 +23,10 @@ Segunda metade da TASK-71, partida em duas para nao juntar mudanca de harness co
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 As cinco skills bloqueadas rodam com o deny layer efetivo e o resumo nao diz isolated=no em nenhuma celula
-- [ ] #2 Cada celula atinge cinco draws limpos no controle ou permanece unresolved com o motivo nomeado
-- [ ] #3 Cada reclassificacao (separator, non-discriminator, unresolved) e publicada no coverage.md com o run dir
-- [ ] #4 Nenhum oraculo e editado depois dos draws; vermelhos viram follow-up
+- [x] #1 As cinco skills bloqueadas rodam com o deny layer efetivo e o resumo nao diz isolated=no em nenhuma celula
+- [x] #2 Cada celula atinge cinco draws limpos no controle ou permanece unresolved com o motivo nomeado
+- [x] #3 Cada reclassificacao (separator, non-discriminator, unresolved) e publicada no coverage.md com o run dir
+- [x] #4 Nenhum oraculo e editado depois dos draws; vermelhos viram follow-up
 <!-- AC:END -->
 
 ## Comments
@@ -37,6 +37,14 @@ created: 2026-11-09T12:27:45.253Z
 ---
 
 Onda parada em 2026-11-09 no F0.1, apos 1 de 5 celulas. A arm com skill fechou 5/5 isolated=yes; o controle rodou sob seatbelt (enforced=true) mas o detector contou a leitura NEGADA como leak, entao o resumo deu isolated=no e a onda parou. 40 draws nao gastos. Evidencia: runs 2026-11-09T07-37-44 (skill) e 2026-09T07-52-50 (controle, r3-r5 contaminados com EPERM no transcript). Branch parkeada no tag parked/SPEC-0047-remeasure-wave; a spec ficou paused. Destrava pela TASK-73/SPEC-0048 (denied != leak), que roda sem draw pago e re-julga esses runs por replay.
+
+---
+
+created: 2026-11-09T17:45:56.340Z
+
+---
+
+Onda concluida em 2026-11-09, fechada via SPEC-0050 (49d1a81) depois de tres halts de harness: SPEC-0046 (boundary), SPEC-0048 (denied != leak) e SPEC-0049/SPEC-0051 (regra enforced e conteudo por caminho). Resultado publicado: tres separadores (process-inbox #1, write-implementation-prompt #1, capture-idea #1), um nao-discriminador (groom-backlog #2) e o #19 separador citado da SPEC-0047. AC-1 marcada com ressalva: os dois controles gravados sob v4 ainda imprimem isolated=no no artefato; o replay sob v5 diz isolated=yes e e a evidencia publicada. Custo: 55 draws no total, sem stall.
 
 ---
 <!-- COMMENTS:END -->

@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "external_run_id": "6c31e1eb-cd6e-4e9c-aa44-a2d0f20f0ac2",
+  "slug": "SPEC-0021-judge-tool-evidence",
+  "events": [
+    {
+      "stage": "audit",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-09T17:45:43.554Z",
+      "ended_at": "2026-11-09T17:45:43.685Z",
+      "duration_ms": 131,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "70fb0e987b1460b3b258698f04cb8459a4111edb8c590f2911f0f1a3caeb0328",
+        "head_sha": "03c7e3f90ae63e0c07c903fed5f53dcbe78e7f70",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      },
+      "metrics": {
+        "tokens_in": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_out": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_cache": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "calls": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "cost": {
+          "value": null,
+          "provenance": "unknown"
+        }
+      },
+      "adapter": {
+        "source": "unavailable"
+      }
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "external_run_id": "979e582f-3870-49a7-977b-d1f348f706e2",
+  "slug": "SPEC-0046-deny-control-arm-corpus",
+  "events": [
+    {
+      "stage": "audit",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-09T17:45:43.554Z",
+      "ended_at": "2026-11-09T17:45:43.959Z",
+      "duration_ms": 405,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "376a782c1af948038b11732228dceeb4d18b9d3837912cd2c7167f11b6c6b392",
+        "head_sha": "6d3beb0a648148807d4c636fa13314226a7f73a4",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      },
+      "metrics": {
+        "tokens_in": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_out": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_cache": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "calls": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "cost": {
+          "value": null,
+          "provenance": "unknown"
+        }
+      },
+      "adapter": {
+        "source": "unavailable"
+      }
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "external_run_id": "f60bcff0-934e-492d-92ce-c39107a3b529",
+  "slug": "SPEC-0023-case-dispositions",
+  "events": [
+    {
+      "stage": "audit",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-09T17:45:43.554Z",
+      "ended_at": "2026-11-09T17:45:43.717Z",
+      "duration_ms": 163,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "c04e95194dc63847f8d422b4de1e3baaf6d353ade597a3db274cfc13d811a16d",
+        "head_sha": "61630c3b33a20f183dcebf75e47893ae0b40ee77",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      },
+      "metrics": {
+        "tokens_in": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_out": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_cache": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "calls": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "cost": {
+          "value": null,
+          "provenance": "unknown"
+        }
+      },
+      "adapter": {
+        "source": "unavailable"
+      }
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "external_run_id": "48fcb7d9-24e9-429f-848b-26fec98ecad6",
+  "slug": "SPEC-0027-sensor-parity-interpreter",
+  "events": [
+    {
+      "stage": "audit",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-09T17:45:43.554Z",
+      "ended_at": "2026-11-09T17:45:43.767Z",
+      "duration_ms": 213,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "b92d7027f106bf37bc48a477a620b4b74b98c602fe5d557b401bd987d895e0f9",
+        "head_sha": "082d05bbac7adc5fdc665a2356b8da37b011f6ac",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      },
+      "metrics": {
+        "tokens_in": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_out": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_cache": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "calls": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "cost": {
+          "value": null,
+          "provenance": "unknown"
+        }
+      },
+      "adapter": {
+        "source": "unavailable"
+      }
+    }
+  ]
+}
