@@ -1,7 +1,7 @@
 ---
 id: SPEC-0045
 title: Measure and publish the stack review
-status: paused
+status: ready
 priority: P2
 task: TASK-69
 created_at: 2026-11-08
