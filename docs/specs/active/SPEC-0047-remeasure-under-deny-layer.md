@@ -1,7 +1,7 @@
 ---
 id: SPEC-0047
 title: Re-measure the blocked cells under the deny layer
-status: paused
+status: ready
 priority: P1
 task: TASK-72
 created_at: 2026-11-09
@@ -86,11 +86,10 @@ no skill behaviour, no fixtures.
 
 1. **F0 — precondition.** Confirm the host reports enforcement available and the
    canary from SPEC-0046 passes. If not, stop: the wave has nothing to measure.
-   Then run **one cell first** (both arms) and read its manifests before
-   committing the remaining draws: SPEC-0046's boundary also hides config
-   entries that symlink into this checkout, and a sandboxed child that cannot
-   start would waste the whole wave. If that first cell fails for an
-   environmental reason, stop and report — do not spend the rest.
+   Then run **one cell first** and read its manifest before committing the rest:
+   `bootstrap-project-harness` #19, **control arm only** — its with-skill arm
+   (`2026-11-09T07-37-44`) is already valid evidence. If that control run fails
+   for an environmental reason, stop and report — do not spend the rest.
 2. **F1 — run.** For each skill, both arms, five draws, one cell. Record every
    run directory and its raw counts.
 3. **F2 — classify.** `separator` only with five clean draws in both arms;
@@ -181,25 +180,33 @@ read (a harness change, which this spec's non-goals forbid and SPEC-0046 owns),
 or the five-clean-draw rule is restated for an enforced host (a human decision
 on the published evidence rules). Neither is invented here.
 
-**Paused 2026-11-09, decision taken.** The detector change is the chosen route
-and it is its own spec: `SPEC-0048-a-denied-read-is-not-a-leak.md`. It touches
-`leak.mjs` and the summary, so this spec's non-goals kept it out. The F0.1 runs
-above are preserved as evidence and can be re-judged by replay once the new
-detector lands — the with-skill arm at 5/5 and the control's two clean failing
-draws suggest #19 may separate without another paid draw. The branch is
-preserved as tag `parked/SPEC-0047-remeasure-wave`; resuming means a new
-dispatch after SPEC-0048 merges, then the remaining four cells (~40 draws).
+**Paused 2026-11-09, then resumed the same day.** The detector change was the
+chosen route and it is its own spec: `SPEC-0048-a-denied-read-is-not-a-leak.md`
+(implemented). It splits a denied corpus hit from a leak, so the control's
+contamination is no longer structural. The branch was preserved as tag
+`parked/SPEC-0047-remeasure-wave` and a new dispatch starts from
+`SPEC-0048`'s result.
+
+**What the halt bought.** Replaying the F0.1 runs under detector
+`d8478beab04a4e3e` turns the control into five clean draws
+(`deniedDraws=3`), so the contamination objection is gone. It does not,
+however, score `r3`–`r5`: contamination short-circuited them and their
+`assertions` are empty, and `file`/`unchanged` assertions are not replayable
+because the scratch is gone. The **with-skill** run at
+`2026-11-09T07-37-44` is valid (5/5, `isolated=yes`) and is reused; only the
+#19 **control** is re-run (5 draws). The remaining four cells cost 40, so the
+resume is **45 draws**, not 50.
 
 ## Open Questions
 
 - **Which cell per skill?** The five named above are the published blocks. If
   one of them turns out to be the wrong cell to spend draws on, the spec says
   why before spending.
-- **What is the ceiling?** Fifty draws is the estimate: five skills × one cell ×
-  five draws × two arms. The bootstrap cell is #19, not the whole stack matrix;
-  a second stack cell would be a separate decision. If a post-load stall hits,
-  the TASK-50 protocol applies: stop the wave, record the events, reopen the
-  task — do not retry blindly.
+- **What is the ceiling?** Forty-five draws: the four remaining cells at both
+  arms (40) plus the #19 control (5), because its with-skill arm is reused. The
+  bootstrap cell is #19, not the whole stack matrix; a second stack cell would be
+  a separate decision. If a post-load stall hits, the TASK-50 protocol applies:
+  stop the wave, record the events, reopen the task — do not retry blindly.
 - **What if a cell still cannot reach five clean draws?** It stays `unresolved`
   and the reason is published. That is a legitimate outcome, not a failure of
   the spec.

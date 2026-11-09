@@ -1,13 +1,13 @@
 ---
 spec: SPEC-0047
-spec_sha: 81092bd17ddd267692520667af10f9d64dbd21be1282d984e240871e5b1e276b
+spec_sha: ea054aa3631ef6916bea0e7153e12d3678a9b591335a0551e1722c5dc95966a4
 ---
 
 # Implementation Prompt: SPEC-0047 Re-measure the blocked cells under the deny layer
 
 ## Source Spec
 
-- `docs/specs/active/SPEC-0047-remeasure-under-deny-layer.md` (pin `81092bd1…`)
+- `docs/specs/active/SPEC-0047-remeasure-under-deny-layer.md` (pin `ea054aa3…`)
 - Prerequisite: `docs/specs/active/SPEC-0046-deny-control-arm-corpus.md` (implemented)
 - Inventory: `docs/evals/coverage.md`
 
@@ -96,11 +96,15 @@ not add a tag that collides with another case.
    scripts/lib/evals/isolation.test.mjs`) and confirm `probeIsolation()` reports
    `enforced: true` with `mechanism: "seatbelt"`. If it does not, stop and
    report: the wave has nothing to measure.
-2. **F0.1 — one cell first.** Run `bootstrap-project-harness` #19 in both arms
-   (5 + 5 draws). Read both manifests: the control must show
-   `params.isolation.enforced: true`, `skillLeaks: 0`, `hostReads: 0`, and no
-   crash from the sandbox. If a draw fails for an environmental reason (config
-   unreadable, child cannot start), stop and report before spending the rest.
+2. **F0.1 — the #19 control first, alone.** The with-skill arm is already valid
+   evidence (`2026-11-09T07-37-44--bootstrap-project-harness--agentworks-deepseek-v4-1-flash`,
+   5/5, `isolated=yes`) and is reused, not re-run: the halt left `r3`–`r5`
+   unscored with empty `assertions`, and `file`/`unchanged` cannot be replayed
+   because the scratch is gone. Run **only the control arm** for #19 (5 draws)
+   under the new detector v3. Read its manifest: `params.isolation.enforced:
+   true`, `skillLeaks: 0`, `hostReads: 0`, `deniedDraws > 0`, and no crash from
+   the sandbox. If a draw fails for an environmental reason, stop and report
+   before spending the rest.
 3. **F1 — the remaining four cells.** `capture-idea` #1, `process-inbox` #1,
    `groom-backlog` #2, `write-implementation-prompt` #1, each in both arms, five
    draws. Record every run directory.
@@ -143,7 +147,7 @@ not add a tag that collides with another case.
 
 | AC | Check |
 | --- | --- |
-| AC-1 | Both manifests of the F0.1 cell show `params.isolation.enforced: true` and the control reports `isolated=yes` |
+| AC-1 | The new #19 control manifest shows `params.isolation.enforced: true`, `skillLeaks: 0`, `hostReads: 0`, and reports `isolated=yes`; the reused with-skill run `07-37-44` still reports `isolated=yes` |
 | AC-2 | Per-cell clean-draw counts in the Results; every cell with fewer than five in the control names the reason |
 | AC-3 | Coverage row per skill cites the run directory; the verdict matches the rule |
 | AC-4 | `git diff --name-only` touches no assertion, fixture or `why:` line; every red cell has a follow-up task id |
