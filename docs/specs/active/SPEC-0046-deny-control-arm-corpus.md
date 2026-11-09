@@ -61,8 +61,7 @@ SPEC-0045 measured the consequence: the control arm read the installed corpus in
 cell reached five clean control draws and every cell was published as
 `unresolved`. That is the honest reading, but it means `unresolved` currently
 says "the control was not isolated", not "the skill does not separate". The same
-block is published for `capture-idea` #1, `groom-backlog` #2 and
-`write-implementation-prompt` #1.
+block is published for the cells listed in `docs/evals/coverage.md`.
 
 The detector already reports the leak (TASK-43). The missing half is denial.
 
@@ -101,8 +100,8 @@ are untouched.
 
 ## Non-Goals
 
-- No re-measurement of any skill. The four blocked cells belong to
-  SPEC-0047 / TASK-72.
+- No re-measurement of any skill. The cells listed in `docs/evals/coverage.md`
+  belong to SPEC-0047 / TASK-72.
 - No container or VM. A real portable boundary is a much larger change and this
   spec does not buy it.
 - No enforcement claim on Linux. Where the boundary cannot be applied the run
@@ -158,6 +157,18 @@ are untouched.
 8. **Nothing else moves.** The detector rules, the skill text, the templates,
    Python and the with-skill arm are unchanged, and every `tests:` command
    passes.
+
+## Results
+
+**Decision — the boundary applies to both arms.** The seatbelt wrapper is applied
+to every isolated child, not only `--no-skill`. `isolated=yes` is derived from
+`params.isolation.enforced`, so restricting enforcement to the control arm would
+force every new with-skill run to `unknown` even on macOS, and the arms would
+measure under different process boundaries. The with-skill arm's cases,
+assertions, skill text and staged artefact are unchanged; the run still stages
+the skill in the scratch directory. Its behaviour under the sandbox is
+**unmeasured**: no draw was run for this spec (no paid draws). SPEC-0047's
+re-measurement is the first evidence.
 
 ## Open Questions
 
