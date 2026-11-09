@@ -1,7 +1,7 @@
 ---
 id: SPEC-0051
 title: Content counts only for the path it names
-status: ready
+status: implemented
 priority: P1
 task: TASK-76
 created_at: 2026-11-09
