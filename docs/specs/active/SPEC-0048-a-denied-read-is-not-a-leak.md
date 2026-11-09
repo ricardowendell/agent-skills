@@ -19,6 +19,8 @@ blocks:
 files:
   - scripts/lib/evals/leak.mjs
   - scripts/lib/evals/leak.test.mjs
+  - scripts/lib/evals/evidence.mjs
+  - scripts/lib/evals/evidence.test.mjs
   - scripts/lib/evals/result.mjs
   - scripts/lib/evals/result.test.mjs
   - scripts/lib/evals/runcheck.mjs
@@ -132,6 +134,20 @@ boundary, no fixture, no case.
   and `2026-11-09T07-52-50--bootstrap-project-harness--agentworks-deepseek-v4-1-flash--without-skill`.
 - `docs/evals/coverage.md`, `CHANGELOG.md`.
 
+### Detector capability
+
+`DETECTOR_CAPABILITIES` names what a detector can prove, in order. An
+`isolated=yes` citation needs `host-reads`: without it, silence about the host
+checkout is not evidence of isolation. The current detector (v3) is
+`["host-reads", "denied-split"]`; the legacy map pins v1 (`a31d58f79a6c7038`) to
+none and v2 (`71bfb85a91cd68ab`) to `["host-reads"]`. `capabilitiesOf(version)`
+returns the current set for `DETECTOR_VERSION`, the mapped set for a known
+legacy digest, and `null` for an unknown digest; an unknown digest fails closed.
+`denied-split` is recorded but not yet required by any claim: a v2
+`isolated=yes` was already true when v3 reclassifies some findings to `denied`,
+because the new rule can only move a finding away from `leak`/`host`, never
+toward one.
+
 ## Acceptance Criteria
 
 1. **Denied is its own kind.** A corpus path whose call output shows a
@@ -146,14 +162,63 @@ boundary, no fixture, no case.
 5. **The attempt stays visible.** The result and the summary carry a `denied`
    count; `check-eval-run` prints it; it is not a finding and does not force
    `isolated=no`.
-6. **The detector version moved.** `DETECTOR_VERSION` changes with the rules,
-   and `check-evidence` still exits 0 on the current inventory.
+6. **The detector version moved and old claims stay honest.** `DETECTOR_VERSION`
+   changes with the rules. A citation of `isolated=yes` is accepted when the
+   detector that judged the run already had the capability the claim needs
+   (`host-reads`); a detector without it stays stale. `check-evidence` exits 0 on
+   the current inventory without rewriting a published citation.
 7. **The replay proves it end to end.** Re-judging the SPEC-0047 control run
    turns `r3`–`r5` into denied-clean (the case then has five clean control
    draws), and the with-skill run still reports `isolated=yes`. The result is
    published here as evidence, not as a verdict.
 8. **Nothing else moves.** No boundary, case, fixture, skill text, template or
    Python change; every `tests:` command passes.
+
+## Results
+
+**Detector v3.** `DETECTOR_RULES` gained `per-path-permission-denial`;
+`DETECTOR_VERSION` moved from `71bfb85a91cd68ab` (v2) to `d8478beab04a4e3e`. The
+classifier is per path: a hit whose call output names the path (or its directory)
+on a line carrying `Operation not permitted`, `permission denied`, `EPERM` or
+`EACCES` is `{ kind: "denied" }`. The denial is gathered from the transcript, so
+a probe that discarded its own stderr is still classified from the call that
+showed the refusal. A mixed call keeps the successful path as a leak; when the
+output names no path at all, the fallback also needs a non-zero exit and an
+output that carries no content. `contaminate` ignores `denied` and records the
+count, `check-eval-run` prints `denied=N`, and `isolated=yes` still requires zero
+`leak`/`host`.
+
+**Replay proof (AC-7).** Read-only re-judge of the two stored SPEC-0047 F0.1
+runs; no model, no write, no paid draw.
+
+| run | arm | before (v2 `71bfb85a`) | after (v3 `d8478beab0`) |
+| --- | --- | --- | --- |
+| `2026-11-09T07-37-44--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` | with-skill | `skillLeaks=0 hostReads=0 isolated=yes`, 5/5 passed | `clean [5 draw(s)] isolated=yes`, `denied=0` |
+| `2026-11-09T07-52-50--bootstrap-project-harness--agentworks-deepseek-v4-1-flash--without-skill` | control | `skillLeaks=3 hostReads=1 contaminated=3 isolated=no` (r3–r5 contaminated) | `clean [5 draw(s)] isolated=yes`, `denied=3` (r3–r5 denied-clean) |
+
+`node scripts/replay-evals.mjs --leaks <the two dirs>` prints
+`Detector d8478beab04a4e3e: 2 cell(s), 0 dirty. No model, no write.` The control's
+`r3`–`r5` probes — `/Users/wendell/.agents/skills`,
+`/Users/wendell/.config/opencode/skills`, `/Users/wendell/.agents/` and
+`/Users/wendell/.agents/commands` — are now three denied draws with no
+`leak`/`host`, so the case has five clean control draws and both arms replay
+`isolated=yes` against the manifest's enforced seatbelt record. The with-skill
+run's stored artefact recorded `isolated=yes` under v2; its transcripts still
+carry zero leaks and zero host reads.
+
+The stored `result.json` is not rewritten: the replay is the evidence, and the
+old artefact keeps the detector it ran under. `check-eval-run` on that artefact
+therefore still echoes `skillLeaks=3 hostReads=1` (v2 record) and reports
+`isolated=unknown` for the with-skill run (its recorded detector is not the
+current one); the re-judged counts are the replay output above.
+
+**Gate status.** All eight `tests:` commands pass. The v3 digest no longer
+invalidates a v2 `isolated=yes` citation by hash equality: `check-evidence`
+accepts a claim when the recording detector had `host-reads` (v1 has none, v2 has
+it, v3 adds `denied-split`), and an unknown digest fails closed. That is sound
+because the v3 rule only reclassifies `leak`/`host` hits to `denied`; it cannot
+turn a clean draw dirty. No published citation was rewritten to make the gate
+pass.
 
 ## Open Questions
 
