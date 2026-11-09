@@ -18,6 +18,19 @@ skills, which cases, and which published measurements.
   against `survey-inflight-work` is pinned by a near-miss case on each side, and
   `pdlc plan` is the authoritative backlog order. Source:
   `docs/analysis/skills-from-sessions-2026-11-07.md`. Also exposes `/status`.
+- **The stack review is measured (SPEC-0045).** `bootstrap-project-harness` now
+  ships behavioural cases and fixtures for the empty-repo default, preservation
+  of an existing Bun, pnpm, ESLint and Biome project and an npm workspace, and
+  refusal of an ambiguous stack. A template/reference parity test fails a
+  deliberate divergence between `templates/ts/` and
+  `references/typescript.md`. The default stays Node 24 + npm + TypeScript 7 +
+  Oxlint + Prettier + `node:test`; the supported alternatives are pnpm, Bun,
+  Biome, ESLint + typescript-eslint, Vitest, Oxfmt and tsdown. The with-skill
+  draws carry the claim; the control arm still reads the real install and host
+  corpus, so every behavioural cell is published as **unresolved**, not a
+  separator. Run directories and per-cell counts are in
+  `docs/evals/coverage.md` and the spec's Results; this entry states the claim,
+  not a new measurement.
 
 ## [0.6.2] — 2026-11-07
 

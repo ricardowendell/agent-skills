@@ -1,0 +1,12 @@
+{
+  "name": "existing-monorepo",
+  "private": true,
+  "type": "module",
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2"
+  }
+}

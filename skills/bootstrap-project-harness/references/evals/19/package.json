@@ -1,0 +1,12 @@
+{
+  "name": "declared-eslint",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "eslint": "9.39.1",
+    "typescript": "7.0.2"
+  }
+}
