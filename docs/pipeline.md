@@ -9,7 +9,7 @@ run_records_dir: runs
 agents_dir: .opencode/agents
 lint: node scripts/validate-skills.mjs --root skills
 selftest: node scripts/run-evals.mjs --root skills --list --check && node --test scripts/lib/evals/*.test.mjs && node --test scripts/lib/*.test.mjs && node --test skills/bootstrap-project-harness/scripts/*.test.mjs && node scripts/check-sensor-parity.mjs && node scripts/check-evidence.mjs
-pdlc_version: ">=1.0.0"
+pdlc_version: ">=1.4.0"
 ---
 
 # Pipeline
@@ -77,11 +77,14 @@ declara `task:` e `files:`.
   adoção do pdlc). O `pdlc release` cria tag **leve**; todo corte converte para
   anotada (`git tag -d <v>` + `git tag -a <v> -m "<resumo>"`) antes do push —
   enquanto o harness não criar anotada, a conversão é passo manual do release.
-- O `pdlc_version` é um **piso** (`>=1.0.0`), não um build exato: o harness é
+- O `pdlc_version` é um **piso** (`>=1.4.0`), não um build exato: o harness é
   privado e corta várias versões por dia, e o pin exato fazia o `preflight`
   falhar a cada corte sem dizer nada sobre compatibilidade. O piso nomeia o
   harness mais antigo contra o qual a policy foi escrita; subir o piso é parte de
-  adotar uma capacidade nova do harness, não de acompanhar releases.
+  adotar uma capacidade nova do harness, não de acompanhar releases. O piso subiu
+  de `>=1.0.0` para `>=1.4.0` em 2026-11-08 ao adotar o `status: implemented`
+  gravado no próprio land e o trailer `Pdlc-Bookkeeping` nos commits manuais na
+  main durante uma onda.
 
 ## Ways of working
 

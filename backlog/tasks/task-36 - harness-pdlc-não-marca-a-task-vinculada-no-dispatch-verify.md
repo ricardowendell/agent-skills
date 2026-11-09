@@ -49,4 +49,12 @@ created: 2026-11-08T01:50:00Z
 Estado corrigido em 2026-11-08: In Progress -> To Do. A AC-2 depende do checkout do pdlc em /Users/wendell/Projects/AI Development/pdlc, que o usuario decidiu deixar bloqueado; nada nesta repo avanca a task, e nao existe task/spec do lado de la que a rastreie. Um In Progress que nao pode progredir e estado falso. Quando o fix upstream for autorizado, a task volta para In Progress com o ciclo de teste.
 
 ---
+
+created: 2026-11-09T00:33:26.331Z
+
+---
+
+Verificado na pdlc 1.4.0 (2026-11-08): markTaskInProgress ainda usa taskIdFromSlug (dispatch.mjs:214) e verify.mjs:323 usa taskIdFromSlug; resolveTaskId aparece so em completedSlugs (dispatch.mjs:122). AC-2 (marcar sem edicao manual) segue pendente; o workaround documentado no AGENTS.md continua.
+
+---
 <!-- COMMENTS:END -->

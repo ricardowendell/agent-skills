@@ -302,6 +302,12 @@ README).
 Conventional Commits: `feat|fix|chore|docs|refactor|test|perf(scope): summary`,
 imperative subject ≤ 72 characters. The body explains why, not what.
 
+Manual commits on `main` during a wave carry a trailer naming why they are not
+part of the fan-in — `Pdlc-Bookkeeping: <reason>` (task close, run record, docs
+fix). `pdlc collect` lists the rest as commits outside the fan-in. Since pdlc
+1.4 the merge writes `status: implemented` itself, so there is no separate
+status commit to make.
+
 ## Before you open a PR
 
 - [ ] `All clear` from the validator.
