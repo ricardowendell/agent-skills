@@ -5,6 +5,7 @@ import {
   DETECTOR_RULES,
   DETECTOR_VERSION,
   capabilitiesOf,
+  contentFor,
   detectorVersion,
   findLeaks,
   hasCapability,
@@ -20,9 +21,11 @@ test("the detector version is derived from the rule list and pinned", () => {
   // value is written here — the signal that an earlier control is no longer
   // citable. Recompute with `detectorVersion()`. SPEC-0048 added the per-path
   // denial rule (`per-path-permission-denial`); SPEC-0049 added the enforced
-  // attempt rule (`enforced-corpus-attempt-is-denied`), so v2's
-  // `71bfb85a91cd68ab` and v3's `d8478beab04a4e3e` are now history.
-  assert.equal(DETECTOR_VERSION, "d3e95ef948f983b7")
+  // attempt rule (`enforced-corpus-attempt-is-denied`); SPEC-0051 added the
+  // per-path content rule (`per-path-content-evidence`), so v2's
+  // `71bfb85a91cd68ab`, v3's `d8478beab04a4e3e` and v4's `d3e95ef948f983b7` are
+  // now history.
+  assert.equal(DETECTOR_VERSION, "def64b2d6a1baa6e")
 })
 
 // SPEC-0048: a claim is judged by what the detector could prove, not by its
@@ -498,3 +501,90 @@ test("leaksIn and leak({ enforced }) carry the state", () => {
     { tool: "shell", path, kind: "denied" },
   ])
 })
+
+// SPEC-0051: content counts only for the path it names. SPEC-0050's two control
+// draws were published as leaks for output that never came from the hit path:
+// capture-idea #1 returned a sibling file's body plus an `ls -l` arrow, and
+// groom-backlog #2 returned `No such file or directory`.
+const CAPTURE_SKILLS = "/Users/wendell/.config/opencode/skills"
+const GROOM_SKILL = "/Users/wendell/.agents/skills/groom/SKILL.md"
+
+test("contentFor: sibling content and a symlink line are not content (capture-idea #1)", () => {
+  const probe = shell(
+    `ls "${CAPTURE_SKILLS}" 2>/dev/null; echo ---; ls "$HOME/.config/opencode/commands" 2>/dev/null; echo ---; cat "$HOME/.config/opencode/SKILL-SOURCES.md" 2>/dev/null | head -40`,
+    "---\n/var/folders/aa/T/opencode-eval-home-x/.config/opencode/commands -> /Users/wendell/.config/opencode/commands  40B\n---\n# Skill Sources & Trust Notes\nbody from another file\n",
+    0,
+  )
+  assert.equal(contentFor(probe, CAPTURE_SKILLS), false)
+  // Under enforcement the residual is a denied attempt; without it, the v2 rule
+  // still publishes the leak. AC-1 and AC-4.
+  assert.deepEqual(findLeaks([probe], SCRATCH, [], { enforced: true }), [
+    { tool: "shell", path: CAPTURE_SKILLS, kind: "denied" },
+  ])
+  assert.deepEqual(findLeaks([probe], SCRATCH, [], { enforced: false }), [{ tool: "shell", path: CAPTURE_SKILLS }])
+})
+
+test("contentFor: an ENOENT line naming the path is not content (groom-backlog #2)", () => {
+  const missing = shell(`cat ${GROOM_SKILL} 2>&1 | head -40`, `cat: ${GROOM_SKILL}: No such file or directory\n`, 0)
+  assert.equal(contentFor(missing, GROOM_SKILL), false)
+  assert.deepEqual(findLeaks([missing], SCRATCH, [], { enforced: true }), [
+    { tool: "shell", path: GROOM_SKILL, kind: "denied" },
+  ])
+  assert.deepEqual(findLeaks([missing], SCRATCH, [], { enforced: false }), [{ tool: "shell", path: GROOM_SKILL }])
+})
+
+test("contentFor: an ls -l symlink arrow is not content", () => {
+  const listing = shell(
+    `ls -la ${CAPTURE_SKILLS} 2>/dev/null`,
+    `755  ${CAPTURE_SKILLS}/link -> /Users/wendell/.agents/skills  20B\n`,
+    0,
+  )
+  assert.equal(contentFor(listing, CAPTURE_SKILLS), false)
+  assert.deepEqual(findLeaks([listing], SCRATCH, [], { enforced: true }), [
+    { tool: "shell", path: CAPTURE_SKILLS, kind: "denied" },
+  ])
+})
+
+test("contentFor: every filesystem error marker is not content", () => {
+  const markers = [
+    "No such file or directory",
+    "permission denied",
+    "Operation not permitted",
+    "EPERM",
+    "EACCES",
+    "Is a directory",
+    "Not a directory",
+  ]
+  for (const marker of markers) {
+    const errored = shell(`cat ${GROOM_SKILL}`, `cat: ${GROOM_SKILL}: ${marker}\n`, 1)
+    assert.equal(contentFor(errored, GROOM_SKILL), false, marker)
+    assert.deepEqual(findLeaks([errored], SCRATCH, [], { enforced: true }), [
+      { tool: "shell", path: GROOM_SKILL, kind: "denied" },
+    ], marker)
+  }
+})
+
+test("contentFor: a non-error line naming the path is content (AC-3)", () => {
+  const body = shell(`cat ${GROOM_SKILL}`, `${GROOM_SKILL}: SKILL BODY\n`, 0)
+  assert.equal(contentFor(body, GROOM_SKILL), true)
+  assert.deepEqual(findLeaks([body], SCRATCH, [], { enforced: true }), [{ tool: "shell", path: GROOM_SKILL }])
+  // A direct read whose body does not name the path is still the path's content
+  // (SPEC-0048's repro 1), but a probe that names the path is not.
+  const direct = shell(`cat ${GROOM_SKILL}`, "SKILL BODY\n", 0)
+  assert.equal(contentFor(direct, GROOM_SKILL), true)
+  const probe = shell(`ls ${GROOM_SKILL}`, "SKILL BODY\n", 0)
+  assert.equal(contentFor(probe, GROOM_SKILL), false)
+  // A line naming a child below the path is the path's content too.
+  const child = shell(`ls /Users/wendell/.agents/skills`, `${GROOM_SKILL}\n`, 0)
+  assert.equal(contentFor(child, "/Users/wendell/.agents/skills"), true)
+})
+
+test("contentFor: a non-shell result carrying a body is content (AC-3)", () => {
+  const read = { tool: "read", input: { path: GROOM_SKILL }, meta: {}, output: "# groom-backlog\nbody", status: "completed" }
+  assert.equal(contentFor(read, GROOM_SKILL), true)
+  assert.deepEqual(findLeaks([read], SCRATCH, [], { enforced: true }), [{ tool: "read", path: GROOM_SKILL }])
+  // An errored or empty non-shell result carries no content.
+  assert.equal(contentFor({ ...read, status: "error" }, GROOM_SKILL), false)
+  assert.equal(contentFor({ ...read, output: "" }, GROOM_SKILL), false)
+})
+

@@ -64,6 +64,14 @@ const RULES = {
   // not a read (SPEC-0048). It is a separate rule because it changes what
   // "clean" means, so a control from another detector is not citable.
   denied: "per-path-permission-denial",
+  // Content counts only for the path it names (SPEC-0051). A hit is a read only
+  // when the call returned *that* path's content: a non-shell result carrying a
+  // body, a shell output line naming the path (or a child) without an error
+  // marker and without a symlink arrow, or a direct read of the path whose body
+  // came back. Sibling output, error lines and `ls` symlink listings are not
+  // content for the path. SPEC-0050's two control draws were published as leaks
+  // from exactly those shapes.
+  content: "per-path-content-evidence",
   // Under an enforced boundary a corpus hit that came back with nothing for
   // that path is an attempt too, even when the transcript cannot name the
   // refusal: SPEC-0047's resumed control ran `ls … 2>/dev/null` and discarded
@@ -82,6 +90,7 @@ export const DETECTOR_RULES = Object.freeze([
   RULES.corpus,
   RULES.hostCorpus,
   RULES.denied,
+  RULES.content,
   RULES.enforcedAttempt,
 ])
 
@@ -218,6 +227,62 @@ function outputOf(call) {
   return typeof call.output === "string" ? call.output : ""
 }
 
+// Filesystem errors and an `ls -l` symlink line (`source -> target`) never
+// evidence a successful read. SPEC-0050 measured both: a `cat` that returned
+// `No such file or directory` and a skills listing whose only line was
+// `…/commands -> …` were published as leaks because the line named the path.
+const CONTENT_ERROR =
+  /No such file or directory|permission denied|Operation not permitted|\bEPERM\b|\bEACCES\b|Is a directory|Not a directory/i
+
+// A path occurrence on a token boundary, counting a child below it. An `ls`
+// that names `…/skills/alpha` proves the `…/skills` menu was read; a line naming
+// the parent `…/.agents` does not prove `…/.agents/skills` was.
+function namesPathOrChild(line, path) {
+  if (!path) return false
+  const needle = norm(path)
+  if (!needle) return false
+  const hay = norm(line)
+  let from = 0
+  for (;;) {
+    const at = hay.indexOf(needle, from)
+    if (at < 0) return false
+    const before = at === 0 ? "" : hay[at - 1]
+    const after = hay[at + needle.length] ?? ""
+    const edge = (c) => c === "" || !/[A-Za-z0-9._/-]/.test(c)
+    if (edge(before) && (edge(after) || after === "/")) return true
+    from = at + 1
+  }
+}
+
+// Did this call return *this* path's content? A non-shell result carries the
+// body it read; a shell call counts through an output line naming the path (or
+// a child), or through a direct read of the path (`cat P`, `sed … P`) whose
+// body came back. Everything else is not content for the path: sibling output,
+// an ENOENT line, a permission refusal, or an `ls -l` arrow.
+export function contentFor(call, path) {
+  if (!call || !path) return false
+  if (call.tool !== "shell") {
+    if (call.status === "error") return false
+    const out = outputOf(call).trim()
+    // `No files found` is the tool's empty result, not a listing.
+    return out !== "" && !/^No files found$/i.test(out)
+  }
+  const output = outputOf(call)
+  const named = output
+    .split("\n")
+    .some((line) => namesPathOrChild(line, path) && !CONTENT_ERROR.test(line) && !line.includes(" -> "))
+  if (named) return true
+  // A direct read has no line naming the path, but its body is the path's
+  // content. Accept it only when every segment naming the path is a content
+  // read, not a probe (`ls`/`find`/`test`): SPEC-0050's capture-idea shape names
+  // the path from an `ls`, and the groom-backlog shape returns an error line.
+  // SPEC-0048's repro 1 (`cat P` → body) must stay a leak.
+  const segments = segmentsFor(call, path)
+  if (!segments.length || segments.some((segment) => PROBE.test(segment))) return false
+  const body = output.trim()
+  return body !== "" && !CONTENT_ERROR.test(body) && !body.includes(" -> ")
+}
+
 const dirOf = (path) => {
   const clean = norm(path)
   const at = clean.lastIndexOf("/")
@@ -323,9 +388,8 @@ function strings(value, out = []) {
 // line that names it — is the suppressed probe the boundary measured on
 // 2026-11-09T10-59-41: an attempt, `denied`, not a leak. Without enforcement the
 // v2 rule stands: the read could have succeeded, so the attempt counts as a
-// leak. A call that did return something for the path (content override) is
-// still a leak in both modes; the enforced rule never promotes a read to
-// `denied`.
+// leak. A call that returned that path's content (`contentFor`) is still a leak
+// in both modes; the enforced rule never promotes a read to `denied`.
 export function findLeaks(calls, scratch, hostRoots = [], { enforced = false } = {}) {
   // First pass: every corpus path any call shows an exact denial for. This is
   // only the fallback input; it never overrides a call that returned content.
@@ -352,8 +416,15 @@ export function findLeaks(calls, scratch, hostRoots = [], { enforced = false } =
       let kind
       if (exactDenial(call, path) || denialWithoutPath(call)) kind = "denied"
       else if (dirDenial(call, path) && nothing) kind = "denied"
-      else if (!nothing) kind = "leak"
-      else if (deniedElsewhere.has(norm(path))) kind = "denied"
+      // Content counts only for the path it names (SPEC-0051). Sibling output,
+      // an ENOENT/permission line and an `ls` symlink listing are not a read of
+      // this path; the denial and fallback rules below still decide those.
+      else if (contentFor(call, path)) kind = "leak"
+      // The cross-call fallback only applies when this call returned nothing for
+      // the path. A call that returned *something* (a body, even one that does
+      // not name the path) must not be turned into `denied` by another call's
+      // refusal: a false `denied` hides a real read (SPEC-0048 repro 1).
+      else if (nothing && deniedElsewhere.has(norm(path))) kind = "denied"
       // Nothing came back for this path and no denial proof names it. Under
       // enforcement that is the boundary doing its job: the suppressed probe is
       // an attempt (`denied`), not a read. Without enforcement the read could

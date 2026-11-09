@@ -129,6 +129,51 @@ boundary, no case, no fixture, no skill.
 7. **Nothing else moves.** No boundary, case, fixture, skill text, template or
    Python change; every `tests:` command passes.
 
+## Results
+
+Replay-only: no draw was run and no run directory was written. Detector v5 is
+`def64b2d6a1baa6e` (v4 was `d3e95ef948f983b7`).
+
+**Before (v4).**
+
+```
+# replay --leaks
+capture-idea#1 → dirty(leak)       [5 draw(s)]  isolated=no  deniedDraws=2
+groom-backlog#2 → dirty(leak,host) [5 draw(s)]  isolated=no  deniedDraws=2
+Detector d3e95ef948f983b7: 2 cell(s), 2 dirty.
+
+# check-eval-run (stored artefact)
+capture-idea#1: findings=1 skillLeaks=1 hostReads=0 isolated=no deniedDraws=2
+groom-backlog#2: findings=2 skillLeaks=1 hostReads=1 isolated=no deniedDraws=2
+```
+
+**After (v5).**
+
+```
+# replay --leaks
+capture-idea#1 → clean  [5 draw(s)]  isolated=yes  deniedDraws=2
+groom-backlog#2 → clean  [5 draw(s)]  isolated=yes  deniedDraws=2
+Detector def64b2d6a1baa6e: 2 cell(s), 0 dirty.
+
+# check-eval-run (stored artefact, read-only — unchanged by design)
+capture-idea#1: findings=1 skillLeaks=1 hostReads=0 isolated=no deniedDraws=2
+groom-backlog#2: findings=2 skillLeaks=1 hostReads=1 isolated=no deniedDraws=2
+```
+
+Both controls replay to five clean draws with `isolated=yes`; the stored
+`result.json` still records the v4 contamination, because the replay is
+read-only and is the citation for these cells. Reclassifying the cleared draw
+leaves `groom-backlog` #2 at 5/5 passed (its `r2` reply assertion passed) and
+`capture-idea` #1 at **1/5** passed, not the 2/5 the spec predicted: `r1`'s
+stored assertions are 3/4, red on `filematch docs/inbox/*.md status:
+unprocessed`, so clearing its contamination does not turn it into a pass. The
+detector verdicts are SPEC-0050's to publish.
+
+Run directories (read-only):
+
+- `~/.local/share/opencode/evals/runs/2026-11-09T12-41-57--capture-idea--agentworks-deepseek-v4-1-flash--without-skill`
+- `~/.local/share/opencode/evals/runs/2026-11-09T12-55-35--groom-backlog--agentworks-deepseek-v4-1-flash--without-skill`
+
 ## Open Questions
 
 - **What counts as a non-error name?** A line that contains the path and does not
