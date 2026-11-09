@@ -57,11 +57,12 @@ supports, and one case held out. The visual and experience cases stay in
 
 **Why paused (2026-11-08).** The first wave spent 30 of 40 draws. The #12
 control draw stalled post-load (`stallMs=120000`, 223 s, one retry), so the
-frozen holdout #11 was never drawn and F5 was not published. The branch
-`pdlc/SPEC-0034-iterative-corpus` at `91ee5ff` keeps the four fixtures and the
-partial Results. Resuming means `--resume` on the #12 control run, then the
-holdout draws; `TASK-50` is reopened with the stall events. The spec returns to
-`ready` only on an explicit decision.
+frozen holdout #11 was never drawn and F5 was not published. The commit is
+preserved as tag `parked/SPEC-0034-iterative-corpus` (`91ee5ff`); the pdlc
+branch and worktree were removed to close the drift. Resuming means a new
+dispatch plus `--resume` on the #12 control run, then the holdout draws;
+`TASK-50` is reopened with the stall events. The spec returns to `ready` only on
+an explicit decision.
 
 ## User Outcome
 

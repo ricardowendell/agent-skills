@@ -49,4 +49,12 @@ created: 2026-11-08T09:59:39.085Z
 Onda parada por decisao em 2026-11-08. A branch pdlc/SPEC-0034-iterative-corpus em 91ee5ff mantem as 4 fixtures e os Results parciais (30/40 draws; holdout #11 nao sorteado; controle #12 stallou). Retomar exige --resume do controle #12 e os draws do #11; TASK-50 reaberta com os eventos. SPEC-0034 volta a paused ate a decisao.
 
 ---
+
+created: 2026-11-09T00:09:46.525Z
+
+---
+
+Branch parkeada migrada para o tag parked/SPEC-0034-iterative-corpus (91ee5ff); o worktree .lane/trees/SPEC-0034-iterative-corpus e a branch pdlc/SPEC-0034-iterative-corpus foram removidos para zerar o drift. Os 6 run dirs continuam como evidencia. Retomar exige novo dispatch + --resume do controle #12 e os draws do holdout #11; TASK-50 reaberta.
+
+---
 <!-- COMMENTS:END -->
