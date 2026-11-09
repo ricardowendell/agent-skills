@@ -143,7 +143,7 @@ export function checkRun({ arm = null, cases = [], isolation = null, requested =
   // SPEC-0048: a denied corpus attempt is evidence that the boundary held, not a
   // finding. It is counted per draw so the reader sees the probe without the
   // cell losing `isolated=yes`.
-  let denied = 0
+  let deniedDraws = 0
   // A cell is isolated only when the detector that judged it already looked for
   // host reads. Pre-SPEC-0028 artefacts (a different or missing version) are
   // history: no host finding was possible, so silence cannot be a clean bill.
@@ -206,7 +206,7 @@ export function checkRun({ arm = null, cases = [], isolation = null, requested =
           const named = host.map((e) => (e.root ? `${e.path} (${e.root})` : e.path))
           add("host", `read host corpus ${named.join(", ")}`)
         }
-        if (leakPaths(r, "denied").length) denied++
+        if (leakPaths(r, "denied").length) deniedDraws++
       }
 
       // Contamination is its own finding even when no path survived (an old
@@ -254,6 +254,6 @@ export function checkRun({ arm = null, cases = [], isolation = null, requested =
   return {
     findings,
     warnings,
-    counts: { cases: cases.length, reps, findings: findings.length, infrastructure, skillLeaks, hostReads, denied, isolated },
+    counts: { cases: cases.length, reps, findings: findings.length, infrastructure, skillLeaks, hostReads, deniedDraws, isolated },
   }
 }

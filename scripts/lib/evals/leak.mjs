@@ -206,6 +206,12 @@ function outputOf(call) {
   return typeof call.output === "string" ? call.output : ""
 }
 
+const dirOf = (path) => {
+  const clean = norm(path)
+  const at = clean.lastIndexOf("/")
+  return at > 0 ? clean.slice(0, at) : clean
+}
+
 function denialLines(call) {
   return outputOf(call)
     .split("\n")
@@ -229,28 +235,52 @@ function denialWithoutPath(call) {
     .every((line) => DENIAL.test(line))
 }
 
-// A non-shell tool that completed with content did return the path's contents,
-// so it is a successful read even when another call in the transcript was
-// refused. `read`/`glob`/`grep` are the tools whose output is the result; a
-// shell call's merged output cannot be attributed to one path, so it never
-// overrides a recorded denial here.
-function returnedContent(call) {
-  return call.tool !== "shell" && call.status === "completed" && outputOf(call).trim() !== ""
+// A denial naming the hit path itself. It wins even when the same call returned
+// other content: `cat A B` can return B and still refuse A.
+function exactDenial(call, path) {
+  return denialLines(call).some((line) => namesPath(line, path))
 }
 
-// Was this corpus hit refused by the call that named it? Only the call's own
-// output can say so; the path being unreadable now is not evidence.
-function isDenied(call, path) {
-  const lines = denialLines(call)
-  if (!lines.length) return false
-  if (lines.some((line) => namesPath(line, path) || namesPath(line, dirOf(path)))) return true
-  return denialWithoutPath(call)
+// A denial naming the directory denies a path inside it only when the call
+// returned nothing. If content came back, the child may have been read even
+// though the parent listing failed (repro: `ls /dir/alpha; cat
+// /dir/alpha/SKILL.md` returns the body and refuses the listing).
+function dirDenial(call, path) {
+  const dir = dirOf(path)
+  if (!dir || dir === norm(path)) return false
+  return denialLines(call).some((line) => namesPath(line, dir))
 }
 
-const dirOf = (path) => {
-  const clean = norm(path)
-  const at = clean.lastIndexOf("/")
-  return at > 0 ? clean.slice(0, at) : clean
+// The shell segments that name this path. `2>/dev/null` on a probe discards the
+// very line that would say what happened, and the segment's stdout can be empty
+// while another command in the same call printed something. That is the F0.1
+// shape (`ls …/skills 2>/dev/null | head; echo …`), so it counts as "nothing came
+// back" and lets the transcript fallback use the denial recorded elsewhere.
+const SEGMENT_SPLIT = /[;\n]|&&|\|\|/
+const PROBE = /\b(?:ls|stat|test|find|readlink)\b/
+const SUPPRESSED = /2>\s*\/dev\/null/
+
+function segmentsFor(call, path) {
+  const text = [...strings(call.input ?? {}), ...strings(call.meta ?? {})].join("\n")
+  const needle = norm(path)
+  return text.split(SEGMENT_SPLIT).filter((segment) => norm(segment).includes(needle))
+}
+
+function suppressedProbe(call, path) {
+  const segments = segmentsFor(call, path)
+  return (
+    segments.length > 0 &&
+    segments.every((segment) => SUPPRESSED.test(segment) && PROBE.test(segment))
+  )
+}
+
+// Did this call return nothing for the path? An empty output always qualifies; a
+// probe whose stderr was discarded qualifies because the call cannot show either
+// a result or the refusal. A non-shell tool that completed with content did
+// return the path's contents and never qualifies.
+function returnedNothing(call, path) {
+  if (outputOf(call).trim() === "") return true
+  return suppressedProbe(call, path)
 }
 
 function strings(value, out = []) {
@@ -267,45 +297,64 @@ function strings(value, out = []) {
 // every artefact written before the host rules contains. A `denied` hit is the
 // same shape plus `kind: "denied"`.
 //
-// A denial is a property of the path within the transcript, not of the token in
-// one call. The stored F0.1 control has two calls for `…/.agents/skills`: one
-// pipes stderr to /dev/null (so its own output proves nothing) and a later one
-// shows `Operation not permitted`. Classifying the first from its silent output
-// would keep the draw contaminated for a read the boundary refused, which is
-// the defect this spec fixes. The denial set is therefore gathered from every
-// call first: a path the transcript shows refused is `denied` wherever it is
-// named. A path read successfully and never refused has no denial line, so it
-// stays a leak (AC-2).
+// A denial is judged per call and per path, never by applying one call's denial
+// to every call that names the path. A later successful `cat P` must stay a
+// leak even when an earlier call was refused; a false `denied` hides a real
+// leak. The transcript only supplies the fallback: when this call returned
+// nothing for the path (an empty result, or a probe that discarded stderr), a
+// denial recorded for the same path elsewhere may classify it as denied — that
+// is the F0.1 control shape. A path with any successful read wins over a denied
+// entry, because a read happened.
 export function findLeaks(calls, scratch, hostRoots = []) {
-  // First pass: every corpus path some call's output shows a denial for.
-  const denied = new Set()
+  // First pass: every corpus path any call shows an exact denial for. This is
+  // only the fallback input; it never overrides a call that returned content.
+  const deniedElsewhere = new Set()
   for (const call of calls) {
     const text = [...strings(call.input ?? {}), ...strings(call.meta ?? {})].join("\n")
     for (const m of text.matchAll(TOKEN)) {
       const path = m[0].replace(/[.:]+$/, "")
       if (!classifies(path, scratch, hostRoots)) continue
-      if (isDenied(call, path)) denied.add(norm(path))
+      if (exactDenial(call, path)) deniedElsewhere.add(norm(path))
     }
   }
 
-  const hits = []
-  const seen = new Set()
+  // Per normalized path: did any call read it, and is there a denial? Leak wins
+  // so a real read is never dropped.
+  const byPath = new Map()
   for (const call of calls) {
     const text = [...strings(call.input ?? {}), ...strings(call.meta ?? {})].join("\n")
     for (const m of text.matchAll(TOKEN)) {
       const path = m[0].replace(/[.:]+$/, "")
       const hit = classifies(path, scratch, hostRoots)
       if (!hit) continue
-      const kind = denied.has(norm(path)) && !returnedContent(call) ? "denied" : hit.kind
-      // The kind is part of the identity: a later classification must not be
-      // dropped just because an earlier call named the same path.
-      const key = `${call.tool}\u0000${path}\u0000${kind}`
-      if (seen.has(key)) continue
-      seen.add(key)
-      if (kind === "denied") hits.push({ tool: call.tool, path, kind: "denied" })
-      else if (hit.kind === "host") hits.push({ tool: call.tool, path, kind: "host", root: hit.root })
-      else hits.push({ tool: call.tool, path })
+      const nothing = returnedNothing(call, path)
+      let kind
+      if (exactDenial(call, path) || denialWithoutPath(call)) kind = "denied"
+      else if (dirDenial(call, path) && nothing) kind = "denied"
+      else if (!nothing) kind = "leak"
+      else if (deniedElsewhere.has(norm(path))) kind = "denied"
+      else kind = "leak"
+
+      const key = norm(path)
+      const entry = byPath.get(key) ?? { path, tool: call.tool, kind: "denied", root: hit.root, seen: false }
+      if (kind === "leak" && entry.kind !== "leak") {
+        entry.kind = "leak"
+        entry.tool = call.tool
+        entry.root = hit.root
+      } else if (!entry.seen) {
+        entry.path = path
+        entry.root = hit.root
+      }
+      entry.seen = true
+      byPath.set(key, entry)
     }
+  }
+
+  const hits = []
+  for (const entry of byPath.values()) {
+    if (entry.kind === "denied") hits.push({ tool: entry.tool, path: entry.path, kind: "denied" })
+    else if (entry.root) hits.push({ tool: entry.tool, path: entry.path, kind: "host", root: entry.root })
+    else hits.push({ tool: entry.tool, path: entry.path })
   }
   return hits
 }

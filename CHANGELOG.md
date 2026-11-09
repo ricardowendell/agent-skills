@@ -16,7 +16,7 @@ skills, which cases, and which published measurements.
   path as `denied` instead of `leak`/`host` (detector v3,
   `d8478beab04a4e3e`). `contaminate` ignores `denied` and records the count, so a
   control draw that probed the installed corpus and was refused by SPEC-0046's
-  seatbelt boundary is clean and scorable; `check-eval-run` prints `denied=N`
+  seatbelt boundary is clean and scorable; `check-eval-run` prints `deniedDraws=N`
   without making it a finding, and `isolated=yes` still requires zero
   `leak`/`host`. A successful read of the same path remains a leak. The change is
   proven by replay, not by a new draw: SPEC-0047's control

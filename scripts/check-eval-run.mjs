@@ -15,7 +15,7 @@ const USAGE = `Usage: node scripts/check-eval-run.mjs <run-dir>...
 Check one or more eval run directories for leaked reads, contamination, a lost
 skill gate, missing provenance, an aborted draw (timeout, stall, provider limit)
 or a run that never completed. The summary names
-skillLeaks, hostReads, denied and isolated=yes|no|unknown: "no" means a read was
+skillLeaks, hostReads, deniedDraws and isolated=yes|no|unknown: "no" means a read was
 detected, "yes" needs a v2 detector, a recorded isolated run (and, when the
 manifest carries params.isolation, enforced: true) and at least one draw that
 ran, and "unknown" is neither. A denied corpus attempt is counted but is not a
@@ -139,7 +139,7 @@ function main(argv) {
     }
     process.stdout.write(
       `cases=${counts.cases} reps=${counts.reps} findings=${counts.findings} warnings=${warnings.length} ` +
-        `skillLeaks=${counts.skillLeaks} hostReads=${counts.hostReads} isolated=${counts.isolated} denied=${counts.denied} (${dir})\n`,
+        `skillLeaks=${counts.skillLeaks} hostReads=${counts.hostReads} isolated=${counts.isolated} deniedDraws=${counts.deniedDraws} (${dir})\n`,
     )
     if (findings.length) dirty = true
   }

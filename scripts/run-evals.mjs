@@ -672,8 +672,9 @@ async function runCase(skill, c, rep = null) {
 
   const result = caseResult(skill, c, {
     ...clean,
-    // `contaminate` keeps the legacy `{ tool, path }` shape; the artifact needs
-    // the kind so the checker can separate a skill leak from a host read.
+    // `leaks` carries the `kind` per entry so the checker can separate a skill
+    // leak, a host read and a denied attempt (SPEC-0048); `clean.leak` is the
+    // same list, but this assignment is what the artefact is built from.
     leak: leaks,
     ...(rep ? { rep: rep.index } : {}),
     meta: { repoSha: meta.repoSha, agent: meta.agent, model: meta.model, level: meta.level },

@@ -39,12 +39,13 @@ in [`discriminating-cases.md`](discriminating-cases.md).
 - A run directory cited **as evidence** takes one of two explicit paths:
   - **v3** (`detectorVersion` `d8478beab04a4e3e`): `node
     scripts/check-eval-run.mjs <run-dir>` reports `findings=0 warnings=0
-    skillLeaks=0 hostReads=0 isolated=yes denied=N`. That means no skill or host
+    skillLeaks=0 hostReads=0 isolated=yes deniedDraws=N`. That means no skill or host
     read, no contaminated draw, no aborted draw (timeout, stall, provider
     limit), no lost gate, no missing provenance, no unfinished run, at least one
     draw that ran, and the manifest records an isolated run (`params.isolate:
-    true`). `denied=N` counts draws that probed the corpus and were refused; it
-    is not a finding and does not deny isolation (SPEC-0048).
+    true`). `deniedDraws=N` counts draws that probed the corpus and were refused
+    (`denied` on a draw's `result.json` is the entry count, not the draw count);
+    it is not a finding and does not deny isolation (SPEC-0048).
     A run that also carries `params.isolation` needs `enforced: true` there:
     `params.isolate` alone is a throwaway home, not a proven boundary. A
     manifest without `params.isolation` is legacy and keeps the boolean rule,
@@ -54,9 +55,13 @@ in [`discriminating-cases.md`](discriminating-cases.md).
     history, never a clean measurement under the current detector. Citable as
     replay-verified history only when
     `node scripts/replay-evals.mjs --leaks <run-dir>` prints `clean` (or
-    `clean … denied=N`), and the citation names that replay. A pre-v3 run never
-    prints `isolated=yes` under v3; with no read detected it prints
-    `isolated=unknown`, because the version moved when the denied rule landed.
+    `clean … deniedDraws=N`) and, when the manifest records an enforced
+    boundary, `isolated=yes`; the citation names that replay. The replay
+    re-judges the stored transcripts under the current detector. The other
+    reader, `node scripts/check-eval-run.mjs <run-dir>`, reports the stored
+    artefact and prints `isolated=unknown` for a pre-v3 run, because the
+    artefact still records the digest it ran under; that is not the replay's
+    verdict.
   A directory that fails may still be cited **as the record of the failure
   itself**, with the finding named; it cannot supply a clean pass rate.
   `isolated=no` means the checker saw a skill or host read; `unknown` is neither

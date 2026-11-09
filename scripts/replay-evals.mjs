@@ -291,7 +291,7 @@ if (opt.leaks) {
       const rules = [entry.leak ? "leak" : "", entry.host ? "host" : ""].filter(Boolean)
       if (rules.length) dirty++
       const verdict = rules.length ? `dirty(${rules.join(",")})` : "clean"
-      const denied = entry.denied ? `  denied=${entry.denied}` : ""
+      const denied = entry.denied ? `  deniedDraws=${entry.denied}` : ""
       // The same three-state rule as `runcheck`: a read denies isolation, and a
       // clean cell is `yes` only when the manifest proves the boundary. The
       // re-judged with-skill cell can then state it without the stale-detector

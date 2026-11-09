@@ -20,7 +20,8 @@ const USAGE = `Usage: node scripts/check-evidence.mjs [--store <runs-dir>] [--st
 Scan docs/evals/*.md for run-directory tokens and check them against the local
 store. Errors: a missing directory, a completed run with no cases/ or no case
 results (empty-run), an unfinished run cited as complete, a line claiming
-isolated=yes for a run whose recorded detector is not current, or a line claiming
+isolated=yes for a run whose recorded detector lacks the host-reads capability,
+or a line claiming
 isolated=yes for a run whose manifest records isolation.enforced: false
 (unenforced-isolation; legacy manifests without the record keep the old rule).
 Warnings: a run

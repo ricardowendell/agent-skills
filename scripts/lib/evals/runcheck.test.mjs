@@ -44,7 +44,7 @@ test("a clean with-skill run at 5/5 has no findings", () => {
   const cases = [aggregate(Array.from({ length: 5 }, (_, i) => rep({ rep: i + 1 })))]
   const { findings, counts } = checkRun({ arm: "with-skill", cases, isolation: true })
   assert.deepEqual(findings, [])
-  assert.deepEqual(counts, { cases: 1, reps: 5, findings: 0, infrastructure: 0, skillLeaks: 0, hostReads: 0, denied: 0, isolated: "yes" })
+  assert.deepEqual(counts, { cases: 1, reps: 5, findings: 0, infrastructure: 0, skillLeaks: 0, hostReads: 0, deniedDraws: 0, isolated: "yes" })
 })
 
 test("a clean control run at 0/5 is not dirty just because it failed", () => {
@@ -53,7 +53,7 @@ test("a clean control run at 0/5 is not dirty just because it failed", () => {
   )
   const { findings, counts } = checkRun({ arm: "without-skill", cases: [aggregate(reps, { contaminated: 0 })], isolation: true })
   assert.deepEqual(findings, [])
-  assert.deepEqual(counts, { cases: 1, reps: 5, findings: 0, infrastructure: 0, skillLeaks: 0, hostReads: 0, denied: 0, isolated: "yes" })
+  assert.deepEqual(counts, { cases: 1, reps: 5, findings: 0, infrastructure: 0, skillLeaks: 0, hostReads: 0, deniedDraws: 0, isolated: "yes" })
 })
 
 test("a control repetition that loaded a skill is a gate miss", () => {
@@ -112,7 +112,7 @@ test("a run with no leak field at all is recognised as pre-detector", () => {
   // historical artefact so the old run remains citable.
   const { findings, counts } = checkRun({ arm: "with-skill", cases, isolation: true })
   assert.deepEqual(kinds(findings), Array(12).fill("leak-missing"))
-  assert.deepEqual(counts, { cases: 1, reps: 12, findings: 12, infrastructure: 0, skillLeaks: 0, hostReads: 0, denied: 0, isolated: "unknown" })
+  assert.deepEqual(counts, { cases: 1, reps: 12, findings: 12, infrastructure: 0, skillLeaks: 0, hostReads: 0, deniedDraws: 0, isolated: "unknown" })
 })
 
 test("a run that carries leak somewhere must carry it everywhere", () => {
@@ -267,7 +267,7 @@ test("a denied-only control draw is clean and counted, not a finding", () => {
     isolation: { enforced: true, mechanism: "seatbelt", reason: "available" },
   })
   assert.deepEqual(findings, [])
-  assert.equal(counts.denied, 1)
+  assert.equal(counts.deniedDraws, 1)
   assert.equal(counts.skillLeaks, 0)
   assert.equal(counts.hostReads, 0)
   assert.equal(counts.isolated, "yes")
@@ -285,7 +285,7 @@ test("a denied attempt beside a real leak keeps the leak a finding", () => {
   ]
   const { findings, counts } = checkRun({ arm: "with-skill", cases })
   assert.deepEqual(kinds(findings), ["leak"])
-  assert.equal(counts.denied, 1)
+  assert.equal(counts.deniedDraws, 1)
   assert.equal(counts.skillLeaks, 1)
   assert.equal(counts.isolated, "no")
 })
@@ -351,7 +351,7 @@ test("an unenforced isolation record is unknown, never isolated", () => {
 test("a single-draw result is the repetition at the root", () => {
   const root = rep({ rep: 1, skillGate: gate({ ok: false, loaded: [], reason: "MISSING" }) })
   const { findings, counts } = checkRun({ arm: "with-skill", cases: [root], isolation: true })
-  assert.deepEqual(counts, { cases: 1, reps: 1, findings: 1, infrastructure: 0, skillLeaks: 0, hostReads: 0, denied: 0, isolated: "yes" })
+  assert.deepEqual(counts, { cases: 1, reps: 1, findings: 1, infrastructure: 0, skillLeaks: 0, hostReads: 0, deniedDraws: 0, isolated: "yes" })
   assert.deepEqual(kinds(findings), ["gate-miss"])
   assert.equal(findings[0].rep, 1)
 })
@@ -512,7 +512,7 @@ test("replay --leaks splits denied attempts and reports the isolation verdict", 
 
   const r = spawnSync(process.execPath, [REPLAY, "--leaks", run], { encoding: "utf8" })
   assert.equal(r.status, 0, r.stderr)
-  assert.match(r.stdout, /demo#1 → clean  \[2 draw\(s\)\]  isolated=yes  denied=2/)
+  assert.match(r.stdout, /demo#1 → clean  \[2 draw\(s\)\]  isolated=yes  deniedDraws=2/)
   assert.match(r.stdout, /demo#2 → dirty\(leak\)  \[1 draw\(s\)\]  isolated=no/)
 })
 
@@ -689,7 +689,7 @@ test("CLI prints denied without a finding and keeps isolation", (t) => {
   const r = runCli(dir)
   assert.equal(r.status, 0)
   assert.match(r.stdout, /findings=0 warnings=0/)
-  assert.match(r.stdout, /skillLeaks=0 hostReads=0 isolated=yes denied=1/)
+  assert.match(r.stdout, /skillLeaks=0 hostReads=0 isolated=yes deniedDraws=1/)
   assert.doesNotMatch(r.stdout, /leak implement-from-prompt/)
 })
 

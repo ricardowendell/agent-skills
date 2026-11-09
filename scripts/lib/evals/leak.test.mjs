@@ -356,9 +356,44 @@ test("a later successful read of a denied path is still a leak", () => {
   const path = "/Users/me/.agents/skills/review-code/SKILL.md"
   const denied = { tool: "read", input: { path }, meta: {}, output: `read: ${path}: Operation not permitted`, status: "error" }
   const success = { tool: "read", input: { path }, meta: {}, output: "# review-code", status: "completed" }
-  assert.deepEqual(findLeaks([denied, success], SCRATCH), [
-    { tool: "read", path, kind: "denied" },
-    { tool: "read", path },
+  // The read happened; a false `denied` would hide it. One leak entry wins.
+  assert.deepEqual(findLeaks([denied, success], SCRATCH), [{ tool: "read", path }])
+})
+
+// SPEC-0048 review repros: per-call, per-path. A successful shell read must not
+// be dropped because another call was refused.
+test("repro 1: a successful shell read survives a later denial of the same path", () => {
+  const path = "/Users/me/.agents/skills/alpha/SKILL.md"
+  const hits = findLeaks(
+    [
+      shell(`cat ${path}`, "# alpha body\n", 0),
+      shell(`cat ${path}`, `cat: ${path}: Operation not permitted\n`, 1),
+    ],
+    SCRATCH,
+  )
+  assert.deepEqual(hits, [{ tool: "shell", path }])
+})
+
+test("repro 2: one call denied on A and returning B keeps both kinds", () => {
+  const a = "/Users/me/.agents/skills/alpha/SKILL.md"
+  const b = "/Users/me/.agents/skills/beta/SKILL.md"
+  const hits = findLeaks([shell(`cat ${a} ${b}`, `cat: ${a}: Operation not permitted\n# B body\n`)], SCRATCH)
+  assert.deepEqual(hits, [
+    { tool: "shell", path: a, kind: "denied" },
+    { tool: "shell", path: b },
+  ])
+})
+
+test("repro 3: a refused parent listing does not deny a child that returned content", () => {
+  const dir = "/Users/me/.agents/skills/alpha"
+  const child = "/Users/me/.agents/skills/alpha/SKILL.md"
+  const hits = findLeaks(
+    [shell(`ls ${dir}; cat ${child}`, `ls: ${dir}: Operation not permitted\n# alpha body\n`)],
+    SCRATCH,
+  )
+  assert.deepEqual(hits, [
+    { tool: "shell", path: dir, kind: "denied" },
+    { tool: "shell", path: child },
   ])
 })
 
