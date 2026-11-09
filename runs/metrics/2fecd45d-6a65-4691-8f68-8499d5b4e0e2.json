@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "external_run_id": "2fecd45d-6a65-4691-8f68-8499d5b4e0e2",
+  "slug": "SPEC-0050-measure-the-four-remaining-cells",
+  "events": [
+    {
+      "stage": "dispatch",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-09T15:38:52.182Z",
+      "ended_at": "2026-11-09T15:38:52.653Z",
+      "duration_ms": 471,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "2b34ad0b1085d47c4000ed068a66e8a3787958aba45fc0288228fb9de17a03b2",
+        "head_sha": "77b011f13485475340e7878e01c36499cd385221",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    }
+  ]
+}
