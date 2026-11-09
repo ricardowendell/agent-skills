@@ -28,6 +28,8 @@ files:
   - scripts/lib/evals/evidence.test.mjs
   - scripts/run-evals.mjs
   - scripts/replay-evals.mjs
+  - scripts/check-eval-run.mjs
+  - scripts/check-evidence.mjs
   - docs/evals/coverage.md
   - docs/roadmap.md
   - CHANGELOG.md
