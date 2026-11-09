@@ -1,10 +1,10 @@
 ---
 id: TASK-68
 title: '[stack] harness-state por capacidades e slots'
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-11-08T10:00:00Z'
-updated_date: '2026-11-08T23:46:00Z'
+updated_date: '2026-11-09T00:04:00Z'
 labels: []
 dependencies:
   - TASK-65
@@ -24,7 +24,7 @@ Fatia 4 da issue #12 (umbrella TASK-64): harness-state.mjs e testes avaliam capa
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 REQUIRED/OPTIONAL expressam capacidades/slots, nao nomes fixos de arquivo
-- [ ] #2 complete e reportado para todas as stacks/perfis suportados, inclusive antes de node_modules/lockfile
-- [ ] #3 Testes cobrem repo novo, Bun existente, Node+pnpm, lint existente, monorepo e stack ambigua
+- [x] #1 REQUIRED/OPTIONAL expressam capacidades/slots, nao nomes fixos de arquivo
+- [x] #2 complete e reportado para todas as stacks/perfis suportados, inclusive antes de node_modules/lockfile
+- [x] #3 Testes cobrem repo novo, Bun existente, Node+pnpm, lint existente, monorepo e stack ambigua
 <!-- AC:END -->
