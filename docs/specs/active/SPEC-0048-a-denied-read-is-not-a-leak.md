@@ -213,9 +213,10 @@ carry zero leaks and zero host reads.
 
 The stored `result.json` is not rewritten: the replay is the evidence, and the
 old artefact keeps the detector it ran under. `check-eval-run` on that artefact
-therefore still echoes `skillLeaks=3 hostReads=1` (v2 record) and reports
-`isolated=unknown` for the with-skill run (its recorded detector is not the
-current one); the re-judged counts are the replay output above.
+therefore still echoes `skillLeaks=3 hostReads=1` (v2 record); SPEC-0049 later
+moved that reader to the same `host-reads` capability rule, so the v2 with-skill
+run now reports `isolated=yes` there as well. The re-judged counts are the replay
+output above.
 
 **Gate status.** All eight `tests:` commands pass. The v3 digest no longer
 invalidates a v2 `isolated=yes` citation by hash equality: `check-evidence`
