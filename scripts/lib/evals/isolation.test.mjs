@@ -3,7 +3,8 @@ import assert from "node:assert/strict"
 import { spawnSync } from "node:child_process"
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs"
 import { homedir, tmpdir } from "node:os"
-import { join } from "node:path"
+import { dirname, join, resolve } from "node:path"
+import { fileURLToPath } from "node:url"
 import {
   corpusRoots,
   installedSkillRoots,
@@ -13,6 +14,7 @@ import {
   resumeIsolation,
   wrapCommand,
 } from "./isolation.mjs"
+import { openRun } from "./runs.mjs"
 
 // A home shaped like the real one: skills next to the config, and the state the
 // child is allowed to keep.
@@ -253,22 +255,70 @@ test("an isolation record cannot claim enforcement without a mechanism", () => {
   assert.notEqual(real.mechanism, null, "enforced: true implies a mechanism")
 })
 
-test("a resumed legacy manifest records that its earlier draws were unenforced", () => {
-  const manifest = { params: { isolate: true } }
-  const record = resumeIsolation(manifest)
-  assert.deepEqual(record, {
+const ENFORCED_NOW = { enforced: true, mechanism: "seatbelt", reason: "available" }
+const UNENFORCED_NOW = { enforced: false, mechanism: null, reason: "not applied: --no-isolate" }
+
+test("resuming keeps only the weaker isolation truth", () => {
+  // Legacy manifest: no record at all.
+  const legacy = { params: { isolate: true } }
+  assert.deepEqual(resumeIsolation(legacy, ENFORCED_NOW), {
     enforced: false,
     mechanism: null,
     reason: "resumed legacy run — earlier draws were not enforced",
   })
-  assert.deepEqual(manifest.params.isolation, record)
+  assert.deepEqual(legacy.params.isolation, resumeIsolation(legacy, ENFORCED_NOW), "idempotent once recorded")
 
-  const enforced = { params: { isolate: true, isolation: { enforced: true, mechanism: "seatbelt", reason: "available" } } }
-  assert.equal(resumeIsolation(enforced).enforced, true, "an existing record is not rewritten")
+  // Both sides enforced: the recorded boundary survives.
+  const enforced = {
+    params: { isolate: true, isolation: { enforced: true, mechanism: "seatbelt", reason: "available" } },
+  }
+  assert.equal(resumeIsolation(enforced, ENFORCED_NOW).enforced, true)
 
+  // Recorded enforced but the current invocation cannot enforce: downgrade.
+  const mixed = {
+    params: { isolate: true, isolation: { enforced: true, mechanism: "seatbelt", reason: "available" } },
+  }
+  const downgraded = resumeIsolation(mixed, UNENFORCED_NOW)
+  assert.equal(downgraded.enforced, false)
+  assert.equal(downgraded.mechanism, null)
+  assert.match(downgraded.reason, /mixes enforced and unenforced draws/)
+  assert.match(downgraded.reason, /--no-isolate/)
+
+  // A false record never rises, even when the new draws are enforced.
+  const weak = { params: { isolation: { enforced: false, mechanism: null, reason: "platform linux" } } }
+  assert.equal(resumeIsolation(weak, ENFORCED_NOW).enforced, false)
+
+  // No params at all still gets the weaker record.
   const bare = {}
-  assert.equal(resumeIsolation(bare).enforced, false, "a manifest with no params still gets the weaker record")
+  assert.equal(resumeIsolation(bare, ENFORCED_NOW).enforced, false)
   assert.equal(bare.params.isolation.mechanism, null)
+
+  // A malformed record cannot prove enforcement.
+  const malformed = { params: { isolation: {} } }
+  assert.equal(resumeIsolation(malformed, ENFORCED_NOW).enforced, false)
+})
+
+test("the resume downgrade reaches the manifest written by finish()", () => {
+  const dir = mkdtempSync(join(tmpdir(), "iso-resume-finish-"))
+  try {
+    writeFileSync(
+      join(dir, "manifest.json"),
+      JSON.stringify({
+        run: "demo",
+        status: "completed",
+        params: { isolate: true, isolation: { enforced: true, mechanism: "seatbelt", reason: "available" } },
+      }),
+    )
+    const run = openRun(dir)
+    resumeIsolation(run.manifest, UNENFORCED_NOW)
+    run.finish()
+
+    const written = JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8"))
+    assert.equal(written.params.isolation.enforced, false)
+    assert.match(written.params.isolation.reason, /mixes enforced and unenforced draws/)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
 })
 
 // SPEC-0046 P2: the synthetic canary proves the profile shape; this one proves
@@ -315,4 +365,37 @@ test("the canary denies a real installed corpus file", (t) => {
   const denied = spawnSync(wrapped.command, wrapped.args, { encoding: "utf8" })
   assert.notEqual(denied.status, 0, `reading installed corpus ${target} must fail under the boundary`)
   assert.doesNotMatch(denied.stdout, /^---/)
+  // A sandbox-exec launch failure (bad profile, missing binary) is also
+  // non-zero; without this the test would pass for the wrong reason.
+  assert.match(denied.stderr, /Operation not permitted|permission denied/i)
+})
+
+// A full run needs a provider; `opencode --version` needs none. This is the
+// cheapest proof that the child binary starts and resolves its config while the
+// checkout (which holds the `commands` symlink) is denied. It is not a draw.
+test("the wrapped child starts and resolves its config under the boundary", (t) => {
+  const probe = probeIsolation()
+  if (!probe.enforced) {
+    t.skip(`the boundary is not available on this host: ${probe.reason}; cannot smoke the launcher`)
+    return
+  }
+  const opencode = String(process.env.PATH ?? "")
+    .split(":")
+    .map((dir) => join(dir, "opencode"))
+    .find((candidate) => existsSync(candidate))
+  if (!opencode) {
+    t.skip("opencode is not on PATH; cannot smoke the launcher")
+    return
+  }
+  const repo = resolve(dirname(fileURLToPath(import.meta.url)), "../../..")
+  const roots = corpusRoots({ home: homedir(), hostRoots: [repo] })
+  const cwd = mkdtempSync(join(tmpdir(), "iso-launch-smoke-"))
+  try {
+    const wrapped = wrapCommand({ command: opencode, args: ["--version"], roots, mechanism: probe.mechanism })
+    const result = spawnSync(wrapped.command, wrapped.args, { cwd, encoding: "utf8", timeout: 30000 })
+    assert.equal(result.status, 0, `opencode --version failed under the boundary: ${result.stderr}`)
+    assert.match(`${result.stdout}${result.stderr}`, /\d+\.\d+/)
+  } finally {
+    rmSync(cwd, { recursive: true, force: true })
+  }
 })

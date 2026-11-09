@@ -150,17 +150,42 @@ export function isolationRecord({ enforced = false, mechanism = null, reason = "
   return { enforced: false, mechanism: null, reason: reason || "not enforced" }
 }
 
-// A resumed run whose manifest predates `params.isolation` must not mix earlier
-// unenforced draws with new ones. Record the weaker truth for the whole run; an
-// existing record is left alone. The manifest is persisted by `finish()`.
+// A resumed run may mix draws made under different boundaries. Keep the weaker
+// truth for the whole manifest: the record is `enforced: true` only when both
+// the recorded run and the current invocation enforced. A legacy manifest has no
+// record at all, and a current invocation that cannot enforce (for example
+// `--resume --no-isolate`) must downgrade an earlier `true` — otherwise the
+// manifest would claim a boundary the new draws did not have. `finish()`
+// persists the mutation.
 export const RESUMED_LEGACY_REASON = "resumed legacy run — earlier draws were not enforced"
 
-export function resumeIsolation(manifest) {
+const isRecord = (value) => Boolean(value) && typeof value === "object" && !Array.isArray(value)
+
+export function resumeIsolation(manifest, current = null) {
   if (!manifest || typeof manifest !== "object") return null
   if (!manifest.params || typeof manifest.params !== "object") manifest.params = {}
   const params = manifest.params
-  if (params.isolation && typeof params.isolation === "object" && !Array.isArray(params.isolation)) return params.isolation
-  params.isolation = { enforced: false, mechanism: null, reason: RESUMED_LEGACY_REASON }
+  const existing = params.isolation
+  if (!isRecord(existing)) {
+    params.isolation = { enforced: false, mechanism: null, reason: RESUMED_LEGACY_REASON }
+    return params.isolation
+  }
+  // `false` is already the weaker truth; it never rises on resume.
+  if (existing.enforced === false) return existing
+  if (existing.enforced !== true) {
+    params.isolation = {
+      enforced: false,
+      mechanism: null,
+      reason: "resumed run's isolation record could not prove enforcement",
+    }
+    return params.isolation
+  }
+  if (isRecord(current) && current.enforced === true) return existing
+  params.isolation = {
+    enforced: false,
+    mechanism: null,
+    reason: `resumed run mixes enforced and unenforced draws: the current invocation could not enforce (${current?.reason ?? "no reason recorded"})`,
+  }
   return params.isolation
 }
 

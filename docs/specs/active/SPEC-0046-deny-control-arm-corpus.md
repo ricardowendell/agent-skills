@@ -95,8 +95,10 @@ control or explicitly not claimable.
 
 **Blast radius.** The eval runner's isolation and summary semantics — which
 every behavioural measurement depends on — plus three documentation surfaces.
-No skill behaviour changes; the with-skill arm is untouched; the detector rules
-are untouched.
+No skill artefact or skill behaviour changes: the with-skill arm keeps the same
+skill text, cases, assertions and staged copy. Both arms share the launch
+boundary, so `isolated=yes` means the same thing in each; the with-skill
+behaviour under that sandbox is unmeasured. The detector rules are untouched.
 
 ## Non-Goals
 
@@ -107,7 +109,9 @@ are untouched.
 - No enforcement claim on Linux. Where the boundary cannot be applied the run
   reports `unknown`; it must not report `yes`.
 - No change to `leak.mjs` detector rules and no change to the five-draw rule.
-- No change to the with-skill arm, the skill text, the templates or Python.
+- No change to the with-skill artefact (skill text, cases, assertions, staged
+  copy), the templates or Python. Both arms share the launch boundary; the
+  with-skill behaviour under it is unmeasured.
 
 ## Flow
 
@@ -154,9 +158,11 @@ are untouched.
    states which skills stay `unresolved` until SPEC-0047 runs.
 7. **The roadmap says where it lands.** The deny layer appears under 0.7.0 as a
    prerequisite of the corpus claim, with the cost of the wave named.
-8. **Nothing else moves.** The detector rules, the skill text, the templates,
-   Python and the with-skill arm are unchanged, and every `tests:` command
-   passes.
+8. **Nothing else moves.** The detector rules, the skill text, templates, Python
+   and fixtures are unchanged; the with-skill artefact (cases, assertions,
+   staged copy) is unchanged, and every `tests:` command passes. Both arms share
+   the launch boundary, so `isolated=yes` means the same thing in each — see
+   Results.
 
 ## Results
 
@@ -170,6 +176,14 @@ the skill in the scratch directory. Its behaviour under the sandbox is
 **unmeasured**: no draw was run for this spec (no paid draws). SPEC-0047's
 re-measurement is the first evidence.
 
+**Consequence — the checkout deny hides config that symlinks into it.** The
+corpus list includes the whole checkout, and the isolated config links entries
+such as `commands` (and `AGENTS.md` when it is the checkout file) back into that
+tree, so the sandboxed child loses that surface. A non-paid `opencode --version`
+smoke proves the child starts and resolves its config under the same profile; it
+does not prove a full run. SPEC-0047 must confirm on its first draw before
+spending the wave.
+
 ## Open Questions
 
 - **How far does the boundary need to reach?** The seatbelt profile sits below
@@ -182,6 +196,11 @@ re-measurement is the first evidence.
 - **Does auth still work?** The isolated home symlinks `.local` for provider
   credentials. The denial must be scoped to the corpus, not to `.local`, or the
   child loses auth and every run aborts.
+- **Does the child lose config that symlinks into the checkout?** `commands`
+  (and `AGENTS.md` when it is the checkout file) resolve into the denied tree,
+  so this boundary removes that surface. The `opencode --version` smoke passes,
+  but only a real draw can prove a full run; SPEC-0047 must confirm it on the
+  first draw before spending the wave.
 - **Paid canary or deterministic canary?** This spec requires the deterministic
   probe only. A paid canary would prove the same thing at model cost and is not
   planned.

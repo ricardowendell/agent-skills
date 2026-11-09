@@ -381,10 +381,11 @@ const run = () => {
           hostRoots: HOST_ROOTS,
         },
       })
-  // A legacy manifest has no isolation record and its earlier draws were not
-  // enforced. Record that for the whole run instead of letting this invocation's
-  // wrapper make the mixed run look clean. `finish()` persists it.
-  if (RESUME) resumeIsolation(RUN.manifest)
+  // The resumed manifest records only what both the recorded run and this
+  // invocation can prove: a legacy run and a current unenforced invocation both
+  // downgrade it, so the mixed run cannot print `isolated=yes`. `finish()`
+  // persists it.
+  if (RESUME) resumeIsolation(RUN.manifest, ISOLATION_RECORD)
   return RUN
 }
 
