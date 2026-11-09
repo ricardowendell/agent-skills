@@ -1,9 +1,10 @@
 ---
 id: TASK-72
 title: 'evals: re-medir sob o deny layer e reclassificar as skills bloqueadas'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-11-09T09:05:00Z'
+updated_date: '2026-11-09T10:36:00Z'
 labels: []
 dependencies:
   - TASK-71
@@ -27,3 +28,15 @@ Segunda metade da TASK-71, partida em duas para nao juntar mudanca de harness co
 - [ ] #3 Cada reclassificacao (separator, non-discriminator, unresolved) e publicada no coverage.md com o run dir
 - [ ] #4 Nenhum oraculo e editado depois dos draws; vermelhos viram follow-up
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-11-09T12:27:45.253Z
+
+---
+
+Onda parada em 2026-11-09 no F0.1, apos 1 de 5 celulas. A arm com skill fechou 5/5 isolated=yes; o controle rodou sob seatbelt (enforced=true) mas o detector contou a leitura NEGADA como leak, entao o resumo deu isolated=no e a onda parou. 40 draws nao gastos. Evidencia: runs 2026-11-09T07-37-44 (skill) e 2026-09T07-52-50 (controle, r3-r5 contaminados com EPERM no transcript). Branch parkeada no tag parked/SPEC-0047-remeasure-wave; a spec ficou paused. Destrava pela TASK-73/SPEC-0048 (denied != leak), que roda sem draw pago e re-julga esses runs por replay.
+
+---
+<!-- COMMENTS:END -->

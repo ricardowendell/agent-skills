@@ -1,7 +1,7 @@
 ---
 id: SPEC-0047
 title: Re-measure the blocked cells under the deny layer
-status: ready
+status: paused
 priority: P1
 task: TASK-72
 created_at: 2026-11-09
@@ -14,6 +14,7 @@ source_docs:
 related_decisions: []
 depends_on:
   - SPEC-0046-deny-control-arm-corpus
+  - SPEC-0048-a-denied-read-is-not-a-leak
 blocks: []
 files:
   - docs/evals/coverage.md
@@ -125,6 +126,69 @@ no skill behaviour, no fixtures.
    a published number.
 7. **Nothing else moves.** No harness code, skill text, template, fixture or
    detector change; every `tests:` command passes.
+
+## Results
+
+**The wave halted at F0.1. No verdict was published.**
+
+**F0 — enforcement available.** `probeIsolation()` reports
+`enforced: true`, `mechanism: "seatbelt"`, and
+`node --test scripts/lib/evals/isolation.test.mjs` passes 18/18, including the
+denied/allowed canary pair. The precondition holds.
+
+**F0.1 — one cell first.** `bootstrap-project-harness` #19, both arms, five
+draws, `agentworks/deepseek-v4-1-flash`, concurrency 4:
+
+| arm | run directory | `enforced` | `skillLeaks` | `hostReads` | draws |
+| --- | --- | --- | --- | --- | --- |
+| with-skill | `2026-11-09T07-37-44--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` | `true` (seatbelt) | 0 | 0 | 5 passed (5/5) |
+| control | `2026-11-09T07-52-50--bootstrap-project-harness--agentworks-deepseek-v4-1-flash--without-skill` | `true` (seatbelt) | 3 | 1 | r1 failed, r2 failed, r3–r5 contaminated |
+
+`node scripts/check-eval-run.mjs` prints `isolated=yes` for the with-skill run
+and `isolated=no` for the control. The control draws had no infrastructure
+failure, no stall and no sandbox crash: every draw started, resolved its config
+and completed.
+
+**Why it halts.** The OS boundary is doing its job. In r3–r5 each corpus read
+was denied — the transcript shows `ls: /Users/wendell/.agents/skills: Operation
+not permitted` and the same for `/Users/wendell/.config/opencode/skills`,
+`/Users/wendell/.agents/` and `/Users/wendell/.agents/commands`. The finding is
+recorded anyway because SPEC-0046 deliberately left `leak.mjs` unchanged
+("No change to `leak.mjs` detector rules"): the detector classifies a **path in
+a tool-call input** as a leak, whether or not the OS denied the read, and the
+published rule in `docs/evals/coverage.md` says the same ("A denied read still
+counts"). So a control draw that probes the installed corpus can never be a
+clean draw, and a control that probes is exactly what the bare agent does: it
+hunts for a skill it does not have.
+
+That is AC-1 failing, not a behavioural result: `isolated=no` on the control
+means the spec must record the failure and stop instead of publishing a
+verdict. Spending the other eight arms would produce the same
+`isolated=no` accounting on any control that probes, i.e. `unresolved`
+(contamination) for every cell — without measuring whether the skill separates.
+The source task is explicit about this: TASK-72 AC-1 requires the wave to run
+"com o deny layer efetivo e o resumo nao diz isolated=no em nenhuma celula".
+
+**What was not spent.** F1's four remaining cells (`capture-idea` #1,
+`process-inbox` #1, `groom-backlog` #2, `write-implementation-prompt` #1) were
+not run: 40 draws saved. F2, F3 and F4 did not run either — no coverage row, no
+`CHANGELOG` entry, no comment on issue #12 or TASK-70. No file outside this spec
+was touched.
+
+**What would unblock the wave.** A decision on the accounting rule for a denied
+read: either the detector learns to separate a denied attempt from a successful
+read (a harness change, which this spec's non-goals forbid and SPEC-0046 owns),
+or the five-clean-draw rule is restated for an enforced host (a human decision
+on the published evidence rules). Neither is invented here.
+
+**Paused 2026-11-09, decision taken.** The detector change is the chosen route
+and it is its own spec: `SPEC-0048-a-denied-read-is-not-a-leak.md`. It touches
+`leak.mjs` and the summary, so this spec's non-goals kept it out. The F0.1 runs
+above are preserved as evidence and can be re-judged by replay once the new
+detector lands — the with-skill arm at 5/5 and the control's two clean failing
+draws suggest #19 may separate without another paid draw. The branch is
+preserved as tag `parked/SPEC-0047-remeasure-wave`; resuming means a new
+dispatch after SPEC-0048 merges, then the remaining four cells (~40 draws).
 
 ## Open Questions
 
