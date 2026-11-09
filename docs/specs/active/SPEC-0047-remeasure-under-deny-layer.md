@@ -1,0 +1,156 @@
+---
+id: SPEC-0047
+title: Re-measure the blocked cells under the deny layer
+status: draft
+priority: P1
+task: TASK-72
+created_at: 2026-11-09
+updated_at: 2026-11-09
+source_docs:
+  - backlog/tasks/task-72 - evals-re-medir-sob-o-deny-layer-e-reclassificar-as-skills-bloqueadas.md
+  - docs/evals/coverage.md
+  - docs/specs/active/SPEC-0045-stack-review-evals.md
+  - docs/specs/active/SPEC-0046-deny-control-arm-corpus.md
+related_decisions: []
+depends_on:
+  - SPEC-0046-deny-control-arm-corpus
+blocks: []
+files:
+  - docs/evals/coverage.md
+  - CHANGELOG.md
+  - docs/specs/active/SPEC-0047-remeasure-under-deny-layer.md
+tests:
+  - node scripts/validate-skills.mjs --root skills
+  - node scripts/run-evals.mjs --root skills --list --check
+  - node --test scripts/lib/evals/*.test.mjs
+  - node --test scripts/lib/*.test.mjs
+  - node --test skills/bootstrap-project-harness/scripts/*.test.mjs
+  - node scripts/check-sensor-parity.mjs
+  - node scripts/check-evidence.mjs
+  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0047-remeasure-under-deny-layer.md --base main
+---
+
+# SPEC-0047: Re-measure the blocked cells under the deny layer
+
+## Purpose
+
+SPEC-0046 makes the control arm unable to read the installed corpus and makes
+`isolated=yes` a claim the manifest has to support. What that unlock is worth is
+still unmeasured. Four behavioural cells are published as `unresolved` only
+because their control was never isolated:
+
+- `capture-idea` #1 — `2026-11-07T08-27-30--capture-idea--agentworks-deepseek-v4-1-flash--without-skill`
+- `groom-backlog` #2 — `2026-11-06T07-47-34--groom-backlog--without-skill`
+- `write-implementation-prompt` #1 — `2026-11-07T08-17-29--write-implementation-prompt--agentworks-deepseek-v4-1-flash--without-skill`
+- `bootstrap-project-harness` — the eight stack cells in `2026-11-08T22-51-39--bootstrap-project-harness--agentworks-deepseek-v4-1-flash--without-skill`
+
+This spec spends the draws to turn each one into a real classification.
+
+## User Outcome
+
+A reader of `docs/evals/coverage.md` can tell, for each of those cells, whether
+the skill separates from the control, does not separate, or still cannot be
+measured — and the run directories behind each verdict are cited. Issue #12's
+behavioural criterion and issue #11's measured-run criterion get an answer
+instead of "blocked on the deny layer".
+
+## Scope
+
+- **One behavioural cell per blocked skill**, chosen as the cell already
+  published as blocked. Both arms, five draws per arm, with the model recorded.
+- **Reclassification** of each cell as `separator`, `non-discriminator` or
+  `unresolved`, naming the failing assertion for every red cell.
+- **Publication** in `docs/evals/coverage.md` with the run directory and the raw
+  counts, plus a `CHANGELOG` entry that states what changed and what did not.
+- **Consumer update.** Issue #12 and TASK-70 are told the new evidence; a
+  separation claim is only written where five clean draws exist in both arms.
+
+**Blast radius.** The coverage inventory and the release entry. No harness code,
+no skill behaviour, no fixtures.
+
+## Non-Goals
+
+- No change to the deny layer or to the runner. If the control cannot be
+  enforced, this spec stops and reports; it does not fix SPEC-0046's job.
+- No new cases and no fixture edits. The fixtures being measured were already
+  measured once; changing them would need its own spec.
+- No oracle edit after seeing draws. A red cell becomes a follow-up task.
+- No lowering of the five-draw rule and no promotion of a cell with fewer than
+  five clean draws in the control.
+- No re-draw of the two stalled SPEC-0045 cells beyond what five clean draws
+  require.
+
+## Flow
+
+1. **F0 — precondition.** Confirm the host reports enforcement available and the
+   canary from SPEC-0046 passes. If not, stop: the wave has nothing to measure.
+2. **F1 — run.** For each skill, both arms, five draws, one cell. Record every
+   run directory and its raw counts.
+3. **F2 — classify.** `separator` only with five clean draws in both arms;
+   otherwise `non-discriminator` or `unresolved`, with the reason named.
+4. **F3 — publish.** Coverage row per skill, CHANGELOG entry, and the consumer
+   update on #12 and TASK-70.
+
+## Data
+
+- Run directories under `~/.local/share/opencode/evals/runs/`.
+- `docs/evals/coverage.md` — the inventory and the per-skill rows.
+- `CHANGELOG.md` — the release entry.
+- The four published block records quoted in Purpose.
+
+## Acceptance Criteria
+
+1. **Every cell runs under an enforced control.** Each run reports the control
+   as isolated (enforced, zero `leak`/`host` findings), or the spec records the
+   enforcement failure and stops instead of publishing a verdict.
+2. **The five-draw rule holds.** Each cell has five clean draws per arm, or is
+   published `unresolved` with the exact reason (contamination, stall, missing
+   draw) named.
+3. **Every verdict is published with its evidence.** The coverage row cites the
+   run directory and the raw counts; a `separator` states both arms, a
+   `non-discriminator` states both rates, an `unresolved` names the blocker.
+4. **No oracle moved after the draws.** Any red cell is recorded and becomes a
+   follow-up task; no assertion, fixture or `why:` line is edited to fit.
+5. **Consumers reflect the evidence.** Issue #12's behavioural criterion and
+   TASK-70 say what the new runs show, and neither is marked done on fewer than
+   five clean draws in both arms.
+6. **The release entry is honest.** `CHANGELOG.md` states which cells became
+   separators, which did not, and which remain unresolved — without recomputing
+   a published number.
+7. **Nothing else moves.** No harness code, skill text, template, fixture or
+   detector change; every `tests:` command passes.
+
+## Open Questions
+
+- **Which cell per skill?** The four named above are the published blocks. If
+  one of them turns out to be the wrong cell to spend draws on, the spec says
+  why before spending.
+- **What is the ceiling?** Forty draws is the estimate. If a post-load stall
+  hits, the TASK-50 protocol applies: stop the wave, record the events, reopen
+  the task — do not retry blindly.
+- **What if a cell still cannot reach five clean draws?** It stays `unresolved`
+  and the reason is published. That is a legitimate outcome, not a failure of
+  the spec.
+- **Does a separation change the release claim?** Only the wave decides; the
+  CHANGELOG is written from what the runs show.
+
+## Prompt Notes
+
+- **Requirements:** prove the enforcement first; spend only the draws the four
+  cells need; publish every verdict with its run directory; never promote a
+  partially clean cell.
+- **Entities:** cell (skill + case number), arm, draw, clean/contaminated,
+  verdict (`separator` / `non-discriminator` / `unresolved`), run directory.
+- **Approach:** reuse the existing runner unchanged; one cell per skill; both
+  arms at five draws; classify with the published rules.
+- **Structure:** only `docs/evals/coverage.md`, `CHANGELOG.md` and this spec
+  change. Run artifacts stay in the eval store.
+- **Operations:** check enforcement; run the eight cells; read counts; classify;
+  publish; update the two issues; run the gates.
+- **Norms:** `node`, not bun. Five draws, never three. Prose in English. A red
+  cell is named, not argued away.
+- **Safeguards:** stop on a stall or a non-enforced control; no `--resume` without
+  a human decision; no oracle edit; no fixture edit; no claim from a manual case.
+- **Tests:** the enforcement precondition is verified before any draw; the
+  published counts are re-read from the stored run dirs; `check-evidence` and
+  `spec-check` run clean.

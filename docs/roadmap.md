@@ -94,7 +94,7 @@ it.
 | release | claim | work | cost |
 | --- | --- | --- | --- |
 | **0.6.2** (released) | an aborted run is never clean | `TASK-52`, `TASK-38`, `TASK-39`, `TASK-40`, `TASK-54`; `TASK-36` documented, `TASK-35` done | 0 draws |
-| **0.7.0** | the corpus can see a small change | `TASK-56` (deterministic slice) and the verdict on `TASK-57` | ~30–40 draws |
+| **0.7.0** | the corpus can see a small change | `SPEC-0046` (deny layer) as a prerequisite, then `TASK-56` (deterministic slice) and the verdict on `TASK-57` | ~30–40 draws for the corpus plus ~40 for `SPEC-0047` |
 | **unscheduled** | the stack is chosen with numbers | `SPEC-0041`–`SPEC-0045` (#12) | measurement, few or no draws |
 | **unscheduled** | the branch can be synced safely | `TASK-62` (`sync-branch`), after the corpus | ~10–20 draws, mostly deterministic |
 | **unscheduled** | a screen can be reviewed | `TASK-61` (oracle) and then `TASK-58`/`TASK-60` — no consumer today | measurement |
@@ -110,6 +110,12 @@ draw stalled post-load, so the frozen holdout #11 was never drawn. The branch is
 parked and `TASK-50` is reopened. The steps below resume only on an explicit
 decision.
 
+0. **`SPEC-0046` — deny the control arm the corpus.** Promoted on 2026-11-09
+   when a consumer asked: every behavioural control cell in the repo is
+   `unresolved` because `--no-skill` still reads the installed skill
+   (`SPEC-0045`: 33 of 35 draws). Until the control is enforced, a corpus
+   verdict about the skill is really a verdict about the harness. `SPEC-0047`
+   then re-measures the four blocked cells; it is blocked by `SPEC-0046`.
 1. **Freeze the holdout before the first draw**, the way `review-code` #7 was
    frozen for issue #5. A holdout chosen after seeing results is not a holdout.
 2. **`TASK-56` — three or four cases, deterministic oracles.** Text, file and
@@ -134,10 +140,12 @@ consumer first, then the oracle, then the skills. Not the other way around.
 ## Out of scope until a consumer asks
 
 - **A deny layer for the control arm.** `TASK-29` chose detection over denial;
-  the consequence is that `capture-idea` #1, `process-inbox` #1 and
-  `write-implementation-prompt` #1 stay `unresolved`. That is honest. If a
-  consumer needs one of those cells, the deny layer is its own task, not a
-  re-measure.
+  the consequence was that `capture-idea` #1, `process-inbox` #1 and
+  `write-implementation-prompt` #1 stayed `unresolved`. That was honest, and the
+  rule was that the deny layer becomes its own task when a consumer needs one of
+  those cells. A consumer asked on 2026-11-09 (`SPEC-0045`: 33 of 35 control
+  draws read the install), so it moved to 0.7.0 as `SPEC-0046`, with
+  `SPEC-0047` re-measuring the blocked cells.
 - **More cases of the same shape, a bigger corpus, an expanded judge.**
 - **A token-budget mechanism** on top of the health delta.
 - **pdlc phase markers (`PDLC-83`).** Another repo; it does not block this one.

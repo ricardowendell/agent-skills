@@ -23,6 +23,17 @@ O runner aceita --no-skill, mas a arm de controle ainda le a skill instalada em 
 <!-- AC:BEGIN -->
 - [ ] #1 A arm --no-skill nao consegue ler /Users/wendell/.agents/skills nem references/evals.md, e um draw que tenta produz finding nomeado
 - [ ] #2 Um controle forcado a ler a skill instalada falha, provando que o deny e efetivo (canario)
-- [ ] #3 Uma celula comportamental de cada skill com bloqueio publicado atinge cinco draws limpos e e reclassificada (separator, non-discriminator ou unresolved)
-- [ ] #4 docs/evals/coverage.md deixa de atribuir o bloqueio a TASK-43 e aponta para esta task
+- [ ] #3 docs/evals/coverage.md deixa de atribuir o bloqueio a TASK-43 e aponta para esta task
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-11-09T09:06:31.126Z
+
+---
+
+Groomed em 2026-11-09 e partida em duas specs porque o pdlc mapeia 1 spec -> 1 task. SPEC-0046-deny-control-arm-corpus (ready) cobre AC-1, AC-2 e o antigo AC-4 (agora AC-3): enforcement no boundary do SO onde existir, probe de capacidade no manifest, canario deterministico nao-vacuo, isolated=yes derivado de enforcement + zero findings, e a correcao da atribuicao no coverage.md. A re-medicao das 4 skills saiu para TASK-72 / SPEC-0047 (draft, depends_on SPEC-0046), porque juntar mudanca de harness com onda paga impede separar 'o deny funciona' de 'a skill separa'. Roadmap: deny layer promovido para 0.7.0 como pre-requisito da claim do corpus.
+
+---
+<!-- COMMENTS:END -->
