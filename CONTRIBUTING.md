@@ -308,6 +308,15 @@ fix). `pdlc collect` lists the rest as commits outside the fan-in. Since pdlc
 1.4 the merge writes `status: implemented` itself, so there is no separate
 status commit to make.
 
+A spec whose declared `files:` must change before `verify` is amended on `main`
+and the `main` branch is merged into the worktree first. That leaves the branch
+already containing `main`, so the fan-in is a **fast-forward**: there is no
+merge commit and therefore no `Pdlc-Land` trailer. `pdlc collect` then lists the
+worker's own commits under "Commits na main fora do fan-in", which is a false
+positive from the fast-forward, not a commit that bypassed the gate (verified on
+SPEC-0045 at pdlc 1.4.0). Check ancestry before treating one of those as
+bookkeeping.
+
 ## Before you open a PR
 
 - [ ] `All clear` from the validator.
