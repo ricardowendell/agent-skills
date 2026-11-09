@@ -1,7 +1,7 @@
 ---
 id: SPEC-0046
 title: Deny the control arm the installed corpus
-status: ready
+status: implemented
 priority: P1
 task: TASK-71
 created_at: 2026-11-09
