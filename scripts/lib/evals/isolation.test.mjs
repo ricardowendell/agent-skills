@@ -225,6 +225,25 @@ test("corpusRoots keeps every installed root when an explicit --root is given", 
   }
 })
 
+test("corpusRoots includes the .retired-skills sibling of an installed root", () => {
+  const home = mkdtempSync(join(tmpdir(), "iso-corpus-retired-"))
+  try {
+    for (const root of installedSkillRoots(home)) mkdirSync(root, { recursive: true })
+    const retired = join(home, ".config/opencode/.retired-skills")
+    mkdirSync(retired, { recursive: true })
+
+    const roots = corpusRoots({ home })
+    assert.ok(roots.includes(realpathSync(retired)), `missing retired corpus ${retired}: ${roots.join(", ")}`)
+    assert.equal(
+      roots.includes(join(home, ".agents/.retired-skills")),
+      false,
+      "an absent sibling is not invented",
+    )
+  } finally {
+    rmSync(home, { recursive: true, force: true })
+  }
+})
+
 test("corpusRoots deduplicates repeated and symlinked roots", () => {
   const home = mkdtempSync(join(tmpdir(), "iso-corpus-dedup-"))
   try {
@@ -296,6 +315,24 @@ test("resuming keeps only the weaker isolation truth", () => {
   // A malformed record cannot prove enforcement.
   const malformed = { params: { isolation: {} } }
   assert.equal(resumeIsolation(malformed, ENFORCED_NOW).enforced, false)
+
+  // `enforced: true` without a named mechanism is malformed too.
+  for (const mechanism of [null, ""]) {
+    const nameless = { params: { isolation: { enforced: true, mechanism, reason: "claimed" } } }
+    const downgradedNameless = resumeIsolation(nameless, ENFORCED_NOW)
+    assert.equal(downgradedNameless.enforced, false, `mechanism=${JSON.stringify(mechanism)}`)
+    assert.equal(downgradedNameless.mechanism, null)
+  }
+
+  // A current record that claims enforcement without a mechanism cannot keep a
+  // previously enforced manifest.
+  const enforcedAgain = {
+    params: { isolation: { enforced: true, mechanism: "seatbelt", reason: "available" } },
+  }
+  assert.equal(
+    resumeIsolation(enforcedAgain, { enforced: true, mechanism: null, reason: "claimed" }).enforced,
+    false,
+  )
 })
 
 test("the resume downgrade reaches the manifest written by finish()", () => {

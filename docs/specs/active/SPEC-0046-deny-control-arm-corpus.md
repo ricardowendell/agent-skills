@@ -95,8 +95,8 @@ control or explicitly not claimable.
 
 **Blast radius.** The eval runner's isolation and summary semantics — which
 every behavioural measurement depends on — plus three documentation surfaces.
-No skill artefact or skill behaviour changes: the with-skill arm keeps the same
-skill text, cases, assertions and staged copy. Both arms share the launch
+The skill artefact does not change: same skill text, cases, assertions and
+staged copy. Both arms share the launch
 boundary, so `isolated=yes` means the same thing in each; the with-skill
 behaviour under that sandbox is unmeasured. The detector rules are untouched.
 

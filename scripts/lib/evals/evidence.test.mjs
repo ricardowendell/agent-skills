@@ -82,7 +82,14 @@ test("isolated=yes on an unenforced manifest is an error", () => {
 
 test("a malformed or partial isolation record cannot underwrite isolated=yes", () => {
   const line = "`2026-01-01T00-00-00--run` `isolated=yes`"
-  for (const isolationRecord of [{}, { mechanism: "seatbelt" }, "enforced", { enforced: "yes" }]) {
+  for (const isolationRecord of [
+    {},
+    { mechanism: "seatbelt" },
+    "enforced",
+    { enforced: "yes" },
+    { enforced: true, mechanism: null },
+    { enforced: true, mechanism: "" },
+  ]) {
     const findings = cites(line, run({ isolationRecord }))
     assert.deepEqual(findings.map((f) => f.rule), ["unenforced-isolation"], JSON.stringify(isolationRecord))
   }

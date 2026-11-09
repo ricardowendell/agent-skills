@@ -30,7 +30,7 @@ import {
   writeFileSync,
 } from "node:fs"
 import { homedir, tmpdir } from "node:os"
-import { join, resolve } from "node:path"
+import { dirname, join, resolve } from "node:path"
 
 // What a run may legitimately need from the real home: provider auth and state
 // (`~/.local/share/opencode`), the credentials file the config points at, the
@@ -120,9 +120,13 @@ export function corpusRoots({
   exists = existsSync,
   realpath = realpathSync,
 } = {}) {
+  // `.retired-skills` is the same corpus under a different name: `isolateHome`
+  // hides it from the config, so a child that can still read it sees the skill
+  // text anyway. Include the sibling of every installed root.
+  const installed = installedSkillRoots(home).flatMap((skills) => [skills, join(dirname(skills), ".retired-skills")])
   const seen = new Set()
   const out = []
-  for (const candidate of [...installedSkillRoots(home), ...(root ? [root] : []), ...hostRoots]) {
+  for (const candidate of [...installed, ...(root ? [root] : []), ...hostRoots]) {
     if (!candidate) continue
     const absolute = resolve(candidate)
     if (!exists(absolute)) continue
@@ -172,7 +176,8 @@ export function resumeIsolation(manifest, current = null) {
   }
   // `false` is already the weaker truth; it never rises on resume.
   if (existing.enforced === false) return existing
-  if (existing.enforced !== true) {
+  const namedMechanism = (value) => typeof value === "string" && value.trim() !== ""
+  if (existing.enforced !== true || !namedMechanism(existing.mechanism)) {
     params.isolation = {
       enforced: false,
       mechanism: null,
@@ -180,7 +185,7 @@ export function resumeIsolation(manifest, current = null) {
     }
     return params.isolation
   }
-  if (isRecord(current) && current.enforced === true) return existing
+  if (isRecord(current) && current.enforced === true && namedMechanism(current.mechanism)) return existing
   params.isolation = {
     enforced: false,
     mechanism: null,

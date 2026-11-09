@@ -118,15 +118,17 @@ export function checkCitation({ line, token, run, currentDetector, tokens = [] }
       // and is deliberately not judged here — it never claimed the boundary.
       const record = run.isolationRecord
       if (record !== undefined && record !== null) {
-        const provesEnforcement =
-          typeof record === "object" && !Array.isArray(record) && record.enforced === true
+        const recordShape = typeof record === "object" && !Array.isArray(record)
+        const namedMechanism = recordShape && typeof record.mechanism === "string" && record.mechanism.trim() !== ""
+        const provesEnforcement = recordShape && record.enforced === true && namedMechanism
         if (!provesEnforcement) {
-          const detail =
-            typeof record === "object" && !Array.isArray(record)
-              ? record.enforced === false
-                ? `the manifest records an unenforced run (${record.reason ?? "no reason recorded"})`
-                : "the isolation record does not say enforced: true"
-              : "the isolation record is not an object"
+          const detail = !recordShape
+            ? "the isolation record is not an object"
+            : record.enforced === false
+              ? `the manifest records an unenforced run (${record.reason ?? "no reason recorded"})`
+              : record.enforced !== true
+                ? "the isolation record does not say enforced: true"
+                : "the isolation record names no mechanism"
           add("error", "unenforced-isolation", `line claims isolated=yes for ${token}, but ${detail}`)
         }
       }
