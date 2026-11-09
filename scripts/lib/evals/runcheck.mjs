@@ -15,7 +15,9 @@
 //
 // The answer is three-state because two states overclaim. `no` requires a read
 // the checker actually saw. `yes` requires a v2 detector, a manifest that
-// records an isolated run, and at least one draw that ran to a verdict.
+// records an isolated run — and, when the manifest carries SPEC-0046's
+// `params.isolation` record, `enforced: true` — plus at least one draw that ran
+// to a verdict.
 // Everything else — a v1 run, a missing isolation
 // record, unproven provenance — is `unknown`, which is neither an accusation nor
 // a clean bill.
@@ -106,6 +108,17 @@ function leakPaths(result, kind) {
   return leakEntries(result)
     .filter((e) => e.kind === kind)
     .map((e) => e.path)
+}
+
+// The run's isolation evidence. SPEC-0046 added `params.isolation` as a
+// separate record; a manifest without it predates the enforcement probe and
+// keeps the old boolean rule. Do not derive enforcement from `params.isolate`:
+// `true` there meant "throwaway home", never "the corpus was denied".
+export function manifestIsolation(manifest) {
+  const record = manifest?.params?.isolation
+  if (record && typeof record === "object" && !Array.isArray(record)) return record
+  const legacy = manifest?.params?.isolate
+  return typeof legacy === "boolean" ? legacy : null
 }
 
 // `{ arm, cases }` → `{ findings, counts }`. `arm` comes from `manifest.json`
@@ -216,14 +229,16 @@ export function checkRun({ arm = null, cases = [], isolation = null, requested =
   // Everything else — a v1 run, a run with no isolation record, a missing leak
   // field — is `unknown`, which is not the same accusation as `no`.
   const read = skillLeaks > 0 || hostReads > 0
+  // SPEC-0046: an isolation record is enforced only when it says so. A legacy
+  // boolean still certifies a throwaway home, because rewriting history would
+  // turn every earlier `isolated=yes` into an error. A record with
+  // `enforced: false` is the honest unenforced case: `unknown`, never `yes`.
+  const record = isolation && typeof isolation === "object" && !Array.isArray(isolation) ? isolation : null
+  const enforced = record ? record.enforced === true : isolation === true
   // `yes` also needs at least one draw that actually ran. A run where every rep
   // aborted (timeout, stall, provider limit) has no behaviour to certify, even
   // when nothing was read: that is `unknown`, not a clean bill.
-  const isolated = read
-    ? "no"
-    : detectorCurrent && isolation === true && !unproven && behavioural > 0
-      ? "yes"
-      : "unknown"
+  const isolated = read ? "no" : detectorCurrent && enforced && !unproven && behavioural > 0 ? "yes" : "unknown"
   return {
     findings,
     warnings,

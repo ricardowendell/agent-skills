@@ -15,7 +15,7 @@
 // behind. Nothing is copied except directories, and cleanup removes links, never
 // their targets.
 
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
+import { accessSync, constants, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs"
 import { homedir, tmpdir } from "node:os"
 import { join } from "node:path"
 
@@ -81,5 +81,82 @@ export function isolateHome(env = process.env, { home = homedir(), base = tmpdir
     env: { ...env, HOME: dir, XDG_CONFIG_HOME: join(dir, ".config") },
     // rmSync does not follow symlinks, so the real home survives this.
     cleanup: () => rmSync(dir, { recursive: true, force: true }),
+  }
+}
+
+// SPEC-0045 measured the cost of a throwaway home without a boundary: 33 of 35
+// control draws still read the installed corpus, so every behavioural cell was
+// `unresolved` rather than a separator. `external_directory: deny` is a tool
+// preference; a `bash` call walks around it. What follows answers whether this
+// host can deny the read below the tool layer, once per run, without spawning a
+// child (the probe is a PATH lookup, not a model call or a capability test).
+function executableAt(path) {
+  try {
+    if (!statSync(path).isFile()) return false
+    accessSync(path, constants.X_OK)
+    return true
+  } catch {
+    return false
+  }
+}
+
+function which(command, pathEnv) {
+  if (!command) return null
+  if (command.includes("/")) return executableAt(command) ? command : null
+  for (const dir of String(pathEnv ?? "").split(":")) {
+    if (!dir) continue
+    const candidate = join(dir, command)
+    if (executableAt(candidate)) return candidate
+  }
+  return null
+}
+
+export function probeIsolation({ platform = process.platform, command = "sandbox-exec", pathEnv = process.env.PATH } = {}) {
+  if (platform !== "darwin") {
+    return {
+      enforced: false,
+      mechanism: null,
+      reason: `no OS read boundary for platform ${platform}: only macOS seatbelt is implemented`,
+    }
+  }
+  const binary = which(command, pathEnv)
+  if (!binary) {
+    return {
+      enforced: false,
+      mechanism: null,
+      reason: `${command} is not executable on PATH; cannot apply the macOS seatbelt boundary`,
+    }
+  }
+  return {
+    enforced: true,
+    mechanism: "seatbelt",
+    reason: `macOS seatbelt available via ${binary}`,
+  }
+}
+
+// A seatbelt path is a double-quoted Scheme string; a quote or backslash in the
+// path would otherwise end the string and silently widen or break the rule.
+const quote = (path) => String(path).replace(/\\/g, "\\\\").replace(/"/g, '\\"')
+
+// `(allow default)` keeps auth, the runtime and the fixture reachable — the
+// boundary is scoped to the corpus, never to `~/.local` or the whole home. The
+// deny comes after the allow, so the more specific rule is the one that wins.
+export function seatbeltProfile(roots) {
+  return ["(version 1)", "(allow default)", ...roots.map((root) => `(deny file-read* (subpath "${quote(root)}"))`)].join("\n")
+}
+
+// Return the launch that runs `command args` under the boundary. An empty root
+// list is a defect, not a no-op: a boundary over nothing would let the run claim
+// enforcement while denying no corpus read at all. A null mechanism is the
+// explicit unenforced record and leaves the launch exactly as it was.
+export function wrapCommand({ command, args = [], roots = [], mechanism = "seatbelt" } = {}) {
+  if (!Array.isArray(roots) || roots.length === 0) {
+    throw new Error("wrapCommand: refusing an empty corpus root list — a boundary over nothing proves nothing")
+  }
+  if (mechanism == null) return { command, args: [...args] }
+  if (mechanism !== "seatbelt") throw new Error(`wrapCommand: unknown isolation mechanism '${mechanism}'`)
+  return {
+    command: "sandbox-exec",
+    args: ["-p", seatbeltProfile(roots), command, ...args],
   }
 }

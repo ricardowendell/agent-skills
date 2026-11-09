@@ -81,7 +81,7 @@ import { fileURLToPath } from "node:url"
 import { homedir } from "node:os"
 import { readEvals } from "./lib/evals/parse.mjs"
 import { authProbe, scrubEnv } from "./lib/evals/agent.mjs"
-import { isolateHome } from "./lib/evals/isolation.mjs"
+import { isolateHome, probeIsolation, wrapCommand } from "./lib/evals/isolation.mjs"
 import { stageFixture, stageSkill, makeScratch, denySkillTool, textHash } from "./lib/evals/fixture.mjs"
 import { summarize, aggregateReps, caseResult, contaminate, PASSED, UNSCORED } from "./lib/evals/result.mjs"
 import { executeCase } from "./lib/evals/execute.mjs"
@@ -308,6 +308,47 @@ const ROOTS = (
     ? [opt.root]
     : [join(HOME, ".agents/skills"), join(HOME, ".claude/skills"), join(HOME, ".codex/skills"), join(HOME, ".config/opencode/skills")]
 ).filter(existsSync)
+// SPEC-0046: the control arm used to read the installed skill even with
+// `--no-skill` (SPEC-0045: 33 of 35 draws). Ask once whether this host can deny
+// that read below the tool layer, and build the launch wrapper before the run
+// directory is written. The parent stays unsandboxed: it stages the fixture and
+// reads the corpus to verify. `params.isolate` alone is not enforcement, so the
+// real answer is recorded separately and a run without it keeps the old rule.
+const PROBE = probeIsolation()
+const CORPUS_ROOTS = [
+  ...new Set(
+    [...ROOTS, ...HOST_ROOTS].flatMap((root) => {
+      const absolute = resolve(root)
+      try {
+        return [absolute, realpathSync(absolute)]
+      } catch {
+        return [absolute]
+      }
+    }),
+  ),
+]
+const ENFORCE =
+  opt.run && PROBE.enforced && opt.isolate && opt.standalone && opt.level !== "smoke" && CORPUS_ROOTS.length > 0
+let WRAPPER = null
+if (ENFORCE) {
+  WRAPPER = wrapCommand({ command: "opencode", args: [], roots: CORPUS_ROOTS, mechanism: PROBE.mechanism })
+}
+const NOT_APPLIED = !PROBE.enforced
+  ? PROBE.reason
+  : !opt.isolate
+    ? "not applied: --no-isolate inherits the real home"
+    : !opt.standalone
+      ? "not applied: --shared runs in the launch directory"
+      : opt.level === "smoke"
+        ? "not applied: smoke stages only, no child draw"
+        : !opt.run
+          ? "not applied: dry run"
+          : CORPUS_ROOTS.length === 0
+            ? "not applied: no corpus roots found on this host"
+            : "not applied: enforcement was not required"
+const ISOLATION_RECORD = WRAPPER
+  ? { enforced: true, mechanism: PROBE.mechanism, reason: PROBE.reason }
+  : { enforced: false, mechanism: null, reason: NOT_APPLIED }
 const OUT_ROOT = join(HOME, ".local/share/opencode/evals")
 // One directory per invocation, named after the selection it covers. Created
 // lazily so --list and dry runs never leave an empty run behind.
@@ -337,6 +378,10 @@ const run = () =>
       // the child got a scratch cwd and a throwaway home. `--shared` or
       // `--no-isolate` writes false, and the verdict stays `unknown`.
       isolate: opt.isolate && opt.standalone,
+      // SPEC-0046: the richer record. `enforced` is true only when the wrapper
+      // was actually applied to the child; a host without the boundary records
+      // the explicit unenforced marker and the summary says `unknown`.
+      isolation: ISOLATION_RECORD,
       // Machine-specific, so the run carries them: the replay must judge the
       // transcript against the checkout that produced it, not its own.
       hostRoots: HOST_ROOTS,
@@ -595,6 +640,7 @@ async function runCase(skill, c, rep = null) {
       timeoutMs: opt.timeout * 1000,
       stallMs: opt.stallSeconds * 1000,
       env: CHILD_ENV,
+      wrapper: WRAPPER,
       judge: opt.judge ? { model: JUDGE_MODEL, threshold: opt.judgeThreshold, selfJudged: SELF_JUDGED } : null,
     })
   } catch (e) {

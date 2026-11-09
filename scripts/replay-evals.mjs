@@ -183,6 +183,20 @@ function readManifest(runDir) {
   }
 }
 
+// SPEC-0046: the explicit record is the only evidence of enforcement.
+// `params.isolate: true` says the child got a throwaway home, not that the
+// corpus read was denied, so a manifest without `params.isolation` is reported
+// as `legacy` and is never upgraded to `enforced`.
+function isolationState(manifest) {
+  const record = manifest?.params?.isolation
+  if (record && typeof record === "object" && !Array.isArray(record)) {
+    return record.enforced === true
+      ? { state: "enforced", mechanism: record.mechanism ?? "unknown" }
+      : { state: "unenforced", mechanism: null }
+  }
+  return { state: "legacy", mechanism: null }
+}
+
 function manifestHostRoots(manifest) {
   const roots = manifest?.hostRoots ?? manifest?.params?.hostRoots
   if (Array.isArray(roots)) {
@@ -237,6 +251,8 @@ if (opt.leaks) {
       continue
     }
     const name = runDir.replace(/\/+$/, "").split("/").pop()
+    const iso = isolationState(manifest)
+    console.log(`${name}  isolation=${iso.state}${iso.mechanism ? `(${iso.mechanism})` : ""}`)
     const hostRoots = opt.hostRoots.length ? opt.hostRoots : manifestHostRoots(manifest) ?? fallback
     const byCell = new Map()
     for (const c of readdirSync(casesDir)) {

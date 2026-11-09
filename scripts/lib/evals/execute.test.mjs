@@ -531,3 +531,43 @@ test("a provider abort is recorded and classified as infrastructure", async () =
     cleanup()
   }
 })
+
+// SPEC-0046: the corpus boundary must cover both attempts. A wrapper applied to
+// the first launch and dropped on the retry would let the second draw read the
+// installed skill while the manifest still said `enforced: true`.
+test("the corpus wrapper reaches both the first launch and the retry", async () => {
+  const { skill, scratch, c, cleanup } = setup()
+  let retryScratch = null
+  try {
+    const calls = []
+    let call = 0
+    const spawn = async (launch) => {
+      calls.push(launch)
+      call++
+      if (call === 1) {
+        retryScratch = launch.cwd
+        return { out: "", err: "", code: "timeout" }
+      }
+      retryScratch = launch.cwd
+      return {
+        out: stream({ reply: "done", loads: [{ id: "demo", directory: join(launch.cwd, ".opencode/skills/demo") }] }),
+        err: "",
+        code: 0,
+      }
+    }
+    const wrapper = { command: "sandbox-exec", args: ["-p", "(version 1)\n(allow default)", "opencode"] }
+    const { result } = await executeCase({ skill, c, scratch, wrapper, spawnAgent: spawn })
+
+    assert.equal(result.status, "passed")
+    assert.equal(calls.length, 2, "one draw and one retry")
+    for (const launch of calls) {
+      assert.equal(launch.command, "sandbox-exec", "the wrapper command survives the retry")
+      assert.deepEqual(launch.args.slice(0, 3), ["-p", "(version 1)\n(allow default)", "opencode"])
+      assert.equal(launch.args[3], "run", "the agent args are appended after the wrapped command")
+      assert.equal(launch.args.at(-1), c.prompt)
+    }
+  } finally {
+    cleanup()
+    if (retryScratch && retryScratch !== scratch) rmSync(retryScratch, { recursive: true, force: true })
+  }
+})

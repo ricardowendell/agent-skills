@@ -103,13 +103,27 @@ export function checkCitation({ line, token, run, currentDetector, tokens = [] }
   const claim = isolatedClaimIndex(line)
   if (claim >= 0) {
     const subject = subjectToken(tokens, claim)
-    if (subject?.token === token && run.detectorVersion !== currentDetector) {
-      const recorded = run.detectorVersion ?? "none"
-      add(
-        "error",
-        "stale-detector",
-        `line claims isolated=yes for ${token}, recorded detector ${recorded} is not ${currentDetector ?? "current"}`,
-      )
+    if (subject?.token === token) {
+      if (run.detectorVersion !== currentDetector) {
+        const recorded = run.detectorVersion ?? "none"
+        add(
+          "error",
+          "stale-detector",
+          `line claims isolated=yes for ${token}, recorded detector ${recorded} is not ${currentDetector ?? "current"}`,
+        )
+      }
+      // SPEC-0046: a manifest that says the corpus boundary was not enforced
+      // cannot underwrite `isolated=yes`. A legacy manifest carries no record
+      // and is deliberately not judged by this rule — it never claimed the
+      // boundary in the first place.
+      const record = run.isolation && typeof run.isolation === "object" ? run.isolation : null
+      if (record && record.enforced === false) {
+        add(
+          "error",
+          "unenforced-isolation",
+          `line claims isolated=yes for ${token}, but the manifest records an unenforced run (${record.reason ?? "no reason recorded"})`,
+        )
+      }
     }
   }
 

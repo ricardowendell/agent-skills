@@ -66,6 +66,26 @@ test("the run nearest the isolated=yes claim is the one checked", () => {
   assert.deepEqual(findings.map((f) => f.rule), ["stale-detector"])
 })
 
+// SPEC-0046: the manifest can refute the claim. Only a record that says
+// `enforced: false` fires; a legacy manifest carries no record and keeps the
+// old rule, so historical `isolated=yes` citations stay valid.
+test("isolated=yes on an unenforced manifest is an error", () => {
+  const line = "`2026-01-01T00-00-00--unenforced` `isolated=yes`"
+  const findings = cites(
+    line,
+    run({ isolation: { enforced: false, mechanism: null, reason: "platform linux" } }),
+  )
+  assert.deepEqual(findings.map((f) => [f.level, f.rule]), [["error", "unenforced-isolation"]])
+  assert.match(findings[0].message, /unenforced run/)
+  assert.match(findings[0].message, /platform linux/)
+})
+
+test("an enforced manifest allows isolated=yes and a legacy one is not judged", () => {
+  const line = "`2026-01-01T00-00-00--run` `isolated=yes`"
+  assert.deepEqual(cites(line, run({ isolation: { enforced: true, mechanism: "seatbelt", reason: "available" } })), [])
+  assert.deepEqual(cites(line, run()), [], "a manifest without the record is legacy")
+})
+
 test("a polluted run is a warning without a dirty marker", () => {
   const line = "`2026-01-01T00-00-00--polluted`"
   const findings = cites(line, run({ findings: 2 }))
@@ -114,21 +134,22 @@ test("checkDocuments carries the file and line", () => {
 function makeRun(
   store,
   name,
-  { status = "completed", detectorVersion = current, leak = [], isolate = true, cases = true } = {},
+  { status = "completed", detectorVersion = current, leak = [], isolate = true, isolation, cases = true } = {},
 ) {
   const dir = join(store, name)
+  const params = { isolate, ...(isolation ? { isolation } : {}) }
   if (!cases) {
     mkdirSync(dir, { recursive: true })
     writeFileSync(
       join(dir, "manifest.json"),
-      JSON.stringify({ arm: "with-skill", status, params: { isolate } }, null, 2),
+      JSON.stringify({ arm: "with-skill", status, params }, null, 2),
     )
     return
   }
   mkdirSync(join(dir, "cases", "demo--01"), { recursive: true })
   writeFileSync(
     join(dir, "manifest.json"),
-    JSON.stringify({ arm: "with-skill", status, params: { isolate } }, null, 2),
+    JSON.stringify({ arm: "with-skill", status, params }, null, 2),
   )
   writeFileSync(
     join(dir, "cases", "demo--01", "result.json"),
@@ -280,6 +301,34 @@ test("the CLI never drops an arm: with-arm is exact, missing-arm is an error, em
       "2026-11-06T10-00-00--demo--nonexistent-arm",
       "2026-11-06T10-01-00--empty",
     ])
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+// The pure rule is only useful if the CLI actually carries the record into the
+// citation check. This exercises the resolver: manifest -> inspectRun -> guard.
+test("the CLI rejects isolated=yes for an unenforced manifest and accepts a legacy one", () => {
+  const dir = mkdtempSync(join(tmpdir(), "evidence-unenforced-"))
+  try {
+    const store = join(dir, "store")
+    mkdirSync(join(dir, "docs", "evals"), { recursive: true })
+    mkdirSync(store, { recursive: true })
+    makeRun(store, "2026-11-06T10-00-00--unenforced", {
+      isolation: { enforced: false, mechanism: null, reason: "platform linux" },
+    })
+    makeRun(store, "2026-11-06T10-01-00--legacy", { isolate: true })
+
+    writeFileSync(
+      join(dir, "docs", "evals", "test.md"),
+      ["unenforced `2026-11-06T10-00-00--unenforced` `isolated=yes`.", "legacy `2026-11-06T10-01-00--legacy` `isolated=yes`.", ""].join("\n"),
+    )
+
+    const result = spawnSync(process.execPath, [cli, "--store", store, "--json"], { cwd: dir, encoding: "utf8" })
+    assert.equal(result.status, 1)
+    const parsed = JSON.parse(result.stdout)
+    assert.deepEqual(parsed.findings.map((f) => f.rule), ["unenforced-isolation"])
+    assert.equal(parsed.findings[0].token, "2026-11-06T10-00-00--unenforced")
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }

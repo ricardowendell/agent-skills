@@ -43,6 +43,11 @@ in [`discriminating-cases.md`](discriminating-cases.md).
     contaminated draw, no aborted draw (timeout, stall, provider limit), no lost
     gate, no missing provenance, no unfinished run, at least one draw that ran,
     and the manifest records an isolated run (`params.isolate: true`).
+    A run that also carries `params.isolation` needs `enforced: true` there:
+    `params.isolate` alone is a throwaway home, not a proven boundary. A
+    manifest without `params.isolation` is legacy and keeps the boolean rule,
+    so the historical `isolated=yes` citations stay valid. A manifest with
+    `enforced: false` can never print `isolated=yes`; it prints `unknown`.
   - **v1** (`a31d58f79a6c7038` and earlier): history, never a clean measurement.
     It is citable as replay-verified history only when
     `node scripts/replay-evals.mjs --leaks <run-dir>` prints `clean`, and the
@@ -157,7 +162,8 @@ sixth, `13-46-05`, was already discarded by hand):
 
 The `record-decision` controls (`17-11-37`, `17-15-33`, `17-20-53`, `17-28-10`)
 and the two agentworks controls replay clean, so not every 0.5.0 control reads
-the host; the deny-layer question (SPEC-0028) stays open. The 12-draw canary at
+the host; the deny-layer question (SPEC-0028) stayed open until SPEC-0046 /
+TASK-71 added the OS boundary. The 12-draw canary at
 `2026-11-06T13-51-35` is clean and remains citable as replay-verified v1
 history. A denied read still counts: detection is the guarantee, denial is the
 permission layer's separate decision.
@@ -177,8 +183,12 @@ controls are still dirty or too short: `capture-idea` #1 0/0 clean,
 and #4 2/2 clean passed. No control reached five clean draws, so the unresolved
 cells stay unresolved and #4 stays a non-discriminator. The control arm still
 reads the real install under `/Users/wendell/.agents/skills`; denying the `skill`
-tool does not deny the text. That is the deny-layer half of TASK-43, not a
-measurement this spec can fix.
+tool does not deny the text. Denying that read is **SPEC-0046 / TASK-71**: the
+runner probes the host for an OS-level boundary (macOS seatbelt), launches the
+child under it, and records `params.isolation` in the manifest. It does not
+re-measure anything here. Until SPEC-0047 runs, `capture-idea` #1,
+`groom-backlog` #2, `process-inbox` #1 and `write-implementation-prompt` #1 stay
+**unresolved** — not separators, not regression cases.
 
 The replay above is the named v1 replay for every 0.5.0 row in the table: a row
 not listed here is `clean` under it and citable as replay-verified history; a

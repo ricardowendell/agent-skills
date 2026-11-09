@@ -57,6 +57,11 @@ export async function executeCase({
   env = process.env,
   judge = null,
   maxInfraRetries = 1,
+  // The result of `wrapCommand` over the bare child command. Its `args` end
+  // with that command (`sandbox-exec -p <profile> opencode`), so the agent args
+  // are appended after it: one wrapper covers the first attempt and the retry,
+  // and a retry can never downgrade to the unenforced launch.
+  wrapper = null,
   // Injected so the contract can be tested without spawning a model. Same
   // seam `judge.mjs` uses; the default keeps every caller unchanged.
   spawnAgent = runAgent,
@@ -88,7 +93,10 @@ export async function executeCase({
   const args = agentArgs({ prompt: c.prompt, model, agent, standalone })
   const spawnOnce = async () => {
     const started = Date.now()
-    const result = await spawnAgent({ args, cwd: scratchUsed, env, timeoutMs, stallMs })
+    const launch = wrapper
+      ? { command: wrapper.command, args: [...wrapper.args, ...args] }
+      : { args }
+    const result = await spawnAgent({ ...launch, cwd: scratchUsed, env, timeoutMs, stallMs })
     return { ...result, durationMs: Date.now() - started }
   }
 

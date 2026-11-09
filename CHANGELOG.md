@@ -11,6 +11,18 @@ skills, which cases, and which published measurements.
 
 ### Added
 
+- **The control arm is denied the installed corpus (SPEC-0046, TASK-71).** The
+  eval runner now probes whether the host can deny corpus reads below the tool
+  layer, and on macOS launches the child under a seatbelt profile that denies the
+  installed skill roots and every host root it already records. The answer is
+  written to the run manifest as `params.isolation = { enforced, mechanism,
+  reason }`; a host without the boundary writes an explicit unenforced marker and
+  the summary reports `isolated=unknown`, never `yes`. A deterministic canary
+  reads a known corpus path under the wrapper (must fail) and without it (must
+  succeed), so the layer cannot pass vacuously. Manifests written before this
+  change carry no record and keep the old `isolated=yes` rule. No model call: the
+  probe is a PATH lookup and the canary is a local read. Source:
+  `docs/specs/active/SPEC-0046-deny-control-arm-corpus.md`.
 - **`report-project-status`** — one-page project status: git/PR state delegated
   to `survey-inflight-work`, open GitHub issues, backlog and spec readiness, CI
   health, and at most three next steps. Read-only. Three trigger and near-miss

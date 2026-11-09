@@ -11,7 +11,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs"
 import { homedir } from "node:os"
 import { join, resolve } from "node:path"
-import { checkRun } from "./lib/evals/runcheck.mjs"
+import { checkRun, manifestIsolation } from "./lib/evals/runcheck.mjs"
 import { DETECTOR_VERSION } from "./lib/evals/leak.mjs"
 import { checkDocuments, tokenSegments } from "./lib/evals/evidence.mjs"
 
@@ -19,8 +19,11 @@ const USAGE = `Usage: node scripts/check-evidence.mjs [--store <runs-dir>] [--st
 
 Scan docs/evals/*.md for run-directory tokens and check them against the local
 store. Errors: a missing directory, a completed run with no cases/ or no case
-results (empty-run), an unfinished run cited as complete, or a line claiming
-isolated=yes for a run whose recorded detector is not current. Warnings: a run
+results (empty-run), an unfinished run cited as complete, a line claiming
+isolated=yes for a run whose recorded detector is not current, or a line claiming
+isolated=yes for a run whose manifest records isolation.enforced: false
+(unenforced-isolation; legacy manifests without the record keep the old rule).
+Warnings: a run
 with findings cited without a dirty/leak/host/stall marker, and a missing eval
 store (missing-store); --strict makes a warning fatal.
 
@@ -97,7 +100,8 @@ function inspectRun(dir) {
     }
   }
 
-  const isolation = typeof manifest?.params?.isolate === "boolean" ? manifest.params.isolate : null
+  // SPEC-0046: prefer the richer record; a legacy manifest keeps the boolean.
+  const isolation = manifest ? manifestIsolation(manifest) : null
   const checked = checkRun({ arm: manifest?.arm ?? null, cases, isolation })
 
   const versions = []
@@ -113,6 +117,9 @@ function inspectRun(dir) {
     exists: true,
     status,
     detectorVersion,
+    // The citation guard needs the record, not only its summary: an unenforced
+    // run is a manifest fact that must be able to refute `isolated=yes`.
+    isolation,
     findings: checked.counts.findings + structural,
   }
 }

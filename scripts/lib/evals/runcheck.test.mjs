@@ -273,6 +273,41 @@ test("a v2 run that did not isolate (--no-isolate/--shared) is unknown", () => {
   assert.equal(counts.isolated, "unknown")
 })
 
+// SPEC-0046: `params.isolation` is a new record, and only `enforced: true` can
+// underwrite `isolated=yes`. The legacy boolean tests above keep the old rule,
+// so history is not rewritten.
+test("an enforced isolation record with zero findings is isolated=yes", () => {
+  const cases = [aggregate([rep({ rep: 1 })])]
+  const { findings, counts } = checkRun({
+    arm: "with-skill",
+    cases,
+    isolation: { enforced: true, mechanism: "seatbelt", reason: "available" },
+  })
+  assert.deepEqual(findings, [])
+  assert.equal(counts.isolated, "yes")
+})
+
+test("an enforced isolation record with a host read is isolated=no", () => {
+  const host = [{ tool: "read", path: "/Users/me/host/docs/x.md", kind: "host", root: "/Users/me/host/docs" }]
+  const { counts } = checkRun({
+    arm: "with-skill",
+    cases: [aggregate([rep({ rep: 1, leak: host, contaminated: true })])],
+    isolation: { enforced: true, mechanism: "seatbelt", reason: "available" },
+  })
+  assert.equal(counts.isolated, "no")
+})
+
+test("an unenforced isolation record is unknown, never isolated", () => {
+  const cases = [aggregate([rep({ rep: 1 })])]
+  const { findings, counts } = checkRun({
+    arm: "with-skill",
+    cases,
+    isolation: { enforced: false, mechanism: null, reason: "platform linux" },
+  })
+  assert.deepEqual(findings, [])
+  assert.equal(counts.isolated, "unknown", "no boundary means no clean bill")
+})
+
 test("a single-draw result is the repetition at the root", () => {
   const root = rep({ rep: 1, skillGate: gate({ ok: false, loaded: [], reason: "MISSING" }) })
   const { findings, counts } = checkRun({ arm: "with-skill", cases: [root], isolation: true })
@@ -469,6 +504,31 @@ test("replay --leaks --all skips an unfinished manifest-only run", (t) => {
   assert.match(r.stderr, /skipped .*running-run/)
 })
 
+// SPEC-0046: the replay reads the explicit record. `params.isolate: true` is
+// not enforcement, so a legacy manifest is reported as such instead of being
+// upgraded to a boundary claim it never made.
+test("replay reads params.isolation and does not upgrade a legacy isolate:true", (t) => {
+  const store = mkdtempSync(join(tmpdir(), "pdlc-replay-isolation-"))
+  t.after(() => rmSync(store, { recursive: true, force: true }))
+  const scratch = "/var/folders/aa/T/eval-demo-1-abc"
+  const make = (name, params) => {
+    const run = join(store, "runs", name)
+    mkdirSync(join(run, "cases", "demo--01"), { recursive: true })
+    writeFileSync(join(run, "manifest.json"), JSON.stringify({ status: "completed", params }))
+    writeFileSync(join(run, "cases", "demo--01", "transcript.r1.md"), transcriptMd({ n: 1, scratch, command: `cat ${scratch}/AGENTS.md` }))
+  }
+  make("legacy", { isolate: true })
+  make("unenforced", { isolate: true, isolation: { enforced: false, mechanism: null, reason: "platform linux" } })
+  make("enforced", { isolate: true, isolation: { enforced: true, mechanism: "seatbelt", reason: "available" } })
+
+  const r = spawnSync(process.execPath, [REPLAY, "--leaks", "--all", "--dir", store], { encoding: "utf8" })
+  assert.equal(r.status, 0, r.stderr)
+  assert.match(r.stdout, /legacy  isolation=legacy/)
+  assert.match(r.stdout, /unenforced  isolation=unenforced/)
+  assert.match(r.stdout, /enforced  isolation=enforced\(seatbelt\)/)
+  assert.doesNotMatch(r.stdout, /legacy  isolation=enforced/)
+})
+
 const modern = (overrides = {}) => ({
   arm: "with-skill",
   status: "completed",
@@ -559,6 +619,31 @@ test("CLI reports unknown for a v2 run that ran --no-isolate/--shared", (t) => {
   const r = runCli(dir)
   assert.equal(r.status, 0)
   assert.match(r.stdout, /skillLeaks=0 hostReads=0 isolated=unknown/)
+})
+
+test("CLI never prints isolated=yes for an unenforced manifest", (t) => {
+  const dir = makeRun(t, {
+    manifest: modern({
+      params: { isolate: true, isolation: { enforced: false, mechanism: null, reason: "platform linux" } },
+    }),
+    cases: [{ name: "x--01", result: aggregate([rep({ rep: 1 })]) }],
+  })
+  const r = runCli(dir)
+  assert.equal(r.status, 0)
+  assert.match(r.stdout, /skillLeaks=0 hostReads=0 isolated=unknown/)
+  assert.doesNotMatch(r.stdout, /isolated=yes/)
+})
+
+test("CLI credits an enforced manifest as isolated", (t) => {
+  const dir = makeRun(t, {
+    manifest: modern({
+      params: { isolate: true, isolation: { enforced: true, mechanism: "seatbelt", reason: "available" } },
+    }),
+    cases: [{ name: "x--01", result: aggregate([rep({ rep: 1 })]) }],
+  })
+  const r = runCli(dir)
+  assert.equal(r.status, 0)
+  assert.match(r.stdout, /skillLeaks=0 hostReads=0 isolated=yes/)
 })
 
 test("CLI treats an infrastructure draw as incomplete evidence, not clean", (t) => {

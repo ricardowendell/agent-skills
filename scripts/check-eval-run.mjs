@@ -8,7 +8,7 @@
 
 import { existsSync, readFileSync, readdirSync } from "node:fs"
 import { join, resolve } from "node:path"
-import { checkRun, isPreDetector } from "./lib/evals/runcheck.mjs"
+import { checkRun, isPreDetector, manifestIsolation } from "./lib/evals/runcheck.mjs"
 
 const USAGE = `Usage: node scripts/check-eval-run.mjs <run-dir>...
 
@@ -16,9 +16,10 @@ Check one or more eval run directories for leaked reads, contamination, a lost
 skill gate, missing provenance, an aborted draw (timeout, stall, provider limit)
 or a run that never completed. The summary names
 skillLeaks, hostReads and isolated=yes|no|unknown: "no" means a read was
-detected, "yes" needs a v2 detector, a recorded isolated run and at least one
-draw that ran, and "unknown" is neither. The checker reads what the runner
-already wrote; it does not call a model.
+detected, "yes" needs a v2 detector, a recorded isolated run (and, when the
+manifest carries params.isolation, enforced: true) and at least one draw that
+ran, and "unknown" is neither. The checker reads what the runner already wrote;
+it does not call a model.
 
 Exit codes:
   0  no findings (isolated may still be "unknown"; pre-detector warnings may print;
@@ -51,8 +52,9 @@ function readRun(dir) {
       arm = manifest.arm ?? null
       startedAt = manifest.startedAt ?? null
       // The runner records whether the child got an isolated home and a scratch
-      // cwd. Without that record a run cannot claim `isolated=yes`.
-      isolation = typeof manifest.params?.isolate === "boolean" ? manifest.params.isolate : null
+      // cwd, and SPEC-0046 adds whether the corpus boundary was enforced. A
+      // manifest without the richer record is legacy and keeps the boolean.
+      isolation = manifestIsolation(manifest)
       // The requested repeat is what makes a short case readable as a stop,
       // rather than as a run that was always that size.
       requested = Number.isInteger(manifest.params?.repeat) ? manifest.params.repeat : null
