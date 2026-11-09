@@ -15,6 +15,7 @@ related_decisions: []
 depends_on: []
 blocks:
   - SPEC-0047-remeasure-under-deny-layer
+  - SPEC-0048-a-denied-read-is-not-a-leak
 files:
   - scripts/lib/evals/isolation.mjs
   - scripts/lib/evals/isolation.test.mjs
