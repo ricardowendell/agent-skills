@@ -27,6 +27,7 @@ files:
   - scripts/lib/evals/runcheck.test.mjs
   - scripts/run-evals.mjs
   - scripts/check-eval-run.mjs
+  - scripts/check-evidence.mjs
   - scripts/replay-evals.mjs
   - docs/evals/coverage.md
   - CHANGELOG.md
@@ -142,7 +143,8 @@ checkout is not evidence of isolation. The current detector (v3) is
 `["host-reads", "denied-split"]`; the legacy map pins v1 (`a31d58f79a6c7038`) to
 none and v2 (`71bfb85a91cd68ab`) to `["host-reads"]`. `capabilitiesOf(version)`
 returns the current set for `DETECTOR_VERSION`, the mapped set for a known
-legacy digest, and `null` for an unknown digest; an unknown digest fails closed.
+legacy digest, and `null` for an unknown digest; an unknown digest — and a run
+with no recorded digest — fails closed.
 `denied-split` is recorded but not yet required by any claim: a v2
 `isolated=yes` was already true when v3 reclassifies some findings to `denied`,
 because the new rule can only move a finding away from `leak`/`host`, never
@@ -159,9 +161,9 @@ toward one.
    path B yields `denied` for A and `leak` for B.
 4. **A denied-only draw is clean.** `contaminate` does not mark it and it can be
    scored; a draw with at least one successful corpus read is still contaminated.
-5. **The attempt stays visible.** The result and the summary carry a `denied`
-   count; `check-eval-run` prints it; it is not a finding and does not force
-   `isolated=no`.
+5. **The attempt stays visible.** The result carries a `denied` entry count and
+   the summary/CLI carry `deniedDraws` (draws, not entries); `check-eval-run`
+   prints it; it is not a finding and does not force `isolated=no`.
 6. **The detector version moved and old claims stay honest.** `DETECTOR_VERSION`
    changes with the rules. A citation of `isolated=yes` is accepted when the
    detector that judged the run already had the capability the claim needs
@@ -178,14 +180,16 @@ toward one.
 
 **Detector v3.** `DETECTOR_RULES` gained `per-path-permission-denial`;
 `DETECTOR_VERSION` moved from `71bfb85a91cd68ab` (v2) to `d8478beab04a4e3e`. The
-classifier is per path: a hit whose call output names the path (or its directory)
-on a line carrying `Operation not permitted`, `permission denied`, `EPERM` or
-`EACCES` is `{ kind: "denied" }`. The denial is gathered from the transcript, so
-a probe that discarded its own stderr is still classified from the call that
-showed the refusal. A mixed call keeps the successful path as a leak; when the
-output names no path at all, the fallback also needs a non-zero exit and an
-output that carries no content. `contaminate` ignores `denied` and records the
-count, `check-eval-run` prints `denied=N`, and `isolated=yes` still requires zero
+classifier is per call and per path. An exact denial names the hit path and wins
+even when the same call returned other content; a denial naming the path's
+directory applies only when the call returned nothing; and a denial recorded in
+another call is only a fallback for a call that returned nothing (an empty
+result, or a probe that discarded its stderr, as the F0.1 control did). A path
+with any successful read stays a leak — one leak entry wins over a denied entry —
+so a later successful `cat P` is never hidden by an earlier refusal. A mixed call
+keeps the successful path as a leak; when the output names no path at all, the
+fallback also needs a non-zero exit and an output that carries no content. `contaminate` ignores `denied` and records the
+count, `check-eval-run` prints `deniedDraws=N`, and `isolated=yes` still requires zero
 `leak`/`host`.
 
 **Replay proof (AC-7).** Read-only re-judge of the two stored SPEC-0047 F0.1
@@ -193,8 +197,8 @@ runs; no model, no write, no paid draw.
 
 | run | arm | before (v2 `71bfb85a`) | after (v3 `d8478beab0`) |
 | --- | --- | --- | --- |
-| `2026-11-09T07-37-44--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` | with-skill | `skillLeaks=0 hostReads=0 isolated=yes`, 5/5 passed | `clean [5 draw(s)] isolated=yes`, `denied=0` |
-| `2026-11-09T07-52-50--bootstrap-project-harness--agentworks-deepseek-v4-1-flash--without-skill` | control | `skillLeaks=3 hostReads=1 contaminated=3 isolated=no` (r3–r5 contaminated) | `clean [5 draw(s)] isolated=yes`, `denied=3` (r3–r5 denied-clean) |
+| `2026-11-09T07-37-44--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` | with-skill | `skillLeaks=0 hostReads=0 isolated=yes`, 5/5 passed | `clean [5 draw(s)] isolated=yes`, `deniedDraws=0` |
+| `2026-11-09T07-52-50--bootstrap-project-harness--agentworks-deepseek-v4-1-flash--without-skill` | control | `skillLeaks=3 hostReads=1 contaminated=3 isolated=no` (r3–r5 contaminated) | `clean [5 draw(s)] isolated=yes`, `deniedDraws=3` (r3–r5 denied-clean) |
 
 `node scripts/replay-evals.mjs --leaks <the two dirs>` prints
 `Detector d8478beab04a4e3e: 2 cell(s), 0 dirty. No model, no write.` The control's
