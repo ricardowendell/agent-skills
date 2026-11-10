@@ -4,6 +4,7 @@ import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, dirname } from "node:path"
 import { evaluateAssertions, oracleFindings, oracleWarnings, skillGate, targetDirectory } from "./assertions.mjs"
+import { VERDICT_BLOCKERS, VERDICT_FORMS } from "./kinds.mjs"
 import { replyText, toolCalls, usageStats } from "./events.mjs"
 import { snapshotTree } from "./fixture.mjs"
 
@@ -128,6 +129,142 @@ test("an invalid regex fails with a reason instead of throwing", () => {
   const r = one({ kind: "reply", arg: "(" }, "/tmp", transcript({ text: "x" }))
   assert.equal(r.pass, false)
   assert.match(r.detail, /invalid regex/)
+})
+
+// The stance table is the contract (SPEC-0062): a form it lists is read as that
+// stance, in either language. The loop is the table, so a new phrase without a
+// test is impossible — adding one here is adding it to the test corpus.
+const PORTUGUESE = new Set([
+  "aprovado com ressalvas",
+  "aprovado com nits",
+  "aprovar",
+  "aprovado",
+  "aprovada",
+  "aprovacao",
+  "aprovo",
+  "mudancas solicitadas",
+  "solicito mudancas",
+  "solicitar mudancas",
+  "solicitando mudancas",
+  "precisa de mudancas",
+  "precisa de ajustes",
+  "nao aprovo",
+  "bloqueante",
+  "bloqueador",
+  "nao mergear",
+  "rejeitar",
+  "rejeitado",
+  "rejeitada",
+  "recusar",
+  "recusado",
+  "retido",
+  "retida",
+  "reter",
+  "retenho",
+])
+
+test("the stance table is closed, normalised and covers both languages", () => {
+  const seen = new Set()
+  for (const [phrase, name] of VERDICT_FORMS) {
+    assert.equal(phrase, normaliseForm(phrase), `${phrase} is not in matched form`)
+    assert.ok(!seen.has(phrase), `${phrase} is declared twice`)
+    seen.add(phrase)
+    assert.ok(["APPROVE", "REJECT", "WITHHELD"].includes(name), `${phrase}: ${name}`)
+  }
+  for (const name of ["APPROVE", "REJECT", "WITHHELD"]) {
+    const forms = VERDICT_FORMS.filter(([, n]) => n === name).map(([p]) => p)
+    assert.ok(forms.some((p) => PORTUGUESE.has(p)), `${name} has no Portuguese form`)
+    assert.ok(forms.some((p) => !PORTUGUESE.has(p)), `${name} has no English form`)
+  }
+})
+
+function normaliseForm(phrase) {
+  return phrase.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+}
+
+test("every accepted form scores as its stance and not as another", () => {
+  const stances = ["APPROVE", "REJECT", "WITHHELD"]
+  for (const [phrase, name] of VERDICT_FORMS) {
+    const out = transcript({ text: `VERDICT: ${phrase}` })
+    const got = one({ kind: "verdict", arg: name }, "/tmp", out)
+    assert.equal(got.pass, true, `'${phrase}' did not score ${name} (${got.detail})`)
+    for (const other of stances.filter((s) => s !== name)) {
+      assert.equal(
+        one({ kind: "verdict", arg: other }, "/tmp", out).pass,
+        false,
+        `'${phrase}' also scored ${other}`,
+      )
+    }
+  }
+})
+
+test("a form is read in a prose verdict line, after a lead-in", () => {
+  const lines = {
+    "compliant — approve with minor test nit.": "APPROVE",
+    "✅ Passes SPEC-0007 — all three acceptance criteria met, tests green": "APPROVE",
+    "needs changes — 1 blocking contract mismatch": "REJECT",
+    "changes requested.** One blocking defect.": "REJECT",
+    "one blocking defect.**": "REJECT",
+    "The branch as a whole should not merge": "REJECT",
+    "Approves against SPEC-0008 — all three criteria implemented": "APPROVE",
+  }
+  for (const [line, name] of Object.entries(lines)) {
+    const r = one({ kind: "verdict", arg: name }, "/tmp", transcript({ text: `**Verdict:** ${line}` }))
+    assert.equal(r.pass, true, `'${line}' did not score ${name} (${r.detail})`)
+  }
+})
+
+// A near-miss stays a miss. These are the forms the SPEC-0056 review warned
+// about: reading them as their surface reading is the bug this table replaced.
+test("a negated form is not its surface reading", () => {
+  const misses = [
+    "not approved",
+    "cannot approve",
+    "can't approve",
+    "never approved",
+    "without approval",
+    "I would approve this if the tests were fixed.",
+    "I cannot approve in good conscience",
+    "não aprovado",
+    "não aprove",
+  ]
+  for (const line of misses) {
+    const r = one({ kind: "verdict", arg: "APPROVE" }, "/tmp", transcript({ text: `VERDICT: ${line}` }))
+    assert.equal(r.pass, false, `'${line}' scored as an approval`)
+    assert.match(r.detail, /got /)
+  }
+})
+
+test("a negative form is not a rejection", () => {
+  for (const line of ["no changes needed", "non-blocking findings only", "not blocking"]) {
+    const r = one({ kind: "verdict", arg: "REJECT" }, "/tmp", transcript({ text: `VERDICT: ${line}` }))
+    assert.equal(r.pass, false, `'${line}' scored as a rejection (${r.detail})`)
+  }
+})
+
+test("the negation guard is adjacent, so a later stance still reads", () => {
+  const out = transcript({ text: "VERDICT: not approved as written — request changes" })
+  assert.equal(one({ kind: "verdict", arg: "REJECT" }, "/tmp", out).pass, true)
+  assert.equal(one({ kind: "verdict", arg: "APPROVE" }, "/tmp", out).pass, false)
+})
+
+test("the blocker list is the whole negation guard", () => {
+  // Every blocker is a word the table treats as a negator; the guard is listed,
+  // not inferred, so this asserts each one actually blocks its nearest form.
+  for (const blocker of VERDICT_BLOCKERS) {
+    const r = one({ kind: "verdict", arg: "APPROVE" }, "/tmp", transcript({ text: `VERDICT: ${blocker} approve` }))
+    assert.equal(r.pass, false, `'${blocker} approve' scored as an approval`)
+  }
+})
+
+test("reply and noreply are untouched by the stance vocabulary", () => {
+  // SPEC-0062 AC-3: only `verdict` widened. The same text still matches a reply
+  // regex literally, including the phrases the stance table now recognises.
+  const out = transcript({ text: "Verdict: changes requested" })
+  assert.equal(one({ kind: "reply", arg: "changes requested" }, "/tmp", out).pass, true)
+  assert.equal(one({ kind: "noreply", arg: "changes requested" }, "/tmp", out).pass, false)
+  assert.equal(one({ kind: "reply", arg: "request changes" }, "/tmp", out).pass, false)
+  assert.equal(one({ kind: "noreply", arg: "request changes" }, "/tmp", out).pass, true)
 })
 
 test("tool calls expose the shell command, exit code and timing", () => {

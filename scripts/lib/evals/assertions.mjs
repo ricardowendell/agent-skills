@@ -10,44 +10,63 @@ import { createHash } from "node:crypto"
 import { dirname, isAbsolute, join, relative, sep } from "node:path"
 import { expand, toRegExp } from "./glob.mjs"
 import { replyText, skillLoads, toolCalls } from "./events.mjs"
-
-// The stance vocabulary a `verdict` line is read with. Closed on purpose: a case
-// gates a stance, not a language, and the harness only knows the words the cases
-// have actually seen. Anything else still compares literally, so a new token is
-// a case change, not a harness change.
-const STANCES = [
-  ["request changes", "REJECT"],
-  ["request change", "REJECT"],
-  ["approve", "APPROVE"],
-  ["approved", "APPROVE"],
-  ["aprovar", "APPROVE"],
-  ["aprovado", "APPROVE"],
-  ["aprovacao", "APPROVE"],
-  ["reject", "REJECT"],
-  ["rejected", "REJECT"],
-  ["rejeitar", "REJECT"],
-  ["rejeitado", "REJECT"],
-  ["recusar", "REJECT"],
-  ["recusado", "REJECT"],
-  ["withheld", "WITHHELD"],
-  ["withhold", "WITHHELD"],
-  ["retido", "WITHHELD"],
-  ["retida", "WITHHELD"],
-  ["reter", "WITHHELD"],
-]
+import { VERDICT_BLOCKERS, VERDICT_FORMS } from "./kinds.mjs"
 
 // Accents and case are decoration too: `Aprovação` and `aprovacao` are one word.
-function stance(line) {
-  const words = line
+// Markdown emphasis is stripped before matching so a bolded stance is the same
+// stance; the line itself is never trimmed to a prefix, because a verdict line
+// is often prose ("compliant — approve", "changes requested — one defect").
+function normaliseVerdict(line) {
+  return line
     .replace(/[*_`]/g, "")
     .trim()
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-  for (const [phrase, name] of STANCES) {
-    if (new RegExp(`^${phrase}\\b`).test(words)) return name
+}
+
+// Longest first, so `approve with nits` is one form and not `approve` plus a
+// tail. Compiled once: the table is closed at module load, so a typo in it is a
+// startup failure, not a silently dead branch of the matcher.
+const FORM_MATCHERS = VERDICT_FORMS.slice()
+  .sort((a, b) => b[0].length - a[0].length)
+  .map(([phrase, name]) => ({
+    phrase,
+    name,
+    re: new RegExp(`(?:^|[^a-z])${phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![a-z])`, "g"),
+  }))
+
+const BLOCKER_RE = new RegExp(`(?:^|[^a-z])(?:${VERDICT_BLOCKERS.map((b) => b.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})$`)
+
+// A form is the stance unless the word immediately before it negates or
+// conditions it: `not approved`, `cannot approve`, `would approve`, and
+// `non-blocking` are not approvals/rejections. The check reads only what is
+// before the phrase, so `not approved — request changes` still ends in a
+// rejection.
+function blockedBefore(text, start) {
+  const before = text.slice(0, start).replace(/[\s\-–—,:;.]+$/, "")
+  return BLOCKER_RE.test(before)
+}
+
+// The stance a verdict line states: the earliest form in the table that is not
+// negated. No form means no stance — the line is reported by its first word, so
+// a near-miss reads as what it literally says instead of as its surface reading.
+function stance(line) {
+  const text = normaliseVerdict(line)
+  const candidates = []
+  for (const { phrase, name, re } of FORM_MATCHERS) {
+    re.lastIndex = 0
+    let m
+    while ((m = re.exec(text))) {
+      candidates.push({ start: m.index + m[0].length - phrase.length, name, length: phrase.length })
+      if (re.lastIndex === m.index) re.lastIndex++
+    }
   }
-  const first = /^[a-z]+/.exec(words)
+  candidates.sort((a, b) => a.start - b.start || b.length - a.length)
+  for (const c of candidates) {
+    if (!blockedBefore(text, c.start)) return c.name
+  }
+  const first = /^[a-z]+/.exec(text)
   return first ? first[0].toUpperCase() : ""
 }
 
