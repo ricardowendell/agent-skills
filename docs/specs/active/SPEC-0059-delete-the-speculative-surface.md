@@ -53,10 +53,13 @@ checks the wrong thing.
 | `health` + `harness-health.mjs` + `harness-health.md` | 471 lines + test doc | a per-release health baseline nobody reads |
 | `check-evidence` + `evidence.mjs` | 178 lines + test | the only thing tying a published rate to a run directory |
 
-The first two go. The third stays but narrows: today it sweeps every markdown
-citation in the repository, which is why it carries 100 warnings nobody acts on.
-The invariant worth keeping is one line — **a cited run directory must exist** —
-and that is cheap to enforce.
+The first two go. The third stays but narrows: it reads the publication —
+`coverage.md`, the matrix files and `discriminating-cases.md` — not every markdown
+file under `docs/evals/`. The 100 warnings it carried were all `dirty-run`: the
+marker rule fired inside the documents the narrowed check still reads, so the
+sweep was not what produced them, and that rule goes too. The invariant worth
+keeping is one line — **a cited run directory must exist** — and that is cheap to
+enforce.
 
 ## User Outcome
 
@@ -82,11 +85,13 @@ report that no longer exists; `docs/evals/coverage.md` carries the current state
 
 ### F3 — narrow `check-evidence`
 
-Keep: every cited run directory in `docs/evals/coverage.md` and the matrix files
-resolves, and a cell with no run directory is a finding.
+Keep: every cited run directory in `docs/evals/coverage.md`,
+`docs/evals/discriminating-cases.md` and the matrix files resolves, and a cell
+with no run directory is a finding.
 
-Drop: the repository-wide markdown sweep that produced the 100 pre-existing
-warnings, and the citation forms it guessed at.
+Drop: the repository-wide markdown sweep, the citation forms it guessed at, and
+the `dirty-run` marker warning — the 100 pre-existing warnings were that rule,
+not the sweep.
 
 The command keeps its name and its exit contract, so `docs/pipeline.md`'s
 `selftest` line does not change. Any citation the narrower check cannot resolve is
@@ -173,21 +178,21 @@ None.
 
 ### Net line delta
 
-`git diff --numstat` over the branch: **+196 / −2034, net −1838 lines** across 14
-files. Excluding this Results section, the deletion is **+115 / −2033, net
-−1918**; the section itself adds 81 lines of publication.
+`git diff --numstat` over the branch: **+243 / −2042, net −1799 lines** across 14
+files. Excluding this spec's own publication and review edits, the deletion is
+**+146 / −2033, net −1887**.
 
 | Module | Files | Lines |
 | --- | --- | --- |
 | `provider-audit` — `scripts/audit-provider-aborts.mjs`, `scripts/lib/evals/provider-audit.mjs`, its test | 3 | −280 |
 | `health` — `scripts/harness-health.mjs`, `scripts/lib/evals/health.mjs`, its test, `docs/evals/harness-health.md` | 4 | −1622 |
-| `check-evidence.mjs` | 1 | 256 → 240 (−16) |
+| `check-evidence.mjs` | 1 | 256 → 244 (−12) |
 | `evidence.mjs` | 1 | 178 → 166 (−12) |
-| `evidence.test.mjs` | 1 | 377 → 396 (+19) |
+| `evidence.test.mjs` | 1 | 377 → 423 (+46) |
 | `CONTRIBUTING.md` | 1 | −20 |
 | `docs/README.md` | 1 | 1 → 1 (the baseline phrase removed) |
 | `CHANGELOG.md` | 1 | +12 |
-| this spec | 1 | +1 in `files:`, plus this section |
+| this spec | 1 | +89 (`files:`, this section and the review correction) |
 
 Nothing imports `provider-audit` or `health`; the only code references were the
 deleted CLI and its test. The 0.6.2 and 0.4.1 CHANGELOG entries that name
@@ -199,13 +204,14 @@ does `docs/specs/SPEC-0024-harness-health.md`.
 | | documents scanned | errors | warnings | exit |
 | --- | --- | --- | --- | --- |
 | before | 8 (`docs/evals/*.md`) | 0 | **100** | 0 |
-| after | 5 (`coverage.md` + four `*-matrix.md`) | 0 | **0** | 0 |
+| after | 6 (`coverage.md`, `discriminating-cases.md`, four `*-matrix.md`) | 0 | **0** | 0 |
 
 All 100 warnings were `dirty-run`: the old rule demanded a
 `dirty|leak|host|stall|contaminated|discard|history|failure` word on every line
 that cited a run with findings. The only other warning source is `missing-store`,
 which cannot fire on this host. The narrowed command reads the publication —
-`docs/evals/coverage.md` and the matrix files — and no other markdown; a citation
+`docs/evals/coverage.md`, `docs/evals/discriminating-cases.md` and the matrix
+files — and no other markdown; a citation
 must name the run directory exactly (no prefix expansion), and a token followed
 by an ellipsis is prose, not a citation. The error rules stay: `missing-run`,
 `empty-run`, `unfinished-run`, `stale-detector` and `unenforced-isolation`. The
@@ -215,7 +221,9 @@ went.
 A missing run directory is still a finding with a non-zero exit, proven by
 `evidence.test.mjs` ("a citation that names no exact directory is a finding and
 exits non-zero", which also proves there is no prefix fallback) and by the
-existing `empty-run`/`missing-run` CLI test. A second test writes
+existing `empty-run`/`missing-run` CLI test. A dedicated test writes a dead
+citation in `docs/evals/discriminating-cases.md` and asserts `missing-run`, so the
+second publication document is read; the scope test writes
 `docs/evals/notes.md` with a dead citation and asserts it is not scanned, which
 is the zero-warning claim made mechanical.
 
@@ -227,11 +235,11 @@ Every command from `tests:`, run from the worktree root, plus `npm run selftest`
 | --- | --- | --- |
 | `node scripts/validate-skills.mjs --root skills` | 0 | |
 | `node scripts/run-evals.mjs --root skills --list --check` | 0 | dry run, no draw |
-| `node --test scripts/lib/evals/*.test.mjs` | 0 | 459 tests |
+| `node --test scripts/lib/evals/*.test.mjs` | 0 | 460 tests |
 | `node --test scripts/lib/*.test.mjs` | 0 | 13 tests |
 | `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` | 0 | 42 tests |
 | `node scripts/check-sensor-parity.mjs` | 0 | 2/2 |
-| `node scripts/check-evidence.mjs` | 0 | 5 documents, 0 errors, 0 warnings |
+| `node scripts/check-evidence.mjs` | 0 | 6 documents, 0 errors, 0 warnings |
 | `node scripts/check-staleness.mjs` | 0 | 62 cited, 51 stale, 3 uncited — report form, pre-existing |
 | `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0059-delete-the-speculative-surface.md --base main` | 0 | one `files-declared-untouched` warning: `README.md` had no mention to remove |
 | `npm run selftest` | 0 | unchanged script |

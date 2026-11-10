@@ -250,9 +250,8 @@ test("the CLI reads a synthetic store: existing, running, v1 and dirty", () => {
   }
 })
 
-// The 100 pre-existing warnings came from sweeping every markdown file. Only
-// `coverage.md` and the matrix files are the publication; a note beside them is
-// prose and is not scanned.
+// The publication has three shapes: `coverage.md`, the matrix files and
+// `discriminating-cases.md`. A note beside them is prose and is not scanned.
 test("the CLI scans coverage.md and the matrix files, not every markdown file", () => {
   const dir = mkdtempSync(join(tmpdir(), "evidence-scope-"))
   try {
@@ -273,6 +272,34 @@ test("the CLI scans coverage.md and the matrix files, not every markdown file", 
     const parsed = JSON.parse(result.stdout)
     assert.equal(parsed.summary.documents, 2)
     assert.deepEqual(parsed.findings, [])
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+// `discriminating-cases.md` publishes measured sets too, so a dead citation in
+// it must not pass at 0 errors / 0 warnings.
+test("the CLI reads discriminating-cases.md: a dead citation there is a finding", () => {
+  const dir = mkdtempSync(join(tmpdir(), "evidence-discriminating-"))
+  try {
+    const store = join(dir, "store")
+    mkdirSync(join(dir, "docs", "evals"), { recursive: true })
+    mkdirSync(store, { recursive: true })
+    makeRun(store, "2026-11-06T10-00-00--clean")
+
+    writeFileSync(join(dir, "docs", "evals", "coverage.md"), "clean `2026-11-06T10-00-00--clean`.\n")
+    writeFileSync(
+      join(dir, "docs", "evals", "discriminating-cases.md"),
+      "holdout `2026-11-06T09-30-00--gone`.\n",
+    )
+
+    const result = spawnSync(process.execPath, [cli, "--store", store, "--json"], { cwd: dir, encoding: "utf8" })
+    assert.equal(result.status, 1)
+    const parsed = JSON.parse(result.stdout)
+    assert.equal(parsed.summary.documents, 2)
+    assert.deepEqual(parsed.findings.map((f) => [f.rule, f.file]), [
+      ["missing-run", "docs/evals/discriminating-cases.md"],
+    ])
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
