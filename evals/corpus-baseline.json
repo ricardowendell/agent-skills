@@ -380,7 +380,7 @@
       }
     },
     "implement-from-prompt": {
-      "caseFileSha256": "f39c32ccfe9e3b23eb09543a417b57ebb3c221073bcb6ec0aba5131145a0ee15",
+      "caseFileSha256": "2983e5e194486206d94a4198e9df6510567f04095ccaa3248153b23c05717667",
       "cases": [
         {
           "n": 1,
@@ -706,7 +706,7 @@
       }
     },
     "write-implementation-prompt": {
-      "caseFileSha256": "972a9add084400f9e2927438e6d9e907c4edd467d561818d5be638c9368a970b",
+      "caseFileSha256": "0de9a14ae343e9132c193f638e8e32ae3e4358bb97a62f02f083ccf185f1ce0d",
       "cases": [
         {
           "n": 1,

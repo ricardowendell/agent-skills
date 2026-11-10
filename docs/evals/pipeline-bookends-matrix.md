@@ -5,7 +5,7 @@ The 0.5.0 rows were measured at commit `db7c49a` on
 assertions only and no judge. The three skills hold the two ends of the pipeline:
 `capture-idea` catches the note, `process-inbox` classifies it, and
 `record-decision` writes the ADR. Eleven cases: five behavioural and six routing
-triggers. Everything below runs under `node scripts/run-evals.mjs --root skills`.
+triggers. Everything below runs under `node scripts/eval.mjs list --root skills`.
 Paths in the measurement notes name the layout at the time of the run; SPEC-0058
 moved the corpus to `evals/<id>/`.
 
@@ -53,9 +53,9 @@ control exclusions below are that kind of read.
 ## Load canaries
 
 ```sh
-node scripts/run-evals.mjs --root skills --skill capture-idea --case 1 --repeat 12 --stop 12/0 --run
-node scripts/run-evals.mjs --root skills --skill process-inbox --case 1 --repeat 12 --stop 12/0 --run
-node scripts/run-evals.mjs --root skills --skill record-decision --case 1 --repeat 12 --stop 12/0 --run
+node scripts/eval.mjs run capture-idea 1 --root skills --repeat 12 --stop 12/0
+node scripts/eval.mjs run process-inbox 1 --root skills --repeat 12 --stop 12/0
+node scripts/eval.mjs run record-decision 1 --root skills --repeat 12 --stop 12/0
 ```
 
 | skill | run directory | result | gate | checker |
@@ -70,24 +70,24 @@ twelve. The canary is a precondition, not a case rate.
 ## Gate A — default model, five repetitions, no judge
 
 ```sh
-node scripts/run-evals.mjs --root skills --skill capture-idea --case 1 --repeat 5 --run
-node scripts/run-evals.mjs --root skills --skill process-inbox --case 1 --repeat 5 --run
-node scripts/run-evals.mjs --root skills --skill record-decision --case 1 --repeat 5 --run
-node scripts/run-evals.mjs --root skills --skill record-decision --case 2 --repeat 5 --run
-node scripts/run-evals.mjs --root skills --skill record-decision --case 3 --repeat 5 --run
-node scripts/run-evals.mjs --root skills --skill capture-idea --tag trigger --repeat 5 --run
-node scripts/run-evals.mjs --root skills --skill process-inbox --tag trigger --repeat 5 --run
-node scripts/run-evals.mjs --root skills --skill record-decision --tag trigger --repeat 5 --run
+node scripts/eval.mjs run capture-idea 1 --root skills --repeat 5
+node scripts/eval.mjs run process-inbox 1 --root skills --repeat 5
+node scripts/eval.mjs run record-decision 1 --root skills --repeat 5
+node scripts/eval.mjs run record-decision 2 --root skills --repeat 5
+node scripts/eval.mjs run record-decision 3 --root skills --repeat 5
+node scripts/eval.mjs run capture-idea --root skills --tag trigger --repeat 5
+node scripts/eval.mjs run process-inbox --root skills --tag trigger --repeat 5
+node scripts/eval.mjs run record-decision --root skills --tag trigger --repeat 5
 ```
 
 Control arm, the same five behavioural cases and no triggers:
 
 ```sh
-node scripts/run-evals.mjs --root skills --skill capture-idea --case 1 --repeat 5 --run --no-skill
-node scripts/run-evals.mjs --root skills --skill process-inbox --case 1 --repeat 5 --run --no-skill
-node scripts/run-evals.mjs --root skills --skill record-decision --case 1 --repeat 5 --run --no-skill
-node scripts/run-evals.mjs --root skills --skill record-decision --case 2 --repeat 5 --run --no-skill
-node scripts/run-evals.mjs --root skills --skill record-decision --case 3 --repeat 5 --run --no-skill
+node scripts/eval.mjs run capture-idea 1 --root skills --repeat 5 --arm without
+node scripts/eval.mjs run process-inbox 1 --root skills --repeat 5 --arm without
+node scripts/eval.mjs run record-decision 1 --root skills --repeat 5 --arm without
+node scripts/eval.mjs run record-decision 2 --root skills --repeat 5 --arm without
+node scripts/eval.mjs run record-decision 3 --root skills --repeat 5 --arm without
 ```
 
 `capture-idea #1` and `process-inbox #1` were re-run twice more, and

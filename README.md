@@ -453,6 +453,8 @@ ones. `last-run.json` holds the most recent summary. Regression is `compare`'s
 job: the `none` arm is the control, the `candidate` arm the working tree, and
 `--against <ref>` adds the skill at that commit, so "did this change anything"
 is one command with the reuse decision printed next to each number.
+`compare <run-dir-a> <run-dir-b>` diffs two stored runs cell by cell and exits 1
+on a regression, for when the question is "did this wave break anything".
 
 ## Optional companion skills
 

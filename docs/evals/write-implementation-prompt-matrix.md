@@ -18,8 +18,8 @@ the corpus intends. SPEC-0058 moved the corpus to `evals/<id>/`; paths in
 measurement notes name the layout at the time of the run.
 
 The skill is six cases: `#1`–`#4` are behavioural, `#5`/`#6` are routing
-triggers. Everything below runs under `node scripts/run-evals.mjs --root skills
---skill write-implementation-prompt`.
+triggers. Everything below runs under `node scripts/eval.mjs list --root skills
+write-implementation-prompt`.
 
 ## What the arms mean
 
@@ -48,7 +48,7 @@ controls. The default-model pair reached five clean draws for #2 (separator) and
 #4 (non-discriminator); #1 did not. The clean SPEC-0030 cells are v2 and print
 `isolated=yes`; the dirty trigger runs are named with their findings.
 
-`node scripts/replay-evals.mjs --leaks <run-dir>` re-judged the stored
+`node scripts/eval.mjs inspect --leaks <run-dir>` re-judged the stored
 transcripts with no model. Two control dirs are `dirty(host)`:
 
 - `2026-11-06T15-30-39--write-implementation-prompt--without-skill` (#2): `r1`
@@ -91,7 +91,7 @@ default pair. #1 has no five-draw clean control on either route and stays
 ## Load canary
 
 ```sh
-node scripts/run-evals.mjs --root skills --skill write-implementation-prompt --case 1 --repeat 12 --stop 12/0 --run
+node scripts/eval.mjs run write-implementation-prompt 1 --root skills --repeat 12 --stop 12/0
 ```
 
 `2026-11-06T13-51-35--write-implementation-prompt`: **12/12 passed, 12/12
@@ -109,11 +109,11 @@ below.
 ## Gate A — default model, five repetitions, no judge
 
 ```sh
-node scripts/run-evals.mjs --root skills --skill write-implementation-prompt --case 1 --repeat 5 --run
-node scripts/run-evals.mjs --root skills --skill write-implementation-prompt --case 2 --repeat 5 --run
-node scripts/run-evals.mjs --root skills --skill write-implementation-prompt --case 4 --repeat 5 --run
-node scripts/run-evals.mjs --root skills --skill write-implementation-prompt --tag trigger --repeat 5 --run
-node scripts/run-evals.mjs --root skills --skill write-implementation-prompt --case 6 --repeat 5 --run
+node scripts/eval.mjs run write-implementation-prompt 1 --root skills --repeat 5
+node scripts/eval.mjs run write-implementation-prompt 2 --root skills --repeat 5
+node scripts/eval.mjs run write-implementation-prompt 4 --root skills --repeat 5
+node scripts/eval.mjs run write-implementation-prompt --root skills --tag trigger --repeat 5
+node scripts/eval.mjs run write-implementation-prompt 6 --root skills --repeat 5
 ```
 
 `--case 3` is intentionally absent: the case is `status: manual`, so the same
@@ -125,10 +125,10 @@ Control arm, the same four cases and no triggers, was **not re-run** here. The
 never produced a clean five-draw run and stayed `unresolved`:
 
 ```sh
-node scripts/run-evals.mjs --root skills --skill write-implementation-prompt --case 1 --repeat 5 --run --no-skill
-node scripts/run-evals.mjs --root skills --skill write-implementation-prompt --case 2 --repeat 5 --run --no-skill
-node scripts/run-evals.mjs --root skills --skill write-implementation-prompt --case 3 --repeat 5 --run --no-skill
-node scripts/run-evals.mjs --root skills --skill write-implementation-prompt --case 4 --repeat 5 --run --no-skill
+node scripts/eval.mjs run write-implementation-prompt 1 --root skills --repeat 5 --arm without
+node scripts/eval.mjs run write-implementation-prompt 2 --root skills --repeat 5 --arm without
+node scripts/eval.mjs run write-implementation-prompt 3 --root skills --repeat 5 --arm without
+node scripts/eval.mjs run write-implementation-prompt 4 --root skills --repeat 5 --arm without
 ```
 
 ### Measurement-surface hashes

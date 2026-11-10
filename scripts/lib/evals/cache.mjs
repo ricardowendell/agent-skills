@@ -73,6 +73,21 @@ export function reuseDecision({ current = null, stored = null, refresh = false }
   return { reuse: mismatched.length === 0, refresh: false, mismatched }
 }
 
+// Beyond the six identity inputs, an arm has to be the experiment it claims to
+// be. A stopped-early arm did not run the requested draws, and a judged arm was
+// scored against `expect:` text the stored artefact does not carry. Both are
+// refusals, not mismatches, so a fresh run cannot inherit a number that means
+// something else.
+export function armReplayable(result, { repeat } = {}) {
+  const draws = Array.isArray(result?.repetitions) ? result.repetitions : result ? [result] : []
+  if (result?.stoppedEarly) return { reusable: false, reason: "stopped early" }
+  if (Number.isInteger(repeat) && draws.length < repeat) {
+    return { reusable: false, reason: `only ${draws.length}/${repeat} draws` }
+  }
+  if (draws.some((draw) => draw?.semantic)) return { reusable: false, reason: "judged draw" }
+  return { reusable: true, reason: "" }
+}
+
 // What graded a draw: the assertion list and the gate. `expect:` lines only
 // grade when a judge is asked, and a judged draw is never reused (see above), so
 // they are not part of this hash.

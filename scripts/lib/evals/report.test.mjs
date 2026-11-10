@@ -165,3 +165,33 @@ test("verbose failures name the draw and the assertion", () => {
   const text = formatFailures([{ arm: "none", score }])
   assert.match(text, /none r2: failed — verdict REJECT/)
 })
+
+// Movement compares rates, not numerators: `5/5` and `4/4` are both 100%, and a
+// raw numerator would call the smaller clean denominator a regression.
+test("a tie on rate is not a regression when the clean denominators differ", () => {
+  const none = { valid: [5, 5], passed: [5, 5], tokens: 1, durationMs: 1, status: "passed", draws: [] }
+  const candidate = { valid: [4, 5], passed: [4, 4], tokens: 1, durationMs: 1, status: "passed", draws: [] }
+  const text = scorecard({
+    skill: "review-code",
+    n: 7,
+    model: "m",
+    repeat: 5,
+    arms: [
+      { arm: "none", score: none },
+      { arm: "candidate", score: candidate },
+    ],
+  })
+  assert.match(text, /none\s+5\/5\s+5\/5/)
+  assert.match(text, /candidate\s+4\/5\s+4\/4/)
+  assert.doesNotMatch(text, /->/)
+})
+
+test("a genuinely worse rate regresses, and a zero denominator makes no claim", () => {
+  const none = { valid: [5, 5], passed: [4, 5], tokens: 1, durationMs: 1, status: "failed", draws: [] }
+  const worse = { valid: [5, 5], passed: [3, 5], tokens: 1, durationMs: 1, status: "failed", draws: [] }
+  const unknown = { valid: [0, 5], passed: [0, 0], tokens: null, durationMs: null, status: "unscored", draws: [] }
+  const cards = (candidate) =>
+    scorecard({ skill: "x", n: 1, model: "m", repeat: 5, arms: [{ arm: "none", score: none }, { arm: "candidate", score: candidate }] })
+  assert.match(cards(worse), /candidate\s+5\/5\s+3\/5\s+.*-> regresses/)
+  assert.doesNotMatch(cards(unknown), /->/)
+})

@@ -429,7 +429,7 @@ test("inspect --leaks reports a clean stored draw", () => {
 // compare: reuse, scorecard, artefact shape. Seeded arms mean no model call.
 // ---------------------------------------------------------------------------
 
-function seedArm(home, { id, arm, skillId, c, identity, statuses }) {
+function seedArm(home, { id, arm, skillId, c, identity, statuses, requested = statuses.length, contaminated = [], judged = [], stoppedEarly = false }) {
   const dir = join(home, ".local/share/opencode/evals/runs", id)
   const caseDir = join(dir, "cases", `${skillId}--${String(c.n).padStart(2, "0")}`)
   mkdirSync(caseDir, { recursive: true })
@@ -446,7 +446,7 @@ function seedArm(home, { id, arm, skillId, c, identity, statuses }) {
       agent: "build",
       level: "behavior",
       repoSha: "abc",
-      params: { repeat: statuses.length, isolate: true, isolation, effectiveModel: "default", baseline: null },
+      params: { repeat: requested, isolate: true, isolation, effectiveModel: "default", baseline: null },
       startedAt: "2026-01-01T00:00:00.000Z",
       finishedAt: "2026-01-01T00:10:00.000Z",
       status: "completed",
@@ -455,28 +455,35 @@ function seedArm(home, { id, arm, skillId, c, identity, statuses }) {
       stagedSkills: {},
     }),
   )
+  const contaminatedSet = new Set(contaminated)
+  const judgedSet = new Set(judged)
   const draw = (status, i) => ({
     rep: i + 1,
-    status,
-    reason: status === "passed" ? "" : "file hello.txt",
+    status: contaminatedSet.has(i) ? "unscored" : status,
+    reason: contaminatedSet.has(i) ? "contaminated" : status === "passed" ? "" : "file hello.txt",
     assertions: c.assert.map((a) => ({ ...a, pass: status === "passed" })),
     skillGate: { ok: true, reason: arm === "without-skill" ? "no skill loaded (control arm)" : "loaded" },
     execution: { exit: 0, durationMs: 1000 + i * 100, tokens: { input: 1000, output: 200 } },
     fixtureHash: identity.fixtureHash,
     promptHash: identity.promptHash,
     skillHash: identity.skillHash,
+    ...(contaminatedSet.has(i) ? { contaminated: true } : {}),
+    ...(judgedSet.has(i) ? { semantic: { model: "judge", threshold: 0.8, score: 1, expectations: [] } } : {}),
   })
-  const passed = statuses.filter((s) => s === "passed").length
+  const clean = statuses.length - contaminatedSet.size
+  const passed = statuses.filter((s, i) => s === "passed" && !contaminatedSet.has(i)).length
   writeFileSync(
     join(caseDir, "result.json"),
     JSON.stringify({
       skill: skillId,
       case: c.n,
-      status: passed === statuses.length ? "passed" : "failed",
-      reason: passed === statuses.length ? "" : "file hello.txt",
+      status: passed === clean ? "passed" : "failed",
+      reason: passed === clean ? "" : "file hello.txt",
       reps: statuses.length,
       passed,
-      passRate: passed / statuses.length,
+      passRate: clean ? passed / clean : 0,
+      stoppedEarly,
+      contaminated: contaminatedSet.size,
       fixtureHash: identity.fixtureHash,
       promptHash: identity.promptHash,
       detectorVersion: "seed",
@@ -484,6 +491,48 @@ function seedArm(home, { id, arm, skillId, c, identity, statuses }) {
       repetitions: statuses.map(draw),
     }),
   )
+}
+
+// The fixture identity a fresh `compare` computes, without a model.
+function demoContext(root) {
+  const skill = { id: "demo", dir: join(root, "skills", "demo") }
+  const { cases } = readEvals(join(root, "evals", "demo", "cases.md"), "demo", { skillDir: skill.dir })
+  const c = cases[0]
+  const scratch = makeScratch(skill.id, c.n)
+  let fixtureHash
+  try {
+    fixtureHash = stageFixture(skill, c, scratch).hash
+  } finally {
+    rmSync(scratch, { recursive: true, force: true })
+  }
+  return {
+    skill,
+    c,
+    skillHash: stagedTreeHash(skill.dir),
+    common: { promptHash: textHash(c.prompt), fixtureHash, gradingHash: gradingHash({ assert: c.assert, gate: c.gate }) },
+  }
+}
+
+// A no-model stand-in for the agent. A behavior draw must be *attempted* to prove
+// it was not reused; the fake exits cleanly with an empty stream, so the draw is
+// scored (and fails its reply/gate) without a provider call.
+function fakeOpencodeEnv(home) {
+  const bin = join(home, "bin")
+  mkdirSync(bin, { recursive: true })
+  writeFileSync(join(bin, "opencode"), "#!/bin/sh\nexit 0\n", { mode: 0o755 })
+  return { ...process.env, HOME: home, PATH: `${bin}:${process.env.PATH}` }
+}
+
+function seedRunDir(home, id, { status, skill = "demo", n = 1 }) {
+  const dir = join(home, ".local/share/opencode/evals/runs", id)
+  const caseDir = join(dir, "cases", `${skill}--${String(n).padStart(2, "0")}`)
+  mkdirSync(caseDir, { recursive: true })
+  writeFileSync(join(dir, "manifest.json"), JSON.stringify({ run: id, status: "completed", level: "behavior" }))
+  writeFileSync(
+    join(caseDir, "result.json"),
+    JSON.stringify({ skill, case: n, status, reason: status === "passed" ? "" : "file hello.txt" }),
+  )
+  return dir
 }
 
 test("compare reuses an arm only when all six inputs match, and prints its decision", () => {
@@ -533,4 +582,126 @@ test("compare --against refuses a ref that is not a commit", () => {
 
 test("compare needs exactly one case", () => {
   rejects(["compare", "demo", "--root", "skills"], /compare needs <skill> <n>/)
+})
+
+// The scorecard's arrow compares rates. `none 5/5` and `candidate 4/4` are both
+// 100%; a numerator comparison called the smaller clean denominator a regression.
+test("compare scores by rate, not by numerator, and labels five draws evidence", () => {
+  const home = tempHome()
+  const root = makeCorpus({ cases: DEMO_CASES, fixtures: { 1: { "hello.txt": "hello\n" } } })
+  const { c, common, skillHash } = demoContext(root)
+  seedArm(home, { id: "2026-01-01T00-00-01--demo--without-skill", arm: "without-skill", skillId: "demo", c, identity: { ...common, skillHash: null }, statuses: ["passed", "passed", "passed", "passed", "passed"], requested: 5 })
+  seedArm(home, { id: "2026-01-01T00-00-02--demo", arm: "with-skill", skillId: "demo", c, identity: { ...common, skillHash }, statuses: ["passed", "passed", "passed", "passed", "passed"], requested: 5, contaminated: [4] })
+
+  const r = cli(["compare", "demo", "1", "--root", root, "--repeat", "5"], { env: envWith(home) })
+  assert.equal(r.code, 0, r.err)
+  assert.match(r.out, /evidence \(5\/arm\)/)
+  assert.match(r.out, /none\s+5\/5\s+5\/5/)
+  assert.match(r.out, /candidate\s+4\/5\s+4\/4/)
+  assert.doesNotMatch(r.out, /->/)
+})
+
+test("compare reports a genuinely worse rate as a regression", () => {
+  const home = tempHome()
+  const root = makeCorpus({ cases: DEMO_CASES, fixtures: { 1: { "hello.txt": "hello\n" } } })
+  const { c, common, skillHash } = demoContext(root)
+  seedArm(home, { id: "2026-01-01T00-00-01--demo--without-skill", arm: "without-skill", skillId: "demo", c, identity: { ...common, skillHash: null }, statuses: ["passed", "passed", "passed", "passed", "failed"], requested: 5 })
+  seedArm(home, { id: "2026-01-01T00-00-02--demo", arm: "with-skill", skillId: "demo", c, identity: { ...common, skillHash }, statuses: ["passed", "passed", "passed", "failed", "failed"], requested: 5 })
+
+  const r = cli(["compare", "demo", "1", "--root", root, "--repeat", "5"], { env: envWith(home) })
+  assert.equal(r.code, 0, r.err)
+  assert.match(r.out, /candidate\s+5\/5\s+3\/5\s+.*-> regresses/)
+})
+
+// An arm stopped by --stop did not run the requested draws, so it is not the
+// experiment the heading describes. It must be rerun, not reused.
+test("compare does not reuse a stopped-early arm with fewer draws than requested", () => {
+  const home = tempHome()
+  const root = makeCorpus({ cases: DEMO_CASES, fixtures: { 1: { "hello.txt": "hello\n" } } })
+  const { c, common, skillHash } = demoContext(root)
+  seedArm(home, { id: "none-run", arm: "without-skill", skillId: "demo", c, identity: { ...common, skillHash: null }, statuses: ["failed", "failed", "failed"] })
+  seedArm(home, { id: "candidate-run", arm: "with-skill", skillId: "demo", c, identity: { ...common, skillHash }, statuses: ["passed", "passed"], requested: 3, stoppedEarly: true })
+
+  const r = cli(["compare", "demo", "1", "--root", root], { env: fakeOpencodeEnv(home) })
+  assert.equal(r.code, 0, r.err)
+  assert.match(r.err, /reused .*none-run/)
+  assert.doesNotMatch(r.err, /reused .*candidate-run/)
+  assert.match(r.err, /ran /)
+})
+
+// A stored judged arm carries a score the non-judged compare cannot justify.
+test("compare does not reuse a judged arm", () => {
+  const home = tempHome()
+  const root = makeCorpus({ cases: DEMO_CASES, fixtures: { 1: { "hello.txt": "hello\n" } } })
+  const { c, common, skillHash } = demoContext(root)
+  seedArm(home, { id: "none-run", arm: "without-skill", skillId: "demo", c, identity: { ...common, skillHash: null }, statuses: ["failed", "failed", "failed"] })
+  seedArm(home, { id: "candidate-run", arm: "with-skill", skillId: "demo", c, identity: { ...common, skillHash }, statuses: ["passed", "passed", "passed"], judged: [1] })
+
+  const r = cli(["compare", "demo", "1", "--root", root], { env: fakeOpencodeEnv(home) })
+  assert.equal(r.code, 0, r.err)
+  assert.match(r.err, /reused .*none-run/)
+  assert.doesNotMatch(r.err, /reused .*candidate-run/)
+  assert.match(r.err, /ran /)
+})
+
+// `compare <run-dir-a> <run-dir-b>` is the whole-run regression gate.
+test("compare run directories prints the diff and exits 1 on a regression", () => {
+  const home = tempHome()
+  const before = seedRunDir(home, "2026-01-01T00-00-00--demo", { status: "passed" })
+  const after = seedRunDir(home, "2026-01-02T00-00-00--demo", { status: "failed" })
+  const r = cli(["compare", before, after], { env: envWith(home) })
+  assert.equal(r.code, 1, r.out)
+  assert.match(r.out, /Baseline: /)
+  assert.match(r.out, /REGRESSION demo#1: passed → failed/)
+})
+
+test("compare run directories exits 0 with no regressions", () => {
+  const home = tempHome()
+  const before = seedRunDir(home, "2026-01-01T00-00-00--demo", { status: "passed" })
+  const after = seedRunDir(home, "2026-01-02T00-00-00--demo", { status: "passed" })
+  const r = cli(["compare", before, after], { env: envWith(home) })
+  assert.equal(r.code, 0, r.out)
+  assert.match(r.out, /no regressions/)
+})
+
+// The stopped-early line names the draws that ran, never the ceiling.
+test("inspect reports a stopped-early case against the requested repeat", () => {
+  const home = tempHome()
+  const dir = join(home, ".local/share/opencode/evals/runs/2026-01-01T00-00-00--demo")
+  const caseDir = join(dir, "cases/demo--01")
+  mkdirSync(caseDir, { recursive: true })
+  writeFileSync(join(dir, "manifest.json"), JSON.stringify({ run: "x", status: "completed", params: { repeat: 3 } }))
+  writeFileSync(
+    join(caseDir, "result.json"),
+    JSON.stringify({ skill: "demo", case: 1, status: "passed", reps: 2, passed: 2, stoppedEarly: true, repetitions: [{ rep: 1, status: "passed" }, { rep: 2, status: "passed" }] }),
+  )
+  const r = cli(["inspect", dir], { env: envWith(home) })
+  assert.equal(r.code, 0, r.err)
+  assert.match(r.out, /demo#1: passed \[2\/2\] stopped early \(2\/3\)/)
+})
+
+test("inspect --judge refuses a bare flag instead of guessing a model", () => {
+  const dir = mkdtempSync(join(tmpdir(), "inspect-judge-"))
+  rejects(["inspect", dir, "--judge"], /--judge needs a model/)
+})
+
+test("inspect --leaks --all can narrow the store by --skill", () => {
+  const home = tempHome()
+  const seed = (run, skill) => {
+    const caseDir = join(home, ".local/share/opencode/evals/runs", run, "cases", `${skill}--01`)
+    mkdirSync(caseDir, { recursive: true })
+    writeFileSync(
+      join(caseDir, "transcript.md"),
+      `# Eval: ${skill} case 1\n\n**Scratch:** /tmp/scratch\n**Exit:** 0\n**Status:** passed\n\n## Transcript\n\n\`\`\`\n{}\n\`\`\`\n`,
+    )
+    writeFileSync(join(home, ".local/share/opencode/evals/runs", run, "manifest.json"), JSON.stringify({ status: "completed" }))
+  }
+  seed("2026-01-01T00-00-00--a", "capture-idea")
+  seed("2026-01-02T00-00-00--b", "process-inbox")
+  const store = join(home, ".local/share/opencode/evals")
+  const r = cli(["inspect", "--leaks", "--all", "--skill", "capture-idea", "--dir", store], { env: envWith(home) })
+  assert.equal(r.code, 0, r.err)
+  assert.match(r.out, /capture-idea#1 → clean/)
+  assert.doesNotMatch(r.out, /process-inbox#1/)
+  assert.match(r.out, /1 cell\(s\), 0 dirty/)
 })

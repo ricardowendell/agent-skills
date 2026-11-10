@@ -32,7 +32,7 @@ They are cited as historical direction and cannot underwrite a clean rate.
 - **measured** is what the assertions said when the draws ran, under the stance
   vocabulary that preceded SPEC-0062. **replayed** is the same stored
   transcripts read under SPEC-0062's closed stance table
-  (`node scripts/replay-evals.mjs --run <dir>`; no model, no write into the run
+  (`node scripts/eval.mjs inspect <dir> --replay`; no model, no write into the run
   directory), attributed to SPEC-0062 on every row. The replayed column carries
   the **cell** (`passed/5`), not the stance token: where only the token moved,
   the cell does not change, which is why cases 1 and 10 read
@@ -128,7 +128,7 @@ in 4/5. The single control pass ended under a `### Verdict` heading with
 `**Hold the merge**` — a stance the guard did not name at the time, not a
 confident approval. The current assertions name that stance and require the reply
 to say what is missing. The class comes from the published cells, not from a
-replay: `node scripts/replay-evals.mjs --run 2026-11-03T10-06-33--review-code`
+replay: `node scripts/eval.mjs inspect ~/.local/share/opencode/evals/runs/2026-11-03T10-06-33--review-code --replay`
 re-judges all five skill draws `passed → failed` — five verdicts differ, so it
 does not confirm this row, it contradicts it. The recorded scratch no longer
 exists and the load path carries a `/private` prefix, so `skillGate`'s
@@ -296,8 +296,8 @@ used here.
 ## Reproduce
 
 ```sh
-node scripts/run-evals.mjs --root skills --list
+node scripts/eval.mjs list --root skills
 node scripts/check-eval-run.mjs ~/.local/share/opencode/evals/runs/<run-dir>
-node scripts/replay-evals.mjs --run <run-id>
+node scripts/eval.mjs inspect <run-dir> --replay
 node scripts/check-evidence.mjs
 ```

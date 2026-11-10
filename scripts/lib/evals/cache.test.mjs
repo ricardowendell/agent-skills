@@ -9,6 +9,7 @@ import assert from "node:assert/strict"
 import {
   IDENTITY_INPUTS,
   armIdentity,
+  armReplayable,
   canonical,
   gradingHash,
   gradingHashFromDraw,
@@ -129,4 +130,33 @@ test("a stored draw reconstructs the gate it ran under", () => {
   assert.equal(gradingHashFromDraw(draw), gradingHash({ assert: draw.assertions, gate: "off" }))
   const gated = { ...draw, skillGate: { ok: true, reason: "no skill loaded (control arm)" } }
   assert.equal(gradingHashFromDraw(gated), gradingHash({ assert: draw.assertions, gate: "auto" }))
+})
+
+// Beyond the six identity inputs, the arm has to be the experiment it claims.
+test("a stopped-early arm is not reusable", () => {
+  const result = { stoppedEarly: true, repetitions: [{ status: "passed" }, { status: "passed" }] }
+  assert.deepEqual(armReplayable(result, { repeat: 3 }), { reusable: false, reason: "stopped early" })
+})
+
+test("an arm with fewer draws than the requested repeat is not reusable", () => {
+  const result = { repetitions: [{ status: "passed" }, { status: "passed" }] }
+  assert.deepEqual(armReplayable(result, { repeat: 3 }), { reusable: false, reason: "only 2/3 draws" })
+  assert.equal(armReplayable(result, { repeat: 2 }).reusable, true)
+})
+
+test("a judged arm is not reusable by any compare", () => {
+  const result = {
+    repetitions: [
+      { status: "passed", semantic: { model: "judge", score: 1 } },
+      { status: "passed" },
+    ],
+  }
+  assert.deepEqual(armReplayable(result, { repeat: 2 }), { reusable: false, reason: "judged draw" })
+  const single = { status: "passed", semantic: { model: "judge", score: 1 } }
+  assert.equal(armReplayable(single, { repeat: 1 }).reusable, false)
+})
+
+test("a complete unjudged arm is reusable", () => {
+  const result = { repetitions: [{ status: "passed" }, { status: "passed" }, { status: "failed" }] }
+  assert.deepEqual(armReplayable(result, { repeat: 3 }), { reusable: true, reason: "" })
 })

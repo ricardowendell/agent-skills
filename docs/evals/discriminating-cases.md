@@ -71,10 +71,10 @@ on a different model route, so it is not a delta on those numbers.
 ## Reproduce
 
 ```sh
-node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 1 \
-  --repeat 5 --model agentworks/deepseek-v4-1-flash --run
-node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 1 \
-  --repeat 5 --no-skill --model agentworks/deepseek-v4-1-flash --run
+node scripts/eval.mjs run implement-from-prompt 1 --root skills \
+  --repeat 5 --model agentworks/deepseek-v4-1-flash
+node scripts/eval.mjs run implement-from-prompt 1 --root skills \
+  --repeat 5 --arm without --model agentworks/deepseek-v4-1-flash
 # repeat for #8 and review-code #7
 ```
 

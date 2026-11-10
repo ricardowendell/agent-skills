@@ -1,27 +1,20 @@
 #!/usr/bin/env node
 // eval.mjs — the one eval CLI: list, check, run, compare, inspect.
 //
-//   node scripts/eval.mjs list [skill]         # cases, no model
-//   node scripts/eval.mjs check [skill]        # parse, validate, dry-stage
-//   node scripts/eval.mjs run <skill> [n]      # one arm, one draw by default
-//   node scripts/eval.mjs compare <skill> <n>  # none/candidate (+baseline)
-//   node scripts/eval.mjs inspect <run-dir>    # stored status, --replay
+//   list [skill]               cases, no model
+//   check [skill]              parse, validate, dry-stage every fixture
+//   run <skill> [n]            one arm, one draw by default
+//   compare <skill> <n>        none/candidate (+baseline with --against)
+//   compare <run-dir-a> <run-dir-b>   whole-run regression diff
+//   inspect <run-dir>          stored status, --replay/--leaks/--judge
 //
-// The ladder is the default: `run` is one draw, `compare` three per arm, and five
-// or more is the explicit promotion that may call itself evidence. The scorecard
-// prints numerator and denominator per arm on one screen. The old -> new flag
-// mapping (and the flags dropped because they had no honest meaning) is in
-// CONTRIBUTING.md; the old run-evals.mjs/replay-evals.mjs are gone rather than
-// wrapped.
-//
-// Isolation: cases run with `--standalone` and a scrubbed child env, with the
-// skill pinned in <scratch>/.opencode/skills/<id>/ and a throwaway home, so the
-// only skill on the menu is the checkout under review. Fixtures are copied from
-// `evals/<id>/fixtures/<n>/`; a `git.json` manifest stages history instead. Every
-// invocation gets its own run directory, and each completed draw is persisted
-// before the next starts so `--resume` re-runs only the missing indexes. Before
-// the first paid draw, `opencode auth list`/`opencode models` are checked without
-// calling a model.
+// The ladder is the default: `run` is one draw, `compare` three per arm, five or
+// more is the explicit promotion that may call itself evidence. Isolation is the
+// contract reuse checks: standalone, a scrubbed child env, the skill pinned in
+// the scratch and a throwaway home. Every invocation has its own run directory,
+// and each draw is persisted before the next so `--resume` skips paid work. The
+// old -> new flag mapping is in CONTRIBUTING.md; run-evals.mjs/replay-evals.mjs
+// are gone rather than wrapped.
 
 import { readdirSync, lstatSync, realpathSync, existsSync, mkdirSync, mkdtempSync, writeFileSync, appendFileSync, readFileSync, rmSync, symlinkSync } from "node:fs"
 import { spawnSync } from "node:child_process"
@@ -38,14 +31,14 @@ import { executeCase } from "./lib/evals/execute.mjs"
 import { leaksIn, DETECTOR_VERSION } from "./lib/evals/leak.mjs"
 import { parseStop, runScheduled } from "./lib/evals/schedule.mjs"
 import { createRun, openRun, listRuns, slug } from "./lib/evals/runs.mjs"
-import { summarizeRun, scorecard, formatFailures, armScore, storedRunStatus, formatStoredStatus, storedHostRoots, isolationState, loadCases, transcriptPaths, readManifest } from "./lib/evals/report.mjs"
+import { summarizeRun, scorecard, formatFailures, armScore, storedRunStatus, formatStoredStatus, storedHostRoots, isolationState, loadCases, transcriptPaths, readManifest, readRunDir, compareRuns, formatComparison } from "./lib/evals/report.mjs"
 import { renderHeader, patchStatus, parseTranscript } from "./lib/evals/transcript.mjs"
 import { REPLAYABLE } from "./lib/evals/kinds.mjs"
 import { evaluateAssertions, skillGate } from "./lib/evals/assertions.mjs"
 import { replyText, skillLoads } from "./lib/evals/events.mjs"
 import { classify } from "./lib/evals/result.mjs"
 import { rejudge } from "./lib/evals/rejudge.mjs"
-import { armIdentity, gradingHash, gradingHashFromDraw, isolationContract, reuseDecision } from "./lib/evals/cache.mjs"
+import { armIdentity, gradingHash, gradingHashFromDraw, isolationContract, reuseDecision, armReplayable } from "./lib/evals/cache.mjs"
 
 const COMMANDS = new Set(["list", "check", "run", "compare", "inspect"])
 
@@ -56,11 +49,13 @@ const opt = {
   model: null,
   agent: "build",
   case: null,
+  skill: null,
   tags: [],
   level: "behavior",
   timeout: 600,
   stallSeconds: 120,
   judge: null,
+  judgeBare: false,
   judgeThreshold: 0.8,
   json: false,
   verbose: false,
@@ -110,6 +105,7 @@ for (let i = 0; i < argv.length; i++) {
   else if (a === "--model") opt.model = valueOf(a, argv, i++)
   else if (a === "--agent") opt.agent = valueOf(a, argv, i++)
   else if (a === "--case") opt.case = Number(valueOf(a, argv, i++))
+  else if (a === "--skill") opt.skill = valueOf(a, argv, i++)
   else if (a === "--tag") opt.tags.push(...valueOf(a, argv, i++).split(",").map((t) => t.trim()).filter(Boolean))
   else if (a === "--level") opt.level = valueOf(a, argv, i++)
   else if (a === "--timeout") opt.timeout = Number(valueOf(a, argv, i++))
@@ -119,7 +115,10 @@ for (let i = 0; i < argv.length; i++) {
     if (v !== undefined && !v.startsWith("-")) {
       opt.judge = v
       i++
-    } else opt.judge = "default"
+    } else {
+      opt.judge = "default"
+      opt.judgeBare = true
+    }
   } else if (a === "--judge-threshold") opt.judgeThreshold = Number(valueOf(a, argv, i++))
   else if (a === "--json") opt.json = true
   else if (a === "--verbose") opt.verbose = true
@@ -164,10 +163,13 @@ const ALLOWED = {
   check: ["--root", "--case", "--tag", "--json"],
   run: ["--root", "--model", "--agent", "--case", "--tag", "--level", "--timeout", "--stall-seconds", "--judge", "--judge-threshold", "--json", "--verbose", "--resume", "--repeat", "--min-pass", "--stop", "--concurrency", "--arm"],
   compare: ["--root", "--model", "--agent", "--case", "--tag", "--level", "--timeout", "--stall-seconds", "--judge", "--judge-threshold", "--json", "--verbose", "--repeat", "--min-pass", "--stop", "--concurrency", "--against", "--refresh"],
-  inspect: ["--root", "--case", "--json", "--verbose", "--judge", "--judge-threshold", "--dir", "--replay", "--leaks", "--all", "--changed", "--host-root"],
+  inspect: ["--root", "--skill", "--case", "--json", "--verbose", "--judge", "--judge-threshold", "--dir", "--replay", "--leaks", "--all", "--changed", "--host-root"],
 }
 const disallowed = [...seen].filter((flag) => !ALLOWED[opt.command].includes(flag))
 if (disallowed.length) usage(`${disallowed.join(", ")} has no meaning for '${opt.command}' (see --help in CONTRIBUTING.md)`)
+// `run`/`compare` let a bare `--judge` mean "the model under test"; `inspect`
+// re-judges stored draws, so guessing a model there is a silent expense.
+if (opt.command === "inspect" && opt.judgeBare) usage("--judge needs a model (or 'default')")
 
 const positionalLimit = { list: 1, check: 1, run: 2, compare: 2, inspect: Infinity }[opt.command]
 if (opt.positionals.length > positionalLimit) {
@@ -180,8 +182,7 @@ const OUT_ROOT = join(HOME, ".local/share/opencode/evals")
 if (!opt.dir) opt.dir = OUT_ROOT
 
 // The host corpus a control draw must not read: the checkout itself (`.git/`,
-// `package.json`, `.pdlc/` too), its documented subdirectories, and the sibling
-// worktrees. Absolute by construction, and recorded so replay can re-judge.
+// `package.json` too), its subdirectories, and the sibling worktrees.
 const hostRootsFor = (root) => [
   root,
   join(root, "docs"),
@@ -280,10 +281,7 @@ function discoverEvals() {
   return found
 }
 
-// Every discovered skill, keyed by id, not only the ones with evals. A case may
-// name a sibling with `stage:`; the id has to resolve to a real skill checkout
-// even when that sibling carries no evals of its own. First root wins, the same
-// order `discoverEvals` uses.
+// Every discovered skill, keyed by id: `stage:` can name a sibling with no evals.
 function discoverSkillDirs() {
   const found = new Map()
   for (const root of rootsForDiscovery()) {
@@ -312,9 +310,8 @@ function resolveModel() {
 }
 const EFFECTIVE_MODEL = resolveModel()
 
-// A judge that is the model under test grades its own homework. It still runs —
-// it is the only option without a second provider — but the artifact and the
-// console say so, because the score is evidence of agreement, not of quality.
+// A judge that is the model under test grades its own homework; the console says
+// so, because the score is agreement, not quality.
 const TARGET = EFFECTIVE_MODEL.replace(/ \(config default\)$/, "")
 const JUDGE_MODEL = opt.judge ? (opt.judge === "default" ? TARGET : opt.judge) : null
 const SELF_JUDGED = JUDGE_MODEL !== null && JUDGE_MODEL === TARGET
@@ -336,22 +333,49 @@ function judgeConfig() {
 
 // A draw that reads a stored run's own result is the same as a paid draw for the
 // scorecard; the caller has already decided it is safe to reuse.
+function isRunDir(path) {
+  if (!path) return false
+  const dir = resolve(path)
+  return existsSync(join(dir, "manifest.json")) && existsSync(join(dir, "cases"))
+}
+
+// `compare` has two forms: two run directories are the whole-run regression diff;
+// `<skill> <n>` is the arm comparison. Directories are checked first.
+function runDiffCommand(a, b) {
+  if (opt.against || opt.refresh) usage("--against/--refresh belong to compare <skill> <n>")
+  const [baseline, current] = [resolve(a), resolve(b)]
+  if (!isRunDir(baseline)) usage(`not a run directory (no manifest.json/cases): ${baseline}`)
+  if (!isRunDir(current)) usage(`not a run directory (no manifest.json/cases): ${current}`)
+  const before = readRunDir(baseline)
+  const after = readRunDir(current)
+  if (!before.results.length) usage(`no case results in ${baseline}`)
+  if (!after.results.length) usage(`no case results in ${current}`)
+  const comparison = compareRuns(before, after)
+  if (opt.json) {
+    console.log(JSON.stringify({ baseline, current, ...comparison }, null, 2))
+  } else {
+    console.log(formatComparison(comparison, baseline))
+  }
+  return comparison.ok ? 0 : 1
+}
+
 async function main() {
   if (opt.command === "inspect") return inspectCommand()
-
-  const skillFilter = opt.command === "compare" ? opt.positionals[0] : opt.positionals[0] ?? null
-  if (opt.command === "run" && opt.positionals[1] !== undefined) {
-    const positional = Number(opt.positionals[1])
-    if (!Number.isInteger(positional) || positional < 1) usage(`case number expects a positive integer (got ${opt.positionals[1]})`)
-    if (opt.case !== null && opt.case !== positional) usage(`--case ${opt.case} and positional ${positional} disagree`)
-    opt.case = positional
+  if (opt.command === "compare" && isRunDir(opt.positionals[0]) && isRunDir(opt.positionals[1])) {
+    return runDiffCommand(opt.positionals[0], opt.positionals[1])
   }
-  if (opt.command === "compare") {
-    if (opt.positionals.length < 2) usage("compare needs <skill> <n>")
-    const positional = Number(opt.positionals[1])
-    if (!Number.isInteger(positional) || positional < 1) usage(`case number expects a positive integer (got ${opt.positionals[1]})`)
-    if (opt.case !== null && opt.case !== positional) usage(`--case ${opt.case} and positional ${positional} disagree`)
-    opt.case = positional
+
+  const skillFilter = opt.positionals[0] ?? null
+  if (opt.command === "run" || opt.command === "compare") {
+    if (opt.command === "compare" && opt.positionals.length < 2) usage("compare needs <skill> <n>")
+    const positional = opt.positionals[1] === undefined ? null : Number(opt.positionals[1])
+    if (positional !== null && (!Number.isInteger(positional) || positional < 1)) {
+      usage(`case number expects a positive integer (got ${opt.positionals[1]})`)
+    }
+    if (positional !== null) {
+      if (opt.case !== null && opt.case !== positional) usage(`--case ${opt.case} and positional ${positional} disagree`)
+      opt.case = positional
+    }
   }
 
   const corpus = loadCorpus(skillFilter)
@@ -384,16 +408,13 @@ function loadCorpus(skillFilter) {
     errors.push(...parsed.errors.map((e) => `${s.id}: ${e}`))
     warnings.push(...parsed.warnings.map((w) => `${s.id}: ${w}`))
     for (const c of parsed.cases) {
-      // `stage:` is validated against every discovered skill, not against the
-      // `--case`/`--tag` selection: a bad declaration must fail `check` even
-      // when its case is not the one being run.
+      // `stage:` is validated against every discovered skill, not the selection.
       for (const id of c.stage ?? []) {
         if (id === s.id) errors.push(`${s.id}: case ${c.n}: stage '${id}' names the skill under review`)
         else if (!known.has(id)) errors.push(`${s.id}: case ${c.n}: unknown stage '${id}'`)
       }
-      // SPEC-0057: an existence target the fixture does not contain is a warning
-      // the draw may satisfy by creating it. Computed from the fixture listing, so
-      // `list` prints it without staging.
+      // SPEC-0057: an existence target the fixture lacks is a warning the draw
+      // may satisfy by creating it; the listing answers it without staging.
       for (const w of oracleWarnings(c, fixtureEntries(s, c))) {
         warnings.push(`${s.id}: case ${c.n}: ${w.kind} ${w.arg} — ${w.reason}`)
       }
@@ -473,9 +494,7 @@ async function pool(items, limit, fn) {
   return results
 }
 
-// `check` is `--level smoke` for the whole corpus: parse, validate, resolve and
-// stage every fixture, with no model and no run directory. SPEC-0057's staging
-// checks (an unsatisfiable `unchanged` target, an unresolved `git.json`) run here.
+// `check` is `--level smoke` for the whole corpus: no model, no run directory.
 async function checkCommand(corpus) {
   const findings = [...corpus.errors]
   const targets = corpus.runnable
@@ -537,8 +556,7 @@ async function runCase(ctx, c, rep = null) {
   const scratch = makeScratch(skill.id, c.n)
   const file = run.transcriptPath(skill.id, c.n, rep)
   const index = rep?.index ?? 1
-  // Persist the draw before the next starts: a dead run keeps the paid work, and
-  // `--resume` reads it back instead of re-running it.
+  // Persist the draw before the next starts: `--resume` reads it back.
   const save = (result) => {
     run.writeDraw(skill.id, c.n, index, result)
     return result
@@ -562,9 +580,8 @@ async function runCase(ctx, c, rep = null) {
     let skillHashes = {}
     try {
       fixture = stageFixture(skill, c, scratch)
-      // Smoke is the one level that stages without a model, so it is where a
-      // snapshot assertion no fixture can satisfy is cheapest to catch
-      // (SPEC-0057). Existence warnings are authoring output, printed by check.
+      // Smoke is where a snapshot assertion no fixture can satisfy is cheapest
+      // to catch (SPEC-0057).
       const dead = oracleFindings(c, scratch).filter((f) => f.level === "error")
       if (dead.length) {
         const detail = dead.map((d) => `${d.kind} ${d.arg} (${d.reason})`).join("; ")
@@ -662,8 +679,7 @@ async function runCase(ctx, c, rep = null) {
   // A retry re-stages in a fresh scratch, so the leak check and transcript must
   // point at the attempt that produced this result.
   const { result: core, out, err, code, pinned: staged, gate, asserts, judged, durationMs, scratch: finalScratch } = exec
-  // The leak is a property of this draw's transcript and scratch, recorded per
-  // draw. A single draw is the whole case, so it says "every repetition".
+  // The leak is per draw: this transcript and this scratch.
   const leaks = leaksIn(out, finalScratch ?? scratch, HOST_ROOTS, { enforced: ctx.isolation.enforced === true })
   const clean = contaminate(core, leaks, { all: !rep })
   const skillLabel =
@@ -673,9 +689,8 @@ async function runCase(ctx, c, rep = null) {
 
   const result = caseResult(skill, c, {
     ...clean,
-    // `leaks` carries the `kind` per entry so the checker can separate a skill
-    // leak, a host read and a denied attempt (SPEC-0048); `clean.leak` is the
-    // same list, but this assignment is what the artefact is built from.
+    // `leaks` keeps the `kind` per entry so the checker separates a leak, a host
+    // read and a denied attempt (SPEC-0048).
     leak: leaks,
     ...(rep ? { rep: rep.index } : {}),
     meta: { repoSha: meta.repoSha, agent: meta.agent, model: meta.model, level: meta.level },
@@ -726,9 +741,7 @@ function patchHeader(file, { status, reason }) {
   writeFileSync(file, patchStatus(readFileSync(file, "utf8"), status, reason))
 }
 
-// The case artifact is written once, after every draw it will ever run has run.
-// That is what keeps a parallel run readable: no draw touches result.json and
-// the final write is the only one.
+// The case artifact is written once, after every draw: no draw touches it.
 function finalizeCase(state, { run, minPass }) {
   const { skill, c } = state.item
   const reps = state.results
@@ -781,8 +794,7 @@ function finalizeCase(state, { run, minPass }) {
   }
 }
 
-// Every draw of a selection through one lane pool, then one run artifact. `run`
-// and each arm of `compare` share this.
+// Every draw of a selection through one lane pool, then one run artifact.
 async function executeSelection({ items, arm, level, repeat, label, known, baseline = null, resumeDir = null }) {
   const started = Date.now()
   const isolation = isolationRecordFor(level)
@@ -811,9 +823,7 @@ async function executeSelection({ items, arm, level, repeat, label, known, basel
           // The checker may only say `isolated=yes` when the run itself records
           // that the child got a scratch cwd and a throwaway home.
           isolate: true,
-          // SPEC-0046: the richer record. `enforced` is true only when the
-          // wrapper was actually applied to the child; a host without the
-          // boundary records the explicit unenforced marker.
+          // SPEC-0046: `enforced` only when the wrapper reached the child.
           isolation,
           // Machine-specific, so the run carries them: the replay must judge the
           // transcript against the checkout that produced it, not its own.
@@ -822,8 +832,7 @@ async function executeSelection({ items, arm, level, repeat, label, known, basel
           baseline,
         },
       })
-  // A resumed manifest records only what both the recorded run and this
-  // invocation can prove, so a mixed run cannot print `isolated=yes`.
+  // A mixed run records the weaker truth, so it cannot print `isolated=yes`.
   if (resumeDir) resumeIsolation(run.manifest, isolation)
 
   const scheduledItems = items.map(({ skill: itemSkill, c }) => ({ skill: itemSkill, c, times: level === "smoke" ? 1 : repeat }))
@@ -886,7 +895,7 @@ function caseLine(result, { repeat = 1, level = "behavior" } = {}) {
     ? ` [${passed}/${clean} clean, ${result.contaminated ?? 0} contaminated, ${result.infrastructure ?? 0} infrastructure]`
     : ` [${passed}/${reps}]`
   const label = level === "smoke" ? "staging" : reps >= 5 ? "evidence" : "screening"
-  const stopped = result.stoppedEarly ? ` stopped-early (${reps}/${repeat})` : ""
+  const stopped = result.stoppedEarly ? ` stopped early (${reps}/${repeat})` : ""
   return `${result.skill} #${result.case}: ${result.status}${rate} — ${label}${stopped}${result.reason ? ` (${result.reason})` : ""} — ${result.transcript}${result.repLine ? `\n     ${result.repLine}` : ""}`
 }
 
@@ -966,9 +975,8 @@ async function runCommand(corpus) {
   return totals.failed || totals.unscored ? 1 : 0
 }
 
-// The skill tree at a commit, in a mirror that keeps the corpus reachable:
-// `<tmp>/skills/<id>` beside `<tmp>/evals -> <repo>/evals`, so the staged skill is
-// the one from the ref while its fixtures come from the checkout.
+// The skill tree at a commit, with `<tmp>/evals -> <repo>/evals` so the staged
+// skill is the one from the ref while its fixtures come from the checkout.
 function exportSkillAt(ref, id) {
   const root = mkdtempSync(join(tmpdir(), `eval-baseline-${id}-`))
   const verify = spawnSync("git", ["rev-parse", "--verify", `${ref}^{commit}`], { cwd: REPO, encoding: "utf8" })
@@ -1054,6 +1062,9 @@ function findReusable({ skill, c, arm, repeat, level, baseline, current }) {
     if ((manifest.params?.repeat ?? 1) !== repeat) continue
     const result = readCaseResult(dir, skill.id, c.n)
     if (!result) continue
+    // A stopped-early or short arm is a different experiment, and a judged arm
+    // carries a score the stored draw cannot justify to a non-judged compare.
+    if (!armReplayable(result, { repeat }).reusable) continue
     const decision = reuseDecision({ current, stored: storedIdentity(dir, result), refresh: opt.refresh })
     if (decision.reuse) return { dir, result, decision }
   }
@@ -1138,9 +1149,7 @@ async function compareCommand(corpus) {
   return 0
 }
 
-// ---------------------------------------------------------------------------
 // inspect — the stored run, read back without a new agent draw.
-// ---------------------------------------------------------------------------
 
 async function inspectCommand() {
   const dirs = opt.positionals.map((p) => resolve(p))
@@ -1189,6 +1198,7 @@ async function inspectCommand() {
       console.log(`${name}  isolation=${iso.state}${iso.mechanism ? `(${iso.mechanism})` : ""}`)
       const hostRoots = opt.hostRoots.length ? opt.hostRoots : storedHostRoots(manifest, fallback)
       const byCell = new Map()
+      let sawTranscript = false
       for (const c of readdirSync(casesDir)) {
         const cdir = join(casesDir, c)
         if (!existsSync(cdir)) continue
@@ -1196,7 +1206,9 @@ async function inspectCommand() {
           if (!file.startsWith("transcript") || !file.endsWith(".md")) continue
           const parsed = parseTranscript(readFileSync(join(cdir, file), "utf8"))
           if (!parsed) continue
+          sawTranscript = true
           if (opt.case !== null && parsed.n !== opt.case) continue
+          if (opt.skill && parsed.skill !== opt.skill) continue
           const key = `${parsed.skill}#${parsed.n}`
           // SPEC-0048: a denied corpus attempt is recorded apart from a read. The
           // replay must apply the same split as a fresh draw.
@@ -1212,12 +1224,13 @@ async function inspectCommand() {
           byCell.set(key, entry)
         }
       }
-      if (!byCell.size) {
+      if (!sawTranscript) {
         if (explicit) console.error(`no transcripts in run dir: ${runDir}`)
         unreadable += explicit ? 1 : 0
         skipped += explicit ? 0 : 1
         continue
       }
+      if (!byCell.size) continue
       for (const [cell, entry] of [...byCell.entries()].sort(([a], [b]) => a.localeCompare(b))) {
         cells++
         const rules = [entry.leak ? "leak" : "", entry.host ? "host" : ""].filter(Boolean)
@@ -1239,7 +1252,7 @@ async function inspectCommand() {
   }
 
   if (opt.judge) {
-    if (!opt.judge || opt.judge === "") usage("--judge needs a model (or 'default')")
+    if (JUDGE_MODEL === TARGET) console.error(`judge: ${JUDGE_MODEL} is also the model under test (self-judged)`)
     const root = opt.root ?? join(REPO, "skills")
     const cases = loadCases(root)
     const seenDirs = new Set()
@@ -1257,6 +1270,7 @@ async function inspectCommand() {
         continue
       }
       if (opt.case !== null && stored.case !== opt.case) continue
+      if (opt.skill && stored.skill !== opt.skill) continue
       const c = cases.get(`${stored.skill}#${stored.case}`)
       if (!c) {
         missing++
@@ -1297,7 +1311,7 @@ async function inspectCommand() {
 
   if (!opt.replay) {
     if (!dirs.length) usage("inspect needs a run directory (or --leaks/--replay/--judge)")
-    const records = dirs.map((dir) => storedRunStatus(dir, { case: opt.case }))
+    const records = dirs.map((dir) => storedRunStatus(dir, { case: opt.case, skill: opt.skill }))
     if (opt.json) {
       console.log(JSON.stringify(records, null, 2))
       return 0
@@ -1315,6 +1329,7 @@ async function inspectCommand() {
     const parsed = parseTranscript(readFileSync(path, "utf8"))
     if (!parsed) continue
     if (opt.case !== null && parsed.n !== opt.case) continue
+    if (opt.skill && parsed.skill !== opt.skill) continue
     scanned++
     const c = cases.get(`${parsed.skill}#${parsed.n}`)
     if (!c) {

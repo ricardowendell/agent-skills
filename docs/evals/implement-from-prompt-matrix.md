@@ -30,7 +30,7 @@ the judge, not of the run; the deterministic cell is the decision.
 Before Gate A, case #1 ran 12 draws with the skill to check the load gate:
 
 ```sh
-node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 1 --repeat 12 --run
+node scripts/eval.mjs run implement-from-prompt 1 --root skills --repeat 12
 ```
 
 This invocation predates the `--stop 12/0` rule; the default `5/3` stop never
@@ -44,9 +44,9 @@ load defect in #2 and #8.
 ## Gate A — default model, five repetitions, judge `opencode-go/gpt-6-luna`
 
 ```sh
-node scripts/run-evals.mjs --root skills --tag matrix --repeat 5 --run --judge opencode-go/gpt-6-luna
-node scripts/run-evals.mjs --root skills --tag trigger --repeat 5 --run
-node scripts/run-evals.mjs --root skills --tag matrix --repeat 5 --no-skill --run --judge opencode-go/gpt-6-luna
+node scripts/eval.mjs run --tag matrix --root skills --repeat 5 --judge opencode-go/gpt-6-luna
+node scripts/eval.mjs run --tag trigger --root skills --repeat 5
+node scripts/eval.mjs run --tag matrix --root skills --repeat 5 --arm without --judge opencode-go/gpt-6-luna
 ```
 
 Run directories: with skill `2026-11-05T11-45-57--implement-from-prompt`, trigger
@@ -100,19 +100,19 @@ The red cells, by assertion or gate reason:
 Default model, `--repeat 12`, no judge:
 
 ```sh
-node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 1 --repeat 12 --run
-node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 1 --repeat 12 --no-skill --run
-node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 8 --repeat 12 --run
-node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 8 --repeat 12 --no-skill --run
+node scripts/eval.mjs run implement-from-prompt 1 --root skills --repeat 12
+node scripts/eval.mjs run implement-from-prompt 1 --root skills --repeat 12 --arm without
+node scripts/eval.mjs run implement-from-prompt 8 --root skills --repeat 12
+node scripts/eval.mjs run implement-from-prompt 8 --root skills --repeat 12 --arm without
 ```
 
 Second model, `--repeat 5`, no judge:
 
 ```sh
-node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 1 --repeat 5 --model opencode-go/gpt-6-luna --run
-node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 1 --repeat 5 --model opencode-go/gpt-6-luna --no-skill --run
-node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 8 --repeat 5 --model opencode-go/gpt-6-luna --run
-node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 8 --repeat 5 --model opencode-go/gpt-6-luna --no-skill --run
+node scripts/eval.mjs run implement-from-prompt 1 --root skills --repeat 5 --model opencode-go/gpt-6-luna
+node scripts/eval.mjs run implement-from-prompt 1 --root skills --repeat 5 --model opencode-go/gpt-6-luna --arm without
+node scripts/eval.mjs run implement-from-prompt 8 --root skills --repeat 5 --model opencode-go/gpt-6-luna
+node scripts/eval.mjs run implement-from-prompt 8 --root skills --repeat 5 --model opencode-go/gpt-6-luna --arm without
 ```
 
 | model | case | reps | with skill | control | failing assertion in the control |
@@ -138,7 +138,7 @@ file read, so the run scored as a control pass. The runner now detects that read
 as contamination, so the cell was re-measured at `8777e0b`:
 
 ```sh
-node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 1 --repeat 5 --model opencode-go/gpt-6-luna --no-skill --run
+node scripts/eval.mjs run implement-from-prompt 1 --root skills --repeat 5 --model opencode-go/gpt-6-luna --arm without
 ```
 
 `2026-11-06T07-05-38--implement-from-prompt--opencode-go-gpt-6-luna--without-skill`:
@@ -168,11 +168,11 @@ no longer a second reason to stop. Measured at commit `6dd38aa`, default model,
 no judge:
 
 ```sh
-node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 4 --repeat 5 --run
-node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 4 --repeat 5 --no-skill --run
-node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 1 --repeat 5 --run
-node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 7 --repeat 5 --run
-node scripts/run-evals.mjs --root skills --skill implement-from-prompt --case 8 --repeat 5 --run
+node scripts/eval.mjs run implement-from-prompt 4 --root skills --repeat 5
+node scripts/eval.mjs run implement-from-prompt 4 --root skills --repeat 5 --arm without
+node scripts/eval.mjs run implement-from-prompt 1 --root skills --repeat 5
+node scripts/eval.mjs run implement-from-prompt 7 --root skills --repeat 5
+node scripts/eval.mjs run implement-from-prompt 8 --root skills --repeat 5
 ```
 
 | case | arm | run directory | passed | gate |

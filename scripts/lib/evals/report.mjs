@@ -68,8 +68,23 @@ export function formatComparison({ regressions, fixes, added, missing, ok }, bas
   return lines.join("\n")
 }
 
-export function readRun(path) {
-  return JSON.parse(readFileSync(path, "utf8"))
+// A whole run directory as the comparison expects it: the manifest's provenance
+// plus every stored case result. `summary.json` is the manifest, not a run
+// summary, so the results are read from `cases/*/result.json` instead.
+export function readRunDir(dir) {
+  const manifest = readManifest(dir)
+  const casesDir = join(dir, "cases")
+  const results = []
+  if (existsSync(casesDir)) {
+    for (const entry of readdirSync(casesDir).sort()) {
+      const file = join(casesDir, entry, "result.json")
+      if (!existsSync(file)) continue
+      try {
+        results.push(JSON.parse(readFileSync(file, "utf8")))
+      } catch {}
+    }
+  }
+  return { ...(manifest ?? {}), results }
 }
 
 // The draw ladder is a label, not a threshold: 1–3 draws point at a direction,
@@ -131,11 +146,22 @@ export function formatDuration(ms) {
 }
 
 // Movement is read against the first arm (`none`), so the reader sees whether the
-// skill moved the rate rather than only where each arm landed.
+// skill moved the rate rather than only where each arm landed. It compares
+// rates, not numerators: `5/5` and `4/4` are both 100% and a raw numerator would
+// call the smaller denominator a regression. A zero denominator is unknown, not
+// a win, so it produces no claim either way.
+function passRate(score) {
+  const [passed, clean] = score.passed
+  return clean > 0 ? passed / clean : null
+}
+
 function movement(score, base) {
   if (!base) return ""
-  if (score.passed[0] > base.passed[0]) return "-> improves"
-  if (score.passed[0] < base.passed[0]) return "-> regresses"
+  const before = passRate(base)
+  const after = passRate(score)
+  if (before === null || after === null) return ""
+  if (after > before) return "-> improves"
+  if (after < before) return "-> regresses"
   return ""
 }
 
@@ -275,7 +301,7 @@ export function transcriptPaths({ dir, runDirs = [] }) {
   return found
 }
 
-export function storedRunStatus(dir, { case: caseNumber = null } = {}) {
+export function storedRunStatus(dir, { case: caseNumber = null, skill = null } = {}) {
   const manifest = readManifest(dir)
   const casesDir = join(dir, "cases")
   const cases = []
@@ -294,6 +320,7 @@ export function storedRunStatus(dir, { case: caseNumber = null } = {}) {
         continue
       }
       if (caseNumber !== null && result.case !== caseNumber) continue
+      if (skill !== null && result.skill !== skill) continue
       const draws = result.repetitions ?? [result]
       const failures = draws.flatMap((draw, i) =>
         (draw.assertions ?? []).filter((a) => !a.pass).map((a) => ({ draw: draw.rep ?? i + 1, assertion: `${a.kind} ${a.arg}` })),
@@ -323,7 +350,8 @@ export function formatStoredStatus({ dir, manifest, cases }, { verbose = false }
   )
   for (const c of cases) {
     const rate = c.reps ? ` [${c.passed ?? "?"}/${c.reps}]` : ""
-    const stopped = c.stoppedEarly ? " stopped-early" : ""
+    const requested = manifest?.params?.repeat ?? null
+    const stopped = c.stoppedEarly ? ` stopped early (${c.reps}/${requested ?? "?"})` : ""
     lines.push(`  ${c.case}: ${c.status}${rate}${stopped}${c.note ? ` — ${c.note}` : ""}`)
     if (verbose || c.status === "failed") {
       for (const f of c.failures) lines.push(`    r${f.draw}: ${f.assertion}`)

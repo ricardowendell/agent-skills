@@ -183,12 +183,24 @@ ignored:
 | `replay-evals.mjs --leaks --all` | `inspect --leaks --all` |
 | `replay-evals.mjs --run <id>` | `inspect <run-dir>` (a directory, not a prefix) |
 | `replay-evals.mjs --judge <model>` | `inspect --judge <model> <run-dir…>` |
-| `--baseline <file>` / `--save-baseline` | dropped: `compare` is the comparison, by arm |
+| `--baseline <file>` / `--save-baseline` | dropped: `compare` is the comparison, by arm or by run directory |
+| `--quiet` (replay) | dropped: `inspect --replay` prints only moved verdicts by default; `--verbose` prints every verdict |
+| `--skill <id>` (replay) | kept: `inspect --leaks --all --skill <id>`, and the same filter on `--replay`/`--judge` |
 | `--shared` / `--i-know` / `--no-isolate` | dropped: a run is always standalone and isolated; the isolation contract is a reuse input |
 
 Kept with their meanings: `--root`, `--model`, `--agent`, `--case`, `--tag`,
 `--level`, `--timeout`, `--stall-seconds`, `--judge`, `--judge-threshold`,
 `--json`, `--resume`, `--repeat`, `--stop`, `--min-pass`, `--concurrency`.
+`--judge` takes an optional model on `run`/`compare` (bare means the model under
+test, and the self-judged warning is printed), but `inspect --judge` requires one
+(`--judge default` is the explicit form).
+
+Exit codes are deliberate: **2** is a usage error, **1** is a finding (`check`),
+a failed/unscored draw (`run`), a regressed or missing cell (the run-dir
+`compare`), or a moved verdict (`inspect --replay --changed`). The single-case
+arm `compare` exits **0**: it prints a decision, it is not a gate. The old
+`run-evals.mjs` used 1 for usage and `replay-evals.mjs` used 2; one CLI has one
+code per class.
 
 ## Measuring
 
@@ -272,15 +284,22 @@ node scripts/eval.mjs inspect ~/.local/share/opencode/evals/runs/<timestamp>--<l
   miss visible. `check-eval-run` prints
   `warn stopped-early … reps=N of requested 12` for a case that stopped short, so
   an eight-draw canary is never read as 12/12.
-- `compare` is the regression check: the `none` arm is the control, the
-  `candidate` arm is the working tree, and `--against <ref>` adds the skill as it
-  was at that commit. Reuse is explicit (`reused <dir>`), so a stale arm cannot
-  hide inside a fresh-looking table.
+- `compare` has two forms. `compare <skill> <n>` is the arm comparison: the
+  `none` arm is the control, the `candidate` arm the working tree, and
+  `--against <ref>` adds the skill as it was at that commit; reuse is explicit
+  (`reused <dir>`), so a stale arm cannot hide inside a fresh-looking table.
+  `compare <run-dir-a> <run-dir-b>` is the whole-run regression diff: it reads
+  both run directories, prints every regression, fix, new and missing cell, and
+  exits 1 when any cell regresses or disappears. The arm form reports a
+  decision; the run-dir form is the gate.
 - Publish a measured set in `docs/evals/review-code-matrix.md` (or a new doc
   beside it); publish a single case's measurement in its `why:` line. Update
   [`docs/evals/coverage.md`](docs/evals/coverage.md) either way.
 - Keep a failed control as a finding. The mutation pilot in
   `docs/evals/experiments/` records two `invalid` results on purpose.
+  Archived experiments under `docs/evals/experiments/` keep the commands they ran
+  (`run-evals.mjs`/`replay-evals.mjs` included): they are history, not live
+  instructions, and are not rewritten.
 
 ## Checking a publication
 

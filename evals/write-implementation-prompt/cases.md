@@ -4,7 +4,7 @@ Representative prompts and the trajectory this skill should produce.
 
 A fixture for case 1 lives in `references/evals/1/` and is copied into the
 scratch repo before the prompt runs. `- [assert] <kind> <arg>` lines are
-machine-checked after the case (see `run-evals.mjs`).
+machine-checked after the case (see `eval.mjs`).
 
 1. **Create the implementation prompt for SPEC-0007.**
    - prompt: Create the implementation prompt for SPEC-0007.

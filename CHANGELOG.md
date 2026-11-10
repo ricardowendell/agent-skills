@@ -16,13 +16,17 @@ skills, which cases, and which published measurements.
   is the only entry point, with `list`, `check`, `run`, `compare` and `inspect`.
   Defaults now follow the cost of the question: `run` is one draw and `compare`
   is three per arm, with 1–3 labelled **screening** and 5+ **evidence**; the
-  scorecard prints the numerator and denominator per arm on one screen, and
-  `--stop` reports the draws that actually ran. `check` parses, validates,
+  scorecard prints the numerator and denominator per arm on one screen and
+  compares rates, never numerators (`5/5` and `4/4` are both 100%), and `--stop`
+  reports the draws that actually ran. `check` parses, validates,
   resolves and dry-stages every fixture without a model. `compare` reuses an arm
   only when model+provider, prompt hash, fixture hash, assertion/grading hash,
   skill hash and the isolation contract all match, and prints `reused <dir>` or
   `ran <dir>` for each; `--refresh` forces a rerun and `--against <ref>` pins the
-  baseline by commit. `--no-skill` became `--arm without`; `--baseline`,
+  baseline by commit, while a stopped-early, short or judged arm is never reused.
+  `compare <run-dir-a> <run-dir-b>` restores the whole-run regression gate and
+  exits 1 on any regressed or missing cell. `--no-skill` became `--arm without`;
+  `--baseline`,
   `--save-baseline`, `--shared`, `--i-know` and `--no-isolate` are gone rather
   than accepted and ignored. `docs/pipeline.md`'s `selftest:` names the new
   command, so that policy edit is in this change and needs the human gate at
