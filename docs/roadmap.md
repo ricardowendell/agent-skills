@@ -5,10 +5,11 @@ pipeline (`docs/pipeline.md`) governs how work runs; this page says what the wor
 is and in which order. A change of direction is a human decision, and the
 releases themselves are the record of what shipped.
 
-Status: **0.6.2 released** on 2026-11-07. The next release is 0.7.0, but it is
-paused: the corpus wave stopped at 30/40 draws on a post-load stall and the
-holdout was not drawn. With the corpus parked, the stack review (#12) is the
-next planned work.
+Status: **0.6.2 released** on 2026-11-07. **0.6.3** is the next cut: the stack
+review (#12) and the detector/deny-layer work (`SPEC-0046`–`SPEC-0052`) are
+merged but unreleased. **0.7.0** remains the corpus, paused: the wave stopped at
+30/40 draws on a post-load stall and the holdout was not drawn. The data-product
+program (#13–#21) is parked behind #6 and has no release assigned.
 
 ## Inputs
 
@@ -19,7 +20,7 @@ scope and the external references. A spec is written at groom, from the task.
 
 | issue | task | spec | what it is |
 | --- | --- | --- | --- |
-| #6 | `TASK-56` | `SPEC-0034` (ready) | the discriminating corpus for iterative work (the gate) |
+| #6 | `TASK-56` | `SPEC-0034` (paused) | the discriminating corpus for iterative work (the gate) |
 | #7 | `TASK-57` | `SPEC-0035` (paused) | spike: a localized refinement path without a full spec |
 | #8 | `TASK-58` | `SPEC-0036` (paused) | planning a visual change from element and design tokens |
 | #9 | `TASK-59` | `SPEC-0037` (paused) | light solution framing before a template is chosen |
@@ -67,9 +68,30 @@ measured demand, and it splits into five specs:
 | `SPEC-0044` | `TASK-68` | `harness-state` by capability slots | 0041, 0043 |
 | `SPEC-0045` | `TASK-69` | evals, coverage and `CHANGELOG.md` | 0042–0044 |
 
-`SPEC-0041` is `ready` and is the next dispatchable item; the other four start
-`paused`. 0042 and 0043 run in parallel after 0041, then 0044, then 0045. The
-corpus (`SPEC-0034`) stays parked at `91ee5ff` until a human decision.
+All five are `implemented` and merged on 2026-11-09 (`cd1fb1d`); they ship
+together in **0.6.3**. The corpus (`SPEC-0034`) stays parked at `91ee5ff` until a
+human decision.
+
+## Data product engineering (#13–#21)
+
+Nine issues arrived on 2026-11-10 (seven P1, two P2). None is in 0.7.0: the gate
+is #13, the discrimination corpus for architecture and data, and #13 itself
+depends on #6. The gate is a spike, not a mandate to create skills; each issue
+may end as `reuse external`, `extend existing`, `build new` or `do not add`.
+
+`TASK-78`–`TASK-86` mirror the issues; no spec is written before the task is
+groomed. The order is the one the issues declare:
+
+```
+13 ──► 14, 15, 16, 17
+16 ──► 18
+15, 16, 18 ──► 19
+17 ──► 20
+18, 20 ──► 21
+```
+
+#20 also needs a real post-migration consumer. Nothing here changes the 0.7.0
+slice or authorises paid draws before the corpus is decided.
 
 ## Where the bottleneck is
 
@@ -78,7 +100,7 @@ dead run loses no paid draw, a direct `SKILL.md` read is a load, and the store c
 be audited for the aborts the old results dropped.
 
 The constraint that remains is the **shape of what the corpus can see**. It has
-76 cases, 26 of them `manual`, and its assertion kinds are file, reply, skill and
+89 cases, 3 of them `manual`, and its assertion kinds are file, reply, skill and
 shell shaped. That is enough to measure a spec-driven change to a file tree. It
 cannot yet measure a small iterative change, a visual change, or an experience
 review — and `manual` cases are excluded from a run, so they cannot separate two
@@ -94,8 +116,9 @@ it.
 | release | claim | work | cost |
 | --- | --- | --- | --- |
 | **0.6.2** (released) | an aborted run is never clean | `TASK-52`, `TASK-38`, `TASK-39`, `TASK-40`, `TASK-54`; `TASK-36` documented, `TASK-35` done | 0 draws |
-| **0.7.0** | the corpus can see a small change | `SPEC-0046` (deny layer) as a prerequisite, then `TASK-56` (deterministic slice) and the verdict on `TASK-57` | ~30–40 draws for the corpus plus ~50 for `SPEC-0047` |
-| **unscheduled** | the stack is chosen with numbers | `SPEC-0041`–`SPEC-0045` (#12) | measurement, few or no draws |
+| **0.6.3** (next) | the stack is chosen with numbers; the control arm is enforced | `SPEC-0041`–`SPEC-0045` (#12) and `SPEC-0046`–`SPEC-0052` | measurement, no new draws |
+| **0.7.0** | the corpus can see a small change | `TASK-56` (deterministic slice) and the verdict on `TASK-57`, resuming `SPEC-0034` from the parked tag | ~10 draws to finish, plus the holdout |
+| **unscheduled** | data products are measured before any skill is built | `TASK-78`–`TASK-86` (#13–#21) | measurement |
 | **unscheduled** | the branch can be synced safely | `TASK-62` (`sync-branch`), after the corpus | ~10–20 draws, mostly deterministic |
 | **unscheduled** | a screen can be reviewed | `TASK-61` (oracle) and then `TASK-58`/`TASK-60` — no consumer today | measurement |
 | **unscheduled** | — | `TASK-59` framing, conditional on a gap the corpus shows | measurement |
@@ -107,15 +130,14 @@ it.
 
 **Paused 2026-11-08.** The first wave spent 30 of 40 draws; the #12 control
 draw stalled post-load, so the frozen holdout #11 was never drawn. The branch is
-parked and `TASK-50` is reopened. The steps below resume only on an explicit
-decision.
+parked and `TASK-50` is reopened. The deny layer and the detector work were
+delivered in 0.6.3 (`SPEC-0046`–`SPEC-0052`); what remains is the corpus slice
+itself. The steps below resume only on an explicit decision.
 
-0. **`SPEC-0046` — deny the control arm the corpus.** Promoted on 2026-11-09
-   when a consumer asked: every behavioural control cell in the repo is
-   `unresolved` because `--no-skill` still reads the installed skill
-   (`SPEC-0045`: 33 of 35 draws). Until the control is enforced, a corpus
-   verdict about the skill is really a verdict about the harness. `SPEC-0047`
-   then re-measures the four blocked cells; it is blocked by `SPEC-0046`.
+0. **The harness precondition is met.** The control arm is denied the corpus and
+   the eval store, and the detector separates a denied attempt from a leak
+   (`SPEC-0046`–`SPEC-0052`, detector v6). The control no longer reads the
+   install.
 1. **Freeze the holdout before the first draw**, the way `review-code` #7 was
    frozen for issue #5. A holdout chosen after seeing results is not a holdout.
 2. **`TASK-56` — three or four cases, deterministic oracles.** Text, file and
@@ -139,13 +161,10 @@ consumer first, then the oracle, then the skills. Not the other way around.
 
 ## Out of scope until a consumer asks
 
-- **A deny layer for the control arm.** `TASK-29` chose detection over denial;
-  the consequence was that `capture-idea` #1, `process-inbox` #1 and
-  `write-implementation-prompt` #1 stayed `unresolved`. That was honest, and the
-  rule was that the deny layer becomes its own task when a consumer needs one of
-  those cells. A consumer asked on 2026-11-09 (`SPEC-0045`: 33 of 35 control
-  draws read the install), so it moved to 0.7.0 as `SPEC-0046`, with
-  `SPEC-0047` re-measuring the blocked cells.
+The deny layer left this list on 2026-11-09, when `SPEC-0045` showed every
+behavioural control reading the install (33 of 35 draws). It ships in 0.6.3 as
+`SPEC-0046`–`SPEC-0052`, closed by detector v6.
+
 - **More cases of the same shape, a bigger corpus, an expanded judge.**
 - **A token-budget mechanism** on top of the health delta.
 - **pdlc phase markers (`PDLC-83`).** Another repo; it does not block this one.
@@ -168,7 +187,10 @@ consumer first, then the oracle, then the skills. Not the other way around.
 - A holdout is frozen before the first draw.
 - F0 starts with an **inventory of the store**, not only the replay table.
 - A control supplies a rate only with five valid draws; an abort is not a draw.
-- A release is a claim. 0.6.2 is not "almost there" if the store re-scan is red.
+- **A pass rate is counted over clean draws.** A pass whose draw read the answer
+  key (the eval store) is not a pass; the draw leaves the clean base
+  (`SPEC-0052`, bootstrap #19 r1).
+- A release is a claim. 0.6.3 is not "almost there" if the store re-scan is red.
 - Never rewrite a published number; name the correction and keep the old value as
   history.
 - **No skill is created before the corpus shows a gap.** Extending an existing
