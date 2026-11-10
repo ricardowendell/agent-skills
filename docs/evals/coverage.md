@@ -176,10 +176,10 @@ every one reads the store:
 Three already-dirty draws gained store hits without a verdict change:
 `2026-11-04T21-49-16--survey-inflight-work` #3,
 `2026-11-06T15-49-43--write-implementation-prompt` #5 r3 and
-`2026-11-06T16-02-56--write-implementation-prompt` #5 r4 (already `dirty(leak,host)`
-from a host read of `/Users/wendell/.agents`). No other draw changed: every
-verdict change is a store read, no draw gained a non-store hit, and no cell that
-was clean for another reason became dirty. The two SPEC-0050 controls affected
+`2026-11-06T16-02-56--write-implementation-prompt` #5 r4 (already `dirty(host)`
+under v5 from a host read of `/Users/wendell/.agents`; v6 adds the store `leak`).
+No other draw changed: every verdict change is a store read, no draw gained a
+non-store hit, and no cell that was clean for another reason became dirty. The two SPEC-0050 controls affected
 are re-judged above: `groom-backlog` #2 is 4/5 clean with 4/4 passed
 (non-discriminator) and `bootstrap-project-harness` #19 is 4/5 clean with 0/4
 passed over the clean base (separator 5/5 vs 0/4).
