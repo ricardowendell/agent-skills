@@ -388,8 +388,8 @@ original 60 ceiling to close the case-10 control.
 | #9 | control | `2026-11-10T15-12-14--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 3/5 | `verdict REJECT` (r3, r4), `reply src/export\.js:[0-9]+` (r3 only) | **token/contract separator**, non-discriminator on judgement |
 | #10 | with-skill (fixed fixture) | `2026-11-10T15-39-17--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | **token/contract separator**; substantive judgement matches (both approve), keep |
 | #10 | control | `2026-11-10T15-54-47--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `verdict APPROVE`, `reply Not verified` (the control approves in prose; no token and no `Not verified` section) | **token/contract separator**, non-discriminator on judgement |
-| #1 | with-skill | `2026-11-10T15-20-12--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | **separator** (5/5 vs 0/5), keep |
-| #1 | control | `2026-11-10T15-23-10--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `verdict APPROVE`, `reply Not verified` | **separator** |
+| #1 | with-skill | `2026-11-10T15-20-12--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | **token/contract separator**; substantive judgement matches (both approve), keep |
+| #1 | control | `2026-11-10T15-23-10--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `verdict APPROVE` (r1, r4), `reply Not verified` (5/5) | **token/contract separator**, non-discriminator on judgement |
 | #2 | with-skill | `2026-11-10T15-26-12--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 4/5 | `verdict REJECT`, `reply AC-2`, `reply 21\.63\|noise\|float` (r4) | **non-discriminator** (4/5 vs 4/5), keep |
 | #2 | control | `2026-11-10T15-28-46--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 4/5 | `verdict REJECT` (r5) | **non-discriminator** |
 | #7 | with-skill | `2026-11-10T15-31-48--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | **separator** (5/5 vs 0/5), holdout, keep |
@@ -416,6 +416,11 @@ emits no `VERDICT: APPROVE` and no `Not verified` section, so those two
 assertions fail. Same classification: token/contract separator,
 non-discriminator on the substantive judgement (both approve). The control
 closes the arm comparison; #10 is no longer unresolved.
+
+Case 1's control approves the clean diff in prose 5/5 ("compliant — approve",
+"approve", "Passes SPEC-0007"), but fails `reply Not verified` in 5/5 and
+`verdict APPROVE` in r1/r4. It is a token/contract separator, non-discriminator
+on the substantive judgement, and the case stays.
 
 **Case 10's first skill arm is not evidence.** The run
 `2026-11-10T15-15-21--review-code--agentworks-deepseek-v4-1-flash` (5/5 clean,

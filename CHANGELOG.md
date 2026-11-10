@@ -51,8 +51,10 @@ skills, which cases, and which published measurements.
   arm is **5/5**; its control is 5/5 clean and **0/5** passed — it approves the
   same correct retry in prose 5/5 but emits no `VERDICT: APPROVE` and no `Not
   verified`, so #10 is the same token/contract separator and a non-discriminator
-  on judgement. Regression #1 separates **5/5 vs 0/5**, #2 stays a
-  **non-discriminator** (4/5 vs 4/5), and the #7 holdout is **5/5 vs 0/5**. Case
+  on judgement. Regression #1 is the same kind of token/contract separator
+  (**5/5 vs 0/5**; the control approves in prose 5/5 but misses `Not verified`
+  in 5/5 and the token in r1/r4), #2 stays a **non-discriminator** (4/5 vs
+  4/5), and the #7 holdout is **5/5 vs 0/5**. Case
   10's first skill arm (5 draws) correctly blocked a fixture whose tests did not
   prove AC-2's delay or AC-3's defaults/non-integer inputs; the fixture was
   strengthened and the arm re-run, with no `expect:` or assertion changed. The

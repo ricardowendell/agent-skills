@@ -195,7 +195,7 @@ deniedDraws=0`; the run directories are in `docs/evals/coverage.md`.
 | 8 — interface break, green suite | 5/5 | 0/5 | token/contract separator; both reject substantively, keep |
 | 9 — introduced injection | 5/5 | 3/5 | token/contract separator; both reject substantively, keep |
 | 10 — correct retry, no blocking | 5/5 (fixed fixture) | 0/5 | token/contract separator; both approve substantively, keep |
-| 1 — clean diff regression | 5/5 | 0/5 | separator, keep |
+| 1 — clean diff regression | 5/5 | 0/5 | token/contract separator; both approve substantively, keep |
 | 2 — rounding defect regression | 4/5 | 4/5 | non-discriminator, keep |
 | 7 — red-gate holdout | 5/5 | 0/5 | separator, keep |
 
@@ -208,7 +208,9 @@ emit prose after the label. Case 10's fixed skill arm is 5/5. Its control
 is 5/5 clean and 0/5 passed: it approves the same correct retry in prose 5/5 but
 emits no `VERDICT: APPROVE` and no `Not verified` section. The same
 classification applies: token/contract separator, non-discriminator on the
-substantive judgement.
+substantive judgement. Case 1's control approves the clean diff in prose 5/5 but
+fails `reply Not verified` in 5/5 and `verdict APPROVE` in r1/r4; it is the same
+kind of token/contract separator.
 
 Case 10's first skill arm
 (`2026-11-10T15-15-21--review-code--agentworks-deepseek-v4-1-flash`) is **not
