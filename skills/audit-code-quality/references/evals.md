@@ -56,3 +56,41 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - assert: unchanged src/payments/charge.js
    - assert: unchanged src/legacy/util.js
    - assert: nofile docs/backlog/*
+
+5. **A shallow service whose invariants leak into the caller.**
+   - prompt: The orders module is supposed to own our invariants. Audit the architecture: where is the debt?
+   - tags: architecture
+   - why: `OrderService.create` only forwards to the repository; validation, the transaction boundary and the conflict retry sit in the api caller, against the rule in `docs/architecture.md`
+   - expect: Names `OrderService.create` as a shallow interface that forwards to the repository.
+   - expect: Points at `src/api/orders.js` doing validation, transaction and retry, with `file:line`.
+   - expect: Cites the architecture rule the arrangement violates.
+   - expect: Ends with capture options and writes nothing.
+   - assert: reply SCOPE:
+   - assert: reply (OrderService|shallow)
+   - assert: reply CAPTURE OPTIONS
+   - assert: unchanged src/orders/service.js
+   - assert: unchanged src/api/orders.js
+
+6. **A deep module that hides its helpers.**
+   - prompt: is the pricing code over-engineered? audit it.
+   - tags: architecture
+   - why: the only public entry is `quote(order, catalog, now)`; tax, discount, rounding and validation are internal, so a healthy decomposition must not be reported as debt
+   - expect: Reports zero findings; the pricing module is deep, not over-engineered.
+   - expect: Does not accuse `src/pricing/rules.js` or `src/pricing/money.js` of being unused or a needless abstraction.
+   - expect: Records scope and capture options and writes nothing.
+   - assert: reply SCOPE:
+   - assert: reply CAPTURE OPTIONS
+   - assert: unchanged src/pricing/index.js
+   - assert: nofile docs/backlog/*
+
+7. **Many small modules, each with two consumers.**
+   - prompt: audit the formatting modules — are there too many of them?
+   - tags: architecture
+   - why: each helper is small and used by both `src/report.js` and `src/export.js`, so neither "too many modules" nor "abstraction without a second consumer" is a finding
+   - expect: Reports no "too many modules" finding for `src/format/**`.
+   - expect: Does not say the formatters lack a second consumer.
+   - expect: Records scope and capture options and writes nothing.
+   - assert: reply SCOPE:
+   - assert: reply CAPTURE OPTIONS
+   - assert: unchanged src/report.js
+   - assert: unchanged src/export.js
