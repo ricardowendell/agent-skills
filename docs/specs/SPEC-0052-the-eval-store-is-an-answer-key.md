@@ -26,7 +26,7 @@ files:
   - scripts/lib/evals/leak.test.mjs
   - docs/evals/coverage.md
   - CHANGELOG.md
-  - docs/specs/active/SPEC-0052-the-eval-store-is-an-answer-key.md
+  - docs/specs/SPEC-0052-the-eval-store-is-an-answer-key.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check
@@ -35,7 +35,7 @@ tests:
   - node --test skills/bootstrap-project-harness/scripts/*.test.mjs
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0052-the-eval-store-is-an-answer-key.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0052-the-eval-store-is-an-answer-key.md --base main
 ---
 
 # SPEC-0052: The eval store is an answer key

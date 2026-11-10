@@ -38,7 +38,7 @@ separate two arms; the release itself spent no new paid draw.
   already dirty and gained a store hit without a verdict change. Every verdict
   change is a store read, no draw gained a non-store hit, and nothing else
   became dirty. Source:
-  `docs/specs/active/SPEC-0052-the-eval-store-is-an-answer-key.md`.
+  `docs/specs/SPEC-0052-the-eval-store-is-an-answer-key.md`.
 - **Content counts only for the path it names (SPEC-0051, TASK-76).** The eval
   detector now credits a corpus hit with content only when the call returned
   **that path's** content (detector v5, `def64b2d6a1baa6e`). A non-shell result
