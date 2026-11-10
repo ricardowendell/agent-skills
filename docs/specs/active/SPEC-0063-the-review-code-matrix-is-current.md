@@ -164,15 +164,16 @@ None.
 
 **The ten classes.** Cases 1, 2, 7–10 are copied from `coverage.md`'s SPEC-0056
 wave table; cases 3 and 4 have no published class there, so the definitions in
-F1 are applied to their published cells and the matrix row says so; cases 5 and
-6 are trigger cases with `gate: off` and no published measurement.
+F1 are applied to their published cells and every class cell in the matrix marks
+them `(derived — no class published)`; cases 5 and 6 are trigger cases with
+`gate: off` and no published measurement.
 
 | case | class | basis (run directory / published cell) |
 | --- | --- | --- |
 | 1 | **token/contract separator** | `2026-11-10T15-20-12--review-code--agentworks-deepseek-v4-1-flash` 5/5 vs `2026-11-10T15-23-10--review-code--agentworks-deepseek-v4-1-flash--without-skill` 0/5; both approve, the control misses `verdict APPROVE` (r1, r4) and `reply Not verified` (5/5) |
-| 2 | **non-discriminator** | `2026-11-10T15-26-12--review-code--agentworks-deepseek-v4-1-flash` 4/5 vs `2026-11-10T15-28-46--review-code--agentworks-deepseek-v4-1-flash--without-skill` 4/5; the skill's r4 emits no `VERDICT:` line |
-| 3 | **separator** | `2026-11-03T10-06-33--review-code` 5/5 vs `2026-11-03T09-56-47--review-code--without-skill` 1/5; the skill withholds or names the missing basis, the control returns a verdict in 4/5. Pre-detector history, no class published in `coverage.md` |
-| 4 | **token/contract separator** | `2026-11-05T07-34-32--review-code` 5/5 vs `2026-11-05T07-47-21--review-code--without-skill` 3/5; both reject, the two control misses are the missing hash prefixes. Pre-detector history, no class published in `coverage.md` |
+| 2 | **non-discriminator** | `2026-11-10T15-26-12--review-code--agentworks-deepseek-v4-1-flash` 4/5 vs `2026-11-10T15-28-46--review-code--agentworks-deepseek-v4-1-flash--without-skill` 4/5; the skill's r4 returns no review at all (it stopped after its last tool call), and the control's r5 replays as `REJECT` |
+| 3 | **separator** (derived) | `2026-11-03T10-06-33--review-code` 5/5 vs `2026-11-03T09-56-47--review-code--without-skill` 1/5; the skill withholds or names the missing basis, the control returns a verdict in 4/5. Pre-detector history, no class published in `coverage.md` |
+| 4 | **token/contract separator** (derived) | `2026-11-05T07-34-32--review-code` 5/5 vs `2026-11-05T07-47-21--review-code--without-skill` 3/5; both reject, the two control misses are the missing hash prefixes. Pre-detector history, no class published in `coverage.md` |
 | 5 | **no class — no arm cell** | trigger (`gate: off`); `coverage.md` publishes no trigger run for `review-code` and the store holds no directory for the case |
 | 6 | **no class — no arm cell** | near-miss trigger (`gate: off`); same absence of a run directory and a published number |
 | 7 | **separator** (holdout) | `2026-11-10T15-31-48--review-code--agentworks-deepseek-v4-1-flash` 5/5 vs `2026-11-10T15-35-51--review-code--agentworks-deepseek-v4-1-flash--without-skill` 0/5; frozen in SPEC-0033, control fails `verdict REJECT` 5/5 |

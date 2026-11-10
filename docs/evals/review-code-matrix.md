@@ -7,11 +7,11 @@ directory it cites: this file reorganises the evidence, it does not measure.
 | | |
 | --- | --- |
 | model | `agentworks/deepseek-v4-1-flash` — the single route of the wave; the `opencode-go` default was over its weekly limit |
-| detector | v6 `9149d6ab1ca57343` |
+| detector | v6 `9149d6ab1ca57343` — the detector these draws were measured and re-judged under; `check-evidence` today reports the current detector `cf2e2e319d975a5b` |
 | isolation | macOS seatbelt; every wave manifest records `params.isolation.enforced: true` with `mechanism: "seatbelt"`, and `check-eval-run` on each of the twelve wave directories prints `findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0` |
 | repository state | `repoSha 2aec756`, `skillHash 9a28572…`; the case-10 control ran later, at `beca23e`, on the strengthened fixture and the same `fixtureHash` as its skill arm |
 | waves | **SPEC-0056 measured 2026-11-10** (five draws per arm); **SPEC-0062 re-judged the same transcripts 2026-11-10** (no model, no new draw) |
-| cost | 65 paid draws in the wave: 55 evidence draws, 5 on an invalid case-10 setup attempt, and the 5 case-10 control draws the human approved above the original ceiling |
+| cost | 65 paid draws in the wave: 60 evidence draws (55 planned plus the 5 case-10 control draws the human approved above the original ceiling) and 5 spent on an invalid case-10 setup attempt |
 
 Two cells predate the wave and are history, not measurement: case 3 was drawn
 2026-11-03 at `repoSha 8b74222` and case 4 on 2026-11-05 at `7a44564`, both
@@ -33,10 +33,14 @@ They are cited as historical direction and cannot underwrite a clean rate.
   vocabulary that preceded SPEC-0062. **replayed** is the same stored
   transcripts read under SPEC-0062's closed stance table
   (`node scripts/replay-evals.mjs --run <dir>`; no model, no write into the run
-  directory), attributed to SPEC-0062 on every row. The two columns are not
-  averaged, not merged, and not interchangeable: `measured` is the historical
-  record of the token, `replayed` is the judgement-corrected reading of the
-  same draws.
+  directory), attributed to SPEC-0062 on every row. The replayed column carries
+  the **cell** (`passed/5`), not the stance token: where only the token moved,
+  the cell does not change, which is why cases 1 and 10 read
+  `measured == replayed` while their prose records the token moving.
+  `coverage.md`'s replayed column gives both numbers as `token / cell`. The two
+  columns are not averaged, not merged, and not interchangeable: `measured` is
+  the historical record of the token, `replayed` is the judgement-corrected
+  reading of the same draws.
 - The classes, and only these three:
   - **separator** — the arms differ on the judgement.
   - **token/contract separator** — the arms agree on the judgement and differ on
@@ -53,8 +57,8 @@ They are cited as historical direction and cannot underwrite a clean rate.
 | --- | --- | --- | --- | --- |
 | 1 | clean diff, every AC satisfied | 5/5 / 0/5 | 5/5 / 0/5 | token/contract separator |
 | 2 | rounding before tax, noisy test | 4/5 / 4/5 | 4/5 / 5/5 | non-discriminator |
-| 3 | no spec in the repo | 5/5 / 1/5 | — | separator |
-| 4 | spec moved after the stamp | 5/5 / 3/5 | — | token/contract separator |
+| 3 | no spec in the repo | 5/5 / 1/5 | — | separator (derived — no class published) |
+| 4 | spec moved after the stamp | 5/5 / 3/5 | — | token/contract separator (derived — no class published) |
 | 5 | trigger: a branch handed over | no arm cell | — | — |
 | 6 | near-miss: debugging a build | no arm cell | — | — |
 | 7 | gate already red on `main` | 5/5 / 0/5 | 5/5 / 0/5 | separator (holdout) |
@@ -86,20 +90,27 @@ response contract, not a different engineering judgement.
 ## Case 2 — rounding before tax
 
 The branch applies rounding to the subtotal, so the returned total still carries
-float noise, and the added test asserts the noisy value. Both arms find AC-2 and
-reject; a diff-reading case cannot separate reviewers that read the same code.
+float noise, and the added test asserts the noisy value. Every draw that produced
+a review, in either arm, finds AC-2 and rejects; a diff-reading case cannot
+separate reviewers that read the same code.
 
 | arm | run directory | clean draws | measured | replayed | class |
 | --- | --- | --- | --- | --- | --- |
 | with skill | `2026-11-10T15-26-12--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 4/5 | 4/5 | non-discriminator |
 | without skill | `2026-11-10T15-28-46--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 4/5 | 5/5 | non-discriminator |
 
-**Class: non-discriminator.** Measured 4/5 vs 4/5; replayed the control's r5
-(`changes requested`) reads `REJECT`, so it moves to 5/5, while the skill arm
-stays 4/5 because its r4 emits no `VERDICT:` line — a token miss on the skill
-side, not a judgement difference. Both arms reject the change in substance. The
-case is kept as a regression case: it fails a reviewer that misses an obvious AC
-violation, or one that approves because the suite is green.
+**Class: non-discriminator.** Measured 4/5 vs 4/5. The skill arm's miss is not a
+token miss: its r4 stopped after its last tool call and returned **no review at
+all** — the transcript's only assistant text is the opening preamble, the final
+step emits two output tokens, and `verdict REJECT`, `reply AC-2` and
+`reply 21\.63|noise|float` fail for that reason. The four skill draws that
+produced a review reject the change; the control rejects in all five, its r5
+(`changes requested`) being a stance the measurement-time table did not read.
+SPEC-0062 re-reads that r5 as `REJECT`, so the control moves to 5/5 while the
+skill arm stays 4/5. The class is `coverage.md`'s: a diff-reading case cannot
+separate reviewers that read the same code. It is kept as a regression case — it
+fails a reviewer that misses an obvious AC violation, or one that approves
+because the suite is green.
 
 ## Case 3 — no spec in the repo
 
@@ -108,17 +119,21 @@ review has to ask for the intent instead of inventing acceptance criteria.
 
 | arm | run directory | clean draws | measured | replayed | class |
 | --- | --- | --- | --- | --- | --- |
-| with skill | `2026-11-03T10-06-33--review-code` | 5 draws, not checkable (pre-detector, `warnings=5`) | 5/5 | — | separator |
-| without skill | `2026-11-03T09-56-47--review-code--without-skill` | 5 draws, not checkable (pre-detector, `warnings=5`) | 1/5 | — | separator |
+| with skill | `2026-11-03T10-06-33--review-code` | 5 draws, not checkable (pre-detector, `warnings=5`) | 5/5 | — | separator (derived — no class published) |
+| without skill | `2026-11-03T09-56-47--review-code--without-skill` | 5 draws, not checkable (pre-detector, `warnings=5`) | 1/5 | — | separator (derived — no class published) |
 
-**Class: separator.** The skill withholds or names the missing basis 5/5; the
-control returns a verdict in 4/5. The single control pass ended under a
-`### Verdict` heading with `**Hold the merge**` — a stance the guard did not name
-at the time, not a confident approval. The current assertions name that stance
-and require the reply to say what is missing; replaying the recorded transcripts
-under them keeps every skill run passing and flips only control runs. The cell
-is historical: it was not re-measured at `skillHash 9a28572…`, and its published
-counts are pre-detector history.
+**Class: separator (derived).** `coverage.md` publishes no class for this cell.
+The skill withholds or names the missing basis 5/5; the control returns a verdict
+in 4/5. The single control pass ended under a `### Verdict` heading with
+`**Hold the merge**` — a stance the guard did not name at the time, not a
+confident approval. The current assertions name that stance and require the reply
+to say what is missing. The class comes from the published cells, not from a
+replay: `node scripts/replay-evals.mjs --run 2026-11-03T10-06-33--review-code`
+re-judges all five skill draws `failed → failed` on the post-SPEC-0046
+skill-location gate (`loaded from … outside the scratch dir`), because they
+predate isolation. The reply-level replay is therefore not reproducible today,
+which is part of why the cell is published as pre-detector history: it was not
+re-measured at `skillHash 9a28572…`.
 
 ## Case 4 — spec moved after the stamp
 
@@ -127,14 +142,14 @@ while the prompt still pins `feb763b1…`. The stale spec is the only defect.
 
 | arm | run directory | clean draws | measured | replayed | class |
 | --- | --- | --- | --- | --- | --- |
-| with skill | `2026-11-05T07-34-32--review-code` | 5 draws, not checkable (pre-detector, `warnings=5`) | 5/5 | — | token/contract separator |
-| without skill | `2026-11-05T07-47-21--review-code--without-skill` | 5 draws, not checkable (pre-detector, `warnings=5`) | 3/5 | — | token/contract separator |
+| with skill | `2026-11-05T07-34-32--review-code` | 5 draws, not checkable (pre-detector, `warnings=5`) | 5/5 | — | token/contract separator (derived — no class published) |
+| without skill | `2026-11-05T07-47-21--review-code--without-skill` | 5 draws, not checkable (pre-detector, `warnings=5`) | 3/5 | — | token/contract separator (derived — no class published) |
 
-**Class: token/contract separator.** Both arms reject the change; the two
-control misses are `reply feb763b1` and `reply 36c915b0` — rejections that do
+**Class: token/contract separator (derived).** Both arms reject the change; the
+two control misses are `reply feb763b1` and `reply 36c915b0` — rejections that do
 not show both hash prefixes. The arms agree on the judgement and differ on the
-required contract. `coverage.md` publishes no class for this cell; the class
-here is the definition applied to the published cell, not a second count. It is
+required contract. `coverage.md` publishes no class for this cell; the class here
+is the definition applied to the published cell, not a second count. It is
 historical: not re-measured at `skillHash 9a28572…`, and the luna cells were
 never re-measured on the revised fixture.
 
@@ -253,9 +268,10 @@ the older version of this file, not in the per-cell table:
   **non-discriminator**. The class did not move; the number did.
 - **Cases 3 and 4 have no published class.** `coverage.md` publishes classes for
   cases 1, 2 and 7–10 only. For these two this file applies the definitions above
-  to the published cells and says so in the row, instead of claiming a published
-  class that does not exist. Case 3 separates on the judgement (withhold vs
-  verdict); case 4 agrees on the judgement and differs on the hash evidence.
+  to the published cells, and every one of their class cells is marked
+  `(derived — no class published)` instead of claiming a class that does not
+  exist. Case 3 separates on the judgement (withhold vs verdict); case 4 agrees
+  on the judgement and differs on the hash evidence.
 - **Cases 5 and 6 have no published measurement.** They are trigger cases with
   `gate: off`; `coverage.md` lists `review-code` as ten cases with two triggers
   and no manual case, and publishes no trigger run. Their rows say `no arm cell`
