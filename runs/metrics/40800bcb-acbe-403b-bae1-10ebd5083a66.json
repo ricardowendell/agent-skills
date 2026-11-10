@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "external_run_id": "40800bcb-acbe-403b-bae1-10ebd5083a66",
+  "slug": "SPEC-0057-the-cost-of-measuring",
+  "events": [
+    {
+      "stage": "dispatch",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-10T20:20:53.872Z",
+      "ended_at": "2026-11-10T20:20:55.054Z",
+      "duration_ms": 1182,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "3fc74b0fe731f34199a2ce6ed4b5b0c56439afcbdb63e68c3c56a3e6e4d28747",
+        "head_sha": "51426b39a097f8a8ab4b1d035147e1ac6535390e",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    }
+  ]
+}

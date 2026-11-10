@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "b75b4e37-0e5f-47d5-88d8-aff36cf1cf3d",
+  "started_at": "2026-11-10T20:21:26.720Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.5.0"
+  },
+  "base_commit": "53fd448206cdefba1c9522e485eb117f59a84c96",
+  "head_commit": "acd6c07dbccd9f05e93110a769dfce7ce8baddfa",
+  "task": "SPEC-0057",
+  "spec_sha": "09c3915596d121fbb3f69d808c614e1f0abae575eacfab969155f9b7cb4124f0",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0057-the-cost-of-measuring.json",
+      "sha256": "f8f95333c03ec29cb51286be38c0a9da6c79cd04d2646eba738cd6ec378c6ba7"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0057-the-cost-of-measuring.json",
+      "sha256": "d6521fa387bc363099200268bfcccda491e2a034fbd395d40aef58909053942f"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "63ef98de8297d62714e4d6fd61c62d860fbf2944dbd9e231b5102f7f076d5320"
+    }
+  ],
+  "attempts": 2,
+  "duration": 5777,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "acd6c07dbccd9f05e93110a769dfce7ce8baddfa"
+}

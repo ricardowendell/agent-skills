@@ -31,7 +31,7 @@ files:
   - scripts/check-staleness.mjs
   - scripts/check-staleness.test.mjs
   - docs/evals/coverage.md
-  - docs/specs/active/SPEC-0057-the-cost-of-measuring.md
+  - docs/specs/SPEC-0057-the-cost-of-measuring.md
   - CHANGELOG.md
 tests:
   - node scripts/validate-skills.mjs --root skills
@@ -43,7 +43,7 @@ tests:
   - node scripts/check-evidence.mjs
   - node --test scripts/check-staleness.test.mjs
   - node scripts/check-staleness.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0057-the-cost-of-measuring.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0057-the-cost-of-measuring.md --base main
 ---
 
 ## Purpose
@@ -323,6 +323,6 @@ All commands from `tests:`, run from the worktree root:
 | `node scripts/check-evidence.mjs` | 0 (8 documents, 0 errors, 99 pre-existing warnings) |
 | `node --test scripts/check-staleness.test.mjs` | 0 (7 tests) |
 | `node scripts/check-staleness.mjs` | 0 (17 stale + 3 uncited, report form) |
-| `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0057-the-cost-of-measuring.md --base main` | 0 |
+| `node scripts/spec-check.mjs --spec docs/specs/SPEC-0057-the-cost-of-measuring.md --base main` | 0 |
 
 Zero paid eval draws; no skill text, fixture or oracle was edited.

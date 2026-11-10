@@ -1,9 +1,10 @@
 ---
 id: TASK-93
 title: 'evals: o custo da medicao — staging, clock seam e staleness (SPEC-0057)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-10T20:19:00Z'
+updated_date: '2026-11-10T21:57:00Z'
 labels: []
 dependencies: []
 references:
