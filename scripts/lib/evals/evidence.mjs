@@ -1,36 +1,34 @@
 // evidence.mjs — a published claim must name evidence that exists and says what
 // the claim says.
 //
-// The corpus cites run directories in `docs/evals/*.md`. Three failures cost
-// review rounds: a directory that is not there, an unfinished run cited as
-// finished, and a v1 run called `isolated=yes`. The rules are mechanical, so
-// they live here and the CLI only reads the store.
+// The corpus cites run directories in `docs/evals/coverage.md` and the matrix
+// files. Three failures cost review rounds: a directory that is not there, an
+// unfinished run cited as finished, and a v1 run called `isolated=yes`. The
+// rules are mechanical, so they live here and the CLI only reads the store.
 //
 // The module is pure: the caller resolves each token to a run record
 // (`{ exists, status, detectorVersion, findings }`) and supplies the current
 // detector version. `checkRun` stays in `runcheck.mjs`; this module only judges
 // the citation against the record it is given.
 //
+// A citation names a directory exactly. A token followed by an ellipsis elides
+// part of the name, so it is prose shorthand and not a citation: the checker
+// skips it rather than guessing which directory the author meant.
+//
 // Markers are words on the citing line, not a section heading: a line that puts
 // an unfinished run under a heading called "Unreadable" still has to say
 // `unreadable` on the line, or the next reader copies the citation without the
-// heading. Warnings use a wider set because "dirty" has several shapes.
+// heading.
 
 import { capabilitiesOf } from "./leak.mjs"
 
 export const COMPLETE_MARKERS = ["unfinished", "running", "discard", "history", "unreadable"]
-export const DIRTY_MARKERS = ["dirty", "leak", "host", "stall", "contaminated", "discard", "history", "failure"]
 
 // A run id is `2026-11-06T19-06-50--capture-idea`. The token must carry every
-// segment of the directory name: `--without-skill` is part of the identity, and
-// a `--matrix--` followed by an ellipsis is prose shorthand, not an id. The
+// segment of the directory name: `--without-skill` is part of the identity. The
 // `[A-Za-z0-9._-]` class is deliberately wider than the old lowercase-only one:
 // a model segment can contain dots and underscores.
 export const RUN_TOKEN = /\b(20\d{2}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}--[A-Za-z0-9._-]+(?:--[A-Za-z0-9._-]+)*)\b/g
-
-export function tokenSegments(token) {
-  return String(token ?? "").split("--")
-}
 
 const markerRe = (markers) => new RegExp(`\\b(?:${markers.join("|")})\\b`, "i")
 
@@ -38,8 +36,9 @@ export function hasMarker(line, markers) {
   return markerRe(markers).test(String(line ?? ""))
 }
 
-function abbreviated(text, end) {
-  // `--matrix--…` and `--matrix-…` are the corpus's shorthand for a range.
+function elided(text, end) {
+  // `--matrix--…` and `--matrix-…` abbreviate a name. The token stops before
+  // the ellipsis, so it names no directory and is not a citation.
   return /^-*…/.test(String(text ?? "").slice(end))
 }
 
@@ -50,7 +49,7 @@ export function scanCitations(text) {
     .forEach((line, i) => {
       const tokens = []
       for (const m of line.matchAll(RUN_TOKEN)) {
-        if (abbreviated(line, m.index + m[0].length)) continue
+        if (elided(line, m.index + m[0].length)) continue
         tokens.push({ token: m[0], index: m.index })
       }
       if (tokens.length) out.push({ line: i + 1, text: line, tokens })
@@ -82,10 +81,7 @@ export function checkCitation({ line, token, run, currentDetector, tokens = [] }
   const add = (level, rule, message) => findings.push({ level, rule, token, message })
 
   if (!run || run.exists !== true) {
-    const candidates = Array.isArray(run?.candidates) && run.candidates.length
-      ? ` (candidates: ${run.candidates.join(", ")})`
-      : ""
-    add("error", "missing-run", `run directory ${token} does not exist${candidates}`)
+    add("error", "missing-run", `run directory ${token} does not exist`)
     return findings
   }
 
@@ -141,14 +137,6 @@ export function checkCitation({ line, token, run, currentDetector, tokens = [] }
         }
       }
     }
-  }
-
-  if (run.status === "completed" && Number(run.findings) > 0 && !hasMarker(line, DIRTY_MARKERS)) {
-    add(
-      "warning",
-      "dirty-run",
-      `run ${token} has ${run.findings} finding(s), cited without a marker (${DIRTY_MARKERS.join(", ")})`,
-    )
   }
 
   return findings

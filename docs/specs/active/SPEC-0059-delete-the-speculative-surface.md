@@ -28,6 +28,7 @@ files:
   - README.md
   - CONTRIBUTING.md
   - docs/README.md
+  - CHANGELOG.md
   - docs/specs/active/SPEC-0059-delete-the-speculative-surface.md
 tests:
   - node scripts/validate-skills.mjs --root skills
@@ -168,4 +169,84 @@ None.
 - The zero-warning claim is the point of F3. If the narrower check still warns on
   a real citation gap, publish that number honestly instead of forcing zero.
 
-_Filled during implementation._
+## Results
+
+### Net line delta
+
+`git diff --numstat` over the branch: **+196 / −2034, net −1838 lines** across 14
+files. Excluding this Results section, the deletion is **+115 / −2033, net
+−1918**; the section itself adds 81 lines of publication.
+
+| Module | Files | Lines |
+| --- | --- | --- |
+| `provider-audit` — `scripts/audit-provider-aborts.mjs`, `scripts/lib/evals/provider-audit.mjs`, its test | 3 | −280 |
+| `health` — `scripts/harness-health.mjs`, `scripts/lib/evals/health.mjs`, its test, `docs/evals/harness-health.md` | 4 | −1622 |
+| `check-evidence.mjs` | 1 | 256 → 240 (−16) |
+| `evidence.mjs` | 1 | 178 → 166 (−12) |
+| `evidence.test.mjs` | 1 | 377 → 396 (+19) |
+| `CONTRIBUTING.md` | 1 | −20 |
+| `docs/README.md` | 1 | 1 → 1 (the baseline phrase removed) |
+| `CHANGELOG.md` | 1 | +12 |
+| this spec | 1 | +1 in `files:`, plus this section |
+
+Nothing imports `provider-audit` or `health`; the only code references were the
+deleted CLI and its test. The 0.6.2 and 0.4.1 CHANGELOG entries that name
+`audit-provider-aborts` and `harness-health` stay as the historical record, as
+does `docs/specs/SPEC-0024-harness-health.md`.
+
+### `check-evidence` before / after
+
+| | documents scanned | errors | warnings | exit |
+| --- | --- | --- | --- | --- |
+| before | 8 (`docs/evals/*.md`) | 0 | **100** | 0 |
+| after | 5 (`coverage.md` + four `*-matrix.md`) | 0 | **0** | 0 |
+
+All 100 warnings were `dirty-run`: the old rule demanded a
+`dirty|leak|host|stall|contaminated|discard|history|failure` word on every line
+that cited a run with findings. The only other warning source is `missing-store`,
+which cannot fire on this host. The narrowed command reads the publication —
+`docs/evals/coverage.md` and the matrix files — and no other markdown; a citation
+must name the run directory exactly (no prefix expansion), and a token followed
+by an ellipsis is prose, not a citation. The error rules stay: `missing-run`,
+`empty-run`, `unfinished-run`, `stale-detector` and `unenforced-isolation`. The
+`RUN_TOKEN` parser is still the one `check-staleness.mjs` imports; only the sweep
+went.
+
+A missing run directory is still a finding with a non-zero exit, proven by
+`evidence.test.mjs` ("a citation that names no exact directory is a finding and
+exits non-zero", which also proves there is no prefix fallback) and by the
+existing `empty-run`/`missing-run` CLI test. A second test writes
+`docs/evals/notes.md` with a dead citation and asserts it is not scanned, which
+is the zero-warning claim made mechanical.
+
+### Gates
+
+Every command from `tests:`, run from the worktree root, plus `npm run selftest`:
+
+| command | exit | note |
+| --- | --- | --- |
+| `node scripts/validate-skills.mjs --root skills` | 0 | |
+| `node scripts/run-evals.mjs --root skills --list --check` | 0 | dry run, no draw |
+| `node --test scripts/lib/evals/*.test.mjs` | 0 | 459 tests |
+| `node --test scripts/lib/*.test.mjs` | 0 | 13 tests |
+| `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` | 0 | 42 tests |
+| `node scripts/check-sensor-parity.mjs` | 0 | 2/2 |
+| `node scripts/check-evidence.mjs` | 0 | 5 documents, 0 errors, 0 warnings |
+| `node scripts/check-staleness.mjs` | 0 | 62 cited, 51 stale, 3 uncited — report form, pre-existing |
+| `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0059-delete-the-speculative-surface.md --base main` | 0 | one `files-declared-untouched` warning: `README.md` had no mention to remove |
+| `npm run selftest` | 0 | unchanged script |
+
+`docs/pipeline.md` is not in the diff. Zero paid draws.
+
+### References left behind
+
+- `docs/evals/coverage.md:97` still tells a reader to run
+  `node scripts/audit-provider-aborts.mjs` before a release. That file is not in
+  this spec's `files:`; SPEC-0062 owns `coverage.md` in this wave.
+- `docs/evals/provider-aborts.md:9-10` still shows the command in its usage
+  block. The document is the 0.6.2 audit record and is not in `files:`; its
+  numbers and markers remain the history they were.
+- `scripts/lib/evals/runcheck.test.mjs` imports `checkCitation` and
+  `scanCitations`. Both are kept, so the agreement test still runs; its
+  isolation half is unchanged.
+

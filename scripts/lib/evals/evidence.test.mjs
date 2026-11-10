@@ -128,13 +128,6 @@ test("an enforced manifest allows isolated=yes and a legacy one is not judged", 
   assert.deepEqual(cites(line, run()), [], "a manifest without the record is legacy")
 })
 
-test("a polluted run is a warning without a dirty marker", () => {
-  const line = "`2026-01-01T00-00-00--polluted`"
-  const findings = cites(line, run({ findings: 2 }))
-  assert.deepEqual(findings.map((f) => [f.level, f.rule]), [["warning", "dirty-run"]])
-  assert.deepEqual(cites("leak `2026-01-01T00-00-00--polluted`", run({ findings: 2 })), [])
-})
-
 test("a completed manifest with no case results is an error", () => {
   const line = "`2026-01-01T00-00-00--empty`"
   const findings = cites(line, {
@@ -148,8 +141,14 @@ test("a completed manifest with no case results is an error", () => {
   assert.deepEqual(findings.map((f) => [f.level, f.rule]), [["error", "empty-run"]])
 })
 
+test("a run with findings needs no prose marker: the rate is the reader's job", () => {
+  const line = "`2026-01-01T00-00-00--polluted`"
+  assert.deepEqual(cites(line, run({ findings: 2 })), [])
+})
+
 test("a run inside an abbreviated range is not a citation", () => {
   assert.deepEqual(scanCitations("2026-11-01 run (`2026-11-01T22-18-10--matrix--…`)"), [])
+  assert.deepEqual(scanCitations("`2026-11-09T10-59-41--demo--…--without-skill`"), [])
 })
 
 test("the token keeps the arm segment", () => {
@@ -234,52 +233,72 @@ test("the CLI reads a synthetic store: existing, running, v1 and dirty", () => {
       "polluted `2026-11-06T10-03-00--polluted`.",
       "",
     ].join("\n")
-    const docPath = join(dir, "docs", "evals", "test.md")
+    const docPath = join(dir, "docs", "evals", "coverage.md")
     writeFileSync(docPath, doc)
 
     const result = spawnSync(process.execPath, [cli, "--store", store, "--json"], { cwd: dir, encoding: "utf8" })
     assert.equal(result.status, 1)
     const parsed = JSON.parse(result.stdout)
     assert.equal(parsed.summary.errors, 2)
-    assert.equal(parsed.summary.warnings, 1)
+    assert.equal(parsed.summary.warnings, 0, "a dirty citation is no longer a warning")
     assert.deepEqual(
       parsed.findings.map((f) => f.rule).sort(),
-      ["dirty-run", "stale-detector", "unfinished-run"],
+      ["stale-detector", "unfinished-run"],
     )
-
-    // Warning only: default exits 0, --strict exits 1.
-    writeFileSync(docPath, "# evidence\n\n`2026-11-06T10-03-00--polluted`.\n")
-    const warning = spawnSync(process.execPath, [cli, "--store", store], { cwd: dir, encoding: "utf8" })
-    assert.equal(warning.status, 0)
-    assert.match(warning.stdout, /1 warnings/)
-
-    const strict = spawnSync(process.execPath, [cli, "--store", store, "--strict"], { cwd: dir, encoding: "utf8" })
-    assert.equal(strict.status, 1)
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
 })
 
-test("the CLI resolves a unique two-segment shorthand and names an ambiguous one", () => {
-  const dir = mkdtempSync(join(tmpdir(), "evidence-short-"))
+// The 100 pre-existing warnings came from sweeping every markdown file. Only
+// `coverage.md` and the matrix files are the publication; a note beside them is
+// prose and is not scanned.
+test("the CLI scans coverage.md and the matrix files, not every markdown file", () => {
+  const dir = mkdtempSync(join(tmpdir(), "evidence-scope-"))
   try {
     const store = join(dir, "store")
     mkdirSync(join(dir, "docs", "evals"), { recursive: true })
     mkdirSync(store, { recursive: true })
+    makeRun(store, "2026-11-06T10-00-00--clean")
+
+    writeFileSync(join(dir, "docs", "evals", "coverage.md"), "clean `2026-11-06T10-00-00--clean`.\n")
+    writeFileSync(
+      join(dir, "docs", "evals", "review-code-matrix.md"),
+      "cell `2026-11-06T10-00-00--clean`.\n",
+    )
+    writeFileSync(join(dir, "docs", "evals", "notes.md"), "history `2026-11-06T09-00-00--gone`.\n")
+
+    const result = spawnSync(process.execPath, [cli, "--store", store, "--json"], { cwd: dir, encoding: "utf8" })
+    assert.equal(result.status, 0)
+    const parsed = JSON.parse(result.stdout)
+    assert.equal(parsed.summary.documents, 2)
+    assert.deepEqual(parsed.findings, [])
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test("a citation that names no exact directory is a finding and exits non-zero", () => {
+  const dir = mkdtempSync(join(tmpdir(), "evidence-exact-"))
+  try {
+    const store = join(dir, "store")
+    mkdirSync(join(dir, "docs", "evals"), { recursive: true })
+    mkdirSync(store, { recursive: true })
+    // The directory that exists is longer than the token: no prefix fallback.
     makeRun(store, "2026-11-06T10-00-00--demo--without-skill")
-    makeRun(store, "2026-11-06T11-00-00--demo--a")
-    makeRun(store, "2026-11-06T11-00-00--demo--b")
 
     writeFileSync(
-      join(dir, "docs", "evals", "test.md"),
-      ["short `2026-11-06T10-00-00--demo`", "ambiguous `2026-11-06T11-00-00--demo`", ""].join("\n"),
+      join(dir, "docs", "evals", "coverage.md"),
+      ["short `2026-11-06T10-00-00--demo`", "gone `2026-11-06T11-00-00--gone`", ""].join("\n"),
     )
     const result = spawnSync(process.execPath, [cli, "--store", store, "--json"], { cwd: dir, encoding: "utf8" })
+    assert.equal(result.status, 1)
     const parsed = JSON.parse(result.stdout)
-    assert.deepEqual(parsed.findings.map((f) => f.token), ["2026-11-06T11-00-00--demo"])
-    assert.equal(parsed.findings[0].rule, "missing-run")
-    assert.match(parsed.findings[0].message, /2026-11-06T11-00-00--demo--a/)
-    assert.match(parsed.findings[0].message, /2026-11-06T11-00-00--demo--b/)
+    assert.deepEqual(parsed.findings.map((f) => f.rule), ["missing-run", "missing-run"])
+    assert.deepEqual(parsed.findings.map((f) => f.token).sort(), [
+      "2026-11-06T10-00-00--demo",
+      "2026-11-06T11-00-00--gone",
+    ])
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
@@ -324,7 +343,7 @@ test("the CLI never drops an arm: with-arm is exact, missing-arm is an error, em
     makeRun(store, "2026-11-06T10-01-00--empty", { cases: false })
 
     writeFileSync(
-      join(dir, "docs", "evals", "test.md"),
+      join(dir, "docs", "evals", "coverage.md"),
       [
         "existing `2026-11-06T10-00-00--demo--with-skill`",
         "missing arm `2026-11-06T10-00-00--demo--nonexistent-arm`",
@@ -362,7 +381,7 @@ test("the CLI rejects isolated=yes for an unenforced manifest and accepts a lega
     makeRun(store, "2026-11-06T10-01-00--legacy", { isolate: true })
 
     writeFileSync(
-      join(dir, "docs", "evals", "test.md"),
+      join(dir, "docs", "evals", "coverage.md"),
       ["unenforced `2026-11-06T10-00-00--unenforced` `isolated=yes`.", "legacy `2026-11-06T10-01-00--legacy` `isolated=yes`.", ""].join("\n"),
     )
 

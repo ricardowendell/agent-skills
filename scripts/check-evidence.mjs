@@ -2,36 +2,36 @@
 // check-evidence.mjs — every cited run directory must exist and mean what the
 // sentence says.
 //
-// Model-free and filesystem-only: scan `docs/evals/*.md` for run-directory
-// tokens, read each directory's manifest and case results, and apply the pure
-// rules in `scripts/lib/evals/evidence.mjs`. The dirty verdict is `checkRun`
-// from `runcheck.mjs`, so this CLI and `check-eval-run.mjs` cannot disagree
-// about a run.
+// Model-free and filesystem-only: scan `docs/evals/coverage.md` and the
+// `docs/evals/*-matrix.md` files for run-directory citations, read each
+// directory's manifest and case results, and apply the pure rules in
+// `scripts/lib/evals/evidence.mjs`. Those documents are the publication; a
+// stray markdown note is prose, not evidence, and is not swept. The dirty
+// verdict is `checkRun` from `runcheck.mjs`, so this CLI and
+// `check-eval-run.mjs` cannot disagree about a run.
 
 import { existsSync, readFileSync, readdirSync } from "node:fs"
 import { homedir } from "node:os"
 import { join, resolve } from "node:path"
 import { checkRun, manifestIsolation } from "./lib/evals/runcheck.mjs"
 import { DETECTOR_VERSION } from "./lib/evals/leak.mjs"
-import { checkDocuments, tokenSegments } from "./lib/evals/evidence.mjs"
+import { checkDocuments } from "./lib/evals/evidence.mjs"
 
 const USAGE = `Usage: node scripts/check-evidence.mjs [--store <runs-dir>] [--strict] [--json]
 
-Scan docs/evals/*.md for run-directory tokens and check them against the local
-store. Errors: a missing directory, a completed run with no cases/ or no case
-results (empty-run), an unfinished run cited as complete, a line claiming
-isolated=yes for a run whose recorded detector lacks the host-reads capability,
-or a line claiming
+Scan docs/evals/coverage.md and docs/evals/*-matrix.md for run-directory
+citations and check them against the local store. Errors: a missing directory, a
+completed run with no cases/ or no case results (empty-run), an unfinished run
+cited as complete, a line claiming isolated=yes for a run whose recorded detector
+lacks the host-reads capability, or a line claiming
 isolated=yes for a run whose manifest records isolation.enforced: false
 (unenforced-isolation; legacy manifests without the record keep the old rule).
-Warnings: a run
-with findings cited without a dirty/leak/host/stall marker, and a missing eval
-store (missing-store); --strict makes a warning fatal.
+A missing eval store is a warning (missing-store); --strict makes it fatal.
 
 Exit codes:
-  0  no errors (warnings may print, including a missing store)
+  0  no errors (a warning may print for a missing store)
   1  at least one error, or a warning under --strict
-  2  the docs could not be read
+  2  the documents could not be read
 `
 
 function option(argv, name) {
@@ -127,13 +127,17 @@ function inspectRun(dir) {
   }
 }
 
+// The publication is `coverage.md` and the matrix files. Scanning every
+// markdown file under `docs/evals/` treated experiment notes and history rows as
+// citations and produced warnings nobody could act on.
 function readDocuments(root) {
   const dir = join(root, "docs", "evals")
   if (!existsSync(dir)) throw new Error(`no docs/evals directory under ${root}`)
-  return readdirSync(dir)
-    .filter((name) => name.endsWith(".md"))
+  const names = readdirSync(dir)
+    .filter((name) => name === "coverage.md" || name.endsWith("-matrix.md"))
     .sort()
-    .map((name) => ({ path: join("docs", "evals", name), text: readFileSync(join(dir, name), "utf8") }))
+  if (!names.includes("coverage.md")) throw new Error(`no coverage.md under ${dir}`)
+  return names.map((name) => ({ path: join("docs", "evals", name), text: readFileSync(join(dir, name), "utf8") }))
 }
 
 function main(argv) {
@@ -183,35 +187,15 @@ function main(argv) {
     }
     return strict ? 1 : 0
   }
-  const storeNames = readdirSync(store, { withFileTypes: true })
-    .filter((e) => e.isDirectory())
-    .map((e) => e.name)
-
   const documents = readDocuments(process.cwd())
   const cache = new Map()
-  // An exact directory always wins. A token with exactly two segments
-  // (timestamp + skill, no arm) may stand for a run whose arm was dropped by the
-  // sentence, but only when the prefix has one candidate; zero or several are an
-  // error that names the candidates. A token with an arm (three or more
-  // segments) never falls back to a prefix: the arm is the identity, and
-  // resolving `...--demo--nonexistent-arm` to `...--demo` is how a broken
-  // citation passed review.
-  const resolveDir = (token) => {
-    const exact = join(store, token)
-    if (existsSync(exact)) return { dir: exact }
-    const segments = tokenSegments(token)
-    if (segments.length !== 2) {
-      const near = storeNames.filter((name) => name.startsWith(`${token}--`))
-      return { error: true, candidates: near }
-    }
-    const candidates = storeNames.filter((name) => name.startsWith(`${token}--`))
-    if (candidates.length === 1) return { dir: join(store, candidates[0]) }
-    return { error: true, candidates }
-  }
+  // A citation names a directory exactly. An unresolved token is a finding that
+  // names it; there is no prefix fallback, because resolving `--demo` to
+  // `--demo--without-skill` is how a citation that never existed passed review.
   const resolveRun = (token) => {
     if (!cache.has(token)) {
-      const resolved = resolveDir(token)
-      cache.set(token, resolved.dir ? inspectRun(resolved.dir) : { exists: false, candidates: resolved.candidates })
+      const dir = join(store, token)
+      cache.set(token, existsSync(dir) ? inspectRun(dir) : { exists: false })
     }
     return cache.get(token)
   }

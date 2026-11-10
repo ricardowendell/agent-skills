@@ -16,7 +16,7 @@ templates.
 | `specs/` | `SPEC-NNNN-*.md` — the durable record of why the harness changed |
 | `specs/active/` | the pdlc work queue; `plan`, `prompt`, `verify` and `merge` read here |
 | `prompts/` | implementation prompts generated from `ready` specs |
-| `evals/` | the `review-code`, `implement-from-prompt`, `write-implementation-prompt` and `pipeline-bookends` matrices, the `harness-health.md` baseline, experiment records, `discriminating-cases.md`, `coverage.md` and the `provider-aborts.md` audit |
+| `evals/` | the `review-code`, `implement-from-prompt`, `write-implementation-prompt` and `pipeline-bookends` matrices, experiment records, `discriminating-cases.md`, `coverage.md` and the `provider-aborts.md` audit |
 | `../evals/` | the case corpus: `evals/<id>/cases.md` and `evals/<id>/fixtures/<n>/`, beside the skill roots and never staged |
 | `integrations/` | how each agent host is wired; `opencode.md` is this kit's canonical-vs-link map |
 | `../runs/` | pdlc run records, one per verified cycle |

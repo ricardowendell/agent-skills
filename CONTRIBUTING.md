@@ -226,28 +226,6 @@ node scripts/run-evals.mjs --skill review-code --case 3 --repeat 3 --run --judge
 - Keep a failed control as a finding. The mutation pilot in
   `docs/evals/experiments/` records two `invalid` results on purpose.
 
-### Per-release health pass
-
-Before writing the CHANGELOG entry for a release, run the health report from the
-main checkout and read the delta against the previous release in
-[`docs/evals/harness-health.md`](docs/evals/harness-health.md):
-
-```sh
-node scripts/harness-health.mjs --until <release-cut-ISO-timestamp>
-```
-
-Bind the snapshot to the cut time with `--until`: the store only grows, so the
-bound is what makes the release reproducible. It reads the eval store and
-`.pdlc/runs.json`, spends no model and writes nothing. A dispatched worktree
-does not carry `.pdlc/`; there, pass `--pdlc /path/to/.pdlc/runs.json`. Compare
-like with like: a number moves the trend only when the artefacts are comparable
-(same fixture/prompt/detector hashes, same case shape); a different mix of runs
-is variance. The strict rate is per draw; `coverage.md`'s rule is per run
-directory, so use strict as the closest comparable trend and the eligible rate
-for the broad trend. Paste the new table into the baseline doc, then open at most
-three findings and at most one spec. The report is evidence, not a CI gate: a
-red number does not fail a build.
-
 ## Checking a publication
 
 Two model-free checks catch the mechanical review findings: a spec whose
@@ -259,20 +237,22 @@ say what the sentence claims. Run them before review and before a merge:
 # `main` is the canonical local base; `origin/main` goes stale by policy (this
 # repo does not push) and produces a flood of phantom diff entries.
 node scripts/spec-check.mjs --spec docs/specs/active/<slug>.md --base main
-# every run-directory citation in docs/evals/*.md against the local store
+# every run-directory citation in coverage.md and the matrix files, against the
+# local store
 node scripts/check-evidence.mjs
 ```
 
 `spec-check` exits 1 on an error and prints one line per finding; warnings (a
 declared file the diff did not touch, an asymmetric dependency) print without
 failing, so an unrelated publication does not block the build. A touched file
-the spec did not declare is always an error. `check-evidence` exits 1 on a
-missing directory, a completed run with no cases, an unfinished run cited as
-complete, or `isolated=yes` on a run whose recorded detector is not current. It
-warns when a run with findings is cited without a
-`dirty|leak|host|stall|contaminated|discard|history|failure` marker; `--strict`
-makes those warnings fatal. The local `selftest` and the pre-commit hook run
-`check-evidence`; CI cannot, because it has no eval store.
+the spec did not declare is always an error. `check-evidence` reads only
+`docs/evals/coverage.md` and the `docs/evals/*-matrix.md` files, and exits 1 on
+a missing directory, a completed run with no cases, an unfinished run cited as
+complete, or `isolated=yes` on a run whose recorded detector is not current or
+whose manifest records an unenforced boundary. A citation must name the run
+directory exactly; an elided name is prose, not evidence. A missing eval store
+is the only warning, and `--strict` makes it fatal. The local `selftest` and the
+pre-commit hook run `check-evidence`; CI cannot, because it has no eval store.
 
 ## What CI enforces
 

@@ -30,6 +30,18 @@ skills, which cases, and which published measurements.
   eval path inside a skill, and `speccheck` accepts a trailing-slash `files:`
   entry as a subtree. `emit-promptfoo.mjs` and `promptfoo/provider.mjs` were
   deleted; a skill now packages runtime references only.
+- **The speculative surface is deleted and `check-evidence` is narrowed
+  (SPEC-0059, TASK-96).** `scripts/audit-provider-aborts.mjs`,
+  `provider-audit.mjs` and its test (280 lines) went: provider aborts are
+  classified per draw and recorded in `execution.error`, so the
+  stored-transcript sweep answered a question the runner already answers.
+  `harness-health.mjs`, `health.mjs`, its test and `docs/evals/harness-health.md`
+  (1,622 lines) went with the release report they served. `check-evidence` keeps
+  its path, its command name and its exit contract, but it reads only
+  `docs/evals/coverage.md` and the matrix files, and a citation must name a run
+  directory exactly: the repository-wide markdown sweep and the 100 dirty-marker
+  warnings are gone, so the next real finding is visible. `docs/pipeline.md` is
+  untouched and its `selftest` line still runs `check-evidence`.
 
 ### Added
 
