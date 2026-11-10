@@ -22,7 +22,7 @@ They are cited as historical direction and cannot underwrite a clean rate.
 
 - **with skill** — `review-code` is staged into the child's workspace and the
   gate requires that copy to be the one that loaded. **without skill** —
-  `--no-skill`: nothing is staged and the `skill` tool is denied. The arm
+  `--arm without`: nothing is staged and the `skill` tool is denied. The arm
   measures "not auto-loaded", not "text unreachable".
 - A cell reads `passed/5`; five repetitions per arm. Five draws show a
   direction, not a per-case population rate.

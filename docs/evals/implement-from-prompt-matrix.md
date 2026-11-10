@@ -14,7 +14,7 @@ measurement notes below name the layout at the time of the run.
 - **with skill** — the skill is copied into `<scratch>/.opencode/skills/implement-from-prompt/`
   and shadows any global install; the gate requires that copy to be the one that
   loaded.
-- **without skill** — `--no-skill`: nothing is staged and the `skill` tool is
+- **without skill** — `--arm without`: nothing is staged and the `skill` tool is
   denied. This measures "not auto-loaded", not "text unreachable".
 
 A deterministic cell reads `passed/reps`: every assertion passed and the skill
@@ -431,7 +431,7 @@ and is also clean; it is a precondition, not a measurement.
   form is now citable with ` | `. The historical exp 1/4 rows above are the
   pre-TASK-40 reading, not a rewrite. No `assert:` line changed, and the judge
   still cannot rescue a deterministic failure.
-- **Control-arm isolation** — `--no-skill` denies the skill tool and stages
+- **Control-arm isolation** — `--arm without` denies the skill tool and stages
   nothing, but the child can still read `/Users/wendell/.agents/skills/…` and
   stale copies under `/private/var/folders/…/T/opencode`. Two control transcripts
   did exactly that. Close the filesystem path before the next matrix.

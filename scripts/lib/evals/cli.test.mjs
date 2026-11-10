@@ -705,3 +705,28 @@ test("inspect --leaks --all can narrow the store by --skill", () => {
   assert.doesNotMatch(r.out, /process-inbox#1/)
   assert.match(r.out, /1 cell\(s\), 0 dirty/)
 })
+
+// The run-dir form reads two directories; a flag that only makes sense for the
+// arm form is a usage error, never accepted and ignored.
+test("compare run directories refuses every flag it cannot honour", () => {
+  const home = tempHome()
+  const before = seedRunDir(home, "2026-01-01T00-00-00--demo", { status: "passed" })
+  const after = seedRunDir(home, "2026-01-02T00-00-00--demo", { status: "passed" })
+  rejects(["compare", before, after, "--repeat", "5"], /--repeat cannot be used with compare <run-dir-a> <run-dir-b>/)
+  rejects(["compare", before, after, "--verbose"], /--verbose cannot be used with compare <run-dir-a> <run-dir-b>/)
+  rejects(["compare", before, after, "--against", "main"], /--against cannot be used with compare <run-dir-a> <run-dir-b>/)
+})
+
+// `run`'s own stopped-early line: the ceiling is never printed as the count.
+// The no-op opencode shim fails the gate without a model, so --stop 5/1 fires
+// after one draw and the line says (1/5), not (5/5).
+test("run reports the draws that actually ran when --stop fires", () => {
+  const home = tempHome()
+  const root = makeCorpus({ cases: DEMO_CASES, fixtures: { 1: { "hello.txt": "hello\n" } } })
+  const r = cli(["run", "demo", "1", "--root", root, "--repeat", "5", "--stop", "5/1", "--concurrency", "1"], {
+    env: fakeOpencodeEnv(home),
+  })
+  assert.equal(r.code, 1, r.err)
+  assert.match(r.out, /stopped early \(1\/5\)/)
+  assert.doesNotMatch(r.out, /stopped early \(5\/5\)/)
+})

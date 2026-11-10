@@ -260,24 +260,24 @@ None. The CLI shape was chosen at review on 2026-11-10.
 are deleted, and nothing delegates to them.
 
 **Size, stated honestly.** This is a move plus new behaviour, not a net line
-reduction. The CLI shrank by two lines; the harness grew because the scorecard,
+reduction. The CLI shrank by four lines; the harness grew because the scorecard,
 the reuse predicate and the stored-run readers are new code.
 
 | file | before | after |
 | --- | ---: | ---: |
 | `scripts/run-evals.mjs` | 921 | 0 (deleted) |
 | `scripts/replay-evals.mjs` | 481 | 0 (deleted) |
-| `scripts/eval.mjs` | 0 | 1 400 |
+| `scripts/eval.mjs` | 0 | 1 398 |
 | `scripts/lib/evals/cache.mjs` | 0 | 103 |
 | `scripts/lib/evals/report.mjs` | 70 | 361 |
 | `scripts/lib/evals/report.test.mjs` | 86 | 197 |
-| `scripts/lib/evals/cli.test.mjs` | 257 | 707 |
+| `scripts/lib/evals/cli.test.mjs` | 257 | 732 |
 | `scripts/lib/evals/cache.test.mjs` | 0 | 162 |
 | `scripts/lib/evals/fixture.test.mjs` | 317 | 317 (repointed) |
 | `scripts/lib/evals/runcheck.test.mjs` | 997 | 997 (repointed) |
 
-CLI 1 402 → 1 400 (−2); `report.mjs` +291 and `cache.mjs` +103, so the harness is
-net +392. `report.mjs` grew because the scorecard and the stored-run readers live
+CLI 1 402 → 1 398 (−4); `report.mjs` +291 and `cache.mjs` +103, so the harness is
+net +390. `report.mjs` grew because the scorecard and the stored-run readers live
 there; the two readers are why `fixture.test.mjs`/`runcheck.test.mjs` had to be
 repointed (they spawn the entry point), and the whole set is declared above as a
 correction to this spec's `files:`.
@@ -359,7 +359,7 @@ parsed prompts, titles, assertions and fixtures stay byte-identical.
 - `node scripts/validate-skills.mjs --root skills` — 0
 - `node scripts/eval.mjs check --root skills` — 0 (97 parsed, 94 runnable, 3
   manual, 94 staged, no findings)
-- `node --test scripts/lib/evals/*.test.mjs` — 0 (517 tests)
+- `node --test scripts/lib/evals/*.test.mjs` — 0 (519 tests)
 - `node --test scripts/lib/*.test.mjs` — 0 (13 tests)
 - `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` — 0
 - `node scripts/check-sensor-parity.mjs` — 0
@@ -373,8 +373,8 @@ The staging proof is a real, cited store directory:
 **Zero paid draws.** The behavioural suite still covers parse, staging, the
 assertion truth table, provider abort, timeout, isolation, cache eligibility,
 resume, early stop, comparison scoring and the artefact shape: `cli.test.mjs`
-has 40 tests (the old usage/resume cases plus rate scoring, reuse refusals, the
-run-dir diff and the stopped-early line), `cache.test.mjs` has one test per input
+has 42 tests (the old usage/resume cases plus rate scoring, reuse refusals, the
+run-dir diff, refused run-dir flags and both stopped-early lines), `cache.test.mjs` has one test per input
 plus the three refusals, and `report.test.mjs` covers the ladder, the
 denominators, rate movement, contamination and the verbose failures.
 

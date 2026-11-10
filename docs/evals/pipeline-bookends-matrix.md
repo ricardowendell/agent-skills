@@ -25,7 +25,7 @@ fixture, assertion, runner or policy file changed in either wave.
 - **with skill** — the skill under review is copied into
   `<scratch>/.opencode/skills/<id>/` and shadows any global install; the gate
   requires that copy to be the one that loaded.
-- **without skill** — `--no-skill`: nothing is staged and the `skill` tool is
+- **without skill** — `--arm without`: nothing is staged and the `skill` tool is
   denied. This measures "not auto-loaded", not "the text is unreachable"; the
   child can still read the real install under `/Users/wendell/.agents/skills`,
   and the detector marks those draws contaminated.

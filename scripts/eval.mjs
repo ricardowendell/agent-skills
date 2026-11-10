@@ -156,8 +156,8 @@ if (!(opt.minPass > 0 && opt.minPass <= 1)) usage(`--min-pass expects a ratio in
 if (!(Number.isFinite(opt.stallSeconds) && opt.stallSeconds >= 0)) usage(`--stall-seconds expects a non-negative number of seconds (got ${opt.stallSeconds})`)
 if (opt.stop !== null && parseStop(opt.stop) === null) usage(`--stop expects <passes>/<fails>, both integers (got ${opt.stop})`)
 
-// A flag is accepted only where it has a meaning; a parsed-and-ignored
-// compatibility flag is how the 921 lines came back.
+// A flag is accepted only where it means something; ignoring one is how the 921
+// lines came back.
 const ALLOWED = {
   list: ["--root", "--case", "--tag", "--level", "--json"],
   check: ["--root", "--case", "--tag", "--json"],
@@ -167,8 +167,7 @@ const ALLOWED = {
 }
 const disallowed = [...seen].filter((flag) => !ALLOWED[opt.command].includes(flag))
 if (disallowed.length) usage(`${disallowed.join(", ")} has no meaning for '${opt.command}' (see --help in CONTRIBUTING.md)`)
-// `run`/`compare` let a bare `--judge` mean "the model under test"; `inspect`
-// re-judges stored draws, so guessing a model there is a silent expense.
+// Bare `--judge` means "the model under test" on run/compare; inspect requires one.
 if (opt.command === "inspect" && opt.judgeBare) usage("--judge needs a model (or 'default')")
 
 const positionalLimit = { list: 1, check: 1, run: 2, compare: 2, inspect: Infinity }[opt.command]
@@ -216,8 +215,7 @@ function rootsForDiscovery() {
 
 const CORPUS_ROOTS = corpusRoots({ home: HOME, root: opt.root, hostRoots: HOST_ROOTS })
 
-// The boundary and its record are per run: smoke stages only and never launches
-// a child, so it records the explicit "not applied" marker instead of a lie.
+// Smoke stages only, so its record is the explicit "not applied" marker.
 function wrapperFor(level) {
   if (level === "smoke" || !PROBE.enforced || CORPUS_ROOTS.length === 0) return null
   return wrapCommand({ command: "opencode", args: [], roots: CORPUS_ROOTS, mechanism: PROBE.mechanism })
@@ -297,8 +295,8 @@ function repoSha() {
   return r.status === 0 ? r.stdout.trim() : "unknown"
 }
 
-// Without --model the child inherits the config's `model`, so the artifact would
-// say "default" and a matrix row would be unattributable. Resolve it by hand.
+// Without --model the child inherits the config model; resolve it so the
+// artifact is attributable.
 function resolveModel() {
   if (opt.model) return opt.model
   try {
@@ -310,8 +308,7 @@ function resolveModel() {
 }
 const EFFECTIVE_MODEL = resolveModel()
 
-// A judge that is the model under test grades its own homework; the console says
-// so, because the score is agreement, not quality.
+// A judge that is the model under test says so: the score is agreement, not quality.
 const TARGET = EFFECTIVE_MODEL.replace(/ \(config default\)$/, "")
 const JUDGE_MODEL = opt.judge ? (opt.judge === "default" ? TARGET : opt.judge) : null
 const SELF_JUDGED = JUDGE_MODEL !== null && JUDGE_MODEL === TARGET
@@ -331,8 +328,7 @@ function judgeConfig() {
   return opt.judge ? { model: JUDGE_MODEL, threshold: opt.judgeThreshold, selfJudged: SELF_JUDGED } : null
 }
 
-// A draw that reads a stored run's own result is the same as a paid draw for the
-// scorecard; the caller has already decided it is safe to reuse.
+// A reused draw is as good as a paid one once the caller has proven it safe.
 function isRunDir(path) {
   if (!path) return false
   const dir = resolve(path)
@@ -342,7 +338,9 @@ function isRunDir(path) {
 // `compare` has two forms: two run directories are the whole-run regression diff;
 // `<skill> <n>` is the arm comparison. Directories are checked first.
 function runDiffCommand(a, b) {
-  if (opt.against || opt.refresh) usage("--against/--refresh belong to compare <skill> <n>")
+  // This form reads two directories; every other flag would be ignored (F1).
+  const ignored = [...seen].filter((flag) => flag !== "--json")
+  if (ignored.length) usage(`${ignored.join(", ")} cannot be used with compare <run-dir-a> <run-dir-b>`)
   const [baseline, current] = [resolve(a), resolve(b)]
   if (!isRunDir(baseline)) usage(`not a run directory (no manifest.json/cases): ${baseline}`)
   if (!isRunDir(current)) usage(`not a run directory (no manifest.json/cases): ${current}`)
