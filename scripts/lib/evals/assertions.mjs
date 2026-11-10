@@ -10,44 +10,82 @@ import { createHash } from "node:crypto"
 import { dirname, isAbsolute, join, relative, sep } from "node:path"
 import { expand, toRegExp } from "./glob.mjs"
 import { replyText, skillLoads, toolCalls } from "./events.mjs"
-
-// The stance vocabulary a `verdict` line is read with. Closed on purpose: a case
-// gates a stance, not a language, and the harness only knows the words the cases
-// have actually seen. Anything else still compares literally, so a new token is
-// a case change, not a harness change.
-const STANCES = [
-  ["request changes", "REJECT"],
-  ["request change", "REJECT"],
-  ["approve", "APPROVE"],
-  ["approved", "APPROVE"],
-  ["aprovar", "APPROVE"],
-  ["aprovado", "APPROVE"],
-  ["aprovacao", "APPROVE"],
-  ["reject", "REJECT"],
-  ["rejected", "REJECT"],
-  ["rejeitar", "REJECT"],
-  ["rejeitado", "REJECT"],
-  ["recusar", "REJECT"],
-  ["recusado", "REJECT"],
-  ["withheld", "WITHHELD"],
-  ["withhold", "WITHHELD"],
-  ["retido", "WITHHELD"],
-  ["retida", "WITHHELD"],
-  ["reter", "WITHHELD"],
-]
+import { VERDICT_BLOCKERS, VERDICT_FORMS } from "./kinds.mjs"
 
 // Accents and case are decoration too: `Aprovação` and `aprovacao` are one word.
-function stance(line) {
-  const words = line
+// Markdown emphasis is stripped before matching so a bolded stance is the same
+// stance; the line itself is never trimmed to a prefix, because a verdict line
+// is often prose ("compliant — approve", "changes requested — one defect").
+function normaliseVerdict(line) {
+  return line
     .replace(/[*_`]/g, "")
     .trim()
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-  for (const [phrase, name] of STANCES) {
-    if (new RegExp(`^${phrase}\\b`).test(words)) return name
+}
+
+// Longest first, so a phrase that prefixes another is tried before it. Compiled
+// once: the table is closed at module load, so a typo in it is a startup failure,
+// not a silently dead branch of the matcher.
+const FORM_MATCHERS = VERDICT_FORMS.slice()
+  .sort((a, b) => b[0].length - a[0].length)
+  .map(([phrase, name]) => ({
+    phrase,
+    name,
+    re: new RegExp(`(?:^|[^a-z])${escapeRe(phrase)}(?![a-z])`, "g"),
+  }))
+
+function escapeRe(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+// The guard applies to the whole clause the form sits in, so a negator does not
+// have to be the word immediately before it: `unable to approve`, `not able to
+// approve`, `not at all blocking` and `if the tests were fixed, approve` are all
+// blocked. A clause boundary resets it, so a later clause can state a stance.
+const CLAUSE_BOUNDARIES = [".", ";", ":", "—", "–"]
+
+function clauseBefore(text, start) {
+  const before = text.slice(0, start)
+  let cut = -1
+  for (const boundary of CLAUSE_BOUNDARIES) cut = Math.max(cut, before.lastIndexOf(boundary))
+  return cut === -1 ? before : before.slice(cut + 1)
+}
+
+const BLOCKER_RE = new RegExp(
+  `(?:^|[^a-z])(?:${VERDICT_BLOCKERS.map((b) => escapeRe(normaliseVerdict(b)))
+    .sort((a, b) => b.length - a.length)
+    .join("|")})(?![a-z])`,
+)
+
+function blockedBefore(text, start) {
+  return BLOCKER_RE.test(clauseBefore(text, start))
+}
+
+// The stance a verdict line states. Every form in the line is read, and the
+// stance is the polarity the line commits to: **a rejection wins over an
+// approval** when both appear, because a line that names a blocking finding is
+// not an approval whatever its first clause says (`Approve the tests; reject the
+// change`, `approved, but do not merge`, the #9 r4 shape). Within one polarity
+// the earliest form decides, which is unobservable once the polarity is named.
+// No unnegated form means no stance: the line is reported by its first word, so a
+// near-miss reads as what it literally says instead of as its surface reading.
+function stance(line) {
+  const text = normaliseVerdict(line)
+  const found = new Set()
+  for (const { phrase, name, re } of FORM_MATCHERS) {
+    re.lastIndex = 0
+    let m
+    while ((m = re.exec(text))) {
+      if (!blockedBefore(text, m.index + m[0].length - phrase.length)) found.add(name)
+      if (re.lastIndex === m.index) re.lastIndex++
+    }
   }
-  const first = /^[a-z]+/.exec(words)
+  if (found.has("REJECT")) return "REJECT"
+  if (found.has("WITHHELD")) return "WITHHELD"
+  if (found.has("APPROVE")) return "APPROVE"
+  const first = /^[a-z]+/.exec(text)
   return first ? first[0].toUpperCase() : ""
 }
 

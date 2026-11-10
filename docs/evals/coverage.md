@@ -381,20 +381,46 @@ draws** — 55 evidence draws, 5 draws of an invalid case-10 setup attempt, and
 the 5 case-10 control draws. The human approved the extra 5 draws above the
 original 60 ceiling to close the case-10 control.
 
-| case | arm | run directory | clean draws | passed | red assertion(s) | verdict |
-| --- | --- | --- | --- | --- | --- | --- |
-| #8 | with-skill | `2026-11-10T15-02-35--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | **token/contract separator**; substantive judgement matches (both reject), keep |
-| #8 | control | `2026-11-10T15-05-54--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `verdict REJECT` (the control rejects in prose 5/5; the token misses `changes requested`/`needs changes`) | **token/contract separator**, non-discriminator on judgement |
-| #9 | with-skill | `2026-11-10T15-08-51--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | **token/contract separator**; substantive judgement matches (both reject), keep |
-| #9 | control | `2026-11-10T15-12-14--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 3/5 | `verdict REJECT` (r3, r4), `reply src/export\.js:[0-9]+` (r3 only) | **token/contract separator**, non-discriminator on judgement |
-| #10 | with-skill (fixed fixture) | `2026-11-10T15-39-17--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | **token/contract separator**; substantive judgement matches (both approve), keep |
-| #10 | control | `2026-11-10T15-54-47--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `verdict APPROVE`, `reply Not verified` (the control approves in prose; no token and no `Not verified` section) | **token/contract separator**, non-discriminator on judgement |
-| #1 | with-skill | `2026-11-10T15-20-12--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | **token/contract separator**; substantive judgement matches (both approve), keep |
-| #1 | control | `2026-11-10T15-23-10--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `verdict APPROVE` (r1, r4), `reply Not verified` (5/5) | **token/contract separator**, non-discriminator on judgement |
-| #2 | with-skill | `2026-11-10T15-26-12--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 4/5 | `verdict REJECT`, `reply AC-2`, `reply 21\.63\|noise\|float` (r4) | **non-discriminator** (4/5 vs 4/5), keep |
-| #2 | control | `2026-11-10T15-28-46--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 4/5 | `verdict REJECT` (r5) | **non-discriminator** |
-| #7 | with-skill | `2026-11-10T15-31-48--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | **separator** (5/5 vs 0/5), holdout, keep |
-| #7 | control | `2026-11-10T15-35-51--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `verdict REJECT` | **separator** |
+| case | arm | run directory | clean draws | passed | replayed (verdict / passed) | red assertion(s) | verdict |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| #8 | with-skill | `2026-11-10T15-02-35--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 5/5 / 5/5 | — | **token/contract separator**; substantive judgement matches (both reject), keep |
+| #8 | control | `2026-11-10T15-05-54--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | 5/5 / 5/5 | `verdict REJECT` (the control rejects in prose 5/5; the token misses `changes requested`/`needs changes`) | **token/contract separator**, non-discriminator on judgement |
+| #9 | with-skill | `2026-11-10T15-08-51--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 5/5 / 5/5 | — | **token/contract separator**; substantive judgement matches (both reject), keep |
+| #9 | control | `2026-11-10T15-12-14--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 3/5 | 4/5 / 4/5 | `verdict REJECT` (r3, r4), `reply src/export\.js:[0-9]+` (r3 only) | **token/contract separator**, non-discriminator on judgement |
+| #10 | with-skill (fixed fixture) | `2026-11-10T15-39-17--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 5/5 / 5/5 | — | **token/contract separator**; substantive judgement matches (both approve), keep |
+| #10 | control | `2026-11-10T15-54-47--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | 3/5 / 0/5 | `verdict APPROVE`, `reply Not verified` (the control approves in prose; no token and no `Not verified` section) | **token/contract separator**, non-discriminator on judgement |
+| #1 | with-skill | `2026-11-10T15-20-12--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 5/5 / 5/5 | — | **token/contract separator**; substantive judgement matches (both approve), keep |
+| #1 | control | `2026-11-10T15-23-10--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | 5/5 / 0/5 | `verdict APPROVE` (r1, r4), `reply Not verified` (5/5) | **token/contract separator**, non-discriminator on judgement |
+| #2 | with-skill | `2026-11-10T15-26-12--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 4/5 | 4/5 / 4/5 | `verdict REJECT`, `reply AC-2`, `reply 21\.63\|noise\|float` (r4) | **non-discriminator** (4/5 vs 4/5), keep |
+| #2 | control | `2026-11-10T15-28-46--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 4/5 | 5/5 / 5/5 | `verdict REJECT` (r5) | **non-discriminator** |
+| #7 | with-skill | `2026-11-10T15-31-48--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 5/5 / 5/5 | — | **separator** (5/5 vs 0/5), holdout, keep |
+| #7 | control | `2026-11-10T15-35-51--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | 0/5 / 0/5 | `verdict REJECT` | **separator** |
+
+The **replayed** column is the same stored transcripts read with the closed stance
+table of SPEC-0062, no new draw: `node scripts/replay-evals.mjs --run <dir>` over
+the eight directories the four citations name (the `#1`, `#8`, `#9` and `#10`
+cells; the `#2` and `#7` rows replay with it and are shown for completeness). The
+measured `passed` column is untouched — it records what the assertion said when
+the draws were run. The first number is the `verdict` assertion, the second is the
+cell. Per cell: #1 control 3/5 → 5/5 on the token and 0/5 on the cell (`reply Not
+verified` fails 5/5); #8 control 0/5 → 5/5 on both; #9 control 3/5 → 4/5 on both,
+because r3 states the rejection in prose and names no listed stance; #10 control
+0/5 → 3/5 on the token and 0/5 on the cell (r1 and r4 are prose, and `reply Not
+verified` fails 5/5). One row moved that SPEC-0056 did not re-judge: the #2
+control's r5 (`changes requested`) now reads `REJECT`, so that arm replays 5/5;
+its skill arm stays 4/5 because r4 emits no `VERDICT:` line, so #2 remains a
+non-discriminator.
+
+**(SPEC-0062) What the `verdict` assertion measures.** It scores the stance line —
+the words after `VERDICT:`/`Veredicto:`/`Parecer:` — and not the engineering
+judgement the reply carries. A reviewer who rejects the change in a paragraph but
+names no stance token is a *miss* for this assertion, exactly as a reviewer who
+writes `VERDICT: REJECT` and then argues for merging is a hit: the assertion is a
+token/contract reader, and a token/contract separator is not a capability
+separator. The replayed column is therefore the judgement-corrected rate: same
+draws, same replies, read with the vocabulary the controls actually wrote. The
+measured column stays as the historical record of the token's behaviour, and the
+two columns are not interchangeable.
 
 Case 8's skill arm ran `npm test`, saw it pass and rejected the public-contract
 break in 5/5. Its control rejects the same break in prose 5/5 ("changes
@@ -422,6 +448,13 @@ Case 1's control approves the clean diff in prose 5/5 ("compliant — approve",
 "approve", "Passes SPEC-0007"), but fails `reply Not verified` in 5/5 and
 `verdict APPROVE` in r1/r4. It is a token/contract separator, non-discriminator
 on the substantive judgement, and the case stays.
+
+These four per-case readings describe the token's behaviour **at measurement
+time**, under the stance table that preceded SPEC-0062; no measured number above
+is rewritten. The **replayed** column is the same transcripts under the current
+table, and it changes only the token: #1 control r1/r4 now read `APPROVE` (#8
+control 5/5, #9 control r4, #10 control r2/r3/r5 likewise), while #9 r3 and
+#10 r1/r4 still state their stance only in prose.
 
 **Case 10's first skill arm is not evidence.** The run
 `2026-11-10T15-15-21--review-code--agentworks-deepseek-v4-1-flash` (5/5 clean,
@@ -484,13 +517,16 @@ on lines 683–684 each match more than one directory. The cited cells that SPEC
 
 ## Known holes
 
-- **The `verdict` stance vocabulary is closed (SPEC-0056).** It accepts
-  `request changes`/`reject` and `approve`, but not `changes requested`,
-  `needs changes` or `one blocking defect`. The control arms of `review-code` #8
-  and #9 reject in prose 5/5 and still score 0/5 and 3/5 on the token; #10's
-  control approves in prose 5/5 and scores 0/5 because it emits no
-  `VERDICT: APPROVE` or `Not verified`. The red is the contract token, not the
-  substantive judgement. The cases are kept as token/contract separators.
+- **The `verdict` stance vocabulary is closed (SPEC-0056), and was widened in
+  SPEC-0062.** The closed table now reads `changes requested`, `needs changes`,
+  `blocking`, `do not merge`/`should not merge`, `approve with nits` and the rest
+  of `VERDICT_FORMS` in `scripts/lib/evals/kinds.mjs`; a negated or conditional
+  form (`not approved`, `cannot approve`, `non-blocking`) is still a miss. The
+  SPEC-0056 control arms of `review-code` #1, #8, #9 and #10 therefore replay to
+  5/5, 5/5, 4/5 and 3/5 on the token (their cells: 0/5, 5/5, 4/5 and 0/5), and
+  the measured column is unchanged. What the assertion still cannot read is a
+  stance stated only as prose: #9's r3 and #10's r1/r4 name no listed stance, so
+  the red there is the absence of the token, not a different judgement.
 - **`review-code` #3–#6 are historical at older hashes (SPEC-0056).** The wave
   re-ran #1, #2 and #7 at `skillHash 9a28572…`; #3–#6 were not re-measured, so
   their published cells are not evidence of green at this hash.
