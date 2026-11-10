@@ -42,7 +42,7 @@ tests:
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
   - node --test scripts/check-staleness.test.mjs
-  - node scripts/check-staleness.mjs --check
+  - node scripts/check-staleness.mjs
   - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0057-the-cost-of-measuring.md --base main
 ---
 
@@ -212,5 +212,13 @@ None. The three policy choices above were settled at review on 2026-11-10.
 - `check-staleness` must read the stored manifests, never the live store's
   `baseline.json`/`last-run.json`: those are not evidence.
 - Do not touch `skills/`. If a test needs a skill fixture, build a temporary one.
+- The gate is the **report** form (`node scripts/check-staleness.mjs`, exit 0). The
+  `--check` form is red on purpose today: run it once and quote the list in
+  Results as the initial state, then do not wire it anywhere.
+- The new authoring checks may flag an existing case. Every `git.json` `base`
+  resolves today (checked before dispatch), so a `base` finding means a bug in the
+  new code. If a filesystem-assertion reachability finding lands on an existing
+  case, **stop and report it** with the case id and path instead of editing a
+  skill file outside `files:`.
 
 _Filled during implementation._
