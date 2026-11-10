@@ -1,9 +1,10 @@
 ---
 id: TASK-77
 title: 'evals: o eval store e oraculo e nao esta negado nem detectado'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-09T17:25:00Z'
+updated_date: '2026-11-10T15:05:00Z'
 labels: []
 dependencies: []
 references:

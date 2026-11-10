@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "00e52c71-cc63-41ed-b5aa-643392ae8385",
+  "started_at": "2026-11-10T14:42:00.765Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.5.0"
+  },
+  "base_commit": "891a7c59110f1445960d277c3af0cd65c4288258",
+  "head_commit": "00df89beaace56df361eaef30f447a193f6e5f49",
+  "task": "SPEC-0052",
+  "spec_sha": "0ec5533914474f85717bc0e20001e1d99f394902cd6ce7dad39fa68bdc9cb698",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0052-the-eval-store-is-an-answer-key.json",
+      "sha256": "eae35b991e97df54fb781787dbefffb7569531b72b40c1359e04df3a87b691cf"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0052-the-eval-store-is-an-answer-key.json",
+      "sha256": "c9ce37d113ffefb455dd420b68edea4c252cd916feb86f2a03b9143ca01ed143"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "e16366b470d6eee5a9fd2c2d933240466f1a15775f290d419f02f64ec4a102fc"
+    }
+  ],
+  "attempts": 1,
+  "duration": 1406,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "00df89beaace56df361eaef30f447a193f6e5f49"
+}
