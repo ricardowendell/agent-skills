@@ -16,6 +16,7 @@ depends_on:
   - SPEC-0049-a-corpus-hit-under-enforcement-is-a-denied-attempt
 blocks:
   - SPEC-0050-measure-the-four-remaining-cells
+  - SPEC-0052-the-eval-store-is-an-answer-key
 files:
   - scripts/lib/evals/leak.mjs
   - scripts/lib/evals/leak.test.mjs

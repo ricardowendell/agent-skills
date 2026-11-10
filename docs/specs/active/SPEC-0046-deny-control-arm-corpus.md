@@ -17,6 +17,7 @@ blocks:
   - SPEC-0047-remeasure-under-deny-layer
   - SPEC-0048-a-denied-read-is-not-a-leak
   - SPEC-0049-a-corpus-hit-under-enforcement-is-a-denied-attempt
+  - SPEC-0052-the-eval-store-is-an-answer-key
 files:
   - scripts/lib/evals/isolation.mjs
   - scripts/lib/evals/isolation.test.mjs

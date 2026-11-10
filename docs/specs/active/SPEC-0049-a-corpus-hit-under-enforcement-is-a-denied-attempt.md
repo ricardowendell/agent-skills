@@ -18,6 +18,7 @@ depends_on:
   - SPEC-0048-a-denied-read-is-not-a-leak
 blocks:
   - SPEC-0047-remeasure-under-deny-layer
+  - SPEC-0052-the-eval-store-is-an-answer-key
 files:
   - scripts/lib/evals/leak.mjs
   - scripts/lib/evals/leak.test.mjs
