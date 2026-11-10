@@ -24,6 +24,7 @@ files:
   - skills/review-code/references/evals/9/git.json
   - skills/review-code/references/evals/10/change.patch
   - skills/review-code/references/evals/10/git.json
+  - skills/review-code/references/evals/10/docs/specs/SPEC-0008-retry-with-backoff.md
   - docs/evals/coverage.md
   - CHANGELOG.md
   - docs/specs/active/SPEC-0056-review-proportional-to-diff-risk.md
