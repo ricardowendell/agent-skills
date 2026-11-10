@@ -219,7 +219,11 @@ docs/
    shape of what belongs in each, and they keep those directories in git (empty
    directories are not tracked). No other content files yet. **Additive only:**
    skip any README that already exists.
-2. Write `AGENTS.md` from `templates/AGENTS.md.template` — it carries this layout and the routing rules.
+2. Write `AGENTS.md` from `templates/AGENTS.md.template`. Fill every `{{field}}`
+   from detection and the interview with this project's own commands and paths,
+   and drop a section whose question has no answer — a marker in the output is a
+   placeholder, not a plan. It is a routing contract, not the docs layout: the
+   layout is step 1.
 3. Add `.gitignore` from `templates/.gitignore.template`.
 4. Add `.editorconfig` from `templates/.editorconfig.template` (prevents whitespace wars).
 5. Add `README.md` from `templates/README.template`.

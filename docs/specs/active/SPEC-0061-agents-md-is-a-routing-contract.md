@@ -188,4 +188,93 @@ None.
 - Do not touch `references/evals*`. SPEC-0058 is moving those paths in a parallel
   worktree; a conflict there means this spec is wrong, not 0058.
 
-_Filled during implementation._
+## Results
+
+Line counts (`wc -l`), before → after:
+
+| File | Before | After |
+| --- | --- | --- |
+| `AGENTS.md` | 39 | 42 |
+| `templates/AGENTS.md.template` | 102 | 50 |
+| `references/typescript.md` | 519 | 312 |
+| `references/python.md` | 50 | 50 (unchanged, on purpose) |
+
+`AGENTS.md` is under the 60-line cap but did not shrink: the ~20 lines of
+version-specific history were replaced by the sections the contract needs
+(headings, sources of truth, the working agreement). What it carries changed,
+not the count. The generated template more than halved.
+
+### What was removed, and why
+
+- **`AGENTS.md`** — the `pdlc plan → prompt → … → audit` arrow chain; the pdlc
+  1.4 caveats (`dispatch.mjs:214`, `verify.mjs:323`, the `SPEC-NNNN` slug note,
+  the `TASK-36` reference); the `TASK-55` / `CONTRIBUTING.md#editing-the-backlog`
+  history; the "no `In Review` status" enumeration. Why: those describe a
+  version of the harness, not the rule an agent must follow today. The lifecycle
+  now lives only in `docs/pipeline.md`, the backlog CLI only in
+  `CONTRIBUTING.md`. Kept: queue → dispatch → review → merge as operations, the
+  no-push / stay-in-the-worktree / human-gate boundaries, the backlog-comment
+  recipe (tool usage, not history), and "behavioural evals are not a gate".
+- **`templates/AGENTS.md.template`** — the `just dev` / `just check` / `just ci`
+  block; the `[tech stack]` / `[db info]` / `[language/locale]` fields; the
+  `## Behavioral Guidelines` body; the duplicated `## Workflow` paragraph; the
+  `## Docs Layout` tree; the `## Linter Limits` table. Why: nothing there is
+  derived from the project — the commands may not exist, and the limits are
+  whatever the installed linter config enforces. The loop and the layout stay in
+  `docs/WORKFLOW.md` and SKILL.md step 1. The template now renders eight
+  `{{field}}`s from detection and the interview, points at the generated
+  `docs/WORKFLOW.md`, and states no limit of its own. SKILL.md step 2 says how
+  to fill and drop those fields.
+- **`templates/WORKFLOW.md`** — `` `just docs-check` ``; the generated workflow
+  cannot assume a recipe the project may not have.
+- **`references/typescript.md`** — the `## Matrix` section (method, the three
+  fixtures, the per-fixture timing tables, the interleaved head-to-head), the
+  per-section timing narrative (171/322 ms, 145/208/353 ms, 239/365 ms, install,
+  build and monorepo numbers), the measured audit/registry tables, and the
+  "Proposed tightening for SPEC-0043" paragraph. Every decision is kept:
+  defaults, alternatives and their conditions, the tsconfig / oxlint / scripts
+  blocks, the quality-limits table, gate tiers (without costs), pins, and the
+  minimum-versions table the parity test reads.
+- **`references/python.md`** — checked for the same problem; it carries
+  decisions (toolchain, limits, security, commands), no measurement history.
+  Left unchanged; it stays in `files:` as a declared non-change.
+
+### Parity tests
+
+- `template-parity.test.mjs` gained five invariants. The "no placeholder"
+  assertion runs on the **rendered** document (`renderAgents()` +
+  `AGENTS_FIXTURE`), not the template source. It proves: every declared field
+  has a fixture value (a new field fails until it is rendered); no `{{…}}`,
+  bracketed field, angle-bracket field, TODO/TBD/FIXME or "tech stack" survives
+  rendering; no `just dev/check/ci` and no fenced command block, and every
+  command in the commands section is one the fixture project ships; the document
+  points at the `WORKFLOW.md` install path and contains none of the loop skills;
+  it states no lint limit and points at the config that owns it. Vacuity check:
+  appending `[tech stack]` to the template made the test fail, then the file was
+  restored.
+- `template-reference-parity.test.mjs` now also compares the reference's
+  `## Quality limits` table with `.oxlintrc.json.template` rule for rule (max,
+  severity, `skipBlankLines`, `skipComments`), so the reference cannot claim a
+  limit the scaffold does not install. A second mutation test raises
+  `max-params` and requires the mismatch to be reported; both mutation tests
+  pass, and the original `.nvmrc` mutation still fails the comparison.
+
+### Gates
+
+All exit 0, run in this worktree:
+
+| Command | Exit |
+| --- | --- |
+| `node scripts/validate-skills.mjs --root skills` | 0 |
+| `node scripts/run-evals.mjs --root skills --list --check` | 0 (dry run; zero paid draws) |
+| `node --test scripts/lib/evals/*.test.mjs` | 0 (463 pass) |
+| `node --test scripts/lib/*.test.mjs` | 0 (13 pass) |
+| `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` | 0 (40 pass) |
+| `node scripts/check-sensor-parity.mjs` | 0 |
+| `node scripts/check-evidence.mjs` | 0 (100 pre-existing warnings, no errors) |
+| `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0061-agents-md-is-a-routing-contract.md --base main` | 0 (one warning: `references/python.md` declared and deliberately untouched) |
+
+No file under `skills/bootstrap-project-harness/references/evals*`, `docs/specs/**`,
+`backlog/**`, `CHANGELOG.md`, `README.md`, `CONTRIBUTING.md` or `docs/README.md`
+was modified.
+

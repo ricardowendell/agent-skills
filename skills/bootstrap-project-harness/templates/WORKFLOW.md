@@ -11,7 +11,7 @@
 4. **Prompt** — `/prompt <SPEC>` — turn a `ready` spec into an implementation prompt.
 5. **Implement** — `/implement <prompt>` — build it, add tests, flip the spec `in_progress` → `implemented`.
 6. **Review** — `/review-code` — read the diff against the spec; APPROVE or REJECT with evidence.
-7. **Check** — `/docs-check` — audit the docs for drift. (`just docs-check` also runs in the gates.)
+7. **Check** — `/docs-check` — audit the docs for drift. The docs check also runs in the gates.
 
 Between **Prompt** and **Implement**, stress-test the prompt with `/blind-spots` —
 the last cheap checkpoint before code exists.
