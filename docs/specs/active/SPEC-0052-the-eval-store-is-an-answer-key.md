@@ -1,7 +1,7 @@
 ---
 id: SPEC-0052
 title: The eval store is an answer key
-status: ready
+status: implemented
 priority: P1
 task: TASK-77
 created_at: 2026-11-09
