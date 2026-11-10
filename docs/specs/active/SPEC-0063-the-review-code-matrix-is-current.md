@@ -1,7 +1,7 @@
 ---
 id: SPEC-0063
 title: The review-code matrix is current
-status: ready
+status: implemented
 priority: P2
 task: TASK-98
 created_at: 2026-11-10
