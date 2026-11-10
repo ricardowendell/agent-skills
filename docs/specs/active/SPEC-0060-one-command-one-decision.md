@@ -324,7 +324,7 @@ seconds and exits 1 on any finding.
 - `node scripts/check-sensor-parity.mjs` — 0
 - `node scripts/check-evidence.mjs` — 0
 - `node scripts/check-staleness.mjs` — 0 (report-only; 51 stale, 3 uncited)
-- `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0060-one-command-one-decision.md --base main` — see the commit message; the run that produced this file is recorded there.
+- `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0060-one-command-one-decision.md --base main` — 0, with four `files-declared-untouched` warnings for `schedule.mjs`, `schedule.test.mjs`, `execute.mjs` and `execute.test.mjs`: they were declared for a move that did not need them, and the library was left untouched.
 
 A `--level smoke` draw of `review-code` #7 staged the fixture and the pinned skill
 with no model and wrote a `staged` artifact. **Zero paid draws.** The behavioural
