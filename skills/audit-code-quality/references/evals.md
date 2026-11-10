@@ -94,3 +94,4 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - assert: reply CAPTURE OPTIONS
    - assert: unchanged src/report.js
    - assert: unchanged src/export.js
+   - assert: nofile docs/backlog/*

@@ -8,6 +8,6 @@ export function discountFor(order, subtotal, now) {
   return loyal ? Math.round(subtotal * LOYALTY_DISCOUNT) : 0
 }
 
-export function taxFor(_order, base, _now) {
+export function taxFor(base) {
   return Math.round(base * TAX_RATE)
 }

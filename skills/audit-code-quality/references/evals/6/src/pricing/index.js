@@ -13,7 +13,7 @@ export function quote(order, catalog, now) {
   }, 0)
 
   const discount = discountFor(order, subtotal, now)
-  const tax = taxFor(order, subtotal - discount, now)
+  const tax = taxFor(subtotal - discount)
 
   return {
     total: roundCents(subtotal - discount + tax),
