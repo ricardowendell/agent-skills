@@ -37,10 +37,11 @@ skills, which cases, and which published measurements.
   stored-transcript sweep answered a question the runner already answers.
   `harness-health.mjs`, `health.mjs`, its test and `docs/evals/harness-health.md`
   (1,622 lines) went with the release report they served. `check-evidence` keeps
-  its path, its command name and its exit contract, but it reads only
-  `docs/evals/coverage.md` and the matrix files, and a citation must name a run
-  directory exactly: the repository-wide markdown sweep and the 100 dirty-marker
-  warnings are gone, so the next real finding is visible. `docs/pipeline.md` is
+  its path, its command name and its exit contract, but it reads only the
+  publication — `docs/evals/coverage.md`, `discriminating-cases.md` and the
+  matrix files — and a citation must name a run directory exactly: the
+  repository-wide markdown sweep and the 100 dirty-marker warnings are gone, so
+  the next real finding is visible. `docs/pipeline.md` is
   untouched and its `selftest` line still runs `check-evidence`.
 
 ### Added

@@ -178,9 +178,9 @@ None.
 
 ### Net line delta
 
-`git diff --numstat` over the branch: **+243 / −2042, net −1799 lines** across 14
+`git diff --numstat` over the branch: **+245 / −2042, net −1797 lines** across 14
 files. Excluding this spec's own publication and review edits, the deletion is
-**+146 / −2033, net −1887**.
+**+147 / −2033, net −1886**.
 
 | Module | Files | Lines |
 | --- | --- | --- |
@@ -189,9 +189,9 @@ files. Excluding this spec's own publication and review edits, the deletion is
 | `check-evidence.mjs` | 1 | 256 → 244 (−12) |
 | `evidence.mjs` | 1 | 178 → 166 (−12) |
 | `evidence.test.mjs` | 1 | 377 → 423 (+46) |
-| `CONTRIBUTING.md` | 1 | −20 |
+| `CONTRIBUTING.md` | 1 | −19 |
 | `docs/README.md` | 1 | 1 → 1 (the baseline phrase removed) |
-| `CHANGELOG.md` | 1 | +12 |
+| `CHANGELOG.md` | 1 | +13 |
 | this spec | 1 | +89 (`files:`, this section and the review correction) |
 
 Nothing imports `provider-audit` or `health`; the only code references were the

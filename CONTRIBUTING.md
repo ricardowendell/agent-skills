@@ -246,7 +246,8 @@ node scripts/check-evidence.mjs
 declared file the diff did not touch, an asymmetric dependency) print without
 failing, so an unrelated publication does not block the build. A touched file
 the spec did not declare is always an error. `check-evidence` reads only
-`docs/evals/coverage.md` and the `docs/evals/*-matrix.md` files, and exits 1 on
+`docs/evals/coverage.md`, `docs/evals/discriminating-cases.md` and the
+`docs/evals/*-matrix.md` files, and exits 1 on
 a missing directory, a completed run with no cases, an unfinished run cited as
 complete, or `isolated=yes` on a run whose recorded detector is not current or
 whose manifest records an unenforced boundary. A citation must name the run
