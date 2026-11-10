@@ -1,6 +1,6 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { mkdtempSync, readFileSync, existsSync } from "node:fs"
+import { mkdtempSync, mkdirSync, readFileSync, existsSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { createRun, openRun, runId } from "./runs.mjs"
@@ -114,6 +114,46 @@ test("a draw is persisted before the case closes, and resume reads it back", () 
   const manifest = JSON.parse(readFileSync(join(run.dir, "manifest.json"), "utf8"))
   assert.equal(manifest.status, "running")
   assert.equal(manifest.finishedAt, null)
+})
+
+// SPEC-0057: an old manifest predates `skillFileHashes`/`governs`. Resume must
+// not throw on its first result write.
+test("an old manifest without the SPEC-0057 maps can still be resumed", () => {
+  const root = mkdtempSync(join(tmpdir(), "runs-"))
+  const dir = join(root, "runs", "2026-11-01T22-59-00--review-code")
+  mkdirSync(dir, { recursive: true })
+  const legacy = {
+    run: "2026-11-01T22-59-00--review-code",
+    dir,
+    label: "review-code",
+    arm: "with-skill",
+    model: "default",
+    agent: "build",
+    level: "behavior",
+    repoSha: "abc",
+    params: null,
+    startedAt: new Date("2026-11-01T22:59:00").toISOString(),
+    finishedAt: null,
+    status: "running",
+    counts: null,
+    skillHashes: {},
+    stagedSkills: {},
+  }
+  writeFileSync(join(dir, "manifest.json"), JSON.stringify(legacy))
+  const resumed = openRun(dir)
+  assert.doesNotThrow(() =>
+    resumed.writeResult("review-code", 1, {
+      case: 1,
+      status: "passed",
+      skillHash: "tree",
+      skillHashes: { "SKILL.md": "abc" },
+      governs: ["SKILL.md"],
+    }),
+  )
+  resumed.finish({ counts: { passed: 1, failed: 0 } })
+  const manifest = JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8"))
+  assert.deepEqual(manifest.skillFileHashes["review-code#1"], { "SKILL.md": "abc" })
+  assert.deepEqual(manifest.governs["review-code#1"], ["SKILL.md"])
 })
 
 test("openRun refuses a directory that is not a run", () => {

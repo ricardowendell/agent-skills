@@ -44,18 +44,20 @@ skills, which cases, and which published measurements.
   A `git.json` whose `base` does not resolve now throws at staging, naming the
   case, the resolved path and the fixture directory, and `--list --check`
   reports the same pointer without staging anything. Every regex-bearing
-  assertion must compile through `safeRegex`, and a stage-time oracle check
-  rejects an `unchanged`/`changed` target no fixture can produce (plus a
-  git-fixture positive target outside the base and the patch), so a dead oracle
-  fails before a draw is spent. `runAgent` accepts injectable `now`,
+  assertion must compile through `safeRegex`, and an oracle check inspects every
+  fixture: an `unchanged`/`changed` target with no staged match is an error,
+  while a `file`/`dir`/`filematch` target the draw must create is a warning
+  printed by `--list --check`. `runAgent` accepts injectable `now`,
   `setTimeout` and `clearTimeout` — no CLI flag reaches them — which drops
   `node --test scripts/lib/evals/*.test.mjs` from 4.75 s to 1.81–1.91 s while
   keeping one real-clock watchdog integration test. Every draw now records
   `skillHashes` and the resolved `governs:` list; `skillHash` still carries the
-  tree hash. New `node scripts/check-staleness.mjs` compares the cited cells'
-  governed hashes with the working tree and names the stale ones (13 on the
-  first run, including `review-code` #3–#6). It is report-only: the default
-  exits 0, `--check` exits 1, and promoting it to a gate is a follow-up.
+  tree hash, and `--resume` defaults the new maps on a manifest written before
+  this change. New `node scripts/check-staleness.mjs` compares the cited cells'
+  governed hashes with the working tree, resolves bare timestamps only by a
+  unique prefix, and names what it cannot verify (first run: 14 stale cells and
+  1 uncited citation, including `review-code` #3–#6). It is report-only: the
+  default exits 0, `--check` exits 1, and promoting it to a gate is a follow-up.
 
 ### Measured
 

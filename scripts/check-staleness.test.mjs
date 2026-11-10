@@ -105,11 +105,43 @@ test("a change to a governed file makes the cell stale; an ungoverned edit does 
 test("scanCitations ignores a bare #N and keeps explicit skill cells", () => {
   const f = fixture()
   try {
-    const cited = scanCitations(readFileSync(f.coverage, "utf8"), {
+    const { cited } = scanCitations(readFileSync(f.coverage, "utf8"), {
       store: f.store,
+      storeRuns: ["2026-01-01T00-00-00--demo", "2026-02-01T00-00-00--demo"],
       knownSkills: new Set(["demo"]),
     })
     assert.equal([...cited.keys()].sort().join(","), "demo#1,demo#2,demo#3,demo#4,demo#5")
+  } finally {
+    rmSync(f.root, { recursive: true, force: true })
+  }
+})
+
+test("a bare timestamp resolves by unique prefix; ambiguous or missing is uncited", () => {
+  const f = fixture()
+  try {
+    const text = [
+      "the run `2026-01-01T00-00-00` is cited",
+      "the pair `2026-03-03T00-00-00` is ambiguous",
+      "the ghost `2026-09-09T00-00-00` does not exist",
+    ].join("\n")
+    const { cited, uncited } = scanCitations(text, {
+      store: f.store,
+      storeRuns: [
+        "2026-01-01T00-00-00--demo",
+        "2026-02-01T00-00-00--demo",
+        "2026-03-03T00-00-00--demo",
+        "2026-03-03T00-00-00--demo--without-skill",
+      ],
+      knownSkills: new Set(["demo"]),
+    })
+    assert.deepEqual([...cited.keys()].sort(), ["demo#1", "demo#2", "demo#3"])
+    assert.deepEqual(
+      uncited.map((u) => [u.timestamp, u.candidates.length]),
+      [
+        ["2026-03-03T00-00-00", 2],
+        ["2026-09-09T00-00-00", 0],
+      ],
+    )
   } finally {
     rmSync(f.root, { recursive: true, force: true })
   }

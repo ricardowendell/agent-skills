@@ -157,16 +157,21 @@ call to find.
    CI catches it.
 3. `validate()` rejects a regex assertion that does not compile through
    `safeRegex`.
-4. At stage time, a filesystem assertion whose target neither the base nor the
-   patch can produce is an error naming the case and the path.
+4. Every filesystem assertion is checked against the fixture, git or not. A
+   `file`/`dir`/`filematch` target with no staged match is a **warning**
+   (`unverified target: the draw must create it`) and is printed by
+   `--list --check`; it is never an error, because a draw legitimately creates
+   the file it is then checked for. A `changed`/`unchanged` target with no
+   staged match is an error naming the case and the path. `nofile`/`nodir`
+   assert an absence and are not checked.
 5. `runAgent` accepts `now`, `setTimeout` and `clearTimeout`, defaults to the real
    ones, and no CLI flag reaches them. Every existing call site keeps its
    behaviour.
 6. The watchdog tests are deterministic and finish in under 500 ms; one
    integration test keeps the real clock with a short window and still shows a
    start-only stream dying as `stalled`.
-7. `node --test scripts/lib/evals/*.test.mjs` drops from 4.9 s to under 2 s on
-   this machine, measured before and after and published in Results.
+7. `node --test scripts/lib/evals/*.test.mjs` at least halves: from ~4.8 s to
+   under 2.6 s, measured before and after and published as a band in Results.
 8. Each draw records `skillHashes: { rel: hash }` for the files that govern it,
    and `skillHash` still carries the tree hash.
 9. A case may declare `governs:`; absent means the whole skill tree; `validate()`
@@ -198,10 +203,16 @@ call to find.
   cells that are already known to be stale (review-code cases 3–6 among them).
   Publishing that list is the point; turning it into a gate on a repository that
   is already red would make the gate meaningless.
+- **AC-4 was narrowed to a warning during review.** The error form rejected
+  correct cases: an eval draw legitimately creates the file it is then checked
+  for (`filematch docs/inbox/*.md status: unprocessed`), so a missing staged
+  target cannot be an error for `file`/`dir`/`filematch`. Those are warnings,
+  and `--list --check` prints them without staging. The SPEC-0055 case-9 class —
+  a fixture that resolves to nothing — stays an error in AC-1.
 
 ## Open Questions
 
-None. The three policy choices above were settled at review on 2026-11-10.
+None. The four policy choices above were settled at review on 2026-11-10.
 
 ## Prompt Notes
 
@@ -215,11 +226,10 @@ None. The three policy choices above were settled at review on 2026-11-10.
 - The gate is the **report** form (`node scripts/check-staleness.mjs`, exit 0). The
   `--check` form is red on purpose today: run it once and quote the list in
   Results as the initial state, then do not wire it anywhere.
-- The new authoring checks may flag an existing case. Every `git.json` `base`
-  resolves today (checked before dispatch), so a `base` finding means a bug in the
-  new code. If a filesystem-assertion reachability finding lands on an existing
-  case, **stop and report it** with the case id and path instead of editing a
-  skill file outside `files:`.
+- Every `git.json` `base` resolves today (checked before dispatch), so a `base`
+  finding means a bug in the new code. A `file`/`dir`/`filematch` target that
+  the fixture does not contain is a warning, not a stop: the draw is expected to
+  create it, and the warning says so in `--list --check`.
 
 ## Results
 
@@ -232,12 +242,15 @@ None. The three policy choices above were settled at review on 2026-11-10.
    from authoring data, so `run-evals.mjs --list --check` catches it in CI
    without staging. The same validator compiles every regex-bearing assertion
    (`reply`, `noreply`, `filematch`, `ran`, `ranpass`) through `safeRegex`, and
-   a stage-time oracle check rejects an `unchanged`/`changed` target that has no
-   staged match, plus a git-fixture `file`/`dir`/`filematch` target outside the
-   base and the patch. Negative assertions (`nofile`/`nodir`) are deliberately
-   not findings: they assert an absence, and the existing audit cases use them
-   for a path the fixture never creates. No existing case was flagged; the
-   `--list --check` corpus stayed at 97 cases (94 runnable, 3 manual).
+   an oracle check inspects every fixture, git or not. An `unchanged`/`changed`
+   target with no staged match is an error (the agent cannot create staged
+   content). A `file`/`dir`/`filematch` target with no staged match is a
+   **warning** — `unverified target: the draw must create it` — because a draw
+   legitimately creates the file it is then checked for, and
+   `--list --check` prints those warnings from the fixture listing without
+   staging. `nofile`/`nodir` assert an absence and are not checked. The
+   `--list --check` corpus stayed at 97 cases (94 runnable, 3 manual); it prints
+   69 existence warnings today and exits 0.
 2. **Staleness is a query.** Every draw records `skillHashes: { rel: hash }`
    for the files that govern it and the resolved `governs:` list (absent means
    the whole skill tree); `skillHash` still carries the tree hash, and the run
@@ -245,8 +258,12 @@ None. The three policy choices above were settled at review on 2026-11-10.
    the cells cited in `docs/evals/coverage.md`, reads only the stored case
    results (never `baseline.json`/`last-run.json`), and compares the recorded
    hashes with the working tree. A legacy run's tree hash is compared against a
-   re-computed filtered skill tree. The default form is a report (exit 0);
-   `--check` exits 1.
+   re-computed filtered skill tree. A bare timestamp in prose is resolved by
+   unique prefix against the store; an ambiguous or missing prefix is reported
+   as `uncited` and never replaced by a run the document does not name. A
+   manifest written before this change is defaulted on `--resume`, so the new
+   maps cannot throw on its first result write. The default form is a report
+   (exit 0); `--check` exits 1.
 
 ### Suite timing
 
@@ -254,7 +271,11 @@ None. The three policy choices above were settled at review on 2026-11-10.
 
 | | before | after |
 | --- | --- | --- |
-| suite | 4 752.8 ms (wall 5.02 s) | 1 790–1 903 ms (wall 1.9–2.0 s), 460 tests |
+| suite | ~4.75 s (wall 5.02 s), 441 tests | 1.87–2.43 s, 463 tests |
+
+The after band is the honest one measured here and on the reviewer's busier
+host: 1.87–1.98 s over five quiet runs and 2.07–2.43 s under load. That is at
+least a halving, published as a band rather than a single cherry-picked number.
 
 The watchdog tests now drive a fake clock: silence → `stalled` in 1.7 ms, a
 start-only stream at the first fake idle window in ~42 ms, and a live stream
@@ -264,18 +285,23 @@ clock with a 60 ms window and still proves a start-only stream dies as
 
 ### Initial stale list
 
-`node scripts/check-staleness.mjs` on 2026-11-10: **57 cited cells, 13 stale** —
+`node scripts/check-staleness.mjs` on 2026-11-10: **59 cited cells, 15
+findings — 14 stale cells and 1 uncited citation**.
 
-- `audit-code-quality` #1, #4
+- `audit-code-quality` #1, #2, #3, #4 (all at `a6179680…`; #1–#4 are now read
+  from the bare `2026-11-04T21-55-53` citation)
 - `implement-from-prompt` #5, #6
-- `review-code` #3, #4, #5, #6 (#5 and #6 have no recorded run; they are the
+- `review-code` #3, #4, #5, #6 (#3, #5 and #6 have no recorded run; they are the
   cells SPEC-0056 did not re-measure at `9a28572…`)
 - `survey-inflight-work` #1, #2, #3, #4
-- `write-implementation-prompt` #5
+- uncited: `2026-11-04T21-59-17` matches both the with-skill and the control
+  directory, so it is reported, not guessed
 
-`node scripts/check-staleness.mjs --check` is **red today by design** (exit 1
-with that list). It is not in CI and not in `docs/pipeline.md`; promoting it to
-a gate is a follow-up after the first clean pass (AC-11).
+`write-implementation-prompt` #5 is fresh through its later
+`2026-11-06T19-53-34` citation. `node scripts/check-staleness.mjs --check` is
+**red today by design** (exit 1 with that list). It is not in CI and not in
+`docs/pipeline.md`; promoting it to a gate is a follow-up after the first clean
+pass (AC-11).
 
 ### Gates
 
@@ -284,14 +310,14 @@ All commands from `tests:`, run from the worktree root:
 | command | exit |
 | --- | --- |
 | `node scripts/validate-skills.mjs --root skills` | 0 |
-| `node scripts/run-evals.mjs --root skills --list --check` | 0 (97 cases: 94 runnable, 3 manual) |
-| `node --test scripts/lib/evals/*.test.mjs` | 0 (460 tests) |
+| `node scripts/run-evals.mjs --root skills --list --check` | 0 (97 cases: 94 runnable, 3 manual; 69 unverified-target warnings) |
+| `node --test scripts/lib/evals/*.test.mjs` | 0 (463 tests) |
 | `node --test scripts/lib/*.test.mjs` | 0 (13 tests) |
 | `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` | 0 |
 | `node scripts/check-sensor-parity.mjs` | 0 |
 | `node scripts/check-evidence.mjs` | 0 (8 documents, 0 errors, 99 pre-existing warnings) |
-| `node --test scripts/check-staleness.test.mjs` | 0 (5 tests) |
-| `node scripts/check-staleness.mjs` | 0 (13 stale, report form) |
+| `node --test scripts/check-staleness.test.mjs` | 0 (6 tests) |
+| `node scripts/check-staleness.mjs` | 0 (14 stale + 1 uncited, report form) |
 | `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0057-the-cost-of-measuring.md --base main` | 0 |
 
 Zero paid eval draws; no skill text, fixture or oracle was edited.

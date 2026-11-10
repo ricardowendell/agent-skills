@@ -3,7 +3,7 @@ import assert from "node:assert/strict"
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, dirname } from "node:path"
-import { evaluateAssertions, oracleFindings, skillGate, targetDirectory } from "./assertions.mjs"
+import { evaluateAssertions, oracleFindings, oracleWarnings, skillGate, targetDirectory } from "./assertions.mjs"
 import { replyText, toolCalls, usageStats } from "./events.mjs"
 import { snapshotTree } from "./fixture.mjs"
 
@@ -273,11 +273,14 @@ test("a dead unchanged target is an error at stage time", () => {
     scratch,
   )
   assert.equal(findings.length, 1)
+  assert.equal(findings[0].level, "error")
   assert.equal(findings[0].arg, "src/pricing/index.js")
   assert.match(findings[0].reason, /no staged file matches/)
 })
 
-test("a git fixture rejects a filematch outside the base and the patch", () => {
+// The draw is allowed to create the file it is then checked for, so an
+// existence target with no staged match is a warning, never a rejection.
+test("an existence target the fixture lacks is a warning for every fixture", () => {
   const scratch = tree({ "src/cart.js": "one\n" })
   const findings = oracleFindings(
     {
@@ -288,26 +291,49 @@ test("a git fixture rejects a filematch outside the base and the patch", () => {
       ],
     },
     scratch,
-    { isGit: true },
   )
-  assert.deepEqual(findings.map((f) => f.arg), ["docs/backlog/* status: draft"])
+  assert.deepEqual(
+    findings.map((f) => [f.level, f.arg]),
+    [
+      ["warning", "docs/backlog/* status: draft"],
+      ["warning", "lefthook.yml"],
+    ],
+  )
+  assert.ok(findings.every((f) => /the draw must create it/.test(f.reason)))
 })
 
-test("a plain tree may create a directory the agent needs, and absence is not dead", () => {
+test("nofile and nodir assert an absence and are not findings", () => {
   const scratch = tree({ "README.md": "x" })
   const findings = oracleFindings(
     {
       assert: [
-        { kind: "file", arg: "docs/pipeline.md" },
-        { kind: "filematch", arg: "docs/inbox/*.md status: unprocessed" },
         { kind: "nofile", arg: "docs/backlog/*" },
         { kind: "nodir", arg: "docs/prompts" },
       ],
     },
     scratch,
-    { isGit: false },
   )
   assert.deepEqual(findings, [])
+})
+
+test("oracleWarnings gives the same authoring view without staging", () => {
+  const c = {
+    assert: [
+      { kind: "file", arg: "AGENTS.md" },
+      { kind: "file", arg: "docs/pipeline.md" },
+      { kind: "dir", arg: "docs/product" },
+      { kind: "filematch", arg: "docs/specs/*.md status: draft" },
+    ],
+  }
+  const entries = [
+    { rel: "AGENTS.md", isDir: false },
+    { rel: "docs", isDir: true },
+    { rel: "docs/product", isDir: true },
+  ]
+  assert.deepEqual(
+    oracleWarnings(c, entries).map((f) => f.arg),
+    ["docs/pipeline.md", "docs/specs/*.md status: draft"],
+  )
 })
 
 test("usageStats sums tokens and cost across steps, both spellings", () => {

@@ -462,12 +462,20 @@ cell is stale. It is **report-only** for now: it is not wired into CI or
 `docs/pipeline.md`, and promoting it to a gate is a follow-up after the first
 clean pass.
 
-First run (2026-11-10, 57 cited cells): **13 stale** —
-`audit-code-quality` #1 and #4; `implement-from-prompt` #5 and #6;
-`review-code` #3–#6 (#5 and #6 have no stored run — they are the cells
-SPEC-0056 did not re-measure); `survey-inflight-work` #1–#4; and
-`write-implementation-prompt` #5. The cited cells that SPEC-0056 re-ran at
-`skillHash 9a28572…` (`review-code` #1, #2 and #7–#10) are fresh.
+A bare timestamp in prose is resolved by unique prefix against the store; when
+several run directories share it, or none does, the citation is reported as
+`uncited` and no run from the whole store is substituted for it.
+
+First run (2026-11-10, 59 cited cells): **15 findings — 14 stale cells and 1
+uncited citation**. Stale: `audit-code-quality` #1–#4;
+`implement-from-prompt` #5 and #6; `review-code` #3–#6 (#3, #5 and #6 have no
+recorded run — they are the cells SPEC-0056 did not re-measure);
+`survey-inflight-work` #1–#4. Uncited: the audit pair at `21-59-17`, which
+matches both the with-skill and the control directory. The cited cells that
+SPEC-0056 re-ran
+at `skillHash 9a28572…` (`review-code` #1, #2 and #7–#10) are fresh, and
+`write-implementation-prompt` #5 is fresh through its later
+`2026-11-06T19-53-34` citation.
 
 ## Known holes
 

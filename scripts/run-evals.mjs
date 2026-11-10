@@ -84,15 +84,15 @@ import { authProbe, scrubEnv } from "./lib/evals/agent.mjs"
 import { corpusRoots, isolateHome, isolationRecord, probeIsolation, resumeIsolation, wrapCommand } from "./lib/evals/isolation.mjs"
 import {
   denySkillTool,
+  fixtureEntries,
   governedFiles,
-  hasGitFixture,
   makeScratch,
   skillFileHashes,
   stageFixture,
   stageSkill,
   textHash,
 } from "./lib/evals/fixture.mjs"
-import { oracleFindings } from "./lib/evals/assertions.mjs"
+import { oracleFindings, oracleWarnings } from "./lib/evals/assertions.mjs"
 import { summarize, aggregateReps, caseResult, contaminate, PASSED, UNSCORED } from "./lib/evals/result.mjs"
 import { executeCase } from "./lib/evals/execute.mjs"
 import { leaksIn, DETECTOR_VERSION } from "./lib/evals/leak.mjs"
@@ -507,6 +507,12 @@ for (const s of skills) {
       if (id === s.id) errors.push(`${s.id}: case ${c.n}: stage '${id}' names the skill under review`)
       else if (!SKILLS.has(id)) errors.push(`${s.id}: case ${c.n}: unknown stage '${id}'`)
     }
+    // SPEC-0057: an existence target the fixture does not contain is a warning
+    // the draw may satisfy by creating it. Computed from the fixture listing, so
+    // `--list --check` prints it without staging.
+    for (const w of oracleWarnings(c, fixtureEntries(s, c))) {
+      warnings.push(`${s.id}: case ${c.n}: ${w.kind} ${w.arg} — ${w.reason}`)
+    }
     if (opt.case !== null && c.n !== opt.case) continue
     plan.push({ skill: s, c })
   }
@@ -591,9 +597,10 @@ async function runCase(skill, c, rep = null) {
     let skillHashes = {}
     try {
       fixture = stageFixture(skill, c, scratch)
-      // Smoke is the one level that stages without a model, so it is where an
-      // assertion no fixture can satisfy is cheapest to catch (SPEC-0057).
-      const dead = oracleFindings(c, scratch, { isGit: hasGitFixture(skill, c) })
+      // Smoke is the one level that stages without a model, so it is where a
+      // snapshot assertion no fixture can satisfy is cheapest to catch
+      // (SPEC-0057). Existence warnings are authoring output, printed below.
+      const dead = oracleFindings(c, scratch).filter((f) => f.level === "error")
       if (dead.length) {
         const detail = dead.map((d) => `${d.kind} ${d.arg} (${d.reason})`).join("; ")
         throw new Error(`case ${c.n}: assertion target not produced by the fixture: ${detail}`)

@@ -12,7 +12,6 @@ import { evidenceLedger, providerError, replyText, skillLoads, toolCalls, usageS
 import {
   denySkillTool,
   governedFiles,
-  hasGitFixture,
   makeScratch,
   skillFileHashes,
   snapshotTree,
@@ -84,9 +83,11 @@ export async function executeCase({
     let attemptPinned = { hash: null }
     let stagedSkills = []
     const attemptFixture = stageFixture(skill, c, target)
-    // SPEC-0057: an assertion no part of the fixture can satisfy is an authoring
-    // error, not a red cell worth paying for. This runs before the agent starts.
-    const dead = oracleFindings(c, target, { isGit: hasGitFixture(skill, c) })
+    // SPEC-0057: a snapshot assertion no part of the fixture can satisfy is an
+    // authoring error, not a red cell worth paying for. Existence assertions are
+    // warnings instead: the draw is allowed to create the file. This runs before
+    // the agent starts.
+    const dead = oracleFindings(c, target).filter((f) => f.level === "error")
     if (dead.length) {
       const detail = dead.map((d) => `${d.kind} ${d.arg} (${d.reason})`).join("; ")
       throw new Error(`case ${c.n}: assertion target not produced by the fixture: ${detail}`)
@@ -102,7 +103,19 @@ export async function executeCase({
         return { id, hash }
       })
     }
-    return { pinned: attemptPinned, stagedSkills, fixture: attemptFixture, snapshot: snapshotTree(target) }
+    // SPEC-0057: hash the governed files as the attempt is staged, not after the
+    // draw. A skill edited mid-draw would otherwise record post-draw hashes and
+    // could hide the staleness the next check should find.
+    const governs = governedFiles(skill.dir, c.governs)
+    const skillHashes = skillFileHashes(skill.dir, governs)
+    return {
+      pinned: attemptPinned,
+      stagedSkills,
+      fixture: attemptFixture,
+      snapshot: snapshotTree(target),
+      governs,
+      skillHashes,
+    }
   }
 
   let scratchUsed = scratch
@@ -140,12 +153,9 @@ export async function executeCase({
   // The final attempt owns the duration; a retry must not hide the slow draw it
   // replaced behind a sum of both.
   const { out, err, code, durationMs } = attempt
-  const { pinned, stagedSkills, fixture, snapshot } = staged
-  // The files that govern this draw, hashed from the working checkout. `governs:`
-  // narrows the set; absent means the whole skill tree, the conservative default
-  // (SPEC-0057). The set is recorded so a later reader never has to re-derive it.
-  const governs = governedFiles(skill.dir, c.governs)
-  const skillHashes = skillFileHashes(skill.dir, governs)
+  // The final attempt owns the governed hashes too: a retry re-stages and
+  // re-hashes, so provenance describes the attempt that counted.
+  const { pinned, stagedSkills, fixture, snapshot, governs, skillHashes } = staged
   const provenance = {
     fixtureHash: fixture.hash,
     promptHash: textHash(c.prompt),

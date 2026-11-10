@@ -124,8 +124,10 @@ test("a stream that emits only at the start dies at the first idle window", asyn
 
 test("a slow but live stream resets the watchdog and survives", async () => {
   // The child emits every 5 ms for ~100 ms; fake time advances faster than real
-  // time, so the idle gap stays tiny. If activity did not reset the timer, the
-  // first window would kill it. No real seconds are spent waiting.
+  // time, so the idle gap stays tiny. Activity advances the deadline, and the
+  // watchdog also re-checks `isStalled` on every stall tick, so this proves the
+  // stream survives — not that the reset is the only mechanism that can save it.
+  // No real seconds are spent waiting.
   const clock = fakeClock()
   const stallMs = 2000
   const pending = runAgent({

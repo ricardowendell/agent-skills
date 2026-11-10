@@ -5,10 +5,10 @@
 // glob.mjs) and every kind that compares against the staged tree fails when the
 // pattern matches nothing: a wildcard with no effect must never read as a pass.
 
-import { existsSync, readFileSync, realpathSync } from "node:fs"
+import { readFileSync, realpathSync } from "node:fs"
 import { createHash } from "node:crypto"
 import { dirname, isAbsolute, join, relative, sep } from "node:path"
-import { expand } from "./glob.mjs"
+import { expand, toRegExp } from "./glob.mjs"
 import { replyText, skillLoads, toolCalls } from "./events.mjs"
 
 // The stance vocabulary a `verdict` line is read with. Closed on purpose: a case
@@ -134,39 +134,69 @@ export function targetDirectory(arg, kind) {
   return dirname(prefix) || "."
 }
 
-// A stage-time oracle check, never an authoring one: `--list --check` must stay
-// model-free and staging-free, but a smoke draw can afford to inspect the tree
-// it just staged. The point is the SPEC-0055 case-9 failure — an assertion that
-// no fixture can satisfy reads as a healthy red cell and spends paid draws.
-//
-// `unchanged`/`changed` compare against the staged snapshot, so a target that
-// is not there can never be produced by the agent either: those are checked for
-// every fixture. `file`/`dir`/`filematch` may legitimately name a path the agent
-// creates, so they are checked only against a git fixture, where the base and
-// the patch are the repository under review and a target outside both is dead.
-// `nofile`/`nodir` assert an absence; there is nothing to produce, and every
-// existing negative assertion is deliberately about a path the fixture does not
-// create (the audit cases' `nofile docs/backlog/*`), so they are not findings.
+// An oracle check with two severities, because an eval draw is allowed to create
+// the file it is then checked for. `unchanged`/`changed` compare against the
+// staged snapshot, so a target that is not staged can never be produced by the
+// agent either: those are errors. `file`/`dir`/`filematch` may legitimately name
+// a path the draw creates, so a missing staged match is a warning, not a
+// rejection of a correct case (the SPEC-0055 case-9 class is caught by the
+// missing-base error in `stageFixture`). `nofile`/`nodir` assert an absence;
+// there is nothing to produce and they are not checked.
 const EXISTENCE_KINDS = new Set(["file", "dir", "filematch"])
 const SNAPSHOT_KINDS = new Set(["unchanged", "changed"])
 
-export function oracleFindings(c, scratch, { isGit = false } = {}) {
+export function oracleFindings(c, scratch) {
   const findings = []
   for (const { kind, arg } of c.assert || []) {
     if (!SNAPSHOT_KINDS.has(kind) && !EXISTENCE_KINDS.has(kind)) continue
-    const glob =
-      kind === "filematch" ? String(arg ?? "").split(" ")[0] : String(arg ?? "").trim()
+    const glob = kind === "filematch" ? String(arg ?? "").split(" ")[0] : String(arg ?? "").trim()
     if (!glob) continue
     if (SNAPSHOT_KINDS.has(kind)) {
       if (!expand(scratch, glob).some((e) => !e.isDir)) {
-        findings.push({ kind, arg, reason: `no staged file matches ${glob}`, directory: targetDirectory(arg, kind) })
+        findings.push({
+          level: "error",
+          kind,
+          arg,
+          reason: `no staged file matches ${glob}`,
+          directory: targetDirectory(arg, kind),
+        })
       }
       continue
     }
-    if (!isGit) continue
-    const directory = targetDirectory(arg, kind)
-    if (!existsSync(join(scratch, directory))) {
-      findings.push({ kind, arg, reason: `no staged directory ${directory}`, directory })
+    const hits = expand(scratch, glob)
+    const hit = kind === "dir" ? hits.some((e) => e.isDir) : hits.some((e) => !e.isDir)
+    if (!hit) {
+      findings.push({
+        level: "warning",
+        kind,
+        arg,
+        reason: "unverified target: the draw must create it",
+        directory: targetDirectory(arg, kind),
+      })
+    }
+  }
+  return findings
+}
+
+// The same warning rules against a fixture listing, so `--list --check` can
+// print them without staging a single case. A stage-time pass remains the
+// authoritative check; this one is an authoring view of the same rule.
+export function oracleWarnings(c, entries) {
+  const findings = []
+  for (const { kind, arg } of c.assert || []) {
+    if (!EXISTENCE_KINDS.has(kind)) continue
+    const glob = kind === "filematch" ? String(arg ?? "").split(" ")[0] : String(arg ?? "").trim()
+    if (!glob) continue
+    const re = toRegExp(glob)
+    const hit = entries.some((e) => (kind === "dir" ? e.isDir : !e.isDir) && re.test(e.rel))
+    if (!hit) {
+      findings.push({
+        level: "warning",
+        kind,
+        arg,
+        reason: "unverified target: the draw must create it",
+        directory: targetDirectory(arg, kind),
+      })
     }
   }
   return findings

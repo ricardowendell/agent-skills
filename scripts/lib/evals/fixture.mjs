@@ -21,7 +21,7 @@
 import { readFileSync, readdirSync, existsSync, mkdtempSync, cpSync, writeFileSync, unlinkSync, rmSync, mkdirSync } from "node:fs"
 import { spawnSync } from "node:child_process"
 import { createHash } from "node:crypto"
-import { join, resolve } from "node:path"
+import { dirname, join, resolve } from "node:path"
 import { tmpdir } from "node:os"
 import { expand } from "./glob.mjs"
 
@@ -254,4 +254,46 @@ export function skillFileHashes(skillDir, files) {
 
 export function hasGitFixture(skill, c) {
   return existsSync(join(skill.dir, "references/evals", String(c.n), "git.json"))
+}
+
+// The files a fixture can put in the scratch dir, without staging it. Used by
+// `--list --check` to warn about an existence target the draw must create; the
+// base tree, `remove:`, and both sides of every patch are the whole answer.
+// Staging remains the authoritative check.
+export function fixtureEntries(skill, c) {
+  const caseDir = join(skill.dir, "references/evals", String(c.n))
+  const manifest = join(caseDir, "git.json")
+  const isGit = existsSync(manifest)
+  let spec = {}
+  if (isGit) {
+    try {
+      spec = JSON.parse(readFileSync(manifest, "utf8"))
+    } catch {
+      return []
+    }
+  }
+  const baseDir = isGit ? resolve(caseDir, spec.base ?? ".") : caseDir
+  const removed = spec.remove ?? []
+  const entries = !existsSync(baseDir)
+    ? []
+    : expand(baseDir, "**").filter((e) => {
+        if (/(^|\/)(git\.json|change\.patch)$/.test(e.rel)) return false
+        return !removed.some((r) => e.rel === r || e.rel.startsWith(`${r}/`))
+      })
+
+  const add = (rel, isDir) => {
+    if (!entries.some((e) => e.rel === rel)) entries.push({ rel, isDir })
+  }
+  const patches = [spec.patch, ...(spec.branches ?? []).map((b) => b.patch)].filter(Boolean)
+  for (const patch of patches) {
+    const file = join(caseDir, patch)
+    if (!existsSync(file)) continue
+    for (const line of readFileSync(file, "utf8").split("\n")) {
+      const m = line.match(/^(?:\+\+\+ b\/|--- a\/)(.+)$/)
+      if (!m || m[1] === "/dev/null") continue
+      add(m[1], false)
+      for (let dir = dirname(m[1]); dir && dir !== "." && dir !== "/"; dir = dirname(dir)) add(dir, true)
+    }
+  }
+  return entries
 }

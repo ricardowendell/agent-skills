@@ -74,8 +74,9 @@ function range(a, b) {
 // A bare `#N` is *not* a citation: it is usually another skill's case named in
 // the same long table row, and guessing from it invents cells that were never
 // published.
-export function scanCitations(text, { store, knownSkills, manual = new Set() }) {
+export function scanCitations(text, { store, storeRuns = [], knownSkills, manual = new Set() }) {
   const cited = new Map()
+  const uncited = []
   const add = (skill, n, run = null) => {
     if (!knownSkills.has(skill) || !Number.isInteger(n)) return
     const key = cellKey(skill, n)
@@ -87,13 +88,27 @@ export function scanCitations(text, { store, knownSkills, manual = new Set() }) 
     if (run) entry.runs.add(run)
   }
 
+  // A bare timestamp has no `--skill` suffix (`coverage.md` abbreviates the run
+  // that way in prose). Resolve it by unique prefix; if several directories
+  // share the second, the citation is ambiguous and must be reported, never
+  // guessed at from the whole store.
+  const bareTimestamp = /(?<![\w-])(20\d{2}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2})(?!--)(?![\w-])/g
   const lines = String(text ?? "").split(/\r?\n/)
-  for (const line of lines) {
+  lines.forEach((line, i) => {
     for (const m of line.matchAll(RUN_TOKEN)) {
       const run = m[1]
       const dir = join(store, run)
       if (!existsSync(dir)) continue
       for (const cell of readRunCells(dir)) add(cell.skill, cell.case, run)
+    }
+    for (const m of line.matchAll(bareTimestamp)) {
+      const timestamp = m[1]
+      const candidates = storeRuns.filter((name) => name.startsWith(`${timestamp}--`))
+      if (candidates.length === 1) {
+        for (const cell of readRunCells(join(store, candidates[0]))) add(cell.skill, cell.case, candidates[0])
+      } else {
+        uncited.push({ timestamp, line: i + 1, candidates })
+      }
     }
     for (const m of line.matchAll(/`([a-z0-9-]+)`\s*#(\d+)(?:\s*[–-]\s*#?(\d+))?/g)) {
       const n = Number(m[2])
@@ -101,8 +116,8 @@ export function scanCitations(text, { store, knownSkills, manual = new Set() }) 
       for (const value of range(n, end)) add(m[1], value)
     }
     for (const m of line.matchAll(/([a-z0-9-]+)#(\d+)/g)) add(m[1], Number(m[2]))
-  }
-  return cited
+  })
+  return { cited, uncited }
 }
 
 // Prefer a cited run that recorded governed hashes; a control arm may be the
@@ -145,7 +160,7 @@ export function checkStaleness({ coverage, store, skillsRoot }) {
     } catch {}
   }
 
-  const cited = scanCitations(text, { store, knownSkills, manual })
+  const { cited, uncited } = scanCitations(text, { store, storeRuns, knownSkills, manual })
   const results = []
   for (const [key, entry] of cited) {
     const candidates = []
@@ -154,16 +169,9 @@ export function checkStaleness({ coverage, store, skillsRoot }) {
         if (cell.skill === entry.skill && cell.case === entry.case) candidates.push({ ...cell, run })
       }
     }
-    let chosen = newestRunWithHashes(candidates)
-    if (!chosen) {
-      const fallback = []
-      for (const run of storeRuns) {
-        for (const cell of cellsInRun(run)) {
-          if (cell.skill === entry.skill && cell.case === entry.case) fallback.push({ ...cell, run })
-        }
-      }
-      chosen = newestRunWithHashes(fallback)
-    }
+    // Only a cited run may decide a cell. Substituting the newest run from the
+    // whole store would judge a cell against evidence the document never names.
+    const chosen = newestRunWithHashes(candidates)
     results.push(judgeCell({ key, skill: entry.skill, n: entry.case, chosen, skillsRoot }))
   }
   results.sort((a, b) => a.cell.localeCompare(b.cell, undefined, { numeric: true }))
@@ -173,6 +181,7 @@ export function checkStaleness({ coverage, store, skillsRoot }) {
     skillsRoot,
     cited: results.length,
     stale: results.filter((r) => r.stale),
+    uncited,
     cells: results,
   }
 }
@@ -248,17 +257,25 @@ function main(argv) {
   const report = checkStaleness({ coverage, store, skillsRoot })
 
   if (json) {
-    process.stdout.write(`${JSON.stringify({ ok: report.stale.length === 0, ...report }, null, 2)}\n`)
+    process.stdout.write(
+      `${JSON.stringify({ ok: report.stale.length === 0 && report.uncited.length === 0, ...report }, null, 2)}\n`,
+    )
   } else {
     for (const cell of report.stale) {
       process.stdout.write(`stale ${cell.cell} — ${cell.run ?? "no run"} (${cell.reason})\n`)
     }
+    for (const entry of report.uncited) {
+      const detail = entry.candidates.length
+        ? `matches ${entry.candidates.length} run directories (${entry.candidates.join(", ")})`
+        : "matches no run directory"
+      process.stdout.write(`uncited ${entry.timestamp} — coverage.md:${entry.line} ${detail}\n`)
+    }
     process.stdout.write(
-      `${report.cited} cited cell(s), ${report.stale.length} stale; ` +
-        `coverage ${coverage}; store ${store}${check ? " (--check)" : ""}\n`,
+      `${report.cited} cited cell(s), ${report.stale.length} stale, ` +
+        `${report.uncited.length} uncited citation(s); coverage ${coverage}; store ${store}${check ? " (--check)" : ""}\n`,
     )
   }
-  return check && report.stale.length ? 1 : 0
+  return check && (report.stale.length || report.uncited.length) ? 1 : 0
 }
 
 // Importable from the test without running the CLI.

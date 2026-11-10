@@ -90,6 +90,10 @@ export function openRun(dir) {
   }
   manifest.status = "running"
   manifest.finishedAt = null
+  // A manifest written before SPEC-0057 has neither map. Default them here or
+  // the first result write after `--resume <old-dir>` throws and loses the run.
+  manifest.skillFileHashes ??= {}
+  manifest.governs ??= {}
   writeAtomic(manifestPath, JSON.stringify(manifest, null, 2))
   return handle(dir, manifest)
 }

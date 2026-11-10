@@ -6,6 +6,7 @@ import { tmpdir } from "node:os"
 import { join, dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import {
+  fixtureEntries,
   governedFiles,
   hasGitFixture,
   skillFileHashes,
@@ -259,6 +260,23 @@ test("governs narrows the hashed set; absent means the whole skill tree", () => 
   assert.deepEqual(Object.keys(hashes), ["references/notes.md"])
   assert.match(hashes["references/notes.md"], /^[0-9a-f]{64}$/)
   assert.equal(hasGitFixture({ id: "demo", dir: skillDir }, { n: 1 }), false)
+})
+
+test("fixtureEntries lists the base, prune and both sides of the patch", () => {
+  const skillDir = files(mkdtempSync(join(tmpdir(), "entries-")), {
+    "SKILL.md": "---\nname: demo\n---\n",
+    "references/evals/1/base/keep.js": "one\n",
+    "references/evals/1/base/docs/old.md": "old\n",
+    "references/evals/1/git.json": JSON.stringify({ base: "base", remove: ["docs/old.md"], patch: "p.patch" }),
+    "references/evals/1/p.patch":
+      "diff --git a/new.js b/new.js\n--- a/new.js\n+++ b/new.js\n@@ -0,0 +1 @@\n+new\n",
+  })
+  const entries = fixtureEntries({ id: "demo", dir: skillDir }, { n: 1 })
+  const rels = entries.map((e) => `${e.rel}${e.isDir ? "/" : ""}`)
+  assert.ok(rels.includes("keep.js"))
+  assert.ok(rels.includes("new.js"), "the patch addition was not listed")
+  assert.ok(!rels.includes("docs/old.md"), "remove: was not pruned")
+  assert.ok(!rels.some((r) => r.endsWith("git.json")))
 })
 
 test("the snapshot records staged content, so a later edit is visible", () => {
