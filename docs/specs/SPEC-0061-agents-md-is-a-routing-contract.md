@@ -23,7 +23,7 @@ files:
   - skills/bootstrap-project-harness/references/python.md
   - skills/bootstrap-project-harness/scripts/template-parity.test.mjs
   - skills/bootstrap-project-harness/scripts/template-reference-parity.test.mjs
-  - docs/specs/active/SPEC-0061-agents-md-is-a-routing-contract.md
+  - docs/specs/SPEC-0061-agents-md-is-a-routing-contract.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check
@@ -32,7 +32,7 @@ tests:
   - node --test skills/bootstrap-project-harness/scripts/*.test.mjs
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0061-agents-md-is-a-routing-contract.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0061-agents-md-is-a-routing-contract.md --base main
 ---
 
 ## Purpose
@@ -295,7 +295,7 @@ All exit 0, run in this worktree:
 | `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` | 0 (42 pass) |
 | `node scripts/check-sensor-parity.mjs` | 0 |
 | `node scripts/check-evidence.mjs` | 0 (100 pre-existing warnings, no errors) |
-| `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0061-agents-md-is-a-routing-contract.md --base main` | 0 (one warning: `references/python.md` declared and deliberately untouched) |
+| `node scripts/spec-check.mjs --spec docs/specs/SPEC-0061-agents-md-is-a-routing-contract.md --base main` | 0 (one warning: `references/python.md` declared and deliberately untouched) |
 
 No file under `skills/bootstrap-project-harness/references/evals*`, `docs/specs/**`,
 `backlog/**`, `CHANGELOG.md`, `README.md`, `CONTRIBUTING.md` or `docs/README.md`

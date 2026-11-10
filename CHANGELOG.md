@@ -11,6 +11,17 @@ skills, which cases, and which published measurements.
 
 ### Changed
 
+- **`AGENTS.md` is a routing contract (SPEC-0061, TASK-95).** The root file went
+  from 39 to 44 lines and now carries only what an agent needs on the first turn:
+  purpose, the four documents that are authoritative, the working agreement, the
+  operational cycle as one line of commands, and what to check before reporting.
+  The PDLC lifecycle graph and the pdlc version caveats moved out, and
+  `docs/pipeline.md` is named as the only home of the policy. The bootstrap
+  template halved, from 102 to 50 lines: no `[tech stack]` placeholder, no
+  universal `just` block, no duplicated workflow body, every command conditional
+  on the project. `references/typescript.md` lost 207 lines of measurement and
+  kept every decision. The no-placeholder and command-provenance checks run on
+  the rendered document, with mutation tests proving they fail.
 - **The eval corpus leaves the skill (SPEC-0058, TASK-94).** The 14
   `skills/<id>/references/evals.md` files moved to `evals/<id>/cases.md` and the
   13 fixture trees to `evals/<id>/fixtures/<n>/`, with history following via

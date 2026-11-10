@@ -30,7 +30,7 @@ files:
   - docs/prompts/SPEC-0006-mutation-pilot-review-code.prompt.md
   - docs/prompts/SPEC-0046-deny-control-arm-corpus.prompt.md
   - docs/README.md
-  - docs/specs/active/SPEC-0058-the-corpus-leaves-the-skill.md
+  - docs/specs/SPEC-0058-the-corpus-leaves-the-skill.md
   - evals/audit-code-quality/cases.md
   - evals/audit-code-quality/fixtures/1/AGENTS.md
   - evals/audit-code-quality/fixtures/1/docs/architecture.md
@@ -797,7 +797,7 @@ tests:
   - node scripts/check-evidence.mjs
   - node --test scripts/check-staleness.test.mjs
   - node scripts/check-staleness.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0058-the-corpus-leaves-the-skill.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0058-the-corpus-leaves-the-skill.md --base main
 ---
 
 ## Purpose
@@ -1026,7 +1026,7 @@ CHANGELOG entry naming the deletion.
 | `node scripts/check-evidence.mjs` | 0 (8 documents, 0 errors, 100 warnings) |
 | `node --test scripts/check-staleness.test.mjs` | 0 (7 tests) |
 | `node scripts/check-staleness.mjs` | 0 (report form) |
-| `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0058-the-corpus-leaves-the-skill.md --base main` | 0 |
+| `node scripts/spec-check.mjs --spec docs/specs/SPEC-0058-the-corpus-leaves-the-skill.md --base main` | 0 |
 
 `spec-check` exits 0 with 27 `files-declared-untouched` warnings: git's rename
 detection reports only the new path for each of the 368 renames, so the 27
