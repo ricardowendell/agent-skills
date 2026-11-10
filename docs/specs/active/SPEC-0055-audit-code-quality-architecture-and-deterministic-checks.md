@@ -9,7 +9,7 @@ updated_at: 2026-11-10
 source_docs:
   - backlog/tasks/task-79 - arch-aprofundar-audit-code-quality-com-deep-modules-e-custo-de-mudanca-issue-14.md
   - https://github.com/ricardowendell/agent-skills/issues/14
-  - docs/specs/active/SPEC-0054-architecture-corpus-slice.md
+  - docs/specs/SPEC-0054-architecture-corpus-slice.md
   - skills/audit-code-quality/references/evals.md
 related_decisions: []
 depends_on:

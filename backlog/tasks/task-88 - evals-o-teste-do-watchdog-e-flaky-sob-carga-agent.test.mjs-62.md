@@ -1,9 +1,10 @@
 ---
 id: TASK-88
 title: 'evals: o teste do watchdog e flaky sob carga (agent.test.mjs:62)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-10T15:13:00Z'
+updated_date: '2026-11-10T16:23:00Z'
 labels: []
 dependencies: []
 references:

@@ -15,7 +15,7 @@ depends_on: []
 blocks: []
 files:
   - scripts/lib/evals/agent.test.mjs
-  - docs/specs/active/SPEC-0053-a-deterministic-watchdog-test.md
+  - docs/specs/SPEC-0053-a-deterministic-watchdog-test.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check
@@ -24,7 +24,7 @@ tests:
   - node --test skills/bootstrap-project-harness/scripts/*.test.mjs
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0053-a-deterministic-watchdog-test.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0053-a-deterministic-watchdog-test.md --base main
 ---
 
 # SPEC-0053: A watchdog test that does not race the machine

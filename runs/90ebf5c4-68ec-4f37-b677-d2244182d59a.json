@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "90ebf5c4-68ec-4f37-b677-d2244182d59a",
+  "started_at": "2026-11-10T16:02:24.476Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.5.0"
+  },
+  "base_commit": "f2d6285df0a5dbaded8965f5e575ec428d356de1",
+  "head_commit": "9f4ee04ac32bfe9998a697eef2d2a12eaab41ec8",
+  "task": "SPEC-0053",
+  "spec_sha": "7201d4ae8a0ebc1efbd672cf0f91e0ce16b890a9a88cef927be21bfba1165c50",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0053-a-deterministic-watchdog-test.json",
+      "sha256": "c5f9d42ed5392094bc8e54dbe8d11a860de1744c02433bf628d7cccb94c69c0f"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0053-a-deterministic-watchdog-test.json",
+      "sha256": "fc87b713f0f726eb1ff4a27638a7aecdd59cbc70e4dfc9a32b56b6eab9c86352"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "c436004b33ef4861a2886346eeac629b360ca2be7af53599c8070ef5ab1c8e2f"
+    }
+  ],
+  "attempts": 1,
+  "duration": 1289,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "9f4ee04ac32bfe9998a697eef2d2a12eaab41ec8"
+}

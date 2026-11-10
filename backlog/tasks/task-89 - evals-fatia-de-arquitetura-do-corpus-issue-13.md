@@ -1,9 +1,10 @@
 ---
 id: TASK-89
 title: 'evals: fatia de arquitetura do corpus (issue #13)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-10T15:58:00Z'
+updated_date: '2026-11-10T16:24:00Z'
 labels: []
 dependencies: []
 references:
