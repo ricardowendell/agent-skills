@@ -9,6 +9,14 @@ skills, which cases, and which published measurements.
 
 ## [Unreleased]
 
+## [0.6.3] — 2026-11-10
+
+The stack is chosen with numbers and the control arm is enforced. The
+TypeScript/Node default is decided by a reproducible matrix, and the eval
+detector can tell a refused corpus read from a leak. The control arm is denied
+the installed skills and the eval store, so a behavioural cell can finally
+separate two arms; the release itself spent no new paid draw.
+
 ### Added
 
 - **The eval store is an answer key (SPEC-0052, TASK-77).** `corpusRoots` now
@@ -138,7 +146,9 @@ skills, which cases, and which published measurements.
   corpus, so every behavioural cell is published as **unresolved**, not a
   separator. Run directories and per-cell counts are in
   `docs/evals/coverage.md` and the spec's Results; this entry states the claim,
-  not a new measurement.
+  not a new measurement. The control was later unlocked by `SPEC-0046`–`SPEC-0052`;
+  the SPEC-0050 entry re-publishes the cells, and `bootstrap-project-harness`
+  #19 became a separator (5/5 vs 0/4 over the clean base).
 
 ## [0.6.2] — 2026-11-07
 
