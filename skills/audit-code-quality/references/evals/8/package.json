@@ -1,0 +1,9 @@
+{
+  "name": "eval-audit-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deps:check": "./bin/dependency-cruiser src --output-type json",
+    "dead-code": "./bin/knip --reporter json"
+  }
+}

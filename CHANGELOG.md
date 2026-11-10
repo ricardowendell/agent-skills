@@ -9,6 +9,35 @@ skills, which cases, and which published measurements.
 
 ## [Unreleased]
 
+### Added
+
+- **Architecture judgement and deterministic slots for `audit-code-quality`
+  (SPEC-0055, TASK-79).** The skill now reads
+  `references/architecture.md` when a finding turns on a module boundary — deep
+  vs shallow interface, leaked invariants, distributed responsibility, the
+  deletion test, seams, dependency direction and change cost — and probes the
+  deterministic slots in `references/deterministic-checks.md` with a
+  detect/run/record/classify protocol. A slot with no declared tool or project
+  script is `unmeasured`, never "clean"; the audit never installs, upgrades or
+  configures a scanner, uses no network and no `npx --yes`. Case 8 uses local
+  stubs that emit a known cycle and a known unused file; case 9 stages fixture 6
+  via `evals/9/git.json` without the stubs and must say `unmeasured`.
+  `SKILL.md` keeps its description and trigger.
+
+### Measured
+
+- **SPEC-0055 wave, five draws per arm on `agentworks/deepseek-v4-1-flash`.**
+  Cases 5–9 were run with and without the skill; every published cell is
+  `findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0`
+  under detector v6. The skill arms passed 5/5, 4/5, 4/5, 3/5 and 4/5; every
+  control passed 0/5. Case 8's `ran dependency-cruiser`, `ran knip`, cycle and
+  unused-file assertions passed in both arms; case 9 is the classification
+  separator (the skill says `unmeasured` 5/5, the control 0/5). The only
+  skill-arm red is the strict `SCOPE:` line — four draws used a `## SCOPE`
+  heading — and it stays. Decisions: `keep` for all five. One invalid case-9
+  attempt (empty fixture, r3 stalled) is published and not counted; the wave
+  spent 55 draws, not 50. Run directories are in `docs/evals/coverage.md`.
+
 ## [0.6.3] — 2026-11-10
 
 The stack is chosen with numbers and the control arm is enforced. The

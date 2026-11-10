@@ -1,0 +1,34 @@
+#!/usr/bin/env node
+// Eval stub: emits the JSON shape dependency-cruiser prints for a known cycle.
+const report = {
+  modules: [
+    {
+      source: "src/app.js",
+      dependencies: [{ module: "src/legacy.js", resolved: "src/legacy.js" }],
+    },
+    {
+      source: "src/legacy.js",
+      dependencies: [{ module: "src/app.js", resolved: "src/app.js" }],
+    },
+    { source: "src/unused.js", dependencies: [] },
+  ],
+  folders: [],
+  summary: {
+    violations: [
+      {
+        type: "cycle",
+        from: "src/app.js",
+        to: "src/legacy.js",
+        rule: { severity: "error", name: "no-circular" },
+        cycle: ["src/app.js", "src/legacy.js", "src/app.js"],
+      },
+    ],
+    error: 1,
+    warn: 0,
+    info: 0,
+    totalCruised: 3,
+    totalDependenciesCruised: 2,
+  },
+}
+
+process.stdout.write(`${JSON.stringify(report, null, 2)}\n`)

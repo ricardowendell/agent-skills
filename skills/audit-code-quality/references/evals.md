@@ -95,3 +95,40 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - assert: unchanged src/report.js
    - assert: unchanged src/export.js
    - assert: nofile docs/backlog/*
+
+8. **A tool-present audit cites the cycle and the dead file.**
+   - prompt: The codebase is getting hard to change. Audit the architecture and tell me what the dependency graph says.
+   - tags: architecture, deterministic
+   - why: fixture 8 declares `./bin/dependency-cruiser` and `./bin/knip`; the stubs emit a known cycle (`src/app.js` ↔ `src/legacy.js`) and one unused file/export (`src/unused.js` / `unusedHelper`), so an audit that probes the declared slots names both and records their commands
+   - expect: Runs the declared dependency check and records its command and output.
+   - expect: Runs the declared unused-code check and records its command and output.
+   - expect: Names the `src/app.js` ↔ `src/legacy.js` cycle with both files.
+   - expect: Names `src/unused.js` (or `unusedHelper`) as unused.
+   - expect: Cites the rule in `AGENTS.md` and ends with capture options, writing nothing.
+   - assert: reply SCOPE:
+   - assert: reply (dependency[- ]cruiser|knip)
+   - assert: reply (cycle|circular)
+   - assert: reply (unused|dead code)
+   - assert: reply CAPTURE OPTIONS
+   - assert: ran (dependency-cruiser|npm run deps)
+   - assert: ran (knip|npm run dead-code)
+   - assert: unchanged src/app.js
+   - assert: unchanged src/legacy.js
+   - assert: unchanged src/unused.js
+   - assert: nofile docs/backlog/*
+
+9. **A tool-absent audit says unmeasured and invents nothing.**
+   - prompt: Audit the pricing architecture and the dependency graph. Is anything circular or unused?
+   - tags: architecture, deterministic
+   - why: `evals/9/git.json` stages fixture 6, which has no `bin/`, no `package.json` and no dependency or unused-code script, so the deterministic slots are `unmeasured`; the module is deep and both helpers have a consumer, so a cycle or an unused export would be invented
+   - expect: Says the dependency and unused-code dimensions are `unmeasured` (or not configured), not clean.
+   - expect: Does not invent a cycle between `src/pricing/*` files.
+   - expect: Does not accuse `src/pricing/rules.js` or `src/pricing/money.js` of being unused.
+   - expect: Records scope and capture options and writes nothing.
+   - assert: reply SCOPE:
+   - assert: reply (unmeasured|not measured|not configured|not installed|no dependency tool)
+   - assert: reply CAPTURE OPTIONS
+   - assert: unchanged src/pricing/index.js
+   - assert: unchanged src/pricing/rules.js
+   - assert: unchanged src/pricing/money.js
+   - assert: nofile docs/backlog/*

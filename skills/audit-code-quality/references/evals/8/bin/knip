@@ -1,0 +1,22 @@
+#!/usr/bin/env node
+// Eval stub: emits the JSON shape knip prints for one unused file and export.
+const report = {
+  files: ["src/unused.js"],
+  issues: [
+    {
+      file: "src/unused.js",
+      owners: [],
+      dependencies: [],
+      devDependencies: [],
+      optionalPeerDependencies: [],
+      unlisted: [],
+      binaries: [],
+      unresolved: [],
+      exports: [{ name: "unusedHelper", line: 1, col: 8 }],
+      types: [],
+      duplicates: [],
+    },
+  ],
+}
+
+process.stdout.write(`${JSON.stringify(report, null, 2)}\n`)

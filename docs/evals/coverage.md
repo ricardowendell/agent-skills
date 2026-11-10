@@ -17,11 +17,11 @@ directories; they are not estimates.
 | `record-decision` | 5 | 2 | 0 | trees 1–5 | published matrix: #1 separator 4/5 vs **1/5** (`2026-11-06T16-43-33--record-decision`, `2026-11-06T17-11-37--record-decision--without-skill`); #2 separator 4/5 vs **0/5** (`2026-11-06T16-45-46--record-decision`, `2026-11-06T17-28-10--record-decision--without-skill`); #3 non-discriminator 4/5 vs 5/5 (`2026-11-06T16-48-00--record-decision`, `2026-11-06T17-20-53--record-decision--without-skill`); triggers #4/#5 5/5 in `2026-11-06T17-04-07--record-decision`; see `pipeline-bookends-matrix.md` |
 | `review-code` | 7 | 2 | 0 | trees 1–7 plus `base/` and `base-red/`; 1–4 and 7 via `git.json` | discriminating set (SPEC-0033, v2): #7 **5/5 vs 0/5** (`2026-11-07T09-07-52--review-code--agentworks-deepseek-v4-1-flash`, `…09-11-14--without-skill`, clean; the control fails `verdict REJECT` 5/5, 3 approve and 2 miss the token), the **holdout**; see `discriminating-cases.md`. Published matrix; #4 fixture revised 2026-11-05: 5/5 with, 3/5 without (`2026-11-05T07-34-32--review-code`, `…07-47-21--review-code--without-skill`); #7 red gate: 3/3 with, 0/3 without (`…09-05-36`, `…09-32-10--without-skill`) |
 | `survey-inflight-work` | 5 | 3 | 0 | tree 1 via `git.json` with a local bare `origin`; tree 2 without a remote | iteration 1, 1 draw/case: with-skill 4/4 (`2026-11-04T21-49-16`); control case 1 0/1, only the `unknown` PR state separated (`…21-45-26`); control case 2 0/1, only the no-remote line separated (`…21-57-53`). Case 5 (near-miss against `report-project-status`) added 2026-11-08, not measured |
-| `audit-code-quality` | 4 | 2 | 0 | trees 1 and 4 via `git.json` | iteration 1: with-skill 4/4 (`2026-11-04T21-55-53`); control case 1 0/1, only coverage `unknown` separated (`…21-47-51`); case 4 on the final 8-assertion version 1/1 with skill (`2026-11-04T21-59-17`) against 0/1 without (`2026-11-04T21-59-17--audit-code-quality--without-skill`) on `SCOPE:`/`rule`/`CAPTURE OPTIONS` — one draw per arm, so it does not separate reliably (`…21-57-53` is the pre-contract 5-assertion version) |
+| `audit-code-quality` | 9 | 2 | 0 | trees 1 and 4 via `git.json`; 5–8 via `git.json`; 9 stages tree 6 via `evals/9/git.json` | iteration 1: with-skill 4/4 (`2026-11-04T21-55-53`); control case 1 0/1, only coverage `unknown` separated (`…21-47-51`); case 4 on the final 8-assertion version 1/1 with skill (`2026-11-04T21-59-17`) against 0/1 without (`2026-11-04T21-59-17--audit-code-quality--without-skill`) on `SCOPE:`/`rule`/`CAPTURE OPTIONS` — one draw per arm, so it does not separate reliably (`…21-57-53` is the pre-contract 5-assertion version); **SPEC-0055 wave:** architecture cases 5–7 and deterministic cases 8–9, five draws per arm on `agentworks/deepseek-v4-1-flash`; skill arms 5/5, 4/5, 4/5, 3/5 and 4/5 passed against 0/5 in every control; all ten published cells are clean under the enforced boundary; see the SPEC-0055 wave below |
 | `tighten-harness` | 6 | 2 | 0 | trees 1, 2, 3, 5, 6 | case 5: 3/3 passed, skill loaded 0/3 (`why:`, no run dir) |
 | `write-implementation-prompt` | 6 | 2 | 1 | trees 1–4 | SPEC-0030 re-measure at `dcf5177` (`skillHash 046369c2…`, detector v2; the clean behavioural cells are `isolated=yes`, the trigger runs carry their findings): #1 5/5 clean (`2026-11-06T19-25-26--write-implementation-prompt`), control **unresolved** under v2: default 0/3 clean in two runs (`2026-11-07T01-46-26--write-implementation-prompt--without-skill`, `…02-58-14…`) and agentworks 0/2 (`08-17-29`); every clean draw failed `spec_sha:`. Four v1 attempts are history; #2 5/5 clean (`2026-11-06T19-28-47--write-implementation-prompt`), control **separator** under v2 on the default model (`2026-11-07T03-01-29--write-implementation-prompt--without-skill`: 5/5 clean, **0/5 passed**); the agentworks control (`08-20-10`) only reached 0/4 clean, a route difference. The v1 `15-30-39` 0/4 replay-clean is history; #4 5/5 clean (`2026-11-06T19-30-26--write-implementation-prompt`), control **non-discriminator** under v2: default **4/4 valid passed** (`2026-11-07T02-03-01--write-implementation-prompt--without-skill`; 1 rep aborted), agentworks 2/2 (`08-22-28`); the v1 `14-37-23` 4/4 passed is history; #3 `manual` (history `14-01-54` split 4/5; not re-run); triggers: #5 loaded 5/5 in both `2026-11-06T19-32-45` and `2026-11-06T19-53-34` but has no stall-free five-draw cell (stalls r1/r4 and r3/r5, event gaps in the matrix; contamination; best clean subsets 1/1 and 2/2); #6 clean 5/5 in `2026-11-06T20-12-15--write-implementation-prompt` (`findings=0 warnings=0 isolated=yes`), 5/5 in `19-32-45`, 4/5 in `19-53-34` (r3 loaded) — improved but not deterministic; canary 12/12 `13-51-35`; `13-46-05` discarded (`r8` read `.lane/trees`); re-measured under the enforced boundary (SPEC-0050, five draws): #1 is 5/5 clean with the skill (`2026-11-09T13-07-02--write-implementation-prompt--agentworks-deepseek-v4-1-flash`, `findings=0 isolated=yes`) and the control `2026-11-09T13-11-33--write-implementation-prompt--…--without-skill` is 0/5 clean (`deniedDraws=1`, `isolated=yes`), every draw red on `filematch docs/prompts/SPEC-0007-*.prompt.md spec_sha:` — **separator** (5/5 vs 0/5). See `write-implementation-prompt-matrix.md` |
 | `report-project-status` | 4 | 3 | 1 | none | declared, not measured: three trigger/near-miss cases and one manual behavioural case (#3); no fixture and no run dir. Source: issue #11 (2026-11-08), skill merged in `fca9c78` |
-| **total** | **89** | **31** | **3** | | |
+| **total** | **91** | **31** | **3** | | |
 
 ## Discriminating set (issue #5)
 
@@ -323,6 +323,50 @@ r1 and the `groom-backlog` control r2 read the eval store. The store is corpus
 and denied under enforcement, so both draws are store leaks; the evidentiary
 bases are the other four draws each, and no cell verdict moves. No oracle,
 fixture, `why:` line or expected output changed after the draws.
+
+### SPEC-0055 wave (five draws per arm)
+
+Measured 2026-11-10 on `agentworks/deepseek-v4-1-flash`, concurrency 4, detector
+v6 `9149d6ab1ca57343`, level `behavior`. Every valid manifest records
+`params.isolation.enforced: true` (seatbelt), and `check-eval-run` on each of the
+ten published cells prints `findings=0 warnings=0 skillLeaks=0 hostReads=0
+isolated=yes deniedDraws=0`. "Clean draws" is the non-contaminated count;
+"passed" is the assertion count.
+
+| case | arm | run directory | clean draws | passed | red assertion(s) | verdict |
+| --- | --- | --- | --- | --- | --- | --- |
+| #5 | with-skill | `2026-11-10T13-28-15--audit-code-quality--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | **separator** (5/5 vs 0/5), keep |
+| #5 | control | `2026-11-10T13-31-04--audit-code-quality--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `reply SCOPE:`, `reply CAPTURE OPTIONS` | **separator** |
+| #6 | with-skill | `2026-11-10T13-33-15--audit-code-quality--agentworks-deepseek-v4-1-flash` | 5/5 | 4/5 | `reply SCOPE:` (r2) | **separator** (4/5 vs 0/5), keep |
+| #6 | control | `2026-11-10T13-36-02--audit-code-quality--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `reply SCOPE:`, `reply CAPTURE OPTIONS` | **separator** |
+| #7 | with-skill | `2026-11-10T13-40-49--audit-code-quality--agentworks-deepseek-v4-1-flash` | 5/5 | 4/5 | `reply SCOPE:` (r5) | **separator** (4/5 vs 0/5), keep |
+| #7 | control | `2026-11-10T13-43-14--audit-code-quality--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `reply SCOPE:`, `reply CAPTURE OPTIONS` | **separator** |
+| #8 | with-skill | `2026-11-10T13-45-48--audit-code-quality--agentworks-deepseek-v4-1-flash` | 5/5 | 3/5 | `reply SCOPE:` (r1, r3) | **separator** (3/5 vs 0/5), keep |
+| #8 | control | `2026-11-10T13-49-08--audit-code-quality--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `reply SCOPE:`, `reply CAPTURE OPTIONS` | **separator** |
+| #9 | with-skill | `2026-11-10T13-59-02--audit-code-quality--agentworks-deepseek-v4-1-flash` | 5/5 | 4/5 | `reply SCOPE:` (r4) | **separator** (4/5 vs 0/5), keep |
+| #9 | control | `2026-11-10T14-02-40--audit-code-quality--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `reply SCOPE:`, `reply (unmeasured\|not measured\|not configured\|not installed\|no dependency tool)`, `reply CAPTURE OPTIONS` | **separator** |
+
+Case 8's deterministic assertions passed in both arms: every draw ran
+`./bin/dependency-cruiser` and `./bin/knip` (`ran`), named the
+`src/app.js` ↔ `src/legacy.js` cycle and the `src/unused.js` /
+`unusedHelper` dead code. The separator is the `SCOPE:`/`CAPTURE OPTIONS`
+contract, not the ability to read the stubs. Case 9 is the classification
+separator: the skill says `unmeasured` in 5/5 draws, the control in 0/5, and the
+control invents no metric.
+
+The first case-9 with-skill attempt (`2026-11-10T13-51-55--audit-code-quality--agentworks-deepseek-v4-1-flash`) is **not evidence** (stall, `findings=1`): `evals/9` did not exist yet, so the
+staged tree held only the skill; r3 stalled for 171 s (the 120 s watchdog fired; 2 attempts, one runner retry) and the other draws failed
+`unchanged` because the fixture files were absent. The fixture pointer
+`evals/9/git.json` (`base: "../6"`) was added and the cell re-run. That is one
+extra cell of five paid draws, so the wave spent 55 draws, not 50; the overrun
+is published rather than hidden.
+
+Decisions: `keep` for all five cases; no `change`, no `drop`. The strict
+`reply SCOPE:` line is the skill's own output contract, and the skill draws that
+missed it used a `## SCOPE` heading. It was not relaxed after the draws. The
+4/5 and 3/5 pass rates are published as rates; they are not reported as five
+clean passes, and no oracle, fixture (apart from the missing case-9 pointer) or
+`why:` line was changed to reach a pass after the first draw.
 
 ## Known holes
 

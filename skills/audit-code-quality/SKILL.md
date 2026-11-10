@@ -27,19 +27,31 @@ register of costs, each with a path, a reason, and an effort estimate.
 3. Measure before judging. Run the declared gates and keep the exact command and
    the number it printed. A command that does not exist is `unknown`, not an
    estimate, and it blocks any finding that would depend on it.
-4. Map the structure: modules, the direction dependencies are allowed to flow,
+4. Probe the deterministic slots. Read `references/deterministic-checks.md`,
+   detect the tools or project scripts the repo already declares, run them
+   locally with JSON output and a timeout, and record the exact command, exit
+   and count in `MEASUREMENTS`. Never install, upgrade or configure a scanner
+   during an audit.
+5. Map the structure: modules, the direction dependencies are allowed to flow,
    and any cycle. Use the project's dependency tool if it declares one. If it
    does not, a deterministic scan of imports is acceptable **only** when the
    result is reproducible; otherwise mark the dimension `unmeasured`.
-5. Walk the dimensions below, in order, and keep only what has evidence.
-6. Rank by cost of leaving it: how much it slows the next change, how likely it
+6. Walk the dimensions below, in order, and keep only what has evidence.
+7. Rank by cost of leaving it: how much it slows the next change, how likely it
    is to spread, and how reversible the fix is. Cap at ten findings; say how many
    were dropped.
-7. Read the existing debt items (backlog, specs, TODOs) and mark what is already
+8. Read the existing debt items (backlog, specs, TODOs) and mark what is already
    tracked instead of re-reporting it as new.
-8. End with capture options and stop.
+9. End with capture options and stop.
 
 ## Dimensions and what counts as evidence
+
+**Architecture.** Read `references/architecture.md` when a finding turns on a
+module boundary. A deep module hides invariants behind a small interface; a
+shallow one forwards while the caller still validates, opens transactions or
+retries. Cite the interface and the caller-side orchestration with `file:line`,
+and the written rule when there is one. Zero findings is a valid result: a
+healthy decomposition is not a finding.
 
 **Coupling and cohesion.** A cycle between modules, a module that changes for
 several unrelated reasons, or a dependency that points against the declared
@@ -91,6 +103,7 @@ SCOPE: <path> @ <short sha> — <date>
 MEASUREMENTS
 - <command> → <result>
 - not run: <command> — <reason>
+- unmeasured: <slot> — <why it could not be measured>
 
 FINDINGS
 - [dimension] [rule|judgement] path:line — cost; evidence; effort S|M|L; risk
@@ -118,6 +131,9 @@ separate, scoped task.
   it from test-file counts or a green gate.
 - No dependency tool and no reproducible scan: mark coupling `unmeasured` rather
   than eyeballing it.
+- A deterministic slot has no tool, script or configuration: record
+  `unmeasured` with the command that would have run. A missing tool is not clean
+  and not a zero.
 - The user asks for a score, grade, or pass/fail: refuse the score and offer the
   register. A verdict belongs to `review-code` and only for a diff.
 - The scope is too large to inspect honestly: say so and ask for a path. Do not
@@ -128,6 +144,9 @@ separate, scoped task.
 - Read-only. Never edit, refactor, commit, or write to the backlog. Confirm
   `git status --porcelain` before and after; an identical result is the proof.
 - Never invent a metric. "About 40%" is a fabrication; `unknown` is a fact.
+- Never install, upgrade or configure a scanner during an audit. No network, no
+  `npx --yes`, no lockfile edit: the tool is the project's, not a new
+  dependency for it.
 - Never label taste as a rule. A finding that cannot name its source is
   `judgement`.
 - Do not reopen product decisions. If YAGNI conflicts with the product scope,

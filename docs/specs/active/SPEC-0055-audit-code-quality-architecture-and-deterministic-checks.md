@@ -28,6 +28,7 @@ files:
   - skills/audit-code-quality/references/evals/8/src/app.js
   - skills/audit-code-quality/references/evals/8/src/legacy.js
   - skills/audit-code-quality/references/evals/8/src/unused.js
+  - skills/audit-code-quality/references/evals/9/git.json
   - docs/evals/coverage.md
   - CHANGELOG.md
   - docs/specs/active/SPEC-0055-audit-code-quality-architecture-and-deterministic-checks.md
@@ -180,3 +181,75 @@ Protocol, in order:
 - **Safeguards:** no install, no network, no `npx --yes`, no mandatory dependency,
   no invented metric, no code write.
 - **Tests:** the eight gates; paid evals are evidence, not a CI gate.
+
+## Results
+
+Landed:
+
+- `references/architecture.md` — deep module, interface, shallow forwarding,
+  leaked invariants, distributed responsibility, deletion test, seams,
+  boundaries, dependency direction, change cost, `rule` vs `judgement`, and zero
+  findings as a valid result.
+- `references/deterministic-checks.md` — cycles/boundaries, unused code,
+  duplication, coverage, complexity/size and Python slots; detect → run → record
+  → classify → scope; absent or broken tools are `unmeasured`.
+- `SKILL.md` — a new step 4 probes the deterministic slots and records the
+  command, exit and count; the architecture dimension reads its reference on
+  demand; the refusal and guardrail sections say `unmeasured` and forbid an
+  install. The description and trigger are byte-identical.
+- Fixture 8 — `AGENTS.md`, `git.json`, `package.json`, executable
+  `bin/dependency-cruiser` and `bin/knip` stubs that emit known JSON, and
+  `src/{app,legacy,unused}.js`. Case 8 uses it; case 9 stages fixture 6 through
+  `evals/9/git.json` (`base: "../6"`), so the tools are absent.
+- Cases 5–9 in `references/evals.md`. Cases 5–7 are the SPEC-0054 fixtures;
+  case 8 proves the tool-present finding; case 9 proves `unmeasured` with no
+  invented metric.
+
+Measured 2026-11-10 on `agentworks/deepseek-v4-1-flash`, concurrency 4, detector
+v6 `9149d6ab1ca57343`, five draws per arm:
+
+| case | arm | run directory | clean draws | passed | red assertion(s) | decision |
+| --- | --- | --- | --- | --- | --- | --- |
+| 5 | with-skill | `2026-11-10T13-28-15--audit-code-quality--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | keep |
+| 5 | control | `2026-11-10T13-31-04--audit-code-quality--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `reply SCOPE:`, `reply CAPTURE OPTIONS` | keep |
+| 6 | with-skill | `2026-11-10T13-33-15--audit-code-quality--agentworks-deepseek-v4-1-flash` | 5/5 | 4/5 | `reply SCOPE:` (r2) | keep |
+| 6 | control | `2026-11-10T13-36-02--audit-code-quality--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `reply SCOPE:`, `reply CAPTURE OPTIONS` | keep |
+| 7 | with-skill | `2026-11-10T13-40-49--audit-code-quality--agentworks-deepseek-v4-1-flash` | 5/5 | 4/5 | `reply SCOPE:` (r5) | keep |
+| 7 | control | `2026-11-10T13-43-14--audit-code-quality--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `reply SCOPE:`, `reply CAPTURE OPTIONS` | keep |
+| 8 | with-skill | `2026-11-10T13-45-48--audit-code-quality--agentworks-deepseek-v4-1-flash` | 5/5 | 3/5 | `reply SCOPE:` (r1, r3) | keep |
+| 8 | control | `2026-11-10T13-49-08--audit-code-quality--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `reply SCOPE:`, `reply CAPTURE OPTIONS` | keep |
+| 9 | with-skill | `2026-11-10T13-59-02--audit-code-quality--agentworks-deepseek-v4-1-flash` | 5/5 | 4/5 | `reply SCOPE:` (r4) | keep |
+| 9 | control | `2026-11-10T14-02-40--audit-code-quality--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `reply SCOPE:`, `reply (unmeasured\|not measured\|not configured\|not installed\|no dependency tool)`, `reply CAPTURE OPTIONS` | keep |
+
+Every published cell passes `check-eval-run` with `findings=0 warnings=0
+skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0`. Case 8's deterministic
+assertions (`ran dependency-cruiser`, `ran knip`, cycle, unused) pass in both
+arms; case 9 separates on classification — the skill says `unmeasured` 5/5, the
+control 0/5.
+
+The first case-9 with-skill attempt (`2026-11-10T13-51-55--audit-code-quality--agentworks-deepseek-v4-1-flash`) is **not evidence** (stall, `findings=1`): `evals/9` did not exist, so the staged tree held only the skill; r3 stalled for 171 s (the 120 s watchdog fired; 2 attempts, one runner retry) and the other draws failed `unchanged`. The fixture pointer was added and the cell re-run. The wave therefore spent 55 paid draws, not 50; the overrun is published, not hidden.
+
+Decisions: `keep` for all five cases; no `change`, no `drop`. The only skill-arm
+red is the strict `SCOPE:` line (a `## SCOPE` heading in four draws). It was not
+relaxed after the draws.
+
+Gates, all eight `tests:` commands from the worktree root:
+
+- `node scripts/validate-skills.mjs --root skills` — exit 0, 14 skills, all clear.
+- `node scripts/run-evals.mjs --root skills --list --check` — exit 0, 94 cases
+  (91 runnable, 3 manual).
+- `node --test scripts/lib/evals/*.test.mjs` — 441 pass, 0 fail.
+- `node --test scripts/lib/*.test.mjs` — 13 pass, 0 fail.
+- `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` — 34 pass,
+  0 fail.
+- `node scripts/check-sensor-parity.mjs` — 2/2 fixtures in parity, exit 0.
+- `node scripts/check-evidence.mjs` — 0 errors; the 99 warnings are the existing
+  dirty-run citations already in `docs/evals/`.
+- `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0055-audit-code-quality-architecture-and-deterministic-checks.md --base main`
+  — 0 errors on the committed diff.
+
+Acceptance criteria: 1–5 and 7 are met. AC-6's read-only and no-install clauses
+hold (every `unchanged` assertion passed; no dependency, lockfile or network
+install); its "no paid draw beyond the authorised five" clause is **not met**:
+the wave spent 55 draws because the missing case-9 fixture pointer forced one
+invalid cell to be re-run.
