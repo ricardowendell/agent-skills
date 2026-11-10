@@ -21,9 +21,10 @@ skills, which cases, and which published measurements.
   the seatbelt boundary, the repository state and the two 2026-11-10 waves.
   Classes were copied from `coverage.md` for cases 1, 2 and 7–10 and derived for
   cases 3 and 4, which carry no published class and are marked `(derived — no
-  class published)` in every class cell: cases 1, 4, 8, 9 and 10 are
-  token/contract separators after the re-judge, 7 is the separator holdout, 2 is
-  a non-discriminator, 3 separates on the judgement, and cases 5 and 6 are
+  class published)` in every class cell: cases 1, 8, 9 and 10 are
+  token/contract separators after the re-judge, 4 is one by derivation, 7 is the
+  separator holdout, 2 is a non-discriminator, 3 separates on the judgement, and
+  cases 5 and 6 are
   trigger cases with no arm cell. The old header's 15/15 vs 0/15 aggregate and
   its reading that case 1 "separates" were corrected against `coverage.md`. The
   replayed column carries the cell, not the token, so cases 1 and 10 read

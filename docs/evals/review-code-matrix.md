@@ -129,11 +129,13 @@ in 4/5. The single control pass ended under a `### Verdict` heading with
 confident approval. The current assertions name that stance and require the reply
 to say what is missing. The class comes from the published cells, not from a
 replay: `node scripts/replay-evals.mjs --run 2026-11-03T10-06-33--review-code`
-re-judges all five skill draws `failed → failed` on the post-SPEC-0046
-skill-location gate (`loaded from … outside the scratch dir`), because they
-predate isolation. The reply-level replay is therefore not reproducible today,
-which is part of why the cell is published as pre-detector history: it was not
-re-measured at `skillHash 9a28572…`.
+re-judges all five skill draws `passed → failed` — five verdicts differ, so it
+does not confirm this row, it contradicts it. The recorded scratch no longer
+exists and the load path carries a `/private` prefix, so `skillGate`'s
+containment check (`scripts/lib/evals/assertions.mjs:360`) cannot match and the
+reply assertions are never reached. The reply-level replay is therefore not
+reproducible today, which is part of why the cell is published as pre-detector
+history: it was not re-measured at `skillHash 9a28572…`.
 
 ## Case 4 — spec moved after the stamp
 
