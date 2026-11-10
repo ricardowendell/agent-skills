@@ -6,6 +6,8 @@ assertions only and no judge. The three skills hold the two ends of the pipeline
 `capture-idea` catches the note, `process-inbox` classifies it, and
 `record-decision` writes the ADR. Eleven cases: five behavioural and six routing
 triggers. Everything below runs under `node scripts/run-evals.mjs --root skills`.
+Paths in the measurement notes name the layout at the time of the run; SPEC-0058
+moved the corpus to `evals/<id>/`.
 
 The SPEC-0031 re-measure at `eb9903e` used `agentworks/deepseek-v4-1-flash`:
 the default provider's weekly limit was exhausted (HTTP 429), so the same model
@@ -37,9 +39,11 @@ a pass and does not count as one. No judge ran, so there is no judge column.
 ## What "clean" means — TASK-43 caveat
 
 `findings=0 warnings=0` means the detector saw **no read of an installed skill or
-of a `references/evals.md` answer key** outside the scratch. It does **not** mean
+of the eval corpus** outside the scratch (`references/evals.md` at the time;
+`evals/<id>/cases.md` after SPEC-0058). It does **not** mean
 the draw was isolated. `scripts/lib/evals/leak.mjs` classifies only skill roots
-and `references/evals.md$`; a draw can read the host's `docs/` corpus, the global
+and the corpus shape (`references/evals.md$`, and since SPEC-0058
+`evals/<id>/cases.md` or `evals/<id>/fixtures/`); a draw can read the host's `docs/` corpus, the global
 `AGENTS.md`, or this worktree and still score `findings=0`. That gap is real and
 open (TASK-43), and it applies to every control cell below, whose clean scored
 draws can still have read the host's `docs/` and `AGENTS.md`. The contamination

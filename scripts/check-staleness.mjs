@@ -25,7 +25,7 @@ import { join, resolve } from "node:path"
 import { pathToFileURL } from "node:url"
 import { stagedTreeHash } from "./lib/evals/fixture.mjs"
 import { RUN_TOKEN } from "./lib/evals/evidence.mjs"
-import { parseCases } from "./lib/evals/parse.mjs"
+import { corpusDir, parseCases } from "./lib/evals/parse.mjs"
 
 const USAGE = `Usage: node scripts/check-staleness.mjs [--check] [--store <runs-dir>] [--coverage <file>] [--skills <dir>] [--json] [--help]
 
@@ -168,7 +168,7 @@ export function checkStaleness({ coverage, store, skillsRoot }) {
 
   const manual = new Set()
   for (const skill of knownSkills) {
-    const evals = join(skillsRoot, skill, "references/evals.md")
+    const evals = join(corpusDir(join(skillsRoot, skill)), "cases.md")
     if (!existsSync(evals)) continue
     try {
       for (const c of parseCases(readFileSync(evals, "utf8"), skill).cases) {

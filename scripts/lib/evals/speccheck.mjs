@@ -15,6 +15,11 @@
 // the implementation did not need. A touched file the spec did not declare is an
 // error: that is the scope violation the rule exists to catch. Prose in Results
 // is not proof of intent and is not used to suppress either direction.
+//
+// One construct keeps a directory move reviewable: an entry ending in `/` names
+// a subtree and covers every path under that prefix. An undeclared file inside a
+// declared subtree is still an error, and a subtree the diff never touches is a
+// warning like any other declared entry (SPEC-0058).
 
 const LIST_KEYS = new Set(["files", "tests", "depends_on", "blocks", "source_docs", "related_decisions"])
 
@@ -148,18 +153,23 @@ export function checkSpec({ text, path = "spec", diff = null, specs = [], tasks 
     const touched = diff.map(normalizePath).filter((path) => path && !path.startsWith("backlog/"))
     const touchedSet = new Set(touched)
     const declaredSet = new Set(files)
-    // A declared file the diff did not touch is a warning: the spec may have
-    // planned a file the implementation did not need. Prose in Results is not
-    // proof of intent, so it is never used to suppress a finding.
+    const subtrees = files.filter((file) => file.endsWith("/"))
+    const inSubtree = (file, prefix) => file.startsWith(prefix) && file !== prefix
+    // A declared file (or subtree) the diff did not touch is a warning: the spec
+    // may have planned a file the implementation did not need. Prose in Results
+    // is not proof of intent, so it is never used to suppress a finding.
     for (const file of files) {
-      if (!touchedSet.has(file)) {
+      const touchedIt = file.endsWith("/")
+        ? touched.some((path) => inSubtree(path, file))
+        : touchedSet.has(file)
+      if (!touchedIt) {
         add("files-declared-untouched", `files: declares ${file}, but the diff does not touch it`, "warning")
       }
     }
     // A touched file the spec did not declare is a scope violation, not a
-    // warning.
+    // warning. A declared subtree covers every path under its prefix.
     for (const file of touched) {
-      if (!declaredSet.has(file)) {
+      if (!declaredSet.has(file) && !subtrees.some((prefix) => inSubtree(file, prefix))) {
         add("files-touched-undeclared", `the diff touches ${file}, but files: does not declare it`)
       }
     }

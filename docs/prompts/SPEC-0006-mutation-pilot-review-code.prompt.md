@@ -103,7 +103,7 @@ README says how to rebuild them.
 
 ## Operations
 
-1. Read `skills/review-code/SKILL.md` and `references/evals.md` end to end. Build
+1. Read `skills/review-code/SKILL.md` and `evals/review-code/cases.md` end to end. Build
    `rule-coverage.md`: one row per rule, the case and assertion that would fail or
    `no assertion`, and whether a fixture can tempt the violation.
 2. If no uncovered rule is manifestable, say so in the map and run only the
@@ -161,7 +161,7 @@ README says how to rebuild them.
 
 ## Safeguards
 
-- Do not stage `references/evals.md` or `references/evals/` where the agent can
+- Do not stage `evals/<id>/cases.md` or `evals/<id>/fixtures/` where the agent can
   read them; the runner excludes them, and a root that leaks the answer key
   measures nothing.
 - Do not count an invalid mutant, a failed load, an empty timeout or a

@@ -17,7 +17,7 @@ import { execFileSync } from "node:child_process"
 import { createHash } from "node:crypto"
 import { join, basename, dirname, relative } from "node:path"
 import { homedir } from "node:os"
-import { readEvals } from "./lib/evals/parse.mjs"
+import { corpusDir, readEvals } from "./lib/evals/parse.mjs"
 
 const args = process.argv.slice(2)
 const maxDescArg = args.indexOf("--max-desc")
@@ -150,17 +150,26 @@ for (const root of ROOTS) {
       if (rootArg >= 0 && isTracked(file)) errors.push(msg)
       else warnings.push(msg)
     }
-    // The eval corpus is authored next to the skill; run its structural checks
-    // here too so `lint` refuses an assertion the run cannot stage, before a
-    // behavioural draw burns time proving it can never pass (SPEC-0030).
-    const evals = join(dirname(file), "references/evals.md")
-    if (rootArg >= 0 && existsSync(evals) && isTracked(evals)) {
-      try {
-        const parsed = readEvals(evals, id)
-        for (const e of parsed.errors) errors.push(`${evals}: ${e}`)
-        for (const w of parsed.warnings) warnings.push(`${evals}: ${w}`)
-      } catch (e) {
-        errors.push(`unreadable eval corpus: ${evals} (${e.message})`)
+    // The eval corpus lives beside the skill roots, at `evals/<id>/cases.md`
+    // (SPEC-0058). Run its structural checks from there so `lint` refuses an
+    // assertion the run cannot stage, before a behavioural draw burns time
+    // proving it can never pass (SPEC-0030). A corpus file left inside the
+    // skill is an error: the boundary is what keeps the answer key out of a
+    // staged skill, and a warning would let it drift back.
+    if (rootArg >= 0) {
+      for (const stray of [join(dirname(file), "references/evals.md"), join(dirname(file), "references/evals")]) {
+        if (existsSync(stray))
+          errors.push(`stray eval corpus: ${stray} — the corpus lives at evals/${id}/cases.md (SPEC-0058)`)
+      }
+      const evals = join(corpusDir(dirname(file)), "cases.md")
+      if (existsSync(evals)) {
+        try {
+          const parsed = readEvals(evals, id, { skillDir: dirname(file) })
+          for (const e of parsed.errors) errors.push(`${evals}: ${e}`)
+          for (const w of parsed.warnings) warnings.push(`${evals}: ${w}`)
+        } catch (e) {
+          errors.push(`unreadable eval corpus: ${evals} (${e.message})`)
+        }
       }
     }
 

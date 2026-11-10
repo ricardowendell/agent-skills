@@ -88,6 +88,55 @@ test("files: reports a touched file the spec did not declare", () => {
   assert.match(findings[0].message, /c\.md/)
 })
 
+test("a trailing-slash entry covers every path under its subtree", () => {
+  const findings = checkSpec({
+    text: specText({ files: ["evals/"] }),
+    path: "spec.md",
+    diff: ["evals/review-code/cases.md", "evals/review-code/fixtures/1/git.json"],
+    tasks,
+    specs: [],
+  })
+  assert.deepEqual(findings, [])
+})
+
+test("an undeclared file under a declared subtree is still an error", () => {
+  const findings = checkSpec({
+    text: specText({ files: ["evals/"] }),
+    path: "spec.md",
+    diff: ["evals/review-code/cases.md", "scripts/runner.mjs"],
+    tasks,
+    specs: [],
+  })
+  assert.deepEqual(findings.map((f) => [f.level, f.rule]), [["error", "files-touched-undeclared"]])
+  assert.match(findings[0].message, /scripts\/runner\.mjs/)
+})
+
+test("a declared subtree the diff does not touch is a warning", () => {
+  const findings = checkSpec({
+    text: specText({ files: ["evals/", "runner.mjs"] }),
+    path: "spec.md",
+    diff: ["runner.mjs"],
+    tasks,
+    specs: [],
+  })
+  assert.deepEqual(findings.map((f) => [f.level, f.rule]), [["warning", "files-declared-untouched"]])
+  assert.match(findings[0].message, /evals\//)
+})
+
+test("an entry without the slash keeps exact equality", () => {
+  const findings = checkSpec({
+    text: specText({ files: ["evals", "a.md"] }),
+    path: "spec.md",
+    diff: ["evals/review-code/cases.md", "a.md"],
+    tasks,
+    specs: [],
+  })
+  assert.deepEqual(findings.map((f) => [f.level, f.rule]), [
+    ["warning", "files-declared-untouched"],
+    ["error", "files-touched-undeclared"],
+  ])
+})
+
 test("Results prose does not excuse a declared file the diff did not touch", () => {
   const findings = checkSpec({
     text: specText({

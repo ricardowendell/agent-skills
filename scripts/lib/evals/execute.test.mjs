@@ -5,6 +5,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { executeCase } from "./execute.mjs"
 import { makeScratch, treeHash } from "./fixture.mjs"
+import { corpusDir } from "./parse.mjs"
 import { DETECTOR_VERSION } from "./leak.mjs"
 import { rejudge } from "./rejudge.mjs"
 
@@ -15,7 +16,9 @@ import { rejudge } from "./rejudge.mjs"
 // testable in milliseconds.
 
 function skillDir(id = "demo") {
-  const dir = mkdtempSync(join(tmpdir(), `exec-skill-${id}-`))
+  const root = mkdtempSync(join(tmpdir(), `exec-skill-${id}-`))
+  const dir = join(root, "skills", id)
+  mkdirSync(dir, { recursive: true })
   writeFileSync(join(dir, "SKILL.md"), `---\nname: ${id}\ndescription: fixture\n---\n\n# Demo\n`)
   return { id, dir }
 }
@@ -301,7 +304,7 @@ test("a failing assertion is named in the reason", async () => {
 
 test("an infrastructure retry re-stages a fresh scratch and does not inherit the dead draw", async () => {
   const { skill, scratch, c, cleanup } = setup()
-  const fixtureDir = join(skill.dir, "references/evals/1")
+  const fixtureDir = join(corpusDir(skill.dir), "fixtures", "1")
   mkdirSync(fixtureDir, { recursive: true })
   writeFileSync(join(fixtureDir, "RULES.md"), "fresh\n")
   const scratches = []
@@ -335,7 +338,7 @@ test("an infrastructure retry re-stages a fresh scratch and does not inherit the
 
 test("a draw records the fixture, prompt and detector provenance", async () => {
   const skill = skillDir()
-  const fixtureDir = join(skill.dir, "references/evals/1")
+  const fixtureDir = join(corpusDir(skill.dir), "fixtures", "1")
   mkdirSync(fixtureDir, { recursive: true })
   writeFileSync(join(fixtureDir, "RULES.md"), "one\n")
   const c = { n: 1, title: "fixture", prompt: "Do the thing.", assert: [{ kind: "file", arg: "RULES.md" }] }
@@ -489,8 +492,8 @@ test("execute and rejudge render the same judge prompt from the same stream", as
 test("the fixture is staged before the agent runs and the skill is pinned", async () => {
   const skill = skillDir()
   const scratch = makeScratch(skill.id, 2)
-  mkdirSync(join(skill.dir, "references/evals/2"), { recursive: true })
-  writeFileSync(join(skill.dir, "references/evals/2/README.md"), "fixture\n")
+  mkdirSync(join(corpusDir(skill.dir), "fixtures/2"), { recursive: true })
+  writeFileSync(join(corpusDir(skill.dir), "fixtures/2/README.md"), "fixture\n")
   const c = { n: 2, title: "fixture", prompt: "Do the thing.", assert: [{ kind: "file", arg: "README.md" }] }
   try {
     const seen = []

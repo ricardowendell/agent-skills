@@ -9,6 +9,17 @@ skills, which cases, and which published measurements.
 
 ## [Unreleased]
 
+### Changed
+
+- **The eval corpus leaves the skill (SPEC-0058, TASK-94).** The 14
+  `skills/<id>/references/evals.md` files moved to `evals/<id>/cases.md` and the
+  13 fixture trees to `evals/<id>/fixtures/<n>/`, with history following via
+  `git mv`. Discovery reads that layout only: `parse.mjs` and `fixture.mjs` no
+  longer resolve `references/evals*`, `validate-skills.mjs` fails on any stray
+  eval path inside a skill, and `speccheck` accepts a trailing-slash `files:`
+  entry as a subtree. `emit-promptfoo.mjs` and `promptfoo/provider.mjs` were
+  deleted; a skill now packages runtime references only.
+
 ### Added
 
 - **Architecture judgement and deterministic slots for `audit-code-quality`

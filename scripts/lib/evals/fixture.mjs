@@ -24,6 +24,7 @@ import { createHash } from "node:crypto"
 import { dirname, join, resolve } from "node:path"
 import { tmpdir } from "node:os"
 import { expand } from "./glob.mjs"
+import { corpusDir } from "./parse.mjs"
 
 export function makeScratch(id, n) {
   return mkdtempSync(join(tmpdir(), `eval-${id}-${n}-`))
@@ -68,11 +69,12 @@ function copyTree(src, dest, filter) {
   cpSync(src, dest, { recursive: true, filter })
 }
 
-// The eval corpus is the answer key: `references/evals.md` holds every case's
-// prompt, expectations and assertions, and `references/evals/<n>/` the fixtures
-// of the other cases. An agent that can read them can satisfy a case without
-// exercising the skill, and 40 of the first 194 transcripts did. The skill is
-// staged without them; `stageFixture` reads the case's fixture from the repo.
+// The eval corpus is the answer key: `evals/<id>/cases.md` holds every case's
+// prompt, expectations and assertions, and `evals/<id>/fixtures/<n>/` the
+// fixtures of the cases. It lives outside the skill checkout (SPEC-0058), so a
+// staged skill cannot carry it; the filter here stays as defence in depth for a
+// checkout that predates the move. `stageFixture` reads the fixture from the
+// repo.
 const CORPUS = /(^|\/)(node_modules|\.git|evals|evals\.md)$/
 
 // Copy the skill under review into the scratch dir, returning its id and hash.
@@ -113,7 +115,7 @@ export function denySkillTool(scratch) {
 // lives under `.opencode/`) is copied *after* this, so the hash describes the
 // fixture alone — a fixture edit moves it, a skill edit does not.
 export function stageFixture(skill, c, scratch) {
-  const caseDir = join(skill.dir, "references/evals", String(c.n))
+  const caseDir = join(corpusDir(skill.dir), "fixtures", String(c.n))
   const manifest = join(caseDir, "git.json")
   const isGit = existsSync(manifest)
   const spec = isGit ? JSON.parse(readFileSync(manifest, "utf8")) : {}
@@ -253,7 +255,7 @@ export function skillFileHashes(skillDir, files) {
 }
 
 export function hasGitFixture(skill, c) {
-  return existsSync(join(skill.dir, "references/evals", String(c.n), "git.json"))
+  return existsSync(join(corpusDir(skill.dir), "fixtures", String(c.n), "git.json"))
 }
 
 // The files a fixture can put in the scratch dir, without staging it. Used by
@@ -261,7 +263,7 @@ export function hasGitFixture(skill, c) {
 // base tree, `remove:`, and both sides of every patch are the whole answer.
 // Staging remains the authoritative check.
 export function fixtureEntries(skill, c) {
-  const caseDir = join(skill.dir, "references/evals", String(c.n))
+  const caseDir = join(corpusDir(skill.dir), "fixtures", String(c.n))
   const manifest = join(caseDir, "git.json")
   const isGit = existsSync(manifest)
   let spec = {}

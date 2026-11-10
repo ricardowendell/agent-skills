@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # Pre-commit health check for the skills repo.
 #   - validate-skills.mjs : frontmatter, id/description budget, cross-tree drift
-#   - run-evals.mjs --list --check : every references/evals.md still parses
+#   - run-evals.mjs --list --check : every evals/<id>/cases.md still parses
 #   - node --test : the harness's own tests
 #   - check-sensor-parity.mjs : the JS and Python docs-check sensors agree
 #   - check-evidence.mjs : docs/evals citations exist and match the store

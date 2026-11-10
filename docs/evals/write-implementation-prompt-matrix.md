@@ -10,10 +10,12 @@ reached through a different route. The model is recorded per run; a control row
 and its with-skill row are therefore **not** a same-model pair unless it says
 so. The new with-skill cells (#1, #2, #4), the trigger cells (#5, #6), the
 #6-only run and the SPEC-0031 controls carry detector v2
-(`71bfb85a91cd68ab`). `stageSkill` excludes `references/evals.md` from
+(`71bfb85a91cd68ab`). `stageSkill` excludes the eval corpus (`references/evals.md`
+then, now outside the skill) from
 `skillHash`; `promptHash` covers only the prompt text, so the fixture and prompt
 hashes repeat the 0.5.0 values. #3 is `status: manual` and produced 0 draws, as
-the corpus intends.
+the corpus intends. SPEC-0058 moved the corpus to `evals/<id>/`; paths in
+measurement notes name the layout at the time of the run.
 
 The skill is six cases: `#1`–`#4` are behavioural, `#5`/`#6` are routing
 triggers. Everything below runs under `node scripts/run-evals.mjs --root skills
@@ -144,7 +146,8 @@ node scripts/run-evals.mjs --root skills --skill write-implementation-prompt --c
 description and boundary edit. The old `ab314e2ceb8f793f…` cells are history.
 The control draws carry the 0.5.0 `fixtureHash`/`promptHash` and v1 detector;
 they have no `skillHash` because no skill is staged. The hashes do not cover the
-assertion set — `skillHash` excludes `references/evals.md` — so the evidence
+assertion set — `skillHash` excludes the eval corpus (`references/evals.md` at
+the time) — so the evidence
 for an unchanged case is the skills diff cited at the top, not the table alone.
 
 ### Behavioural run directories

@@ -1,0 +1,756 @@
+{
+  "note": "Pre-move snapshot of SPEC-0058. Generated from skills/<id>/references/evals.md and skills/<id>/references/evals/<n>/ before the corpus moved to evals/<id>/. fieldsSha256 covers {n,title,prompt,why,assert}; fixtureSha256 is the treeHash of the fixture directory.",
+  "cases": {
+    "audit-code-quality": {
+      "caseFileSha256": "a1e93c946a51f3febdf0dd02354a1e3909639b036fa64b13047ddd6791625ee2",
+      "cases": [
+        {
+          "n": 1,
+          "title": "A repo with a cycle, a duplicate and dead code.",
+          "fieldsSha256": "e09b6e6009f7f865194fc2ba7e722f2f53f479c2a0b34554c54137c70af6c75b",
+          "fixtureSha256": "4f158faa97728e30702c0b5f62d4426c71801a67005069f88ce676eb124d9c36"
+        },
+        {
+          "n": 2,
+          "title": "Trigger: code health is asked about without naming the skill.",
+          "fieldsSha256": "ff22c4e5b23d004acf49a20af6a7f47858e3a68b45fdc79638d024188f428aa6",
+          "fixtureSha256": null
+        },
+        {
+          "n": 3,
+          "title": "Near-miss: a diff to review, not a codebase to audit.",
+          "fieldsSha256": "641ebeda94247093385eb1e5ecf07bb884fdea6044694afc94ec116de1bb96ec",
+          "fixtureSha256": null
+        },
+        {
+          "n": 4,
+          "title": "A scoped audit stays inside the path.",
+          "fieldsSha256": "2d42fb8085c4452f0e107e535c232e5ccaf24b9b2cd0033fc51e150903a573ef",
+          "fixtureSha256": "fcd2837f7066fc3fdec33d3b146155aa93aa0f96c778fa703ae24ac6a89a1d5b"
+        },
+        {
+          "n": 5,
+          "title": "A shallow service whose invariants leak into the caller.",
+          "fieldsSha256": "32490d8ff0ef2a11c9fd3493d03e3a72770276ed29afc106884537078f8089e0",
+          "fixtureSha256": "6277b527562968b35baf979b852554f6bfd9f3d956bed634ed6e938dcd3d3e3f"
+        },
+        {
+          "n": 6,
+          "title": "A deep module that hides its helpers.",
+          "fieldsSha256": "10b7b364cca9494bc92181400d72679dcd20a4012b8367fca264d34dcfdd9546",
+          "fixtureSha256": "62ea1e403016c09d569648ab2ab9cc8863e5f1158af7ceea9a2462fcad64cfd9"
+        },
+        {
+          "n": 7,
+          "title": "Many small modules, each with two consumers.",
+          "fieldsSha256": "f9b3d665ae856dbafa8158ae3d8cdb4f100aed52dcaf1bbdcad635afa946881c",
+          "fixtureSha256": "7eee0e38d13a6d6ec403ebf98ea7e25d13f93ad405907eccb79cd809d33e0298"
+        },
+        {
+          "n": 8,
+          "title": "A tool-present audit cites the cycle and the dead file.",
+          "fieldsSha256": "082d9af537918b657cf3c9222bae0af0ab8437ed04c2033bb5488f359964ebc5",
+          "fixtureSha256": "374c5aadbca93ae6d7f337732b3ca625f86a842899dea703492c816f22545517"
+        },
+        {
+          "n": 9,
+          "title": "A tool-absent audit says unmeasured and invents nothing.",
+          "fieldsSha256": "f2020550f3df4f589d4d6e696b5cdd0a4f0eed6d95282ae57ebb8db4ee5c15e2",
+          "fixtureSha256": "d62f4d482ef5e7583b6f2c8594a1f03040cbe1d410b75e8de0bc5185714e4b3e"
+        }
+      ],
+      "fixtures": {
+        "1": "4f158faa97728e30702c0b5f62d4426c71801a67005069f88ce676eb124d9c36",
+        "4": "fcd2837f7066fc3fdec33d3b146155aa93aa0f96c778fa703ae24ac6a89a1d5b",
+        "5": "6277b527562968b35baf979b852554f6bfd9f3d956bed634ed6e938dcd3d3e3f",
+        "6": "62ea1e403016c09d569648ab2ab9cc8863e5f1158af7ceea9a2462fcad64cfd9",
+        "7": "7eee0e38d13a6d6ec403ebf98ea7e25d13f93ad405907eccb79cd809d33e0298",
+        "8": "374c5aadbca93ae6d7f337732b3ca625f86a842899dea703492c816f22545517",
+        "9": "d62f4d482ef5e7583b6f2c8594a1f03040cbe1d410b75e8de0bc5185714e4b3e"
+      }
+    },
+    "audit-docs": {
+      "caseFileSha256": "2b58d2aa209fd0010eee783de7e17f9e32b50f2e58e09b20bb2095fcd2a98c26",
+      "cases": [
+        {
+          "n": 1,
+          "title": "Check the product docs for consistency.",
+          "fieldsSha256": "042fbab05a563965913d96fb39f2f1fc146d0e731e490155afcaef6f01035311",
+          "fixtureSha256": "646695ff6f87717490ea9696b45e5e8f75e05b20eb8848ed89c3b885bfc0166c"
+        },
+        {
+          "n": 2,
+          "title": "Trigger: two docs disagree, and the skill is not named.",
+          "fieldsSha256": "8d08890d18e04ce6523dd6f08ff2db6c1c0313f92b20f01c6c4cd3606a57ca9e",
+          "fixtureSha256": null
+        },
+        {
+          "n": 3,
+          "title": "Near-miss: a doc change to review, not a doc set to audit.",
+          "fieldsSha256": "25c06188d54e06738ba84505082c31e403d4985cf81ca8f893566a061ddf6a9a",
+          "fixtureSha256": "31505eabab01fc478d754de845f227d5880bd41faa47db5b8c72a03857c02e52"
+        },
+        {
+          "n": 4,
+          "title": "Check the docs against the code.",
+          "fieldsSha256": "1cda3d52c19ed5855a55662cf942a39a23ad23462c0044b3f004ed638f826168",
+          "fixtureSha256": "d661268abc204954da206428773412d14c0a11f48185e56a2019d574c5e86f17"
+        }
+      ],
+      "fixtures": {
+        "1": "646695ff6f87717490ea9696b45e5e8f75e05b20eb8848ed89c3b885bfc0166c",
+        "3": "31505eabab01fc478d754de845f227d5880bd41faa47db5b8c72a03857c02e52",
+        "4": "d661268abc204954da206428773412d14c0a11f48185e56a2019d574c5e86f17"
+      }
+    },
+    "bootstrap-project-harness": {
+      "caseFileSha256": "8ad02fa8080ebaca1454c833184de7f64a4f8be3cc99cf85f2c0ff9bb4ee81c3",
+      "cases": [
+        {
+          "n": 1,
+          "title": "Set up this repo's harness.",
+          "fieldsSha256": "738bf09531462ceaf4dcbb47fa2dd28ddee6f759672d5555b99956429274c5f1",
+          "fixtureSha256": "030adf5872258967285a3055adf488c66f62e9445ef5c3eba9818ebfbe05e450"
+        },
+        {
+          "n": 2,
+          "title": "Bootstrap a harness for existing code, don't break anything.",
+          "fieldsSha256": "17cb3b35c5b664f26c9955aecd73ff8950cb674b6ceb8cad8ca06a47ffdcdc4b",
+          "fixtureSha256": "eb16ffa728a00795a684962e99d64b57fb12bea9e288225da47394d712957104"
+        },
+        {
+          "n": 3,
+          "title": "Finish setting up the harness.",
+          "fieldsSha256": "eb2579f21747e4963b32a7a8f3e8be9e38744006d0584f77b771afea378b879c",
+          "fixtureSha256": "eb3a4b8e3f374d7ea0fd2b6a593096a90ab5f6263d0d3b627284485c771701ca"
+        },
+        {
+          "n": 4,
+          "title": "Set up this project.",
+          "fieldsSha256": "7313e268a768bede3b3d8c7fe1debd199f71da8390f68fd4f592525429907e7f",
+          "fixtureSha256": null
+        },
+        {
+          "n": 5,
+          "title": "Bootstrap this repo.",
+          "fieldsSha256": "7a2312d22f109b6d0fd1ac530a4d5f3e0231d436846ee80530a1f8f6f70fb119",
+          "fixtureSha256": "1c01a3709bd42d420fc20ab014574e02dcf48a8ed5bd628ab8d11a218ed8695f"
+        },
+        {
+          "n": 6,
+          "title": "Just scaffold it, skip the interview.",
+          "fieldsSha256": "db7abdcbc41cd22a9af1284a43db0a7891487c3fb8d6225cf6ddf26ab7f71dd9",
+          "fixtureSha256": null
+        },
+        {
+          "n": 7,
+          "title": "Set up the harness here.",
+          "fieldsSha256": "0e1bdf5e15cd78e7ef2c05d21aad7f9acd18630aaf739a34cc3c544e315b1f70",
+          "fixtureSha256": "a1c3661f40782d271f136af51b0ebe81eae69e869f543942760aab2cdfb64405"
+        },
+        {
+          "n": 8,
+          "title": "Any bootstrap.",
+          "fieldsSha256": "aee2f0757f1369fb344ec70175ee6911862cf811f232909ba70581a7efb678a8",
+          "fixtureSha256": null
+        },
+        {
+          "n": 9,
+          "title": "Bootstrap this Python repo.",
+          "fieldsSha256": "a06035a0d621e10d2f0e9f910e141c5b827755d98503dd974150611a732e3a0b",
+          "fixtureSha256": "2d5673660dfce1c1469c4e7ba31554cbcc9b10e6330ee24f44cd847a4de793c3"
+        },
+        {
+          "n": 10,
+          "title": "Bootstrap this Python repo.",
+          "fieldsSha256": "d5c89834d0bd3153cbfd5effa229c933d0eaa8a569453bbaf3189cfa5a12410b",
+          "fixtureSha256": "726e73e676c0bbd44a978d82c1a96f642c1fa79c71a745e728786066a82572fe"
+        },
+        {
+          "n": 11,
+          "title": "Set up the harness here.",
+          "fieldsSha256": "12fd7c3f24717b1c73800a0a05d67ad9e1487d09537234708d650346c5fc227c",
+          "fixtureSha256": "10a28745aa4a5a5dda48220d6b72ac19d84588c9f52797a1de67259c15036bca"
+        },
+        {
+          "n": 12,
+          "title": "Trigger: an empty repo is handed over.",
+          "fieldsSha256": "b57432b49e0417a3239b3b1649e567dd6d2ef715fc1046b8a20c4103fc5689a5",
+          "fixtureSha256": null
+        },
+        {
+          "n": 13,
+          "title": "Near-miss: an existing harness that stopped biting.",
+          "fieldsSha256": "3747b65d5a7b09e2032012aca3695ebef95d86922c31739140a1493e91674774",
+          "fixtureSha256": null
+        },
+        {
+          "n": 14,
+          "title": "Complete harness: stop instead of rebuilding it.",
+          "fieldsSha256": "4bdf9a38a02b5a73dd5c61a632f863f46b141ff0b19ec7505ee7ce42b70c3140",
+          "fixtureSha256": "eeb7507a205a6df1d385e69f3eb21177640d45bf4e6af83d950b8dc5d4a11bef"
+        },
+        {
+          "n": 15,
+          "title": "Nearly complete: one file missing.",
+          "fieldsSha256": "abc772a4a3f9957d58e84e32de3cd62bb6c2023c63041b55caca38842ab55729",
+          "fixtureSha256": "2f05dda22cd0fa838bd0dfb07f5875918258bea1bd34a7b7b897f13d35207eba"
+        },
+        {
+          "n": 16,
+          "title": "Empty repo: the default stack.",
+          "fieldsSha256": "51b8be1dec7c211b79d57b6ef816e789bee65bfad7044085b8f284540a334343",
+          "fixtureSha256": "9888845271db3726b33de58ff1ad52bd28a910f7567b73e261c7ec41c224b10a"
+        },
+        {
+          "n": 17,
+          "title": "Existing Bun: keep the runtime and package manager.",
+          "fieldsSha256": "f57e5d8a16c10b29f33cd535fed752c1b4fc675b354d27beda6c011725f5f2ba",
+          "fixtureSha256": "4dcf2cf57eccf4b80b653dbc8e048c4e4511a71d0b1c11f666a178ebc9080f5e"
+        },
+        {
+          "n": 18,
+          "title": "Node + pnpm: keep the lockfile.",
+          "fieldsSha256": "6d9bfcda87fe189f835ac13a86ce8651ed42164d1aa87206d282452ca2748458",
+          "fixtureSha256": "f2690622dd27013657c74297e0e84f620c42d5e7a4268c1d79ccfce6e89d3a5f"
+        },
+        {
+          "n": 19,
+          "title": "Declared ESLint without its config: fill, do not replace.",
+          "fieldsSha256": "5df672c1623c5fa8c1d1850a99f01c005aa3cb3eb66f7101827b92ffa157c08c",
+          "fixtureSha256": "bdb61d773589790b623282d6c1d2219573d8e7db34cf02b77a27c32eb5ee941c"
+        },
+        {
+          "n": 20,
+          "title": "Existing Biome: one linter, one formatter.",
+          "fieldsSha256": "8f610106dca66959c4a94d8b8ead9434e9bc9689d499be72df4b13b12a8fc845",
+          "fixtureSha256": "f0e293fccf69fd6d1b0ae0aa66314bdd80f7fea4853025d01de3a83057290fbe"
+        },
+        {
+          "n": 21,
+          "title": "Monorepo: npm workspaces, no Turbo by default.",
+          "fieldsSha256": "d3a12b5acc0b16572387abbcdc073142067e20e75ac63a45a384080e1079d2ac",
+          "fixtureSha256": "5b81c547d41ba78cce14672462e4ca46f45b352099fbc90d9acd9166b509f364"
+        },
+        {
+          "n": 22,
+          "title": "Ambiguous stack: refuse with a diagnostic.",
+          "fieldsSha256": "ca0c25aecff2765d1ecd5a3aefcf39933e073912a9e7827656a9b13e5f447a82",
+          "fixtureSha256": "1b647b13544b28bdb644157482b0eb4eb0f7198571d1143030a2b3e0d42dadcf"
+        },
+        {
+          "n": 23,
+          "title": "Trigger: an existing Bun repo asks for the missing hooks.",
+          "fieldsSha256": "dcdf33d1fcd5bbd4d3ec6f2697ad81f49e3ebfcad3b87e194afda319673421dd",
+          "fixtureSha256": "4277e7e444a0dc7d37306a6737f23d3428d0490e17cb448cfab6b97c6c0ee036"
+        }
+      ],
+      "fixtures": {
+        "1": "030adf5872258967285a3055adf488c66f62e9445ef5c3eba9818ebfbe05e450",
+        "2": "eb16ffa728a00795a684962e99d64b57fb12bea9e288225da47394d712957104",
+        "3": "eb3a4b8e3f374d7ea0fd2b6a593096a90ab5f6263d0d3b627284485c771701ca",
+        "5": "1c01a3709bd42d420fc20ab014574e02dcf48a8ed5bd628ab8d11a218ed8695f",
+        "7": "a1c3661f40782d271f136af51b0ebe81eae69e869f543942760aab2cdfb64405",
+        "9": "2d5673660dfce1c1469c4e7ba31554cbcc9b10e6330ee24f44cd847a4de793c3",
+        "10": "726e73e676c0bbd44a978d82c1a96f642c1fa79c71a745e728786066a82572fe",
+        "11": "10a28745aa4a5a5dda48220d6b72ac19d84588c9f52797a1de67259c15036bca",
+        "14": "eeb7507a205a6df1d385e69f3eb21177640d45bf4e6af83d950b8dc5d4a11bef",
+        "15": "2f05dda22cd0fa838bd0dfb07f5875918258bea1bd34a7b7b897f13d35207eba",
+        "16": "9888845271db3726b33de58ff1ad52bd28a910f7567b73e261c7ec41c224b10a",
+        "17": "4dcf2cf57eccf4b80b653dbc8e048c4e4511a71d0b1c11f666a178ebc9080f5e",
+        "18": "f2690622dd27013657c74297e0e84f620c42d5e7a4268c1d79ccfce6e89d3a5f",
+        "19": "bdb61d773589790b623282d6c1d2219573d8e7db34cf02b77a27c32eb5ee941c",
+        "20": "f0e293fccf69fd6d1b0ae0aa66314bdd80f7fea4853025d01de3a83057290fbe",
+        "21": "5b81c547d41ba78cce14672462e4ca46f45b352099fbc90d9acd9166b509f364",
+        "22": "1b647b13544b28bdb644157482b0eb4eb0f7198571d1143030a2b3e0d42dadcf",
+        "23": "4277e7e444a0dc7d37306a6737f23d3428d0490e17cb448cfab6b97c6c0ee036"
+      }
+    },
+    "capture-idea": {
+      "caseFileSha256": "e3b2b7a15c11a3ae9b0bcb34adfb04763979c51ad406349c7ac9fd4837d4b6ba",
+      "cases": [
+        {
+          "n": 1,
+          "title": "Capture this idea: maybe we should add a weekly digest email.",
+          "fieldsSha256": "836ecb4206f286be33794540ebbc8cafe3f4cb06217f1dc137abbb876512d1dc",
+          "fixtureSha256": "23167e4f19715688cf5ec3ca9e6fb1da7c281936f12c9d647408d134242adc56"
+        },
+        {
+          "n": 2,
+          "title": "Trigger: a thought is handed over to keep.",
+          "fieldsSha256": "54292f2f306e18f2147583aae0997f012f98ced74eff068e8e7bd9613e26f4f2",
+          "fixtureSha256": "3d529bddbd4fe0278d3bcd06884ab20ac2d3b9eba16b48277642c62ce6a858c3"
+        },
+        {
+          "n": 3,
+          "title": "Routing: an inbox that already holds notes is processed, not captured.",
+          "fieldsSha256": "588b70892f97096f013d07e61efb04583ca850d6bcd83452cd95561164542163",
+          "fixtureSha256": "3d529bddbd4fe0278d3bcd06884ab20ac2d3b9eba16b48277642c62ce6a858c3"
+        }
+      ],
+      "fixtures": {
+        "1": "23167e4f19715688cf5ec3ca9e6fb1da7c281936f12c9d647408d134242adc56",
+        "2": "3d529bddbd4fe0278d3bcd06884ab20ac2d3b9eba16b48277642c62ce6a858c3",
+        "3": "3d529bddbd4fe0278d3bcd06884ab20ac2d3b9eba16b48277642c62ce6a858c3"
+      }
+    },
+    "find-blind-spots": {
+      "caseFileSha256": "6c806bd625dc6e59699acde1eff6425007b01ee045ee5da6f11614b6be81befd",
+      "cases": [
+        {
+          "n": 1,
+          "title": "Poke holes in this plan.",
+          "fieldsSha256": "302fd578741c9ee65122e9be228e5bbe0aa8d0726cdb6b7d9c615cba364141dc",
+          "fixtureSha256": null
+        },
+        {
+          "n": 2,
+          "title": "Stress-test this: we're moving billing into a shared Postgres used by three services.",
+          "fieldsSha256": "5a4b2b1c913c6032a78cf44098aec4225a8824805e236953f7642200f3010482",
+          "fixtureSha256": null
+        },
+        {
+          "n": 3,
+          "title": "Trigger: a design about to be locked in, no skill named.",
+          "fieldsSha256": "03fdaf90d805c5d2efb2fc0afa4307b18524f5f6b81244ca6aabd2ee732bab77",
+          "fixtureSha256": null
+        },
+        {
+          "n": 4,
+          "title": "Near-miss: the same plan, but to be decomposed, not challenged.",
+          "fieldsSha256": "5c3b3ee7461d2b29650dd71ad79a350b41a7412426463b9893ae8b6cace4f4ef",
+          "fixtureSha256": "8a67df1ec17e14c3cfb2c96c4f5057d3633fd9a93bb98d7f7ac890195c223ee7"
+        }
+      ],
+      "fixtures": {
+        "4": "8a67df1ec17e14c3cfb2c96c4f5057d3633fd9a93bb98d7f7ac890195c223ee7"
+      }
+    },
+    "groom-backlog": {
+      "caseFileSha256": "a548be198bf8cba5c01797e5604ef44b6c1786489ecefae4ec25ffe421663e7c",
+      "cases": [
+        {
+          "n": 1,
+          "title": "Groom the backlog.",
+          "fieldsSha256": "7379d2c27c79832a886816d30c66008dbbd536dc03f3686ed3df1c1cb0b730fe",
+          "fixtureSha256": "b78b981b90f7ccd34ec2ea5ed2073ec2d0c2cf58499a488c2a77186c8b8d0fcd"
+        },
+        {
+          "n": 2,
+          "title": "Turn this rough idea into a spec: *build the whole onboarding flow*.",
+          "fieldsSha256": "1c2c4a13bc2a372a34486d47438167dae6a4077272ae66030e16ce90b3cff6bf",
+          "fixtureSha256": null
+        },
+        {
+          "n": 3,
+          "title": "Mark SPEC-0003 ready.",
+          "fieldsSha256": "288ced5b01c9ca822b8e69e551f9ea502f6f2871c99438dbb37df6e91fcdc324",
+          "fixtureSha256": "659432abde088cc9107d2e3b5a0813c213d3d77d6d246d1a6b55d665211b5f1d"
+        },
+        {
+          "n": 4,
+          "title": "\"Groom the backlog\" in a repo whose docs layout differs from the default.",
+          "fieldsSha256": "aafcbbbc65a7ce6a6d525d9084fc6f594dab53c6eb7b93b900c2c0a199ddb5c9",
+          "fixtureSha256": "a39877f23bb2ffc51d645030eaefc35cd756b55edcd6ef5b9ba2874eaaa1f056"
+        },
+        {
+          "n": 5,
+          "title": "Groom the weekly digest email backlog item.",
+          "fieldsSha256": "917526ec0ee682e9bb0572d5e6adcb7e0992a9b2a4112b00e19373f15d99574b",
+          "fixtureSha256": "267f3d48b0bcc84b71ced6d218ee34cb77745f6058f6393bde989fd5782e7139"
+        },
+        {
+          "n": 6,
+          "title": "Trigger: a backlog item too vague to build.",
+          "fieldsSha256": "99370da07f76303c8ad9371600e923c00fa388c0b86bf06338f754294350f888",
+          "fixtureSha256": null
+        },
+        {
+          "n": 7,
+          "title": "Near-miss: a ready spec that needs a prompt, not a groom.",
+          "fieldsSha256": "d276da834bee335cb5c511c831390d1e5a7f7437e0eb9c7fe3cf5ee6a028f570",
+          "fixtureSha256": null
+        }
+      ],
+      "fixtures": {
+        "1": "b78b981b90f7ccd34ec2ea5ed2073ec2d0c2cf58499a488c2a77186c8b8d0fcd",
+        "3": "659432abde088cc9107d2e3b5a0813c213d3d77d6d246d1a6b55d665211b5f1d",
+        "4": "a39877f23bb2ffc51d645030eaefc35cd756b55edcd6ef5b9ba2874eaaa1f056",
+        "5": "267f3d48b0bcc84b71ced6d218ee34cb77745f6058f6393bde989fd5782e7139"
+      }
+    },
+    "implement-from-prompt": {
+      "caseFileSha256": "f39c32ccfe9e3b23eb09543a417b57ebb3c221073bcb6ec0aba5131145a0ee15",
+      "cases": [
+        {
+          "n": 1,
+          "title": "Implement docs/prompts/SPEC-0007-demo.prompt.md.",
+          "fieldsSha256": "e43c047461c90ee18b045ce772ca655d1254045f588372fafb9a6f7b55757e5a",
+          "fixtureSha256": "3fa05dd7cb66ca7a50ee038ca51279dec620f86d99bd1dc0324fb26287b33f2b"
+        },
+        {
+          "n": 2,
+          "title": "Missing prompt file.",
+          "fieldsSha256": "314d55fd5851516e55612ff5cdb01cebb17581ac652c18e1d8b5c091f3957557",
+          "fixtureSha256": "d4a79db2c44c8c4e0d80452775bf17fe5a39cf282b23233021bb535d2382528b"
+        },
+        {
+          "n": 3,
+          "title": "Code reality forces a scope change.",
+          "fieldsSha256": "826fab6977de7f90897fc6af5f2e614465fc0912900931bbc8648b5e42166f8a",
+          "fixtureSha256": "9b6b63e2fd069ae724b6a1fbb55b21649648ec90189b16c99d30ec35c3346364"
+        },
+        {
+          "n": 4,
+          "title": "Verification cannot run locally.",
+          "fieldsSha256": "6aab4026b4ee57522e12c14703e512316ba0218304624ab38b6912e4ab863d6a",
+          "fixtureSha256": "0bda1e7b1762cce1c5a208c2b14921c083a65ce314e36df91d625680ca6907dc"
+        },
+        {
+          "n": 5,
+          "title": "Trigger: an approved prompt is handed over to build.",
+          "fieldsSha256": "5be8da060528613ef6169398137e2d9b244a199c884a22de186e91ade1f5593e",
+          "fixtureSha256": null
+        },
+        {
+          "n": 6,
+          "title": "Near-miss: the same prompt, to be judged rather than executed.",
+          "fieldsSha256": "a59571d3efd61adb1ac6f6d18e03f77b048155022bbea47d39e4d55de31e0c21",
+          "fixtureSha256": null
+        },
+        {
+          "n": 7,
+          "title": "A red gate the prompt cannot make green.",
+          "fieldsSha256": "0ba2cf2ad063c30a789378495ef7f6290b1ca072fa562fa3446675818586e45f",
+          "fixtureSha256": "442d28fb198d819242f2e1a2181ba1e79cfd2478cd5fe385bd6e1881015c5e39"
+        },
+        {
+          "n": 8,
+          "title": "The prompt assumes a module that does not exist.",
+          "fieldsSha256": "1b48491ab48f4b897caa200934cd7a760d105b4561974c18cfc9ebe7246139ee",
+          "fixtureSha256": "2d18a74716be6f0dc56e538d6bc72f211d30841b8c4aaa74af9e7b0e74583779"
+        }
+      ],
+      "fixtures": {
+        "1": "3fa05dd7cb66ca7a50ee038ca51279dec620f86d99bd1dc0324fb26287b33f2b",
+        "2": "d4a79db2c44c8c4e0d80452775bf17fe5a39cf282b23233021bb535d2382528b",
+        "3": "9b6b63e2fd069ae724b6a1fbb55b21649648ec90189b16c99d30ec35c3346364",
+        "4": "0bda1e7b1762cce1c5a208c2b14921c083a65ce314e36df91d625680ca6907dc",
+        "7": "442d28fb198d819242f2e1a2181ba1e79cfd2478cd5fe385bd6e1881015c5e39",
+        "8": "2d18a74716be6f0dc56e538d6bc72f211d30841b8c4aaa74af9e7b0e74583779"
+      }
+    },
+    "process-inbox": {
+      "caseFileSha256": "72f040982ec6e03ce7d11772457e76ea6adf8df82d85a97d0a25918917c6dad9",
+      "cases": [
+        {
+          "n": 1,
+          "title": "Process the inbox.",
+          "fieldsSha256": "213e73de96fc0b4a91b6f750cb5f501a3d67a6d514701a9d2aa149ef6d8d9f31",
+          "fixtureSha256": "7427edae879155e52c38ce8ffd900924b5f7d98edfc57f706f6ca1db6d833727"
+        },
+        {
+          "n": 2,
+          "title": "Trigger: a pile of notes that has to land in the product docs.",
+          "fieldsSha256": "1a5d75b3f083eab81009a3b29c4874bb7034b6ba59832dd926f9845642436f41",
+          "fixtureSha256": null
+        },
+        {
+          "n": 3,
+          "title": "Near-miss: a new note for the inbox, not the inbox to process.",
+          "fieldsSha256": "92e82933fe1a0d6801553d365f131c504bed8f9e06e72203d3f00c8c1dd8d7fa",
+          "fixtureSha256": null
+        }
+      ],
+      "fixtures": {
+        "1": "7427edae879155e52c38ce8ffd900924b5f7d98edfc57f706f6ca1db6d833727"
+      }
+    },
+    "record-decision": {
+      "caseFileSha256": "93b91f49460f7fbd71c7d3ce8ca406ac325eefab3a81249d745c42e0d15369c5",
+      "cases": [
+        {
+          "n": 1,
+          "title": "Record the decision: we're moving the local store from Postgres to SQLite, because a single-user app should not need an ops dependency.",
+          "fieldsSha256": "2d3183462d89d256dd69cf922743082bf7b888ecce57aaf93b0cb3991d6fb9e8",
+          "fixtureSha256": "989f42d11f0d9d84a93c877503de588de206033c56c79ffc95b8a6607caaee6e"
+        },
+        {
+          "n": 2,
+          "title": "Record that we decided to go with microservices.",
+          "fieldsSha256": "0da8875331928c91533dc6983d3d1eaf01133a9621e35031f2c218b2069601aa",
+          "fixtureSha256": "989f42d11f0d9d84a93c877503de588de206033c56c79ffc95b8a6607caaee6e"
+        },
+        {
+          "n": 3,
+          "title": "We're reversing ADR-0002: the background queue moves from SQS to a Postgres-backed queue, because we already run Postgres.",
+          "fieldsSha256": "b5622788b747b8272b8f7356da930974d6aabad8fcfc70424f1ae967be35e214",
+          "fixtureSha256": "989f42d11f0d9d84a93c877503de588de206033c56c79ffc95b8a6607caaee6e"
+        },
+        {
+          "n": 4,
+          "title": "Trigger: a decision is stated in passing.",
+          "fieldsSha256": "3a557c150604a2f859ea9e82bf1fdd076f2022bd5cafd5df239cb26948585cb1",
+          "fixtureSha256": "3d529bddbd4fe0278d3bcd06884ab20ac2d3b9eba16b48277642c62ce6a858c3"
+        },
+        {
+          "n": 5,
+          "title": "Near-miss: an open question with no decision in it.",
+          "fieldsSha256": "715cd5df55535ba35a7f98c2f3e2221ae9307cf142b31bd8eaceeebd48307fd4",
+          "fixtureSha256": "66a3d636a10dc7a702b61b394800d8bd6cacb5a2a2ddfb4a184650cbbe4885ba"
+        }
+      ],
+      "fixtures": {
+        "1": "989f42d11f0d9d84a93c877503de588de206033c56c79ffc95b8a6607caaee6e",
+        "2": "989f42d11f0d9d84a93c877503de588de206033c56c79ffc95b8a6607caaee6e",
+        "3": "989f42d11f0d9d84a93c877503de588de206033c56c79ffc95b8a6607caaee6e",
+        "4": "3d529bddbd4fe0278d3bcd06884ab20ac2d3b9eba16b48277642c62ce6a858c3",
+        "5": "66a3d636a10dc7a702b61b394800d8bd6cacb5a2a2ddfb4a184650cbbe4885ba"
+      }
+    },
+    "report-project-status": {
+      "caseFileSha256": "2950ce85b55c9bd3cbb885457fb54fe49e4144638b98234ea5cdbe2ac132ecb5",
+      "cases": [
+        {
+          "n": 1,
+          "title": "Trigger: status and next steps, without naming the skill.",
+          "fieldsSha256": "372164d55d01e24f480b2deed78a9b7a07b1ca73e724efdb837f2a90a578a804",
+          "fixtureSha256": null
+        },
+        {
+          "n": 2,
+          "title": "Near-miss: a review verdict is requested.",
+          "fieldsSha256": "de56a525165b0df88420ed9414e78a91bc1fc9e3e5586f5b01bcf62182c3a3b4",
+          "fixtureSha256": null
+        },
+        {
+          "n": 3,
+          "title": "Status without `gh`: issues and CI are unknown, never guessed.",
+          "fieldsSha256": "b6b89b3baa7aa4ae337938bf750056ec6c7efef6b1abaf471362329c15da17a6",
+          "fixtureSha256": null
+        },
+        {
+          "n": 4,
+          "title": "Near-miss: the work in flight, not the project status.",
+          "fieldsSha256": "3a0a7d0e1433b112de704560d71672a06645d754522401c31474458e2a80b681",
+          "fixtureSha256": null
+        }
+      ],
+      "fixtures": {}
+    },
+    "review-code": {
+      "caseFileSha256": "387b4d75284f1f4b9aaad5b4b4eb5bcc96e5fa4419a9a5e65d5995cf7c517e0e",
+      "cases": [
+        {
+          "n": 1,
+          "title": "Review this branch against SPEC-0007.",
+          "fieldsSha256": "692769afd58bec6c19549a24745612e77ca6f5f5ea258d9e8d9847372ae1c190",
+          "fixtureSha256": "96ae13884af11ee04df2029649eae7777642f2c95fc5401cbf5925dbeb733fcf"
+        },
+        {
+          "n": 2,
+          "title": "Review this branch.",
+          "fieldsSha256": "588ccd8cff9ad7cc2c5451c009157276c5ec12268bcef739d8532757ccb85047",
+          "fixtureSha256": "0dbbc9586a2131470e710285a60bde73471c69d0939634d4716175e48becc713"
+        },
+        {
+          "n": 3,
+          "title": "Review a branch with no spec in the repo.",
+          "fieldsSha256": "8e67d33468a0f7388199f1d0d9e32737f9aa760a0540a5cdd2a2fa6e3be569b7",
+          "fixtureSha256": "59135ad8b5470ffd832ebc22e7391b5e0b879566fb63e85ffcf2589df44ef007"
+        },
+        {
+          "n": 4,
+          "title": "Review this branch against SPEC-0007.",
+          "fieldsSha256": "4469326b5f19256127a70766963888973b201e685093c6c57e5261b7f026c200",
+          "fixtureSha256": "1e671d3cbbb79f6cc6340fbf30c550d14fc098b2bba9b907dbc8a9793833e02d"
+        },
+        {
+          "n": 5,
+          "title": "Trigger: a branch is handed over for review.",
+          "fieldsSha256": "7881c94c340b3eae7bd7603cf0bb22cacc4d8652b0e918655e5c30f6d11d0ced",
+          "fixtureSha256": "3d529bddbd4fe0278d3bcd06884ab20ac2d3b9eba16b48277642c62ce6a858c3"
+        },
+        {
+          "n": 6,
+          "title": "Near-miss: a failure being debugged, not a change being reviewed.",
+          "fieldsSha256": "5e726bdec06c275e4f3900897bd2be44daea293e1a0743a2417d3d9a297eb233",
+          "fixtureSha256": "3d529bddbd4fe0278d3bcd06884ab20ac2d3b9eba16b48277642c62ce6a858c3"
+        },
+        {
+          "n": 7,
+          "title": "Review a branch whose gate is already red.",
+          "fieldsSha256": "b5cc92bce047cad634f78780148f689495b7d772346fa6d471f7ee25c350902e",
+          "fixtureSha256": "07a74da26b2c40813a0b0490dc6bfe5db7d6d19b617c66e9ce9feed291049042"
+        },
+        {
+          "n": 8,
+          "title": "Interface break with a green suite.",
+          "fieldsSha256": "4680d5ab35be7e888b6004872cee3aaa752525b31f7fb12cc1a14afb5ae09d8a",
+          "fixtureSha256": "b7cc4f95858271a9cf112bc0396d4cdc98e0aa41488d867741a079d97a1f4819"
+        },
+        {
+          "n": 9,
+          "title": "Introduced vulnerability with a green suite.",
+          "fieldsSha256": "025036349a947c2a668a0a31ff8befe42a13018efd46832f9b9865d2d5bf51b0",
+          "fixtureSha256": "f78dc64f05e98315155342132c6ecb921bd12aa2d5115df08f543ecfd91dcec8"
+        },
+        {
+          "n": 10,
+          "title": "A risky-looking change that must not block.",
+          "fieldsSha256": "f05312726c67a8bb571f23114e81c812e56dbe3e8e05a999928d1568624e8bfd",
+          "fixtureSha256": "55dfe566eeb35a6585ef5b26452234a330120a3f38150baac1495ce8b0a959d8"
+        }
+      ],
+      "fixtures": {
+        "1": "96ae13884af11ee04df2029649eae7777642f2c95fc5401cbf5925dbeb733fcf",
+        "2": "0dbbc9586a2131470e710285a60bde73471c69d0939634d4716175e48becc713",
+        "3": "59135ad8b5470ffd832ebc22e7391b5e0b879566fb63e85ffcf2589df44ef007",
+        "4": "1e671d3cbbb79f6cc6340fbf30c550d14fc098b2bba9b907dbc8a9793833e02d",
+        "5": "3d529bddbd4fe0278d3bcd06884ab20ac2d3b9eba16b48277642c62ce6a858c3",
+        "6": "3d529bddbd4fe0278d3bcd06884ab20ac2d3b9eba16b48277642c62ce6a858c3",
+        "7": "07a74da26b2c40813a0b0490dc6bfe5db7d6d19b617c66e9ce9feed291049042",
+        "8": "b7cc4f95858271a9cf112bc0396d4cdc98e0aa41488d867741a079d97a1f4819",
+        "9": "f78dc64f05e98315155342132c6ecb921bd12aa2d5115df08f543ecfd91dcec8",
+        "10": "55dfe566eeb35a6585ef5b26452234a330120a3f38150baac1495ce8b0a959d8",
+        "base": "1fd6409e9825e701f89e06b5aaeb34f0755a305fe7e0a3806704628f7e89cee8",
+        "base-red": "7ffdd83ba470fee0f65ac3a576f3f27bdca9cd34a440c07e1e5a3e3a153380b6"
+      }
+    },
+    "survey-inflight-work": {
+      "caseFileSha256": "44cdbabeb5d11b01cab0be84c455a04ddfde1646211442103236eef7b3126215",
+      "cases": [
+        {
+          "n": 1,
+          "title": "Two branches overlap on the same file.",
+          "fieldsSha256": "dea3db8cea6f71cd5dadc29041149026f6f6ce8bc1884a1d52843e2d7d6e3d8d",
+          "fixtureSha256": "b6ec0eb58602a1e4829193ad4ca57d60b9d4fce17e59d56428268071146d611b"
+        },
+        {
+          "n": 2,
+          "title": "A repo with no remote at all.",
+          "fieldsSha256": "98f8e1413e61070d69dc90204208d96d0e188c3563d57682c13b16817bb91032",
+          "fixtureSha256": "003ffe22e2487cff58fcb42630423fefd41a587dec6449fbe247528724048e4e"
+        },
+        {
+          "n": 3,
+          "title": "Trigger: work in flight is asked about without naming the skill.",
+          "fieldsSha256": "3eded22f46956e35b8106acaebbe236c6de233a8f5ea78f8a78ebba8d7c04a76",
+          "fixtureSha256": null
+        },
+        {
+          "n": 4,
+          "title": "Near-miss: a rebase is requested, not a survey.",
+          "fieldsSha256": "e19037e2319a22cdbd207056026fb2a8511001ce3496c79dabc18173253bb8d9",
+          "fixtureSha256": null
+        },
+        {
+          "n": 5,
+          "title": "Near-miss: the project status, not the work in flight.",
+          "fieldsSha256": "a1378ed058e8834c220fb5112ac8da77fbc12404e7cacd331d7b31af6746f612",
+          "fixtureSha256": null
+        }
+      ],
+      "fixtures": {
+        "1": "b6ec0eb58602a1e4829193ad4ca57d60b9d4fce17e59d56428268071146d611b",
+        "2": "003ffe22e2487cff58fcb42630423fefd41a587dec6449fbe247528724048e4e",
+        "base": "f824bc089b7345ca1bd7b9e9af469b1309678a2020ad74c37964f362d68f56aa"
+      }
+    },
+    "tighten-harness": {
+      "caseFileSha256": "75108df2cae3bd5dd22c9f0f08676492c0a5b3f833705feb5ecd897d55f8a842",
+      "cases": [
+        {
+          "n": 1,
+          "title": "Tighten the harness.",
+          "fieldsSha256": "9552860847f08499c50544e04d956e32abdbb0dd61511a5550a7b829fbf39247",
+          "fixtureSha256": "433b1635054807ec3619e16c7da232b33103af300e5237c89a41c5e87f37a670"
+        },
+        {
+          "n": 2,
+          "title": "The lint is failing on src/huge.js — just raise max-lines to 400 so CI passes.",
+          "fieldsSha256": "902a0dce309650a62efc5c579a10e611f4cd8df116a3854b8a58199621d6281d",
+          "fixtureSha256": "1a032b30d509bc5ff7bdf65260d64df36609de6768a240f3a03a26a6f13ff749"
+        },
+        {
+          "n": 3,
+          "title": "Tighten the harness.",
+          "fieldsSha256": "6edc6e98c7c2522359c661c6ead017b3b5923da43b28211fa006fb94c5e4c79f",
+          "fixtureSha256": "807a1a8d38f1085b3e9a6478b94921b37a63cb227ab48b9fbc9c27495501005c"
+        },
+        {
+          "n": 4,
+          "title": "Trigger: a cleaner codebase than the limits assume.",
+          "fieldsSha256": "313c2bd9088113f4d4a4c26930f8482e5db54e388df48bd0d70f7700ce887d66",
+          "fixtureSha256": null
+        },
+        {
+          "n": 5,
+          "title": "Near-miss: fixing the offending file, not the threshold.",
+          "fieldsSha256": "38b4f1990bc34866e4e801dd6b2148d1a53a03cd733591e68d00e102aa1e96de",
+          "fixtureSha256": "725dbe1e4300b22e7215c80dbafb9ab408ee2357f9068c703f51add256479fbd"
+        },
+        {
+          "n": 6,
+          "title": "Apply the ratchet when the prompt grants approval.",
+          "fieldsSha256": "451a9642d44fbfcaa2800f44796ac3dc754b371f35712718a100a885534a5247",
+          "fixtureSha256": "678c3e914b6b6dac8d0315a272ccbba248acf1c40dcc75a45914147cea072b02"
+        }
+      ],
+      "fixtures": {
+        "1": "433b1635054807ec3619e16c7da232b33103af300e5237c89a41c5e87f37a670",
+        "2": "1a032b30d509bc5ff7bdf65260d64df36609de6768a240f3a03a26a6f13ff749",
+        "3": "807a1a8d38f1085b3e9a6478b94921b37a63cb227ab48b9fbc9c27495501005c",
+        "5": "725dbe1e4300b22e7215c80dbafb9ab408ee2357f9068c703f51add256479fbd",
+        "6": "678c3e914b6b6dac8d0315a272ccbba248acf1c40dcc75a45914147cea072b02"
+      }
+    },
+    "write-implementation-prompt": {
+      "caseFileSha256": "972a9add084400f9e2927438e6d9e907c4edd467d561818d5be638c9368a970b",
+      "cases": [
+        {
+          "n": 1,
+          "title": "Create the implementation prompt for SPEC-0007.",
+          "fieldsSha256": "040c0e38ee3ac8f33e084e189df6a065556a7e73b184439282e6d2857472058c",
+          "fixtureSha256": "5157bf5f487ddb684fed6aee5743ca265125d2919791aa6e6d1e9c466a741b9a"
+        },
+        {
+          "n": 2,
+          "title": "Make a prompt for SPEC-0008.",
+          "fieldsSha256": "75ffe5726adb876f44d158f13d31cb12960035124edab8114cd81e94fe01ef93",
+          "fixtureSha256": "2895c3f51c6e86889f14972c1486075acbcc56f5df6ac4981d48c3847afa9743"
+        },
+        {
+          "n": 3,
+          "title": "Open questions that block implementation.",
+          "fieldsSha256": "59c03fd30a5f2f7c1d5a18bf1de0c40c5ec38be5ab8214949ee19589a6fad70c",
+          "fixtureSha256": "86e79e58590365f74a9515a27ed03cfb674fe5e022325cb7ed1f97bef4acb8dc"
+        },
+        {
+          "n": 4,
+          "title": "A spec overlapping an existing prompt's domain.",
+          "fieldsSha256": "2149ffc8b812ef3e893149ac1aa65db42df37b535e4f441a17940cc6a6f23e48",
+          "fixtureSha256": "633c5197bda8fa0e51db5a052dcc81f61dc542c258de9c75135d75558e439190"
+        },
+        {
+          "n": 5,
+          "title": "Trigger: a ready spec that has to become executable.",
+          "fieldsSha256": "3ac9b5f5a0627a175deed92063cd15f5c6c17e317d528d6c402ed6f866e7a152",
+          "fixtureSha256": null
+        },
+        {
+          "n": 6,
+          "title": "Near-miss: the same spec, but to be summarised.",
+          "fieldsSha256": "acf6460b1897da2b643d1e6868f180c22df4d4b7d3aa7cdfad45bdefbce0249f",
+          "fixtureSha256": null
+        }
+      ],
+      "fixtures": {
+        "1": "5157bf5f487ddb684fed6aee5743ca265125d2919791aa6e6d1e9c466a741b9a",
+        "2": "2895c3f51c6e86889f14972c1486075acbcc56f5df6ac4981d48c3847afa9743",
+        "3": "86e79e58590365f74a9515a27ed03cfb674fe5e022325cb7ed1f97bef4acb8dc",
+        "4": "633c5197bda8fa0e51db5a052dcc81f61dc542c258de9c75135d75558e439190"
+      }
+    }
+  }
+}

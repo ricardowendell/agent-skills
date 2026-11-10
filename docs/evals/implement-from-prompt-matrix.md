@@ -6,7 +6,8 @@ default, judged by `opencode-go/gpt-6-luna`. Gate B tops the two separators to
 `n=12` on the default model and `n=5` on `opencode-go/gpt-6-luna`, both arms.
 Case #4 was re-measured at commit `6dd38aa` after SPEC-0016 changed the rule;
 the *Re-measurement* section below is the current reading for it, and the Gate A
-row is the pre-fix one.
+row is the pre-fix one. SPEC-0058 moved the corpus to `evals/<id>/`; paths in the
+measurement notes below name the layout at the time of the run.
 
 ## What the arms mean
 
@@ -336,9 +337,10 @@ and they predate home isolation. They answer a different question.
 
 ## Integrity
 
-The staging fix holds: no with-skill run read a `references/evals.md` inside its
-scratch directory, and the runner's `the staged skill carries no eval corpus`
-test still passes. But the absolute claim — zero transcripts read the file — is
+The staging fix holds: no with-skill run read the eval corpus
+(`references/evals.md` then; now `evals/<id>/cases.md`) inside its scratch
+directory, and the runner's `the staged skill carries no eval corpus` test still
+passes. But the absolute claim — zero transcripts read the file — is
 **false for the cited run directories**. The raw grep finds one hit:
 
 ```sh
@@ -373,8 +375,9 @@ The permission attempt in SPEC-0017 did **not** block the read: the `#2` control
 guarantee; denial is not. Closing the filesystem path stays open (TASK-29's
 follow-up in SPEC-0018's scope).
 
-The five run directories of the SPEC-0016 re-measurement contain zero reads of a
-`references/evals.md` and zero reads of `/Users/wendell/.agents/skills`, and no
+The five run directories of the SPEC-0016 re-measurement contain zero reads of the
+corpus (`references/evals.md` then) and zero reads of
+`/Users/wendell/.agents/skills`, and no
 transcript reads anything outside its own scratch directory:
 
 ```sh

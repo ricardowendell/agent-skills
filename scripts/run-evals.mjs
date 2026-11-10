@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// run-evals.mjs — run the prose evals in a skill's references/evals.md.
+// run-evals.mjs — run the prose evals in a skill's evals/<id>/cases.md.
 //
 // For each numbered case it stages the fixture and the skill under review in an
 // isolated scratch directory, runs `opencode run` there, and checks the case's
@@ -59,7 +59,7 @@
 // installed on the machine stays on the menu — 22 of them here, the one under
 // review included — and a case can pass because *another* skill was chosen.
 //
-// Fixtures: `references/evals/<n>/` is copied into the scratch dir. A case that
+// Fixtures: `evals/<id>/fixtures/<n>/` is copied into the scratch dir. A case that
 // brings a `git.json` manifest is staged instead: `{ "base": "../base",
 // "remove": ["docs/specs"], "branch": "feature", "message": "...", "patch":
 // "change.patch" }` commits the base tree as `main`, prunes `remove`, applies
@@ -79,7 +79,7 @@ import { spawnSync } from "node:child_process"
 import { join, basename, dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { homedir } from "node:os"
-import { readEvals } from "./lib/evals/parse.mjs"
+import { corpusDir, readEvals } from "./lib/evals/parse.mjs"
 import { authProbe, scrubEnv } from "./lib/evals/agent.mjs"
 import { corpusRoots, isolateHome, isolationRecord, probeIsolation, resumeIsolation, wrapCommand } from "./lib/evals/isolation.mjs"
 import {
@@ -456,7 +456,7 @@ function discoverEvals() {
   for (const root of ROOTS) {
     for (const { id, dir } of skillDirs(root)) {
       if (seen.has(id)) continue
-      const evals = join(dir, "references/evals.md")
+      const evals = join(corpusDir(dir), "cases.md")
       if (existsSync(evals)) {
         seen.add(id)
         found.push({ id, dir, evals })
@@ -487,7 +487,7 @@ function repoSha() {
 
 const skills = discoverEvals().filter((s) => !opt.skill || s.id === opt.skill)
 if (!skills.length) {
-  console.error(opt.skill ? `no skill "${opt.skill}" with references/evals.md` : "no skills with references/evals.md found")
+  console.error(opt.skill ? `no skill "${opt.skill}" with evals/${opt.skill}/cases.md` : "no skills with evals/<id>/cases.md found")
   process.exit(1)
 }
 
@@ -496,7 +496,7 @@ const plan = []
 const warnings = []
 const errors = []
 for (const s of skills) {
-  const parsed = readEvals(s.evals)
+  const parsed = readEvals(s.evals, s.id, { skillDir: s.dir })
   errors.push(...parsed.errors.map((e) => `${s.id}: ${e}`))
   warnings.push(...parsed.warnings.map((w) => `${s.id}: ${w}`))
   for (const c of parsed.cases) {

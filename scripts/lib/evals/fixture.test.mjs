@@ -26,6 +26,17 @@ function files(root, map) {
   return root
 }
 
+// A mini repo: the skill at `<root>/skills/demo`, its corpus beside it at
+// `<root>/evals/demo` (SPEC-0058). Returns the skill directory, which is what
+// `stageFixture`/`stageSkill` take as `skill.dir`.
+function repo(skillFiles = {}, corpusFiles = {}) {
+  const root = mkdtempSync(join(tmpdir(), "fixture-skill-"))
+  const skill = join(root, "skills", "demo")
+  files(skill, skillFiles)
+  files(join(root, "evals", "demo"), corpusFiles)
+  return skill
+}
+
 function git(cwd, ...args) {
   const r = spawnSync("git", args, { cwd, encoding: "utf8" })
   assert.equal(r.status, 0, `git ${args.join(" ")}: ${r.stderr}`)
@@ -33,12 +44,16 @@ function git(cwd, ...args) {
 }
 
 test("the staged skill carries no eval corpus", () => {
-  const skillDir = files(mkdtempSync(join(tmpdir(), "fixture-skill-")), {
-    "SKILL.md": "---\nname: demo\n---\n",
-    "references/notes.md": "kept\n",
-    "references/evals.md": "- prompt: the answer\n",
-    "references/evals/1/AGENTS.md": "# another case's fixture\n",
-  })
+  const skillDir = repo(
+    {
+      "SKILL.md": "---\nname: demo\n---\n",
+      "references/notes.md": "kept\n",
+    },
+    {
+      "cases.md": "1. **T.**\n   - prompt: the answer\n",
+      "fixtures/1/AGENTS.md": "# another case's fixture\n",
+    },
+  )
   const scratch = makeScratch("demo", 9)
   const pinned = stageSkill({ id: "demo", dir: skillDir }, scratch)
   const staged = join(scratch, ".opencode/skills/demo")
@@ -51,25 +66,29 @@ test("the staged skill carries no eval corpus", () => {
 })
 
 test("a plain fixture is copied whole", () => {
-  const skillDir = files(mkdtempSync(join(tmpdir(), "fixture-skill-")), {
-    "SKILL.md": "---\nname: demo\n---\n",
-    "references/evals/1/AGENTS.md": "# repo\n",
-    "references/evals/1/docs/specs/SPEC-0001.md": "# spec\n",
-  })
+  const skillDir = repo(
+    { "SKILL.md": "---\nname: demo\n---\n" },
+    {
+      "fixtures/1/AGENTS.md": "# repo\n",
+      "fixtures/1/docs/specs/SPEC-0001.md": "# spec\n",
+    },
+  )
   const scratch = makeScratch("demo", 1)
   stageFixture({ id: "demo", dir: skillDir }, { n: 1 }, scratch)
   assert.equal(readFileSync(join(scratch, "docs/specs/SPEC-0001.md"), "utf8"), "# spec\n")
 })
 
 test("a git fixture stages main, prunes, then applies the patch on a branch", () => {
-  const skillDir = files(mkdtempSync(join(tmpdir(), "fixture-git-")), {
-    "SKILL.md": "---\nname: demo\n---\n",
-    "references/evals/1/base/a.txt": "one\n",
-    "references/evals/1/base/docs/keep.md": "keep\n",
-    "references/evals/1/base/docs/specs/SPEC-0001.md": "old\n",
-    "references/evals/1/git.json": JSON.stringify({ base: "base", remove: ["docs/specs"], branch: "feature/x", patch: "change.patch", message: "feat: change" }),
-    "references/evals/1/change.patch": "diff --git a/a.txt b/a.txt\n--- a/a.txt\n+++ b/a.txt\n@@ -1 +1 @@\n-one\n+two\n",
-  })
+  const skillDir = repo(
+    { "SKILL.md": "---\nname: demo\n---\n" },
+    {
+      "fixtures/1/base/a.txt": "one\n",
+      "fixtures/1/base/docs/keep.md": "keep\n",
+      "fixtures/1/base/docs/specs/SPEC-0001.md": "old\n",
+      "fixtures/1/git.json": JSON.stringify({ base: "base", remove: ["docs/specs"], branch: "feature/x", patch: "change.patch", message: "feat: change" }),
+      "fixtures/1/change.patch": "diff --git a/a.txt b/a.txt\n--- a/a.txt\n+++ b/a.txt\n@@ -1 +1 @@\n-one\n+two\n",
+    },
+  )
   const scratch = makeScratch("demo", 1)
   stageFixture({ id: "demo", dir: skillDir }, { n: 1 }, scratch)
 
@@ -82,9 +101,8 @@ test("a git fixture stages main, prunes, then applies the patch on a branch", ()
 })
 
 test("the skill under review is copied into the scratch dir and hashed", () => {
-  const skillDir = files(mkdtempSync(join(tmpdir(), "pin-skill-")), {
+  const skillDir = repo({
     "SKILL.md": "---\nname: review-code\ndescription: demo\n---\nbody\n",
-    "references/evals.md": "1. **x**\n",
   })
   const a = makeScratch("review-code", 1)
   const pinned = stageSkill({ id: "review-code", dir: skillDir }, a)
@@ -96,17 +114,19 @@ test("the skill under review is copied into the scratch dir and hashed", () => {
 })
 
 test("a git fixture can stage several branches and a local remote", () => {
-  const skillDir = files(mkdtempSync(join(tmpdir(), "fixture-branches-")), {
-    "SKILL.md": "---\nname: demo\n---\n",
-    "references/evals/1/base/shared.js": "one\n",
-    "references/evals/1/a.patch": "diff --git a/shared.js b/shared.js\n--- a/shared.js\n+++ b/shared.js\n@@ -1 +1 @@\n-one\n+from a\n",
-    "references/evals/1/b.patch": "diff --git a/shared.js b/shared.js\n--- a/shared.js\n+++ b/shared.js\n@@ -1 +1 @@\n-one\n+from b\n",
-    "references/evals/1/git.json": JSON.stringify({
-      base: "base",
-      remote: true,
-      branches: [{ name: "feature/a", patch: "a.patch" }, { name: "feature/b", patch: "b.patch" }],
-    }),
-  })
+  const skillDir = repo(
+    { "SKILL.md": "---\nname: demo\n---\n" },
+    {
+      "fixtures/1/base/shared.js": "one\n",
+      "fixtures/1/a.patch": "diff --git a/shared.js b/shared.js\n--- a/shared.js\n+++ b/shared.js\n@@ -1 +1 @@\n-one\n+from a\n",
+      "fixtures/1/b.patch": "diff --git a/shared.js b/shared.js\n--- a/shared.js\n+++ b/shared.js\n@@ -1 +1 @@\n-one\n+from b\n",
+      "fixtures/1/git.json": JSON.stringify({
+        base: "base",
+        remote: true,
+        branches: [{ name: "feature/a", patch: "a.patch" }, { name: "feature/b", patch: "b.patch" }],
+      }),
+    },
+  )
   const scratch = makeScratch("demo", 3)
   stageFixture({ id: "demo", dir: skillDir }, { n: 1 }, scratch)
 
@@ -119,16 +139,18 @@ test("a git fixture can stage several branches and a local remote", () => {
 })
 
 test("a git fixture still applies a patch on main when no branch is named", () => {
-  const skillDir = files(mkdtempSync(join(tmpdir(), "fixture-patch-main-")), {
-    "SKILL.md": "---\nname: demo\n---\n",
-    "references/evals/1/base/shared.js": "one\n",
-    "references/evals/1/p.patch": "diff --git a/shared.js b/shared.js\n--- a/shared.js\n+++ b/shared.js\n@@ -1 +1 @@\n-one\n+patched\n",
-    "references/evals/1/git.json": JSON.stringify({
-      base: "base",
-      patch: "p.patch",
-      message: "change under review",
-    }),
-  })
+  const skillDir = repo(
+    { "SKILL.md": "---\nname: demo\n---\n" },
+    {
+      "fixtures/1/base/shared.js": "one\n",
+      "fixtures/1/p.patch": "diff --git a/shared.js b/shared.js\n--- a/shared.js\n+++ b/shared.js\n@@ -1 +1 @@\n-one\n+patched\n",
+      "fixtures/1/git.json": JSON.stringify({
+        base: "base",
+        patch: "p.patch",
+        message: "change under review",
+      }),
+    },
+  )
   const scratch = makeScratch("demo", 4)
   stageFixture({ id: "demo", dir: skillDir }, { n: 1 }, scratch)
 
@@ -139,11 +161,13 @@ test("a git fixture still applies a patch on main when no branch is named", () =
 })
 
 test("a pinned skill stays out of the fixture's git status", () => {
-  const skillDir = files(mkdtempSync(join(tmpdir(), "pin-git-")), {
-    "SKILL.md": "---\nname: demo\n---\n",
-    "references/evals/1/base/a.txt": "one\n",
-    "references/evals/1/git.json": JSON.stringify({ base: "base", branch: "feature" }),
-  })
+  const skillDir = repo(
+    { "SKILL.md": "---\nname: demo\n---\n" },
+    {
+      "fixtures/1/base/a.txt": "one\n",
+      "fixtures/1/git.json": JSON.stringify({ base: "base", branch: "feature" }),
+    },
+  )
   const scratch = makeScratch("demo", 1)
   stageFixture({ id: "demo", dir: skillDir }, { n: 1 }, scratch)
   stageSkill({ id: "demo", dir: skillDir }, scratch)
@@ -154,16 +178,18 @@ test("a pinned skill stays out of the fixture's git status", () => {
 // exactly like the arm's: copied into the scratch, stripped of its eval corpus,
 // and hashed so the run can prove which copy the agent could see.
 test("two synthetic skills stage side by side, each with its own hash", () => {
-  const arm = files(mkdtempSync(join(tmpdir(), "fixture-arm-")), {
+  const armRoot = mkdtempSync(join(tmpdir(), "fixture-arm-"))
+  const arm = files(join(armRoot, "skills", "capture"), {
     "SKILL.md": "---\nname: capture\n---\nbody\n",
     "references/notes.md": "arm\n",
-    "references/evals.md": "1. **x**\n",
   })
-  const sibling = files(mkdtempSync(join(tmpdir(), "fixture-sibling-")), {
+  files(join(armRoot, "evals", "capture"), { "cases.md": "1. **x**\n" })
+  const siblingRoot = mkdtempSync(join(tmpdir(), "fixture-sibling-"))
+  const sibling = files(join(siblingRoot, "skills", "process"), {
     "SKILL.md": "---\nname: process\n---\nbody\n",
     "references/notes.md": "sibling\n",
-    "references/evals.md": "1. **y**\n",
   })
+  files(join(siblingRoot, "evals", "process"), { "cases.md": "1. **y**\n" })
   const scratch = makeScratch("capture", 3)
   const pinned = stageSkill({ id: "capture", dir: arm }, scratch)
   const staged = stageSkill({ id: "process", dir: sibling }, scratch)
@@ -183,12 +209,12 @@ const RUN_EVALS = resolve(dirname(fileURLToPath(import.meta.url)), "../../run-ev
 function stageRoot(skills) {
   const root = mkdtempSync(join(tmpdir(), "stage-check-"))
   for (const [id, stage] of Object.entries(skills)) {
-    files(join(root, id), {
-      "SKILL.md": `---\nname: ${id}\n---\n`,
-      "references/evals.md": `1. **T.**\n   - prompt: do it\n   - stage: ${stage}\n   - assert: skill ${stage}\n`,
+    files(join(root, "skills", id), { "SKILL.md": `---\nname: ${id}\n---\n` })
+    files(join(root, "evals", id), {
+      "cases.md": `1. **T.**\n   - prompt: do it\n   - stage: ${stage}\n   - assert: skill ${stage}\n`,
     })
   }
-  return root
+  return join(root, "skills")
 }
 const checkRoot = (root) => spawnSync(process.execPath, [RUN_EVALS, "--root", root, "--list", "--check"], { encoding: "utf8" })
 
@@ -211,10 +237,10 @@ test("--check rejects an unknown stage id", () => {
 // SPEC-0055 case 9 spent five paid draws on an empty scratch because a broken
 // `base` returned quietly. The contrast is `applyPatch`, which already threw.
 test("a git.json base that does not resolve throws and names case, path and fixture", () => {
-  const skillDir = files(mkdtempSync(join(tmpdir(), "fixture-dead-base-")), {
-    "SKILL.md": "---\nname: demo\n---\n",
-    "references/evals/1/git.json": JSON.stringify({ base: "../missing" }),
-  })
+  const skillDir = repo(
+    { "SKILL.md": "---\nname: demo\n---\n" },
+    { "fixtures/1/git.json": JSON.stringify({ base: "../missing" }) },
+  )
   const scratch = makeScratch("demo", 1)
   assert.throws(
     () => stageFixture({ id: "demo", dir: skillDir }, { n: 1 }, scratch),
@@ -224,9 +250,7 @@ test("a git.json base that does not resolve throws and names case, path and fixt
 })
 
 test("a case without git.json still stages its empty tree quietly", () => {
-  const skillDir = files(mkdtempSync(join(tmpdir(), "fixture-no-manifest-")), {
-    "SKILL.md": "---\nname: demo\n---\n",
-  })
+  const skillDir = repo({ "SKILL.md": "---\nname: demo\n---\n" })
   const scratch = makeScratch("demo", 1)
   const staged = stageFixture({ id: "demo", dir: skillDir }, { n: 1 }, scratch)
   assert.match(staged.hash, /^[0-9a-f]{64}$/)
@@ -235,25 +259,28 @@ test("a case without git.json still stages its empty tree quietly", () => {
 // Staleness compares a legacy run's `skillHash` with the working tree, so the
 // re-computed filtered hash must be the exact one `stageSkill` produced.
 test("the staged tree hash matches the copy stageSkill hashes", () => {
-  const skillDir = files(mkdtempSync(join(tmpdir(), "staged-hash-")), {
-    "SKILL.md": "---\nname: demo\n---\nbody\n",
-    "references/notes.md": "kept\n",
-    "references/evals.md": "1. **x**\n",
-    "references/evals/1/base/a.txt": "excluded\n",
-  })
+  const skillDir = repo(
+    {
+      "SKILL.md": "---\nname: demo\n---\nbody\n",
+      "references/notes.md": "kept\n",
+    },
+    {
+      "cases.md": "1. **x**\n",
+      "fixtures/1/base/a.txt": "excluded\n",
+    },
+  )
   const scratch = makeScratch("demo", 1)
   const pinned = stageSkill({ id: "demo", dir: skillDir }, scratch)
   assert.equal(stagedTreeHash(skillDir), pinned.hash)
 })
 
 test("governs narrows the hashed set; absent means the whole skill tree", () => {
-  const skillDir = files(mkdtempSync(join(tmpdir(), "governs-")), {
+  const skillDir = repo({
     "SKILL.md": "---\nname: demo\n---\n",
     "references/notes.md": "notes\n",
-    "references/evals.md": "1. **x**\n",
   })
   const all = governedFiles(skillDir, null)
-  assert.deepEqual(all, ["SKILL.md", "references/evals.md", "references/notes.md"])
+  assert.deepEqual(all, ["SKILL.md", "references/notes.md"])
   const narrow = governedFiles(skillDir, ["references/notes.md"])
   assert.deepEqual(narrow, ["references/notes.md"])
   const hashes = skillFileHashes(skillDir, narrow)
@@ -263,14 +290,16 @@ test("governs narrows the hashed set; absent means the whole skill tree", () => 
 })
 
 test("fixtureEntries lists the base, prune and both sides of the patch", () => {
-  const skillDir = files(mkdtempSync(join(tmpdir(), "entries-")), {
-    "SKILL.md": "---\nname: demo\n---\n",
-    "references/evals/1/base/keep.js": "one\n",
-    "references/evals/1/base/docs/old.md": "old\n",
-    "references/evals/1/git.json": JSON.stringify({ base: "base", remove: ["docs/old.md"], patch: "p.patch" }),
-    "references/evals/1/p.patch":
-      "diff --git a/new.js b/new.js\n--- a/new.js\n+++ b/new.js\n@@ -0,0 +1 @@\n+new\n",
-  })
+  const skillDir = repo(
+    { "SKILL.md": "---\nname: demo\n---\n" },
+    {
+      "fixtures/1/base/keep.js": "one\n",
+      "fixtures/1/base/docs/old.md": "old\n",
+      "fixtures/1/git.json": JSON.stringify({ base: "base", remove: ["docs/old.md"], patch: "p.patch" }),
+      "fixtures/1/p.patch":
+        "diff --git a/new.js b/new.js\n--- a/new.js\n+++ b/new.js\n@@ -0,0 +1 @@\n+new\n",
+    },
+  )
   const entries = fixtureEntries({ id: "demo", dir: skillDir }, { n: 1 })
   const rels = entries.map((e) => `${e.rel}${e.isDir ? "/" : ""}`)
   assert.ok(rels.includes("keep.js"))

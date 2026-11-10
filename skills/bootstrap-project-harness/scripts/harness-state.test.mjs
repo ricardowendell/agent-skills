@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url"
 
 import { REQUIRED, DEFAULT, installPaths, stateOf, detectStack, CODES } from "./harness-state.mjs"
 
-const EVALS = join(dirname(fileURLToPath(import.meta.url)), "..", "references", "evals")
+const EVALS = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "evals", "bootstrap-project-harness", "fixtures")
 
 function tree(files) {
   const dir = mkdtempSync(join(tmpdir(), "harness-state-"))

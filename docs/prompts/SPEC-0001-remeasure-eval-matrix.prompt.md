@@ -35,7 +35,7 @@ per arm per model, an aggregate per arm, and the failing assertion for every red
 cell; AC-3 re-running one cell lands within one repetition of the document's count, both
 numbers are written, and a larger difference is investigated rather than excused; AC-4 the parity smoke classifies every run
 the same way the runner does, and a difference is a defect; AC-5 zero transcripts
-from this run read `references/evals.md`; AC-6 the document records date, model
+from this run read `evals/<id>/cases.md`; AC-6 the document records date, model
 ids, repetition count and commands, states that pre-`c876d88` figures are not
 comparable, and the README links to it.
 
@@ -75,9 +75,6 @@ spec forbids.
 
 - `scripts/run-evals.mjs` — runs; `--tag matrix`, `--repeat 5`, `--no-skill`,
   `--model`.
-- `scripts/emit-promptfoo.mjs` — emits the config for the parity smoke
-  (`--skill review-code --case 3 --arms with-skill,without-skill`).
-- `scripts/promptfoo/provider.mjs` — the adapter, sharing `executeCase()`.
 - `scripts/replay-evals.mjs` — re-judge the new transcripts if an assertion looks
   like it moved, instead of paying for another run.
 - `docs/evals/review-code-matrix.md` — new; the table and its commands.
@@ -105,14 +102,10 @@ spec forbids.
    run's `manifest.json`. A file that fails either is a hole, not a number.
 8. For every cell below 5/5, read `reason` and attribute it to the assertion that
    failed. The document gets that attribution, not a guess.
-9. Parity smoke: `node scripts/emit-promptfoo.mjs --skill review-code --case 3 --arms with-skill,without-skill --out /tmp/parity.yaml`,
-   then `npx promptfoo eval -c /tmp/parity.yaml --repeat 3`. Every run must
-   classify the same way the runner classified that case in its cell. A
-   difference is a defect in one of the two paths and is reported as such.
-10. Integrity check: search the four run directories' transcripts for a read of
-    `references/evals.md`. The count must be zero; a hit voids the measurement
+9. Integrity check: search the four run directories' transcripts for a read of
+    `evals/<id>/cases.md`. The count must be zero; a hit voids the measurement
     and means `c876d88` regressed.
-11. Write `docs/evals/review-code-matrix.md`: one table per model, rows are the
+10. Write `docs/evals/review-code-matrix.md`: one table per model, rows are the
     four cases, columns are the two arms as `passed/5`, plus the aggregate per arm
     (`n/20`), plus the failure attribution from step 8, plus the commands from
     steps 3–6, the date, both model ids and the note that pre-`c876d88` figures
@@ -142,7 +135,6 @@ spec forbids.
   and mixing runs would hide that.
 - Do not describe `--no-skill` as proving the skill text is unreachable.
 - Do not put numbers in the README, and do not touch `~/.opencode/plan/`.
-- Do not commit `scripts/promptfoo/promptfoo.yaml` or `/tmp/parity.yaml`.
 
 ## Verification
 
@@ -152,7 +144,7 @@ spec forbids.
 | AC-2 | read the document: `passed/5` per cell, aggregate `n/20` per arm, a failing assertion for every red |
 | AC-3 | re-run one cell and compare its `passed` values with the document |
 | AC-4 | compare the parity smoke's six classifications with the runner's for case #3 |
-| AC-5 | `grep -r 'references/evals.md'` over the four run directories returns nothing |
+| AC-5 | `grep -r 'evals/<id>/cases.md'` over the four run directories returns nothing |
 | AC-6 | the document states date, models, repetitions and commands; the README links to it |
 
 Done when all six pass and the spec reads `status: implemented` with `tests:`

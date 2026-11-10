@@ -34,7 +34,7 @@ explicit yes applies the ratchet and leaves the source alone.
   it keeps `status: manual`, and its `why:` carries the rate and the assertion
   that failed.
 - AC-4 — `--list --check` passes, and its totals match the case's `status:`.
-- AC-5 — The paragraph in `skills/tighten-harness/references/evals.md` saying the
+- AC-5 — The paragraph in `evals/tighten-harness/cases.md` saying the
   apply path "stays manual until the runner can stage a reply" is replaced by the
   measured result and points at #6; the preamble's fixture-case list includes #6.
 
@@ -71,15 +71,15 @@ a control agent happened to edit the config.
 
 ## Structure
 
-- `skills/tighten-harness/references/evals/6/` — `AGENTS.md`,
+- `evals/tighten-harness/fixtures/6/` — `AGENTS.md`,
   `eslint.config.js`, `justfile`, `package.json`, `src/big.js`, `src/small.js`.
-- `skills/tighten-harness/references/evals.md` — case #6 and the stale preamble
+- `evals/tighten-harness/cases.md` — case #6 and the stale preamble
   paragraph.
 
 ## Operations
 
 1. **Create the fixture.** Copy
-   `skills/tighten-harness/references/evals/1/` to `.../evals/6/`. Change only
+   `evals/tighten-harness/fixtures/1/` to `evals/tighten-harness/fixtures/6/`. Change only
    `justfile`:
 
    ```just
@@ -93,7 +93,7 @@ a control agent happened to edit the config.
    Keep `AGENTS.md`, `eslint.config.js`, `package.json`, `src/big.js` and
    `src/small.js` byte-identical to case #1.
 
-2. **Write case #6** in `skills/tighten-harness/references/evals.md`, after case
+2. **Write case #6** in `evals/tighten-harness/cases.md`, after case
    #5:
 
    ```md
@@ -180,7 +180,7 @@ a control agent happened to edit the config.
 
 | AC | Check |
 | --- | --- |
-| AC-1 | `ls skills/tighten-harness/references/evals/6`; the case block lists the six assertions and no `notskill` |
+| AC-1 | `ls evals/tighten-harness/fixtures/6`; the case block lists the six assertions and no `notskill` |
 | AC-2 | The three repetitions: `changed eslint.config.js` passes and every `unchanged` passes; read one transcript to confirm the skill loaded and named the ratchet |
 | AC-3 | `status:` and `why:` match the final measured rate; if the skill sentence was needed, the spec and the re-run say so; below 3/3 the failing assertion is named |
 | AC-4 | `node scripts/run-evals.mjs --root skills --list --check` passes and its totals match the case files |

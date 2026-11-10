@@ -16,6 +16,8 @@ depends_on: []
 blocks: []
 files:
   - evals/
+  - .gitignore
+  - .githooks/pre-commit
   - skills/audit-code-quality/references/evals.md
   - skills/audit-docs/references/evals.md
   - skills/bootstrap-project-harness/references/evals.md
@@ -43,6 +45,7 @@ files:
   - skills/survey-inflight-work/references/evals/
   - skills/tighten-harness/references/evals/
   - skills/write-implementation-prompt/references/evals/
+  - skills/bootstrap-project-harness/scripts/harness-state.test.mjs
   - scripts/lib/evals/speccheck.mjs
   - scripts/lib/evals/speccheck.test.mjs
   - scripts/lib/evals/parse.mjs
@@ -232,4 +235,116 @@ None.
   SPEC-0061 is editing that skill's template in parallel and must not touch
   `references/evals*`; if a merge conflict appears there, this spec wins.
 
-_Filled during implementation._
+## Results
+
+**F3 first — `speccheck` learned the subtree rule.** In
+`scripts/lib/evals/speccheck.mjs`, a `files:` entry ending in `/` now covers every
+path under that prefix: a covered path is clean, an undeclared file under the
+subtree is still an error, a declared subtree the diff never touches is a
+warning, and an entry without the slash keeps exact equality. Four tests in
+`speccheck.test.mjs` pin those four cases;
+`node --test scripts/lib/evals/speccheck.test.mjs` → 25/25 pass. That is what lets
+this spec declare `evals/` and the 27 old `references/evals*` prefixes instead of
+368 individual paths.
+
+**F1/F2 — the move and the reader.** `git mv` moved 368 files: 14
+`skills/<id>/references/evals.md` → `evals/<id>/cases.md` and 13 fixture trees
+(72 top-level fixture directories, including the shared `base`/`base-red` trees)
+to `evals/<id>/fixtures/<n>/`. Nothing was removed and re-added; `git status`
+reports all 368 as renames. `parse.mjs` now resolves the corpus through
+`corpusDir(skillDir)` / `skillDirForCorpus(casesFile)` and `readEvals` reads
+`evals/<id>/cases.md`; `fixture.mjs` stages `evals/<id>/fixtures/<n>/`.
+`run-evals`, `replay-evals`, `check-staleness` and `validate-skills` use the same
+layout. There is no fallback: the remaining `references/evals` strings in
+`scripts/` are the leak detector's stale-copy rule, the validator's stray guard,
+and comments that name it as the old shape.
+
+**AC-1 — case parity.** Before the move, `evals/corpus-baseline.json` recorded,
+per skill, the `cases.md` sha256, every case's `{n, title, prompt, why, assert}`
+digest, and every fixture tree hash. The committed test
+`every case and fixture survived the move byte-for-byte`
+(`scripts/lib/evals/corpus.test.mjs`) re-parses the moved corpus and compares
+against it. All 14 skills and 97 cases (94 runnable, 3 manual) match: identical
+per-case digests and identical `cases.md` bytes. Aggregate over the sorted
+`id#n:title:fieldsSha256` lines: **before `a2c571ceccf78e3d`, after
+`a2c571ceccf78e3d`**. `node scripts/run-evals.mjs --root skills --list --check`
+→ `Parsed 97 case(s): 94 runnable, 3 manual`, exit 0.
+
+**AC-2 — fixture parity.** All **72/72** fixture tree hashes match the pre-move
+baseline; aggregate over the sorted `id/name:treeHash` lines: **before
+`febd93a742b917ca`, after `febd93a742b917ca`**. `git.json` bases are relative to
+the case directory, so they moved with it: `review-code`'s `../base` now resolves
+to `evals/review-code/fixtures/base`, `audit-code-quality` #9's `../6` to
+`evals/audit-code-quality/fixtures/6`, and `survey-inflight-work`'s `../base` to
+`evals/survey-inflight-work/fixtures/base`. `--list --check` re-resolves every
+manifest (the `git.json` base check in `parse.mjs`) and exits 0.
+
+**AC-5/AC-6 — the guards.** `validate-skills.mjs` fails on any
+`skills/*/references/evals*` path, and the negative test
+`validate-skills fails on a stray references/evals path` (in `corpus.test.mjs`)
+builds a synthetic skill with one and asserts exit 1 and the error text. The real
+checkout is clean: `node scripts/validate-skills.mjs --root skills` → `All clear`,
+exit 0; the committed test `no skill checkout carries the eval corpus after the
+move` also scans every skill.
+
+**AC-7 — staging proof, no model.** `node scripts/run-evals.mjs --root skills
+--level smoke --skill review-code --case 1 --run` staged the case in
+`2026-11-10T19-06-29--review-code` (scratch
+`/var/folders/4y/djb3lgn91gl9t5hxytq19y600000gn/T/eval-review-code-1-fauliC`).
+`find <scratch> -path '*references/evals*'` printed nothing; the staged skill
+contains only `SKILL.md` and `references/deterministic-checks.md`. No provider was
+called.
+
+**AC-9 — the dead consumers.** `scripts/emit-promptfoo.mjs` and
+`scripts/promptfoo/provider.mjs` are deleted, the generated-YAML entry is gone
+from `.gitignore`, and the README's Promptfoo section is replaced by a pointer to
+the published matrix. No script imports or invokes them. The remaining prose
+mentions are history this spec must not rewrite: `docs/specs/SPEC-0001…`,
+`docs/evals/review-code-matrix.md` (SPEC-0063 owns that file), and this spec's
+CHANGELOG entry naming the deletion.
+
+**AC-10 — gates.**
+
+| command | exit |
+| --- | --- |
+| `node scripts/validate-skills.mjs --root skills` | 0 (`All clear`) |
+| `node scripts/run-evals.mjs --root skills --list --check` | 0 (`Parsed 97`) |
+| `node --test scripts/lib/evals/*.test.mjs` | 0 (472 tests) |
+| `node --test scripts/lib/*.test.mjs` | 0 (13 tests) |
+| `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` | 0 (34 tests) |
+| `node scripts/check-sensor-parity.mjs` | 0 (`2/2 fixtures in parity`) |
+| `node scripts/check-evidence.mjs` | 0 (8 documents, 0 errors, 100 warnings) |
+| `node --test scripts/check-staleness.test.mjs` | 0 (7 tests) |
+| `node scripts/check-staleness.mjs` | 0 (report form) |
+| `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0058-the-corpus-leaves-the-skill.md --base main` | 0 |
+
+`spec-check` exits 0 with 27 `files-declared-untouched` warnings: git's rename
+detection reports only the new path for each of the 368 renames, so the 27
+declared old paths (14 `evals.md` files and 13 `evals/` subtrees) appear
+untouched. They are declarations of what moved, not missing edits; no
+`files-touched-undeclared` finding exists.
+
+`check-staleness` now reports **62 cited, 27 stale, 3 uncited**; before this change
+the same tree reported 62 cited, 17 stale, 3 uncited. The same 62 cells resolve
+and the cited runs are unchanged. The 10 new stale cells are
+`bootstrap-project-harness` #14–#23: `harness-state.test.mjs` lives inside that
+skill checkout and had to change its fixture-root constant, so the recorded skill
+tree hash (`dd55fd88d57d`) no longer matches the current checkout
+(`285348f7f19b`). That is the report correctly saying those draws described a
+different tree; it is not a broken citation. `check-evidence`'s 100 warnings are
+the same pre-existing dirty-run markers as before.
+
+**Not preserved, and why.**
+
+- The preambles inside the moved `cases.md` files still say
+  `references/evals/<n>/`. F1 requires `git mv` with byte-identical content, and
+  AC-1/AC-2 compare those bytes; editing the prose would break the parity proof.
+  The runner now uses the new path; the prose is a stale authoring note.
+- `docs/specs/**`, `backlog/**`, `docs/inbox/` and `docs/analysis/` keep the old
+  paths as history, per the Non-Goals. No file under `docs/specs/**` or
+  `backlog/**` changed except this spec's own Results.
+- The spec's `files:` gained three necessary entries: `harness-state.test.mjs`
+  (the fixture-root constant), `.gitignore` (the retired exporter's artifact) and
+  `.githooks/pre-commit` (a one-line comment naming the corpus file). They are
+  consequences of F1 and AC-9, not extra scope.
+- No behavioural eval was run; zero paid draws.

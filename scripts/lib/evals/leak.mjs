@@ -3,7 +3,8 @@
 // `--no-skill` denies the `skill` tool and stages nothing, but the child still
 // runs as this user: it can read the installed copy at `~/.agents/skills/<id>`,
 // a stale copy under `$TMPDIR/opencode/…/skills`, or the answer key at
-// `references/evals.md`. Three published control draws did exactly that and were
+// `evals/<id>/cases.md` (it lived at `references/evals.md` inside the skill
+// before SPEC-0058). Three published control draws did exactly that and were
 // scored as passes, because the gate only watched the `skill` tool.
 //
 // The same hole existed one level up. A control draw can read the host checkout
@@ -70,7 +71,11 @@ const RULES = {
   // is the `evals` subtree only: `evals-archive`/`evals-backup` are not the
   // store and `auth.json` stays outside the rule.
   evalStore: "(?:^|/)\\.local/share/opencode/evals(?:/|$)",
-  corpus: "/references/evals\\.md$",
+  // The answer key moved out of the skill in SPEC-0058: `evals/<id>/cases.md`
+  // and `evals/<id>/fixtures/` beside the skill roots. The old
+  // `references/evals.md` shape stays in the rule for a stale installed copy,
+  // which is still the answer key.
+  corpus: "(?:^|/)(?:references/evals\\.md$|evals/[^/]+/(?:cases\\.md$|fixtures(?:/|$)))",
   // The roots themselves are machine-specific and passed by the caller; this
   // rule pins the semantics: an absolute read inside one of them is a finding.
   hostCorpus: "absolute-host-corpus-read",
@@ -140,6 +145,9 @@ const LEGACY_CAPABILITIES = Object.freeze({
   // denied split, so its clean claims keep their two capabilities; the store
   // rule narrows what "clean" means without adding a capability (AC-5).
   def64b2d6a1baa6e: Object.freeze(["host-reads", "denied-split"]),
+  // SPEC-0058 moved the answer key to `evals/<id>/cases.md` and widened the
+  // corpus rule; like the store rule it only narrows what counts as clean.
+  "9149d6ab1ca57343": Object.freeze(["host-reads", "denied-split"]),
 })
 
 export function capabilitiesOf(version) {
@@ -178,7 +186,8 @@ function isSkillRoot(path) {
   return SKILL_ROOTS.some((re) => re.test(path))
 }
 
-// `references/evals.md` is the answer key, wherever it is outside the scratch.
+// `evals/<id>/cases.md` (and its old in-skill shape) is the answer key,
+// wherever it is outside the scratch.
 const CORPUS = new RegExp(RULES.corpus)
 
 function isCorpus(path) {
@@ -213,7 +222,7 @@ function hostRootOf(path, hostRoots = []) {
 
 function classifies(path, scratch, hostRoots = []) {
   // Only an absolute path can be outside the scratch *and* outside the throwaway
-  // home. A relative `references/evals.md` resolves inside the scratch, where
+  // home. A relative `evals/<id>/cases.md` resolves inside the scratch, where
   // reading it is legitimate; `~/…` resolves inside the isolated home.
   if (!path.startsWith("/")) return null
   if (inside(path, scratch)) return null

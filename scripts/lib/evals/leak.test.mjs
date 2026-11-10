@@ -23,10 +23,11 @@ test("the detector version is derived from the rule list and pinned", () => {
   // denial rule (`per-path-permission-denial`); SPEC-0049 added the enforced
   // attempt rule (`enforced-corpus-attempt-is-denied`); SPEC-0051 added the
   // per-path content rule (`per-path-content-evidence`); SPEC-0052 added the
-  // eval-store rule (`evalStore`), so v2's `71bfb85a91cd68ab`, v3's
-  // `d8478beab04a4e3e`, v4's `d3e95ef948f983b7` and v5's `def64b2d6a1baa6e`
-  // are now history.
-  assert.equal(DETECTOR_VERSION, "9149d6ab1ca57343")
+  // eval-store rule (`evalStore`); SPEC-0058 moved the answer key to
+  // `evals/<id>/cases.md` and widened the corpus rule, so v2's
+  // `71bfb85a91cd68ab`, v3's `d8478beab04a4e3e`, v4's `d3e95ef948f983b7`,
+  // v5's `def64b2d6a1baa6e` and v6's `9149d6ab1ca57343` are now history.
+  assert.equal(DETECTOR_VERSION, "cf2e2e319d975a5b")
 })
 
 // SPEC-0048: a claim is judged by what the detector could prove, not by its
@@ -129,6 +130,17 @@ test("a stale copy under T/opencode is a leak, even without an install dir", () 
 test("an external references/evals.md is a leak", () => {
   const hits = findLeaks([call("read", { path: "/Users/me/repos/other/references/evals.md" })], SCRATCH)
   assert.deepEqual(paths(hits), ["/Users/me/repos/other/references/evals.md"])
+})
+
+test("the moved corpus at evals/<id>/cases.md is a leak", () => {
+  const hits = findLeaks([call("read", { path: "/Users/me/repos/other/evals/review-code/cases.md" })], SCRATCH)
+  assert.deepEqual(paths(hits), ["/Users/me/repos/other/evals/review-code/cases.md"])
+})
+
+test("a fixture under evals/<id>/fixtures/ is a leak", () => {
+  const fixture = "/Users/me/repos/other/evals/review-code/fixtures/1/git.json"
+  const hits = findLeaks([call("read", { path: fixture })], SCRATCH)
+  assert.deepEqual(paths(hits), [fixture])
 })
 
 test("the corpus staged inside the scratch is not a leak", () => {

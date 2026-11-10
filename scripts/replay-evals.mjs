@@ -43,7 +43,7 @@ import { join, dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { homedir } from "node:os"
 import { spawnSync } from "node:child_process"
-import { parseCases } from "./lib/evals/parse.mjs"
+import { corpusDir, parseCases } from "./lib/evals/parse.mjs"
 import { REPLAYABLE } from "./lib/evals/kinds.mjs"
 import { evaluateAssertions, skillGate } from "./lib/evals/assertions.mjs"
 import { replyText, skillLoads } from "./lib/evals/events.mjs"
@@ -316,9 +316,9 @@ function loadCases(root) {
   const map = new Map()
   for (const entry of readdirSync(root, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue
-    const file = join(root, entry.name, "references/evals.md")
+    const file = join(corpusDir(join(root, entry.name)), "cases.md")
     if (!existsSync(file)) continue
-    for (const c of parseCases(readFileSync(file, "utf8")).cases) map.set(`${entry.name}#${c.n}`, c)
+    for (const c of parseCases(readFileSync(file, "utf8"), entry.name).cases) map.set(`${entry.name}#${c.n}`, c)
   }
   return map
 }

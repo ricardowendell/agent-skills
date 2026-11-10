@@ -3,15 +3,27 @@ import assert from "node:assert/strict"
 import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
-import { parseCases, readEvals, unquote } from "./parse.mjs"
+import { corpusDir, parseCases, readEvals, unquote } from "./parse.mjs"
 
-function skillDir(files) {
-  const root = mkdtempSync(join(tmpdir(), "parse-skill-"))
+function writeFiles(root, files) {
   for (const [rel, text] of Object.entries(files)) {
     mkdirSync(dirname(join(root, rel)), { recursive: true })
     writeFileSync(join(root, rel), text)
   }
-  return root
+}
+
+// A mini repo: `<root>/skills/demo` is the skill, `<root>/evals/demo` the
+// corpus beside it (SPEC-0058). The helper returns the skill directory, which
+// is what every caller passes as `skillDir`.
+function skillDir(files = {}) {
+  const root = mkdtempSync(join(tmpdir(), "parse-skill-"))
+  const dir = join(root, "skills", "demo")
+  writeFiles(dir, files)
+  return dir
+}
+
+function corpusFiles(skill, files) {
+  writeFiles(corpusDir(skill), files)
 }
 
 const legacy = `# Evals
@@ -171,29 +183,33 @@ test("a valid regex is accepted", () => {
 // SPEC-0057: `--list --check` must catch a broken pointer without staging.
 test("a git.json base that does not resolve is reported from the authoring side", () => {
   const md = `1. **T.**\n   - prompt: do it\n   - assert: file a.txt\n`
-  const dir = skillDir({ "references/evals/1/git.json": JSON.stringify({ base: "../missing" }) })
+  const dir = skillDir()
+  corpusFiles(dir, { "fixtures/1/git.json": JSON.stringify({ base: "../missing" }) })
   const { errors } = parseCases(md, "demo", { skillDir: dir })
   assert.ok(errors.some((e) => /case 1: git\.json base '\.\.\/missing' does not resolve/.test(e)), errors.join(" | "))
 })
 
-test("readEvals resolves the fixture pointer from the file's own skill directory", () => {
-  const dir = skillDir({
-    "references/evals.md": `1. **T.**\n   - prompt: do it\n   - assert: file a.txt\n`,
-    "references/evals/1/git.json": JSON.stringify({ base: "nowhere" }),
+test("readEvals resolves the corpus and the fixture pointer from its own layout", () => {
+  const dir = skillDir()
+  corpusFiles(dir, {
+    "cases.md": `1. **T.**\n   - prompt: do it\n   - assert: file a.txt\n`,
+    "fixtures/1/git.json": JSON.stringify({ base: "nowhere" }),
   })
-  const { errors } = readEvals(join(dir, "references/evals.md"), "demo")
+  const { errors } = readEvals(join(corpusDir(dir), "cases.md"))
   assert.ok(errors.some((e) => /does not resolve/.test(e)), errors.join(" | "))
 })
 
 test("a resolving base and a malformed manifest are reported honestly", () => {
-  const ok = skillDir({
-    "references/evals/1/base/a.txt": "a\n",
-    "references/evals/1/git.json": JSON.stringify({ base: "base" }),
+  const ok = skillDir()
+  corpusFiles(ok, {
+    "fixtures/1/base/a.txt": "a\n",
+    "fixtures/1/git.json": JSON.stringify({ base: "base" }),
   })
   const parsed = parseCases(`1. **T.**\n   - prompt: do it\n   - assert: file a.txt\n`, "demo", { skillDir: ok })
   assert.deepEqual(parsed.errors, [])
 
-  const broken = skillDir({ "references/evals/1/git.json": "{ not json" })
+  const broken = skillDir()
+  corpusFiles(broken, { "fixtures/1/git.json": "{ not json" })
   const bad = parseCases(`1. **T.**\n   - prompt: do it\n   - assert: file a.txt\n`, "demo", { skillDir: broken })
   assert.ok(bad.errors.some((e) => /git\.json is not valid JSON/.test(e)))
 })

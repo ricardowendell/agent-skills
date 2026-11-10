@@ -25,7 +25,7 @@ function fixture() {
   const skill = join(skills, "demo")
   write(skill, "SKILL.md", "---\nname: demo\n---\nbody\n")
   write(skill, "references/notes.md", "notes\n")
-  write(skill, "references/evals.md", "1. **T.**\n   - prompt: do it\n   - assert: reply ok\n")
+  write(root, "evals/demo/cases.md", "1. **T.**\n   - prompt: do it\n   - assert: reply ok\n")
 
   const store = join(root, "runs")
   const run1 = join(store, "2026-01-01T00-00-00--demo")

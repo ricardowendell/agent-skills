@@ -23,8 +23,10 @@ and every assertion kind. This file covers only what changes when you contribute
 | Path | What it is |
 | --- | --- |
 | `skills/<id>/SKILL.md` | the skill; `<id>` is the skill id |
-| `skills/<id>/references/` | material the skill loads on demand, including `evals.md` |
-| `scripts/` | validator, eval runner, replay, matrix exporter, sensor-parity check, Promptfoo provider |
+| `skills/<id>/references/` | material the skill loads on demand; never the eval corpus |
+| `evals/<id>/cases.md` | the cases for `<id>`, outside the skill and never staged |
+| `evals/<id>/fixtures/<n>/` | the fixture trees and `git.json` manifests |
+| `scripts/` | validator, eval runner, replay and the sensor-parity check |
 | `commands/`, `agents/` | OpenCode command stubs and the `spec-reviewer` subagent |
 | `claude/` | Claude Code versions of the same stubs and subagent |
 | `docs/` | this repo's own record; see [`docs/README.md`](docs/README.md) |
@@ -88,7 +90,9 @@ the display is not. TASK-55 tracks the upstream issue.
 
 ## Adding a case
 
-Every skill keeps its cases in `skills/<id>/references/evals.md`. One case is:
+Every skill keeps its cases in `evals/<id>/cases.md`, beside the skill roots —
+never inside the skill, so a staged copy cannot carry its own answer key. One
+case is:
 
 ```md
 1. **Short title.**
@@ -124,8 +128,8 @@ Rules:
   Nothing uses it today.
 - Tags in use: `trigger`, `matrix`, `regression`, `harness-state`.
 
-A case ships its fixture as `references/evals/<n>/`, copied into the scratch
-repo. When the case needs history, ship `references/evals/<n>/git.json` instead:
+A case ships its fixture as `evals/<id>/fixtures/<n>/`, copied into the scratch
+repo. When the case needs history, ship `evals/<id>/fixtures/<n>/git.json` instead:
 
 ```json
 { "base": "../base", "remove": ["docs/specs"], "branch": "feature",

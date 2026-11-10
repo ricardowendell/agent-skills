@@ -94,8 +94,8 @@ not block.
 - `skills/bootstrap-project-harness/SKILL.md` — step 0, the table, fallback.
 - `skills/bootstrap-project-harness/templates/python/justfile.template` — add
   `smoke`.
-- `skills/bootstrap-project-harness/references/evals.md` and
-  `references/evals/15/` — case 15.
+- `evals/bootstrap-project-harness/cases.md` and
+  `evals/bootstrap-project-harness/fixtures/15/` — case 15.
 - `.github/workflows/skills.yml` and `.githooks/pre-commit` — the new test
   commands.
 
@@ -150,7 +150,7 @@ not block.
    If all three stop, run `--repeat 12` into a fresh run and use the combined
    rate. At ≥10/12 remove `status: manual`; otherwise keep it and put the rate
    and the failing behaviour in `why:`.
-10. **Case 15.** Build `references/evals/15/` as a copy of case 14's fixture with
+10. **Case 15.** Build `evals/bootstrap-project-harness/fixtures/15/` as a copy of case 14's fixture with
     `lefthook.yml` removed, plus its `git.json`. Case block: prompt "Set up the
     harness here.", `tags: harness-state`, expectations that it names the missing
     piece and fixes only it, asserts `file lefthook.yml` and `unchanged
@@ -186,7 +186,7 @@ not block.
 | AC | Check |
 | --- | --- |
 | AC-1 | `node --test skills/bootstrap-project-harness/scripts/harness-state.test.mjs` — four states, failing smoke, ambiguous, missing directory |
-| AC-2 | Script on `references/evals/14` with `node_modules` absent prints `complete`, exit 0; on a copy with a broken `smoke` recipe prints `partial` |
+| AC-2 | Script on `evals/bootstrap-project-harness/fixtures/14` with `node_modules` absent prints `complete`, exit 0; on a copy with a broken `smoke` recipe prints `partial` |
 | AC-3 | Read `SKILL.md`: step 0, `competing:` handling, `ambiguous` handling, fallback line |
 | AC-4 | Case 14 at 12 runs; rate in `why:` decides `status:`; AC-4 recorded as passed or failed |
 | AC-5 | `just smoke` in a Python fixture exits 0 without `uv sync` |

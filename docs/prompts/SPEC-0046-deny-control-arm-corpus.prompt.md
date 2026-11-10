@@ -24,7 +24,7 @@ cannot be enforced, the run says `unknown` instead of claiming `yes`.
 
 - An enforcement capability probed at run start and recorded in the manifest.
 - Enforcement where it exists: on macOS, a seatbelt profile that denies reading
-  the corpus (installed roots and `references/evals.md`), with the mechanism
+  the corpus (installed roots and `evals/<id>/cases.md`), with the mechanism
   named in the manifest.
 - A deterministic canary: the same probe reads a known corpus path under the
   enforcement and must fail; without the enforcement it must succeed.

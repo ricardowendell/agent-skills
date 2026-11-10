@@ -228,7 +228,7 @@ case; nothing is tagged today, so behaviour equals full until a case earns the
 tag. `gate: off` releases a case from the provenance gate — required by trigger
 cases, which ask whether a skill was chosen at all.
 
-A case normally ships a fixture tree under `references/evals/<n>/`. When the
+A case normally ships a fixture tree under `evals/<id>/fixtures/<n>/`. When the
 skill needs history (a diff to review, a branch to compare), the case ships a
 `git.json` manifest instead: the tree is committed as `main`, `change.patch` is
 applied on a branch, and that branch is left checked out.
@@ -288,8 +288,8 @@ the prompt to make a run cheaper: a cheaper run is a different test.
 The scratch dir is not an OS sandbox — the agent can still write outside it. The
 protection is `unchanged` plus the fixture's own `git status`.
 
-The eval corpus is never staged. `references/evals.md` holds every case's prompt,
-expectations and assertions, and `references/evals/<n>/` the fixtures of the
+The eval corpus is never staged. `evals/<id>/cases.md` holds every case's prompt,
+expectations and assertions, and `evals/<id>/fixtures/<n>/` the fixtures of the
 other cases; an agent that reads either can satisfy a case without exercising the
 skill. Forty of the first 194 transcripts did exactly that, and closing the leak
 moved one trigger near-miss from 3/3 to 0/3 — rerun anything measured before.
@@ -411,27 +411,14 @@ assertion change would do to the runs you already have, before paying for new
 ones. A verdict that came from `--judge`, or a case whose assertions changed
 after the run, will read as a difference — look, don't assume.
 
-### Matrix runs with Promptfoo
+### Matrix runs
 
-Repetition, a model × arm matrix and cost reporting are commodity work, so they
-can be delegated — without moving the verdict out of this repo:
-
-```sh
-node scripts/emit-promptfoo.mjs --tag matrix --models default,opencode-go/gpt-6-luna
-npx promptfoo eval -c scripts/promptfoo/promptfoo.yaml --repeat 3
-```
-
-The published result — four cases, two models, both arms, five repetitions each
-— is in [`docs/evals/review-code-matrix.md`](docs/evals/review-code-matrix.md),
-including which assertion failed in every cell without the skill.
-
-`scripts/promptfoo/provider.mjs` imports the same library, stages the same
-fixture, pins the same skill and classifies with the same rules; the only
-assertion on the Promptfoo side reads `metadata.status`, so the two front ends
-cannot disagree about what passed. The generated YAML is a build artifact and is
-not committed; `evals.md` remains the source. Enable the judge there with
-`judge: { model: default, threshold: 0.8 }` in a provider's config — one judge
-per execution, same rule as the CLI.
+Repetition, a model × arm matrix and cost reporting are commodity work. The
+published matrix — four cases, two models, both arms, five repetitions each —
+is in [`docs/evals/review-code-matrix.md`](docs/evals/review-code-matrix.md),
+including which assertion failed in every cell without the skill. Its
+Promptfoo-based exporter was retired in SPEC-0058; `run-evals.mjs --repeat`
+covers the same ground, and `evals/<id>/cases.md` remains the source.
 
 ### Artifacts and regressions
 

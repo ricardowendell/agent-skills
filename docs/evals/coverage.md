@@ -1,9 +1,10 @@
 # Eval coverage
 
-Inventory of the cases in `skills/*/references/evals.md`: what exists, how it is
-staged, and what has actually been measured. Counts come from
+Inventory of the cases in `evals/*/cases.md`: what exists, how it is staged, and
+what has actually been measured. Counts come from
 `node scripts/run-evals.mjs --root skills --list` and from the fixture
-directories; they are not estimates.
+directories; they are not estimates. Paths quoted inside a measurement note name
+the layout at the time of that run; SPEC-0058 moved the corpus out of the skill.
 
 | Skill | Cases | Trigger | Manual | Fixture | Evidence recorded |
 | --- | --- | --- | --- | --- | --- |
@@ -711,10 +712,10 @@ has a clean control pair from SPEC-0050 (5/5 vs 0/5) and is a separator;
 node scripts/run-evals.mjs --root skills --list
 
 # which cases stage a committed repo
-find skills -name git.json
+find evals -name git.json
 
 # which cases are manual (format lines also contain the string)
-grep -rn '^[[:space:]]*- status: manual' skills/*/references/evals.md
+grep -rn '^[[:space:]]*- status: manual' evals/*/cases.md
 ```
 
 Recount the totals, update the row you changed, and leave `none` alone unless a

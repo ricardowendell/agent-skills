@@ -55,12 +55,12 @@ not exist. Build them.
 
 ## Structure
 
-- `skills/find-blind-spots/references/evals/4/` — `plan.md`, `AGENTS.md`.
-- `skills/tighten-harness/references/evals/5/` — `src/huge.js`,
+- `evals/find-blind-spots/fixtures/4/` — `plan.md`, `AGENTS.md`.
+- `evals/tighten-harness/fixtures/5/` — `src/huge.js`,
   `eslint.config.js`, `justfile`, `package.json`, `AGENTS.md`.
-- `skills/audit-docs/references/evals/3/` — `git.json`, `change.patch`, and the
+- `evals/audit-docs/fixtures/3/` — `git.json`, `change.patch`, and the
   `docs/` tree the branch starts from.
-- The three case blocks in `skills/<id>/references/evals.md`.
+- The three case blocks in `evals/<id>/cases.md`.
 
 ## Operations
 
@@ -97,7 +97,7 @@ not exist. Build them.
   behaviour.
 - Conventional commits, imperative subject ≤72 chars.
 - `git.json` follows the shape already used in
-  `skills/review-code/references/evals/2/git.json`: `base`, `branch`, `message`,
+  `evals/review-code/fixtures/2/git.json`: `base`, `branch`, `message`,
   `patch`.
 
 ## Safeguards

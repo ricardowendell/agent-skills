@@ -1,4 +1,9 @@
-// parse.mjs — read a skill's references/evals.md into cases.
+// parse.mjs — read a skill's evals/<id>/cases.md into cases.
+//
+// The corpus lives outside the skill: `evals/<id>/cases.md` beside the skill
+// roots, never `<skill>/references/evals.md` (SPEC-0058). Discovery reads that
+// one layout; there is no fallback, so a corpus that cannot be found is an
+// error rather than a silent empty run.
 //
 // Case syntax (v2):
 //
@@ -197,16 +202,34 @@ export function parseCases(md, selfId = null, { skillDir = null } = {}) {
   return { cases, ...validate(cases, selfId, { skillDir }) }
 }
 
-// The eval corpus lives at `<skill>/references/evals.md`, so the skill under
-// review is derivable without the caller passing it. An explicit id still wins
-// for a corpus read from somewhere else.
-export function readEvals(file, selfId = basename(dirname(dirname(file)))) {
-  return parseCases(readFileSync(file, "utf8"), selfId, { skillDir: dirname(dirname(file)) })
+// The corpus lives at `evals/<id>/cases.md`, beside the skill roots. A skill
+// directory is `<root>/skills/<id>`, so its corpus directory is
+// `<root>/evals/<id>`. Pure path arithmetic: no filesystem probe, no fallback.
+export function corpusDir(skillDir) {
+  const dir = normalize(String(skillDir)).replace(/\/+$/, "")
+  return join(dirname(dirname(dir)), "evals", basename(dir))
 }
 
-// `skillDir` is the checkout whose `references/evals.md` was parsed. Without it
-// (a bare `parseCases` call) the filesystem checks cannot run and are skipped;
-// the CLI always passes it.
+// The inverse, for a corpus file whose skill directory the caller did not pass.
+export function skillDirForCorpus(file) {
+  const dir = normalize(String(file)).replace(/\/+$/, "")
+  return join(dirname(dirname(dirname(dir))), "skills", basename(dirname(dir)))
+}
+
+// The corpus file lives at `<skill>/../../evals/<id>/cases.md`; the skill under
+// review is the directory basename. An explicit id or skillDir still wins for a
+// corpus read from somewhere else.
+export function readEvals(
+  file,
+  selfId = basename(dirname(file)),
+  { skillDir = skillDirForCorpus(file) } = {},
+) {
+  return parseCases(readFileSync(file, "utf8"), selfId, { skillDir })
+}
+
+// `skillDir` is the checkout whose corpus was parsed. Without it (a bare
+// `parseCases` call) the filesystem checks cannot run and are skipped; the CLI
+// always passes it.
 export function validate(cases, selfId = null, { skillDir = null } = {}) {
   const errors = []
   const warnings = []
@@ -255,7 +278,7 @@ export function validate(cases, selfId = null, { skillDir = null } = {}) {
     // The pointer itself is authoring data: `--list --check` can prove it
     // resolves without staging anything (SPEC-0057).
     if (skillDir) {
-      const manifest = join(skillDir, "references/evals", String(c.n), "git.json")
+      const manifest = join(corpusDir(skillDir), "fixtures", String(c.n), "git.json")
       if (existsSync(manifest)) {
         let spec
         try {
