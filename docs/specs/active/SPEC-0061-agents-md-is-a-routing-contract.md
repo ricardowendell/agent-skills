@@ -1,7 +1,7 @@
 ---
 id: SPEC-0061
 title: AGENTS.md is a routing contract
-status: ready
+status: implemented
 priority: P2
 task: TASK-95
 created_at: 2026-11-10
