@@ -31,18 +31,46 @@ Concept names below are stable; resolve literal paths from `AGENTS.md`.
 4. Walk the acceptance criteria one by one. For each, record the code that
    satisfies it and the test that proves it. An AC without both is a blocking
    finding; do not replace evidence with an impression.
-5. Run the gates the project documents and keep the exact command plus result. A
+5. Choose the **risk profile** from the diff, after the AC walk: **fast** for a
+   small, contained change, **deep** when the diff touches a public interface,
+   auth/security, persistence, schema or migration, concurrency, or project
+   policy. Deepen only the dimensions the diff actually touches; see
+   [Risk profile](#risk-profile).
+6. Run the gates the project documents and keep the exact command plus result. A
    gate that cannot run locally is reported as not run; it never counts as a pass.
-6. Check the protections the project already has: no secrets, no new dependency
+7. Probe the deterministic slots that match the changed paths through
+   `references/deterministic-checks.md`. Detect the project's own tool, run it
+   locally with the exact command, and record the exit status. A tool that is
+   absent, unconfigured or broken is `unverified`, never a pass.
+8. Check the protections the project already has: no secrets, no new dependency
    without a stated reason, no migration or destructive change outside the spec,
-   no unrelated refactor, no weakened or deleted test.
-7. Check only the norms that are written down — architecture rules, size limits,
+   no unrelated refactor, no weakened or deleted test. Carry the interface
+   question into the deep profile: an exported name, arity or return shape is a
+   contract even when the suite is green.
+9. Check only the norms that are written down — architecture rules, size limits,
    naming, interface language. A finding must cite the rule it violates. Taste is
    not a finding.
-8. Decide. APPROVE requires every AC evidenced, gates green or explicitly not
-   applicable, and zero blocking findings. Everything else is REJECT.
-9. Hand the verdict to whatever gate owns the transition. This skill produces
-   evidence; it does not record the gate, merge, or push.
+10. Decide. APPROVE requires every AC evidenced, gates green or explicitly not
+    applicable, and zero blocking findings. Everything else is REJECT.
+11. Hand the verdict to whatever gate owns the transition. This skill produces
+    evidence; it does not record the gate, merge, or push.
+
+## Risk profile
+
+The profile scales the review; it never replaces the AC walk, the gates or the
+withhold rule.
+
+| Profile | When the diff is | What is deepened |
+| --- | --- | --- |
+| **fast** | small and contained: no public interface, auth/security, persistence, schema/migration, concurrency or policy change | correctness, tests, secrets, scope |
+| **deep** | touches a public interface, auth/security, persistence, schema/migration, concurrency or project policy | only the dimensions the diff touches, plus the deterministic slots for the changed paths |
+
+- **Deepen only what the diff touches.** A dimension the diff does not touch is
+  not opened; record it as not applicable instead of producing a checklist.
+- No dimension is mandatory. A dimension the diff touches and you could not
+  verify goes under `Not verified`; it does not become a pass.
+- The profile is chosen from the diff, never from the author's description of
+  it.
 
 ## Refusal Conditions
 
@@ -64,6 +92,9 @@ Stop and say why, instead of producing a verdict, when:
   rule it violates, and one concrete action.
 - Severity: `blocking` (must change before merge), `should-fix` (merge is
   defensible, but record it), `nit` (only when it violates a documented rule).
+  Taste is not a finding, and a clean diff is not a finding either.
+- A `blocking` finding names the contract it breaks — the AC, the public
+  interface, the documented rule — not only the symptom.
 - No finding without an action. No action that requires rewriting the change —
   the fix belongs to the implementer.
 - Absence of evidence is a finding, not a pass.
@@ -104,6 +135,10 @@ human merge sign-off, or back to implementation.
   judges the change against a contract nobody wrote; it is not the safe option.
 - Do not invent acceptance criteria; do not mark a missing AC satisfied because
   the code looks reasonable.
+- Do not deepen a dimension the diff does not touch; no scanner is mandatory and
+  no checklist is scored.
+- Never install, upgrade or configure a tool during a review, and never use
+  `npx --yes`. A deterministic slot with no tool is `unverified`, not clean.
 - Do not reopen product decisions in review. If the spec is wrong, raise it as an
   open question and send it back to grooming.
 - Report what you did not verify, even when the verdict is APPROVE.

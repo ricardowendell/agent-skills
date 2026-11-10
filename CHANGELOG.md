@@ -23,9 +23,37 @@ skills, which cases, and which published measurements.
   stubs that emit a known cycle and a known unused file; case 9 stages fixture 6
   via `evals/9/git.json` without the stubs and must say `unmeasured`.
   `SKILL.md` keeps its description and trigger.
+- **Risk-proportional review and diff-scoped deterministic slots for
+  `review-code` (SPEC-0056, TASK-80).** `SKILL.md` keeps the spec hash and the AC
+  walk first and adds a fast/deep risk profile: the fast profile checks
+  correctness, tests, secrets and scope; the deep profile is chosen only when the
+  diff touches a public interface, auth/security, persistence,
+  schema/migration, concurrency or project policy. Only the dimensions the diff
+  touches are deepened, so no checklist is scored. `references/deterministic-checks.md`
+  adds a diff-scoped registry (semgrep baseline, gitleaks, osv-scanner,
+  actionlint/zizmor, shellcheck, knip/dependency-cruiser filtered to the changed
+  files, and the project's type/test/lint commands) with the
+  detect/run/record/classify protocol. An absent or broken tool is `unverified`,
+  never clean; the review never installs, upgrades or configures a scanner and
+  never uses `npx --yes`. Cases 8–10 are new. The description and trigger are
+  unchanged.
 
 ### Measured
 
+- **SPEC-0056 wave, five draws per arm on `agentworks/deepseek-v4-1-flash`.**
+  Cases 8, 9 and 10 plus regressions 1, 2 and 7; every cited cell is
+  `findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0`
+  under detector v6. Case 8 (interface break, green suite) separates **5/5 vs
+  0/5**; case 9 (introduced injection) separates **5/5 vs 3/5**; case 10's fixed
+  skill arm is **5/5** and its control is **unresolved** because the 60-draw
+  ceiling was reached; regression #1 separates **5/5 vs 0/5**, #2 stays a
+  **non-discriminator** (4/5 vs 4/5), and the #7 holdout is **5/5 vs 0/5**. Case
+  10's first skill arm (5 draws) correctly blocked a fixture whose tests did not
+  prove AC-2's delay or AC-3's defaults/non-integer inputs; the fixture was
+  strengthened and the arm re-run, with no `expect:` or assertion changed. The
+  wave spent 60 paid draws (55 evidence + 5 invalid setup). Decisions: `keep`
+  for #8, #9, #1, #2 and #7; `change` for #10 and keep the case with its control
+  unresolved. Run directories are in `docs/evals/coverage.md`.
 - **SPEC-0055 wave, five draws per arm on `agentworks/deepseek-v4-1-flash`.**
   Cases 5–9 were run with and without the skill; every published cell is
   `findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0`

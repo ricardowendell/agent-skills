@@ -15,13 +15,13 @@ directories; they are not estimates.
 | `implement-from-prompt` | 8 | 2 | 0 | trees 1, 2, 3, 4, 7, 8 | discriminating set (SPEC-0033, v2, `agentworks/deepseek-v4-1-flash`): #1 **5/5 vs 0/5** (`2026-11-07T08-57-39--implement-from-prompt--agentworks-deepseek-v4-1-flash`, `…08-59-39--without-skill`, `findings=0 isolated=yes`) and #8 **5/5 vs 0/5** (`…09-01-25…`, `…09-04-41--without-skill`, clean); see `discriminating-cases.md`. Published matrix: #1 and #8 separate 12/12 vs 0/12 on the default (`2026-11-05T12-35-30--implement-from-prompt`, `2026-11-05T12-42-05--implement-from-prompt--without-skill`, `2026-11-05T12-48-46--implement-from-prompt`, `2026-11-05T12-56-03--implement-from-prompt--without-skill`; these four predate the leak field, so `check-eval-run` reports `warnings=12` — pre-detector history, the rates stand); on `gpt-6-luna` #1 is 5/5 vs **0/5** (the old 1/5 control pass read the installed `SKILL.md`; re-measured at `2026-11-06T07-05-38--implement-from-prompt--opencode-go-gpt-6-luna--without-skill`) and #8 is 5/5 vs 1/5 (`2026-11-05T13-18-27--implement-from-prompt--opencode-go-gpt-6-luna`, `2026-11-05T13-22-08--implement-from-prompt--opencode-go-gpt-6-luna--without-skill`, `2026-11-05T13-25-10--implement-from-prompt--opencode-go-gpt-6-luna`, `2026-11-05T13-28-38--implement-from-prompt--opencode-go-gpt-6-luna--without-skill`; the one #1 control pass read the real `SKILL.md`); #7 non-discriminator 5/5 both arms; #2 readable after SPEC-0019: gate 12/12 at `07f4fe6`, 11/12 passed (`2026-11-06T10-38-39--implement-from-prompt`), so the Gate A 2/5 did not reproduce (the delta includes the SPEC-0016 rule change, so the cause is not isolated); its control re-read under the detector is **0/3 draws**, 1 contaminated (`r3`) and the two clean draws failed the reply assertion (**0/2 clean**) at `2026-11-06T07-31-00--implement-from-prompt--without-skill`; the load across #1/#2/#5/#8 at n=12 was 45 of 46 clean draws loaded the skill (`2026-11-06T10-34-26`, `…10-38-39`, `…10-45-29`, `…10-53-13`); the one miss is #5 r9, which read the staged SKILL.md directly without calling the skill tool (a trigger case, so the tool call stays the routing signal — TASK-39), and #5's two exclusions are one contamination and one stall; #4 re-measured after SPEC-0016 (write target vs read dependency + fixture `package.json`): 5/5 with vs 3/5 without at `6dd38aa` (`2026-11-05T15-00-48--implement-from-prompt`, `2026-11-05T15-06-58--implement-from-prompt--without-skill`; two control reds are 600 s provider timeouts), so #4 is a non-discriminator and stays as a regression case; #1/#7/#8 kept 5/5 with skill (`2026-11-05T15-30-10--implement-from-prompt`, `2026-11-05T15-36-40--implement-from-prompt`, `2026-11-05T15-44-35--implement-from-prompt`); #3 is no longer `manual` after SPEC-0022: 1/1 with skill (`2026-11-06T11-28-49--implement-from-prompt`), no control, so it is a regression case, not a separator; trigger #5 4/5, #6 5/5 (`2026-11-05T11-52-43--implement-from-prompt`) |
 | `process-inbox` | 3 | 2 | 0 | tree 1 | published matrix: #1 5/5 with the skill; control **unresolved** under v2 — default `02-51-15` is 0/2 valid clean (1 abort, 2 contaminated), and `03-08-51` is 5 provider aborts, not evidence; agentworks 0/2. v1 subsets 0/1, 0/1 and 0/1 are history. #2 trigger 4/4 clean scored draws loaded (`2026-11-06T16-55-11--process-inbox`, findings=1); #3 routing **5/5** with `capture-idea` staged as the declared sibling in `2026-11-06T19-09-27--process-inbox` (v2, `isolated=yes`), replacing the pre-fix 0/5 cross-skill-staging record; re-measured under the enforced boundary (SPEC-0050, five draws): #1 is 5/5 clean with the skill (`2026-11-09T12-44-11--process-inbox--agentworks-deepseek-v4-1-flash`, `findings=0 isolated=yes`) and the control `2026-11-09T12-46-48--process-inbox--…--without-skill` is 0/5 clean (`deniedDraws=3`, `isolated=yes`), every draw red on `unchanged docs/inbox/2026-01-01-digest-email.md` and `nodir docs/backlog` — **separator** (5/5 vs 0/5). See `pipeline-bookends-matrix.md` |
 | `record-decision` | 5 | 2 | 0 | trees 1–5 | published matrix: #1 separator 4/5 vs **1/5** (`2026-11-06T16-43-33--record-decision`, `2026-11-06T17-11-37--record-decision--without-skill`); #2 separator 4/5 vs **0/5** (`2026-11-06T16-45-46--record-decision`, `2026-11-06T17-28-10--record-decision--without-skill`); #3 non-discriminator 4/5 vs 5/5 (`2026-11-06T16-48-00--record-decision`, `2026-11-06T17-20-53--record-decision--without-skill`); triggers #4/#5 5/5 in `2026-11-06T17-04-07--record-decision`; see `pipeline-bookends-matrix.md` |
-| `review-code` | 7 | 2 | 0 | trees 1–7 plus `base/` and `base-red/`; 1–4 and 7 via `git.json` | discriminating set (SPEC-0033, v2): #7 **5/5 vs 0/5** (`2026-11-07T09-07-52--review-code--agentworks-deepseek-v4-1-flash`, `…09-11-14--without-skill`, clean; the control fails `verdict REJECT` 5/5, 3 approve and 2 miss the token), the **holdout**; see `discriminating-cases.md`. Published matrix; #4 fixture revised 2026-11-05: 5/5 with, 3/5 without (`2026-11-05T07-34-32--review-code`, `…07-47-21--review-code--without-skill`); #7 red gate: 3/3 with, 0/3 without (`…09-05-36`, `…09-32-10--without-skill`) |
+| `review-code` | 10 | 2 | 0 | trees 1–7 plus `base/` and `base-red/`; 1–4 and 7–10 via `git.json` | discriminating set (SPEC-0033, v2): #7 **5/5 vs 0/5** (`2026-11-07T09-07-52--review-code--agentworks-deepseek-v4-1-flash`, `…09-11-14--without-skill`, clean; the control fails `verdict REJECT` 5/5, 3 approve and 2 miss the token), the **holdout**; see `discriminating-cases.md`. Published matrix; #4 fixture revised 2026-11-05: 5/5 with, 3/5 without (`2026-11-05T07-34-32--review-code`, `…07-47-21--review-code--without-skill`); #7 red gate: 3/3 with, 0/3 without (`…09-05-36`, `…09-32-10--without-skill`). **SPEC-0056 wave** (cases 8–10 and regressions 1, 2, 7, five draws per arm) is below |
 | `survey-inflight-work` | 5 | 3 | 0 | tree 1 via `git.json` with a local bare `origin`; tree 2 without a remote | iteration 1, 1 draw/case: with-skill 4/4 (`2026-11-04T21-49-16`); control case 1 0/1, only the `unknown` PR state separated (`…21-45-26`); control case 2 0/1, only the no-remote line separated (`…21-57-53`). Case 5 (near-miss against `report-project-status`) added 2026-11-08, not measured |
 | `audit-code-quality` | 9 | 2 | 0 | trees 1 and 4 via `git.json`; 5–8 via `git.json`; 9 stages tree 6 via `evals/9/git.json` | iteration 1: with-skill 4/4 (`2026-11-04T21-55-53`); control case 1 0/1, only coverage `unknown` separated (`…21-47-51`); case 4 on the final 8-assertion version 1/1 with skill (`2026-11-04T21-59-17`) against 0/1 without (`2026-11-04T21-59-17--audit-code-quality--without-skill`) on `SCOPE:`/`rule`/`CAPTURE OPTIONS` — one draw per arm, so it does not separate reliably (`…21-57-53` is the pre-contract 5-assertion version); **SPEC-0055 wave:** architecture cases 5–7 and deterministic cases 8–9, five draws per arm on `agentworks/deepseek-v4-1-flash`; skill arms 5/5, 4/5, 4/5, 3/5 and 4/5 passed against 0/5 in every control; all ten published cells are clean under the enforced boundary; see the SPEC-0055 wave below |
 | `tighten-harness` | 6 | 2 | 0 | trees 1, 2, 3, 5, 6 | case 5: 3/3 passed, skill loaded 0/3 (`why:`, no run dir) |
 | `write-implementation-prompt` | 6 | 2 | 1 | trees 1–4 | SPEC-0030 re-measure at `dcf5177` (`skillHash 046369c2…`, detector v2; the clean behavioural cells are `isolated=yes`, the trigger runs carry their findings): #1 5/5 clean (`2026-11-06T19-25-26--write-implementation-prompt`), control **unresolved** under v2: default 0/3 clean in two runs (`2026-11-07T01-46-26--write-implementation-prompt--without-skill`, `…02-58-14…`) and agentworks 0/2 (`08-17-29`); every clean draw failed `spec_sha:`. Four v1 attempts are history; #2 5/5 clean (`2026-11-06T19-28-47--write-implementation-prompt`), control **separator** under v2 on the default model (`2026-11-07T03-01-29--write-implementation-prompt--without-skill`: 5/5 clean, **0/5 passed**); the agentworks control (`08-20-10`) only reached 0/4 clean, a route difference. The v1 `15-30-39` 0/4 replay-clean is history; #4 5/5 clean (`2026-11-06T19-30-26--write-implementation-prompt`), control **non-discriminator** under v2: default **4/4 valid passed** (`2026-11-07T02-03-01--write-implementation-prompt--without-skill`; 1 rep aborted), agentworks 2/2 (`08-22-28`); the v1 `14-37-23` 4/4 passed is history; #3 `manual` (history `14-01-54` split 4/5; not re-run); triggers: #5 loaded 5/5 in both `2026-11-06T19-32-45` and `2026-11-06T19-53-34` but has no stall-free five-draw cell (stalls r1/r4 and r3/r5, event gaps in the matrix; contamination; best clean subsets 1/1 and 2/2); #6 clean 5/5 in `2026-11-06T20-12-15--write-implementation-prompt` (`findings=0 warnings=0 isolated=yes`), 5/5 in `19-32-45`, 4/5 in `19-53-34` (r3 loaded) — improved but not deterministic; canary 12/12 `13-51-35`; `13-46-05` discarded (`r8` read `.lane/trees`); re-measured under the enforced boundary (SPEC-0050, five draws): #1 is 5/5 clean with the skill (`2026-11-09T13-07-02--write-implementation-prompt--agentworks-deepseek-v4-1-flash`, `findings=0 isolated=yes`) and the control `2026-11-09T13-11-33--write-implementation-prompt--…--without-skill` is 0/5 clean (`deniedDraws=1`, `isolated=yes`), every draw red on `filematch docs/prompts/SPEC-0007-*.prompt.md spec_sha:` — **separator** (5/5 vs 0/5). See `write-implementation-prompt-matrix.md` |
 | `report-project-status` | 4 | 3 | 1 | none | declared, not measured: three trigger/near-miss cases and one manual behavioural case (#3); no fixture and no run dir. Source: issue #11 (2026-11-08), skill merged in `fca9c78` |
-| **total** | **94** | **31** | **3** | | |
+| **total** | **97** | **31** | **3** | | |
 
 ## Discriminating set (issue #5)
 
@@ -368,8 +368,63 @@ missed it used a `## SCOPE` heading. It was not relaxed after the draws. The
 clean passes, and no oracle, fixture (apart from the missing case-9 pointer) or
 `why:` line was changed to reach a pass after the first draw.
 
+### SPEC-0056 wave (five draws per arm)
+
+Measured 2026-11-10 on `agentworks/deepseek-v4-1-flash`, concurrency 4, detector
+v6 `9149d6ab1ca57343`, level `behavior`. Every cited manifest records
+`params.isolation.enforced: true` (seatbelt), and `check-eval-run` on each
+directory prints `findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes
+deniedDraws=0`. "Clean draws" is the non-contaminated count; "passed" is the
+assertion count. New cases 8–10 plus regression cases 1, 2 and 7; 60 paid draws,
+the authorised ceiling (55 evidence draws plus 5 draws of an invalid case-10
+setup attempt).
+
+| case | arm | run directory | clean draws | passed | red assertion(s) | verdict |
+| --- | --- | --- | --- | --- | --- | --- |
+| #8 | with-skill | `2026-11-10T15-02-35--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | **separator** (5/5 vs 0/5), keep |
+| #8 | control | `2026-11-10T15-05-54--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `verdict REJECT` | **separator** |
+| #9 | with-skill | `2026-11-10T15-08-51--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | **separator** (5/5 vs 3/5), keep |
+| #9 | control | `2026-11-10T15-12-14--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 3/5 | `verdict REJECT`, `reply src/export\.js:[0-9]+` (r3, r4) | **separator** |
+| #10 | with-skill (fixed fixture) | `2026-11-10T15-39-17--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | **unresolved control**, change + keep |
+| #10 | control | not run — ceiling reached | — | — | — | **unresolved** |
+| #1 | with-skill | `2026-11-10T15-20-12--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | **separator** (5/5 vs 0/5), keep |
+| #1 | control | `2026-11-10T15-23-10--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `verdict APPROVE`, `reply Not verified` | **separator** |
+| #2 | with-skill | `2026-11-10T15-26-12--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 4/5 | `verdict REJECT`, `reply AC-2`, `reply 21\.63\|noise\|float` (r4) | **non-discriminator** (4/5 vs 4/5), keep |
+| #2 | control | `2026-11-10T15-28-46--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 4/5 | `verdict REJECT` (r5) | **non-discriminator** |
+| #7 | with-skill | `2026-11-10T15-31-48--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | **separator** (5/5 vs 0/5), holdout, keep |
+| #7 | control | `2026-11-10T15-35-51--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `verdict REJECT` | **separator** |
+
+Case 8's skill arm ran `npm test`, saw it pass and rejected on the public
+contract in 5/5; every control approved. Case 9's skill arm named `filename` →
+`buildExportCommand` → `execSync` in 5/5; the control rejected in 3/5, missing
+the `VERDICT:` stance in r3/r4 (r3 also missed the `file:line`), so the
+separator is 5/5 vs 3/5 rather than a clean control. Case 2 remains the
+non-discriminator it already was (4/5 vs 4/5); the r4 skill failure had no
+`VERDICT:` line. Case 7's holdout stands at 5/5 vs 0/5.
+
+**Case 10's first skill arm is not evidence.** The run
+`2026-11-10T15-15-21--review-code--agentworks-deepseek-v4-1-flash` (5/5 clean,
+0/5 passed) reviewed the original fixture and correctly blocked it: the tests
+covered AC-1, the call budget and the rethrow, but not AC-2's delay schedule or
+AC-3's defaults and non-integer inputs, so the spec's "correct and tested"
+premise was false. The fixture was strengthened — an injected `sleep` seam and
+tests for the `[10, 20, 40]`/`[100, 200]` waits, the defaults, and `1.5`/`2.5`
+rejections — and the case re-measured. The fixed arm is 5/5; no `expect:` line or
+assertion was changed, and the fixture change did not lower the bar. The control
+was **not run** because the 60-draw ceiling was reached; #10's control is
+`unresolved`, not a separator.
+
+Decisions: `keep` for #8, #9, #1, #2 and #7; `change` for #10 (the fixture was
+strengthened) and keep the case with its control unresolved. No case was
+dropped. A later wave should run the #10 control on the fixed fixture.
+
 ## Known holes
 
+- **`review-code` #10's control is unmeasured (SPEC-0056).** The first skill arm
+  found the fixture under-tested; after the tests were strengthened, the 60-draw
+  ceiling was reached with the fixed skill arm (5/5) and no control. The case is
+  kept with its control `unresolved`; a later wave should run the control on the
+  fixed fixture.
 - **A successful bare `ls` of a corpus root reads as `denied` under
   enforcement.** v5's content rule needs a line naming the path, and an `ls`
   that returns only relative names has none, so the residual is `denied`. That

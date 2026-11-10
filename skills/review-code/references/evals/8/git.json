@@ -1,0 +1,6 @@
+{
+  "base": "../base",
+  "branch": "feature/cart-tax",
+  "message": "feat(cart): add tax-aware total",
+  "patch": "change.patch"
+}

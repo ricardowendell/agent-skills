@@ -1,0 +1,145 @@
+diff --git a/docs/specs/SPEC-0008-retry-with-backoff.md b/docs/specs/SPEC-0008-retry-with-backoff.md
+new file mode 100644
+index 0000000..cd3584c
+--- /dev/null
++++ b/docs/specs/SPEC-0008-retry-with-backoff.md
+@@ -0,0 +1,24 @@
++---
++id: SPEC-0008
++status: ready
++---
++
++# Retry a transient call with backoff
++
++## Problem
++
++Checkout reads the tax rate from a remote service. A transient failure
++(timeout, 503) must not fail the checkout on the first attempt.
++
++## Acceptance criteria
++
++- **AC-1** — `retry(fn, options)` returns the first successful result.
++- **AC-2** — when `fn` throws, it retries at most `attempts` times in total,
++  waits `baseDelayMs * 2 ** (attempt - 1)` ms between attempts, and rethrows the
++  last error.
++- **AC-3** — `attempts` defaults to 3 and `baseDelayMs` to 100; a non-positive or
++  non-integer value throws a `RangeError`.
++
++## Out of scope
++
++- Circuit breakers, jitter, and retries outside checkout.
+diff --git a/src/retry.js b/src/retry.js
+new file mode 100644
+index 0000000..99a6b50
+--- /dev/null
++++ b/src/retry.js
+@@ -0,0 +1,21 @@
++const defaultSleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
++
++export async function retry(fn, { attempts = 3, baseDelayMs = 100, sleep = defaultSleep } = {}) {
++  if (!Number.isInteger(attempts) || attempts < 1) {
++    throw new RangeError("attempts must be a positive integer")
++  }
++  if (!Number.isInteger(baseDelayMs) || baseDelayMs < 1) {
++    throw new RangeError("baseDelayMs must be a positive integer")
++  }
++
++  let lastError
++  for (let attempt = 1; attempt <= attempts; attempt += 1) {
++    try {
++      return await fn()
++    } catch (error) {
++      lastError = error
++      if (attempt < attempts) await sleep(baseDelayMs * 2 ** (attempt - 1))
++    }
++  }
++  throw lastError
++}
+diff --git a/test/retry.test.js b/test/retry.test.js
+new file mode 100644
+index 0000000..dc81231
+--- /dev/null
++++ b/test/retry.test.js
+@@ -0,0 +1,82 @@
++import { test } from "node:test"
++import assert from "node:assert/strict"
++
++import { retry } from "../src/retry.js"
++
++test("returns the first success without retrying", async () => {
++  let calls = 0
++  const result = await retry(async () => {
++    calls += 1
++    return "ok"
++  }, { attempts: 3, baseDelayMs: 1 })
++  assert.equal(result, "ok")
++  assert.equal(calls, 1)
++})
++
++test("retries a transient failure and returns the later success", async () => {
++  let calls = 0
++  const result = await retry(async () => {
++    calls += 1
++    if (calls < 3) throw new Error("503")
++    return "ok"
++  }, { attempts: 3, baseDelayMs: 1 })
++  assert.equal(result, "ok")
++  assert.equal(calls, 3)
++})
++
++test("rethrows the last error after the budget", async () => {
++  let calls = 0
++  await assert.rejects(
++    retry(async () => {
++      calls += 1
++      throw new Error(`failure ${calls}`)
++    }, { attempts: 2, baseDelayMs: 1 }),
++    /failure 2/,
++  )
++  assert.equal(calls, 2)
++})
++
++test("waits with exponential backoff between attempts", async () => {
++  const waits = []
++  let calls = 0
++  await assert.rejects(
++    retry(async () => {
++      calls += 1
++      throw new Error("503")
++    }, {
++      attempts: 4,
++      baseDelayMs: 10,
++      sleep: async (ms) => {
++        waits.push(ms)
++      },
++    }),
++    /503/,
++  )
++  assert.equal(calls, 4)
++  assert.deepEqual(waits, [10, 20, 40])
++})
++
++test("uses three attempts and a 100 ms base delay by default", async () => {
++  const waits = []
++  let calls = 0
++  await assert.rejects(
++    retry(async () => {
++      calls += 1
++      throw new Error("503")
++    }, {
++      sleep: async (ms) => {
++        waits.push(ms)
++      },
++    }),
++    /503/,
++  )
++  assert.equal(calls, 3)
++  assert.deepEqual(waits, [100, 200])
++})
++
++test("rejects a non-positive or non-integer budget", async () => {
++  await assert.rejects(retry(async () => "ok", { attempts: 0 }), RangeError)
++  await assert.rejects(retry(async () => "ok", { baseDelayMs: -1 }), RangeError)
++  await assert.rejects(retry(async () => "ok", { attempts: 1.5 }), RangeError)
++  await assert.rejects(retry(async () => "ok", { baseDelayMs: 2.5 }), RangeError)
++})

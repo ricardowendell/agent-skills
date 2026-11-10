@@ -1,0 +1,6 @@
+{
+  "base": "../base",
+  "branch": "feature/checkout-retry",
+  "message": "feat(retry): retry transient checkout calls with backoff",
+  "patch": "change.patch"
+}

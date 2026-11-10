@@ -1,11 +1,14 @@
 # Evals
 
-Cases 1–4 share the `base/` fixture: a small Node project with `AGENTS.md`, a
-spec (`docs/specs/SPEC-0007-cart-tax.md`), its prompt stamped with `spec_sha`,
-and a passing `node --test` suite. Each case's `git.json` commits that tree as
-`main`, applies `change.patch` on a branch, and leaves the branch checked out —
-so the skill reviews a real `main..feature` range instead of an unversioned
-directory.
+Cases 1–4 and 8–10 share the `base/` fixture: a small Node project with
+`AGENTS.md`, a spec (`docs/specs/SPEC-0007-cart-tax.md`), its prompt stamped with
+`spec_sha`, and a passing `node --test` suite. Each case's `git.json` commits
+that tree as `main`, applies `change.patch` on a branch, and leaves the branch
+checked out — so the skill reviews a real `main..feature` range instead of an
+unversioned directory. Case 7 stages `base-red/` instead (its gate is already
+red). Case 10's patch also adds `docs/specs/SPEC-0008`, so the review is against
+the retry spec the branch carries; the case directory carries a copy of that
+spec so the corpus check can see the document the patch stages.
 
 Case 3 prunes `docs/specs` and `docs/prompts` before the base commit: the review
 must then ask for the intent rather than invent acceptance criteria.
@@ -102,3 +105,53 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
    - assert: unchanged test/legacy.test.js
    - assert: unchanged src/cart.js
    - assert: unchanged test/cart.test.js
+
+8. **Interface break with a green suite.**
+   - prompt: Review this branch against SPEC-0007.
+   - tags: matrix
+   - why: the branch adds `total` and updates every call and test to the object form `total({ items, taxRate })`, so `npm test` is green. AC-1 fixes the signature as `total(items, taxRate)` and the export is the public contract, so the green suite does not make the break acceptable.
+   - expect: Runs the documented gate and sees it pass.
+   - expect: Rejects on the public contract: AC-1 names `total(items, taxRate)`, the branch exports `total({ items, taxRate })` at `src/cart.js:5`.
+   - expect: Marks the break `blocking` with `file:line` and one action (restore the exported signature, or get the spec changed first).
+   - expect: Watch for: accepting the object form because the tests and internal callers were updated with it.
+   - assert: verdict REJECT
+   - assert: ranpass npm test
+   - assert: reply AC-1
+   - assert: reply public|interface|signature|contract
+   - assert: reply src/cart\.js:[0-9]+
+   - assert: unchanged src/cart.js
+   - assert: unchanged test/cart.test.js
+
+9. **Introduced vulnerability with a green suite.**
+   - prompt: Review this branch against SPEC-0007.
+   - tags: matrix
+   - why: the branch implements `total` but also adds `exportCart`, which builds a shell string from `filename` — the value the checkout page forwards from the request query string — and runs it through `execSync`. The test only asserts the built string, so the suite stays green while the command path is injectable.
+   - expect: Runs the suite, sees it pass, and still rejects.
+   - expect: Names the untrusted flow: request query `filename` → `buildExportCommand` → `execSync` (shell), citing `src/export.js:7` and `:11`.
+   - expect: Marks it `blocking` and gives one action (an argument array with `execFile`/`spawn` and no shell, or an allowlist).
+   - expect: Watch for: treating the green test as proof that the command path is safe.
+   - assert: verdict REJECT
+   - assert: ranpass npm test
+   - assert: reply command injection|shell injection|injection|untrusted
+   - assert: reply filename|query
+   - assert: reply execSync|shell|child_process
+   - assert: reply src/export\.js:[0-9]+
+   - assert: unchanged src/export.js
+   - assert: unchanged src/cart.js
+   - assert: unchanged test/export.test.js
+
+10. **A risky-looking change that must not block.**
+   - prompt: Review this branch against SPEC-0008.
+   - tags: matrix
+   - why: the branch adds a bounded exponential-backoff retry and its spec, with tests for the first success, a transient retry, the exponential wait, the defaults, the exhausted budget and the non-integer/negative validation. The timers, the `catch` and the exponent look risky to a scanner, but the loop is bounded and the error is rethrown; the diff is scoped to SPEC-0008 and tested. A correct review approves without a blocking finding.
+   - expect: Walks AC-1 through AC-3, recording the code and the test for each.
+   - expect: Runs the documented gate and sees it pass.
+   - expect: Does not block on the timer, the `catch` or the exponential delay; reads the bound (`attempt < attempts`) and the rethrow.
+   - expect: Watch for: calling the loop unbounded, calling the catch a swallow, or rejecting because `setTimeout` appears in a pure module.
+   - assert: verdict APPROVE
+   - assert: ranpass npm test
+   - assert: reply AC-1
+   - assert: reply Not verified
+   - assert: noreply - \[blocking\]
+   - assert: unchanged src/retry.js
+   - assert: unchanged test/retry.test.js

@@ -1,0 +1,6 @@
+{
+  "base": "../base",
+  "branch": "feature/cart-tax-export",
+  "message": "feat(cart): add tax-aware total and CSV export",
+  "patch": "change.patch"
+}

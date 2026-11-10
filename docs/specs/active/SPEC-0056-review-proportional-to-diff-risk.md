@@ -24,6 +24,7 @@ files:
   - skills/review-code/references/evals/9/git.json
   - skills/review-code/references/evals/10/change.patch
   - skills/review-code/references/evals/10/git.json
+  - skills/review-code/references/evals/10/docs/specs/SPEC-0008-retry-with-backoff.md
   - docs/evals/coverage.md
   - CHANGELOG.md
   - docs/specs/active/SPEC-0056-review-proportional-to-diff-risk.md
@@ -173,3 +174,42 @@ never make a scanner mandatory. Prefer the project's CI tool over a duplicate.
 - **Safeguards:** no second gate, no mandatory scanner, no install, no edit, no
   approval by inference, no spec → withhold.
 - **Tests:** the eight gates; the paid eval is evidence, not CI.
+
+## Results
+
+Implemented F0–F3. `SKILL.md` keeps the spec hash, the AC walk and the gate order
+and adds the fast/deep profile, the rule that only risk-relevant dimensions are
+deepened, and the blocking/should-fix/nit distinction. The new
+`references/deterministic-checks.md` carries the diff-scoped registry and the
+detect/run/record/classify protocol; an absent or broken tool is `unverified`.
+Cases 8–10 stage on the existing `base/` fixture via `git.json`; the description
+and trigger are unchanged.
+
+Measured 2026-11-10 on `agentworks/deepseek-v4-1-flash`, five draws per arm,
+level `behavior`, detector v6 `9149d6ab1ca57343`, enforced seatbelt. Every cited
+run is `findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes
+deniedDraws=0`; the run directories are in `docs/evals/coverage.md`.
+
+| Case | Skill arm | Control arm | Result |
+| --- | --- | --- | --- |
+| 8 — interface break, green suite | 5/5 | 0/5 | separator, keep |
+| 9 — introduced injection | 5/5 | 3/5 | separator, keep |
+| 10 — correct retry, no blocking | 5/5 (fixed fixture) | not run | unresolved control, change + keep |
+| 1 — clean diff regression | 5/5 | 0/5 | separator, keep |
+| 2 — rounding defect regression | 4/5 | 4/5 | non-discriminator, keep |
+| 7 — red-gate holdout | 5/5 | 0/5 | separator, keep |
+
+Case 10's first skill arm
+(`2026-11-10T15-15-21--review-code--agentworks-deepseek-v4-1-flash`) is **not
+evidence**: it correctly blocked the original fixture because the tests did not
+prove AC-2's delay schedule or AC-3's defaults and non-integer inputs. The
+fixture was strengthened (an injected `sleep` seam and tests for `[10, 20, 40]`,
+`[100, 200]`, the defaults and `1.5`/`2.5`), and the arm re-measured at
+`2026-11-10T15-39-17--review-code--agentworks-deepseek-v4-1-flash` (5/5). No
+`expect:` line or assertion was changed and the bar was not lowered. The control
+was not run because the 60-draw ceiling was reached; it is published as
+`unresolved`, not as a separator.
+
+Paid draws: 60 (55 evidence + 5 invalid setup). Decisions: `keep` for 8, 9, 1, 2
+and 7; `change` for 10 (fixture strengthened) and keep it with its control
+unresolved. No case was dropped. All eight `tests:` commands pass.
