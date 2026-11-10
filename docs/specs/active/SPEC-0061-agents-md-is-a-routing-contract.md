@@ -194,7 +194,7 @@ Line counts (`wc -l`), before → after:
 
 | File | Before | After |
 | --- | --- | --- |
-| `AGENTS.md` | 39 | 42 |
+| `AGENTS.md` | 39 | 44 |
 | `templates/AGENTS.md.template` | 102 | 50 |
 | `references/typescript.md` | 519 | 312 |
 | `references/python.md` | 50 | 50 (unchanged, on purpose) |
@@ -206,15 +206,19 @@ not the count. The generated template more than halved.
 
 ### What was removed, and why
 
-- **`AGENTS.md`** — the `pdlc plan → prompt → … → audit` arrow chain; the pdlc
-  1.4 caveats (`dispatch.mjs:214`, `verify.mjs:323`, the `SPEC-NNNN` slug note,
-  the `TASK-36` reference); the `TASK-55` / `CONTRIBUTING.md#editing-the-backlog`
-  history; the "no `In Review` status" enumeration. Why: those describe a
-  version of the harness, not the rule an agent must follow today. The lifecycle
-  now lives only in `docs/pipeline.md`, the backlog CLI only in
-  `CONTRIBUTING.md`. Kept: queue → dispatch → review → merge as operations, the
+- **`AGENTS.md`** — the pdlc 1.4 caveats (`dispatch.mjs:214`, `verify.mjs:323`,
+  the `SPEC-NNNN` slug note, the `TASK-36` reference); the `TASK-55` /
+  `CONTRIBUTING.md#editing-the-backlog` history; the "no `In Review` status"
+  enumeration. Why: those describe a version of the harness, not the rule an
+  agent must follow today; the backlog CLI lives in `CONTRIBUTING.md`. Kept, as
+  F1 requires: the operational cycle with its commands and order (`pdlc plan` →
+  `pdlc prompt` → `pdlc dispatch` → worker → reviewer → `pdlc review` →
+  `pdlc verify` → `pdlc merge` → `pdlc audit`, one line), the queue rule, the
   no-push / stay-in-the-worktree / human-gate boundaries, the backlog-comment
-  recipe (tool usage, not history), and "behavioural evals are not a gate".
+  recipe (tool usage, not history), and "behavioural evals are not a gate". The
+  cycle stays because `docs/pipeline.md` names the stages and gates but no
+  command: dropping it would leave `verify` and the order unrecoverable. That is
+  the one deviation from F1's "remove the lifecycle graph", corrected in review.
 - **`templates/AGENTS.md.template`** — the `just dev` / `just check` / `just ci`
   block; the `[tech stack]` / `[db info]` / `[language/locale]` fields; the
   `## Behavioral Guidelines` body; the duplicated `## Workflow` paragraph; the
@@ -222,9 +226,10 @@ not the count. The generated template more than halved.
   derived from the project — the commands may not exist, and the limits are
   whatever the installed linter config enforces. The loop and the layout stay in
   `docs/WORKFLOW.md` and SKILL.md step 1. The template now renders eight
-  `{{field}}`s from detection and the interview, points at the generated
-  `docs/WORKFLOW.md`, and states no limit of its own. SKILL.md step 2 says how
-  to fill and drop those fields.
+  `{{field}}`s and points at the generated `docs/WORKFLOW.md`. SKILL.md step 2
+  names the source of each field — detection for `constraints` and
+  `secret_policy`, one question for `change_scope` and `approval_points` with a
+  stated default — and forbids leaving a marker in the file.
 - **`templates/WORKFLOW.md`** — `` `just docs-check` ``; the generated workflow
   cannot assume a recipe the project may not have.
 - **`references/typescript.md`** — the `## Matrix` section (method, the three
@@ -249,15 +254,32 @@ not the count. The generated template more than halved.
   rendering; no `just dev/check/ci` and no fenced command block, and every
   command in the commands section is one the fixture project ships; the document
   points at the `WORKFLOW.md` install path and contains none of the loop skills;
-  it states no lint limit and points at the config that owns it. Vacuity check:
-  appending `[tech stack]` to the template made the test fail, then the file was
-  restored.
+  it states no lint limit and points at the config that owns it. The rules are
+  functions, and two mutation tests keep them honest: a bracketed field and a
+  hard-coded `just check` each make the rendered assertion report.
 - `template-reference-parity.test.mjs` now also compares the reference's
   `## Quality limits` table with `.oxlintrc.json.template` rule for rule (max,
   severity, `skipBlankLines`, `skipComments`), so the reference cannot claim a
-  limit the scaffold does not install. A second mutation test raises
-  `max-params` and requires the mismatch to be reported; both mutation tests
-  pass, and the original `.nvmrc` mutation still fails the comparison.
+  limit the scaffold does not install. Its mutation test changes only the
+  reference row (`Max parameters 4` → `5`) and requires exactly one finding, the
+  rule-level message; a template mutation would not prove that, because the
+  whole-block comparison also quotes `max-params`. The original `.nvmrc`
+  mutation still fails the comparison.
+
+### Review round 1
+
+- **Cycle restored.** `AGENTS.md` names `pdlc plan` → `prompt` → `dispatch` →
+  worker → reviewer → `pdlc review` → `verify` → `merge` → `audit`, in order,
+  because `docs/pipeline.md` has the stages but no commands.
+- **Field sources.** SKILL.md step 2 no longer says to drop a required section:
+  it names detection or one question for all eight fields and a default for the
+  two that the project may not answer.
+- **Template wording.** "Do not invent a command"; the closing check is named by
+  role ("the gate in the list above that runs the others") because
+  `{{commands}}` may list several.
+- **Mutation isolation.** The quality-limit mutation now changes the reference
+  row and requires the rule-level finding, so deleting the rule-by-rule check
+  makes the test fail.
 
 ### Gates
 
@@ -269,7 +291,7 @@ All exit 0, run in this worktree:
 | `node scripts/run-evals.mjs --root skills --list --check` | 0 (dry run; zero paid draws) |
 | `node --test scripts/lib/evals/*.test.mjs` | 0 (463 pass) |
 | `node --test scripts/lib/*.test.mjs` | 0 (13 pass) |
-| `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` | 0 (40 pass) |
+| `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` | 0 (42 pass) |
 | `node scripts/check-sensor-parity.mjs` | 0 |
 | `node scripts/check-evidence.mjs` | 0 (100 pre-existing warnings, no errors) |
 | `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0061-agents-md-is-a-routing-contract.md --base main` | 0 (one warning: `references/python.md` declared and deliberately untouched) |

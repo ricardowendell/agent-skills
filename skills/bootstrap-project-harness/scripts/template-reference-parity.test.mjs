@@ -206,20 +206,17 @@ test("a deliberate divergence is reported", () => {
   }
 })
 
-test("a deliberate quality-limit divergence is reported", () => {
-  const dir = mkdtempSync(join(tmpdir(), "template-reference-parity-"))
-  try {
-    cpSync(join(SKILL, "templates/ts"), join(dir, "ts"), { recursive: true })
-    const file = join(dir, "ts/.oxlintrc.json.template")
-    const oxlint = JSON.parse(read(file))
-    oxlint.rules["max-params"] = ["error", 5]
-    writeFileSync(file, `${JSON.stringify(oxlint, null, 2)}\n`)
-    const { mismatches } = compare(dir, read(REFERENCE))
-    assert.ok(
-      mismatches.some((message) => message.includes("max-params")),
-      `a raised parameter limit must be reported, got: ${mismatches.join("; ")}`,
-    )
-  } finally {
-    rmSync(dir, { recursive: true, force: true })
-  }
+test("a deliberate quality-limit divergence is reported by the rule-level check", () => {
+  // Mutate the reference row, not the template JSON: the pre-existing
+  // whole-block comparison also quotes `max-params`, so a template mutation
+  // would still pass with the rule-by-rule check deleted. A reference-row change
+  // can only be caught by the rule-level comparison, and it must be the only
+  // finding — that is what proves this check is doing the work.
+  const reference = read(REFERENCE)
+  const mutated = reference.replace("| Max parameters 4 |", "| Max parameters 5 |")
+  assert.notEqual(mutated, reference, "the reference row to mutate was not found")
+  const { mismatches } = compare(join(SKILL, "templates"), mutated)
+  assert.deepEqual(mismatches, [
+    "quality limit max-params: reference row 'Max parameters 5' != template max 4",
+  ])
 })

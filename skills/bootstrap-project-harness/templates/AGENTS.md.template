@@ -23,7 +23,7 @@ The manifests and the lockfile own the versions. Do not restate one here.
 ## Commands this project has
 
 Run them from the repository root with the package manager the project already
-uses. A command that is not listed here does not exist yet.
+uses. If a command is not listed here, do not invent one.
 
 {{commands}}
 
@@ -45,6 +45,6 @@ uses. A command that is not listed here does not exist yet.
 
 ## Before reporting done
 
-Run the check command above and report the exact command and its output. A red
-gate is not "almost done"; a skipped check is named as skipped, never reported
-as a pass.
+Run the full check — the gate in the list above that runs the others — and
+report the exact command and its output. A red gate is not "almost done"; a
+skipped check is named as skipped, never reported as a pass.

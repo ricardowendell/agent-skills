@@ -32,11 +32,41 @@ const AGENTS_FIXTURE = {
   approval_points: "A human signs off before a merge and before a release tag.",
 }
 
-function renderAgents(values = AGENTS_FIXTURE) {
-  return readFileSync(AGENTS_TEMPLATE, "utf8").replace(/\{\{([a-z_]+)\}\}/g, (match, field) => {
+function renderAgents(values = AGENTS_FIXTURE, source = readFileSync(AGENTS_TEMPLATE, "utf8")) {
+  return source.replace(/\{\{([a-z_]+)\}\}/g, (match, field) => {
     if (!(field in values)) throw new Error(`no fixture value for ${match}`)
     return values[field]
   })
+}
+
+// The rendered-document rules live in functions so the vacuity proofs below can
+// mutate the template and assert the same rule reports it. A check nobody has
+// seen fail is a check that may be asserting nothing.
+function placeholderProblems(rendered) {
+  const problems = []
+  if (/\{\{|\}\}/.test(rendered)) problems.push("an unrendered {{field}}")
+  // Markdown links are not placeholders; strip them first so the bracket rule
+  // cannot be satisfied by a link's text.
+  const withoutLinks = rendered.replace(/\[[^\]\n]*\]\([^)\n]+\)/g, "")
+  if (/\[[^\]\n]*\]/.test(withoutLinks)) problems.push("a bracketed field")
+  if (/<[a-z][^>\n]*>/i.test(rendered)) problems.push("an angle-bracket field")
+  if (/\b(?:TODO|TBD|FIXME)\b/i.test(rendered)) problems.push("a TODO marker")
+  if (/tech stack/i.test(rendered)) problems.push("a stack placeholder")
+  return problems
+}
+
+function commandProblems(rendered, source) {
+  const problems = []
+  if (/\bjust\s+(?:dev|check|ci)\b/.test(rendered)) problems.push("a universal `just` recipe")
+  if ((source.match(/```/g) ?? []).length > 0) problems.push("a fenced command block")
+  const section = rendered.split("## Commands this project has")[1]?.split("\n## ")[0] ?? ""
+  const commands = [...section.matchAll(/`([^`]+)`/g)].map((match) => match[1])
+  if (commands.length === 0) problems.push("an empty commands section")
+  const installed = new Set(["npm run check", "npm test"])
+  for (const command of commands) {
+    if (!installed.has(command)) problems.push(`${command} is not a command the fixture project has`)
+  }
+  return problems
 }
 
 // The docs content and shared files keep their own names; everything else is
@@ -146,37 +176,31 @@ test("every field the AGENTS template declares has a render fixture", () => {
 })
 
 test("the rendered AGENTS.md carries no placeholder", () => {
-  const rendered = renderAgents()
-  assert.doesNotMatch(rendered, /\{\{|\}\}/, "an unrendered {{field}} reached the document")
-  // Markdown links and inline code are not placeholders; strip links first so
-  // the bracket rule cannot be satisfied by a link's text.
-  const withoutLinks = rendered.replace(/\[[^\]\n]*\]\([^)\n]+\)/g, "")
-  assert.doesNotMatch(withoutLinks, /\[[^\]\n]*\]/, "a bracketed field reached the document")
-  assert.doesNotMatch(rendered, /<[a-z][^>\n]*>/i, "an angle-bracket field reached the document")
-  assert.doesNotMatch(rendered, /\b(?:TODO|TBD|FIXME)\b/i, "a TODO marker reached the document")
-  assert.doesNotMatch(rendered, /tech stack/i, "a stack placeholder reached the document")
+  assert.deepEqual(placeholderProblems(renderAgents()), [])
+})
+
+test("the placeholder assertion fails on a bracketed field", () => {
+  const source = `${readFileSync(AGENTS_TEMPLATE, "utf8")}\n- Frontend: [tech stack]\n`
+  assert.ok(
+    placeholderProblems(renderAgents(AGENTS_FIXTURE, source)).includes("a bracketed field"),
+    "a bracketed field in the template must be reported by the rendered assertion",
+  )
 })
 
 test("the rendered AGENTS.md states only commands the project has", () => {
-  const rendered = renderAgents()
-  assert.doesNotMatch(
-    rendered,
-    /\bjust\s+(?:dev|check|ci)\b/,
-    "a universal `just` recipe reached a project that may have no justfile",
-  )
-  assert.deepEqual(
-    readFileSync(AGENTS_TEMPLATE, "utf8").match(/```/g) ?? [],
-    [],
-    "a fenced command block in the template is unconditional; commands come from {{commands}}",
-  )
+  const source = readFileSync(AGENTS_TEMPLATE, "utf8")
+  assert.deepEqual(commandProblems(renderAgents(), source), [])
+})
 
-  const section = rendered.split("## Commands this project has")[1]?.split("\n## ")[0] ?? ""
-  const commands = [...section.matchAll(/`([^`]+)`/g)].map((match) => match[1])
-  assert.ok(commands.length > 0, "the commands section lists nothing")
-  const installed = new Set(["npm run check", "npm test"])
-  for (const command of commands) {
-    assert.ok(installed.has(command), `${command} is not a command the fixture project has`)
-  }
+test("the command assertion fails on a just recipe the project lacks", () => {
+  const source = readFileSync(AGENTS_TEMPLATE, "utf8").replace(
+    "{{commands}}",
+    "- `just check`\n\n{{commands}}",
+  )
+  assert.ok(
+    commandProblems(renderAgents(AGENTS_FIXTURE, source), source).includes("a universal `just` recipe"),
+    "a hard-coded `just check` must be reported by the rendered assertion",
+  )
 })
 
 test("the rendered AGENTS.md points at the generated WORKFLOW and does not repeat it", () => {
