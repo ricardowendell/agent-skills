@@ -54,10 +54,11 @@ skills, which cases, and which published measurements.
   `skillHashes` and the resolved `governs:` list; `skillHash` still carries the
   tree hash, and `--resume` defaults the new maps on a manifest written before
   this change. New `node scripts/check-staleness.mjs` compares the cited cells'
-  governed hashes with the working tree, resolves bare timestamps only by a
-  unique prefix, and names what it cannot verify (first run: 14 stale cells and
-  1 uncited citation, including `review-code` #3–#6). It is report-only: the
-  default exits 0, `--check` exits 1, and promoting it to a gate is a follow-up.
+  governed hashes with the working tree, resolves bare timestamps and bare
+  `HH-MM-SS` citations only by a unique match, and names what it cannot verify
+  (first run: 17 stale cells and 3 uncited citations, including `review-code`
+  #3–#6 and `groom-backlog` #1/#3/#4). It is report-only: the default exits 0,
+  `--check` exits 1, and promoting it to a gate is a follow-up.
 
 ### Measured
 

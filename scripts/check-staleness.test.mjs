@@ -147,6 +147,39 @@ test("a bare timestamp resolves by unique prefix; ambiguous or missing is uncite
   }
 })
 
+test("a time-only citation resolves by unique time slot; ambiguous or missing is uncited", () => {
+  const f = fixture()
+  try {
+    const run = join(f.store, "2026-05-05T09-32-51--demo")
+    write(run, "cases/demo--06/result.json", JSON.stringify({ skill: "demo", case: 6, skillHash: "deadbeef" }))
+    const text = [
+      "the ablation `09-32-51` is cited",
+      "the pair `08-00-00` is ambiguous",
+      "the ghost `07-07-07` does not exist",
+      "the ellipsis `…10-45-29` is the date-relative shorthand",
+    ].join("\n")
+    const { cited, uncited } = scanCitations(text, {
+      store: f.store,
+      storeRuns: [
+        "2026-05-05T09-32-51--demo",
+        "2026-06-06T08-00-00--demo",
+        "2026-06-06T08-00-00--demo--without-skill",
+      ],
+      knownSkills: new Set(["demo"]),
+    })
+    assert.deepEqual([...cited.keys()], ["demo#6"])
+    assert.deepEqual(
+      uncited.map((u) => [u.timestamp, u.candidates.length]),
+      [
+        ["08-00-00", 2],
+        ["07-07-07", 0],
+      ],
+    )
+  } finally {
+    rmSync(f.root, { recursive: true, force: true })
+  }
+})
+
 test("the report form exits 0 and --check exits 1 when a cited cell is stale", () => {
   const f = fixture()
   try {

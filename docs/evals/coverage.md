@@ -458,22 +458,25 @@ that set, and absent means the whole skill tree. Manual cases are not checked:
 they are design intent, not a measurement.
 
 The default form prints the report and exits 0. `--check` exits 1 when any cited
-cell is stale. It is **report-only** for now: it is not wired into CI or
-`docs/pipeline.md`, and promoting it to a gate is a follow-up after the first
-clean pass.
+cell is stale **or an uncited citation is present**. It is **report-only** for
+now: it is not wired into CI or `docs/pipeline.md`, and promoting it to a gate is
+a follow-up after the first clean pass.
 
-A bare timestamp in prose is resolved by unique prefix against the store; when
-several run directories share it, or none does, the citation is reported as
-`uncited` and no run from the whole store is substituted for it.
+A bare timestamp in prose is resolved by unique prefix against the store, and a
+bare `HH-MM-SS` by the time slot in the directory name (`slice(11, 19)`). When
+several directories match, or none does, the citation is reported as `uncited`
+and no run from the whole store is substituted for it. An ellipsis-prefixed
+time (`…10-45-29`) is the date-relative shorthand and is not re-resolved from
+the clock alone.
 
-First run (2026-11-10, 59 cited cells): **15 findings — 14 stale cells and 1
-uncited citation**. Stale: `audit-code-quality` #1–#4;
-`implement-from-prompt` #5 and #6; `review-code` #3–#6 (#3, #5 and #6 have no
-recorded run — they are the cells SPEC-0056 did not re-measure);
-`survey-inflight-work` #1–#4. Uncited: the audit pair at `21-59-17`, which
-matches both the with-skill and the control directory. The cited cells that
-SPEC-0056 re-ran
-at `skillHash 9a28572…` (`review-code` #1, #2 and #7–#10) are fresh, and
+First run (2026-11-10, 62 cited cells): **17 stale** —
+`audit-code-quality` #1–#4; `groom-backlog` #1, #3 and #4 (the ablation runs at
+`1ebd1f1c…`); `implement-from-prompt` #5 and #6; `review-code` #3–#6 (#3, #5 and
+#6 have no recorded run — they are the cells SPEC-0056 did not re-measure); and
+`survey-inflight-work` #1–#4. Three citations are `uncited`: the audit pair on
+line 20 and the two time-only tokens on lines 680–681 each match more than one
+directory. The cited cells that SPEC-0056 re-ran at `skillHash 9a28572…`
+(`review-code` #1, #2 and #7–#10) are fresh, and
 `write-implementation-prompt` #5 is fresh through its later
 `2026-11-06T19-53-34` citation.
 

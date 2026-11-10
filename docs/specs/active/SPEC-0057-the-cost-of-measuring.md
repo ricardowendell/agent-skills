@@ -271,11 +271,12 @@ None. The four policy choices above were settled at review on 2026-11-10.
 
 | | before | after |
 | --- | --- | --- |
-| suite | ~4.75 s (wall 5.02 s), 441 tests | 1.87–2.43 s, 463 tests |
+| suite | ~4.75 s (wall 5.02 s), 441 tests | ≈1.84–2.43 s, 463 tests |
 
-The after band is the honest one measured here and on the reviewer's busier
-host: 1.87–1.98 s over five quiet runs and 2.07–2.43 s under load. That is at
-least a halving, published as a band rather than a single cherry-picked number.
+The after band covers every sample measured here and on the reviewer's host
+(1.839, 1.851, 1.948, 2.024, 2.054 and up to 2.43 s under load). That is at
+least a halving, published as one band rather than a split or a cherry-picked
+number.
 
 The watchdog tests now drive a fake clock: silence → `stalled` in 1.7 ms, a
 start-only stream at the first fake idle window in ~42 ms, and a live stream
@@ -285,23 +286,25 @@ clock with a 60 ms window and still proves a start-only stream dies as
 
 ### Initial stale list
 
-`node scripts/check-staleness.mjs` on 2026-11-10: **59 cited cells, 15
-findings — 14 stale cells and 1 uncited citation**.
+`node scripts/check-staleness.mjs` on 2026-11-10: **62 cited cells, 17 stale**,
+plus 3 uncited citations.
 
 - `audit-code-quality` #1, #2, #3, #4 (all at `a6179680…`; #1–#4 are now read
   from the bare `2026-11-04T21-55-53` citation)
+- `groom-backlog` #1, #3, #4 (the ablation runs at `1ebd1f1c…`, now read from
+  the bare `09-32-51`/`09-34-43`/`09-39-15`/`09-43-45` citations)
 - `implement-from-prompt` #5, #6
 - `review-code` #3, #4, #5, #6 (#3, #5 and #6 have no recorded run; they are the
   cells SPEC-0056 did not re-measure at `9a28572…`)
 - `survey-inflight-work` #1, #2, #3, #4
-- uncited: `2026-11-04T21-59-17` matches both the with-skill and the control
-  directory, so it is reported, not guessed
+- uncited: the audit pair on line 20 and the two time-only tokens on lines
+  680–681 each match more than one directory, so they are reported, not guessed
 
 `write-implementation-prompt` #5 is fresh through its later
-`2026-11-06T19-53-34` citation. `node scripts/check-staleness.mjs --check` is
-**red today by design** (exit 1 with that list). It is not in CI and not in
-`docs/pipeline.md`; promoting it to a gate is a follow-up after the first clean
-pass (AC-11).
+`2026-11-06T19-53-34` citation; `write-implementation-prompt` #3 is `manual` and
+excluded. `node scripts/check-staleness.mjs --check` is **red today by design**
+(exit 1 with that set). It is not in CI and not in `docs/pipeline.md`; promoting
+it to a gate is a follow-up after the first clean pass (AC-11).
 
 ### Gates
 
@@ -316,8 +319,8 @@ All commands from `tests:`, run from the worktree root:
 | `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` | 0 |
 | `node scripts/check-sensor-parity.mjs` | 0 |
 | `node scripts/check-evidence.mjs` | 0 (8 documents, 0 errors, 99 pre-existing warnings) |
-| `node --test scripts/check-staleness.test.mjs` | 0 (6 tests) |
-| `node scripts/check-staleness.mjs` | 0 (14 stale + 1 uncited, report form) |
+| `node --test scripts/check-staleness.test.mjs` | 0 (7 tests) |
+| `node scripts/check-staleness.mjs` | 0 (17 stale + 3 uncited, report form) |
 | `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0057-the-cost-of-measuring.md --base main` | 0 |
 
 Zero paid eval draws; no skill text, fixture or oracle was edited.

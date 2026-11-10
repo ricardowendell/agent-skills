@@ -8,8 +8,9 @@
 // evidence — and compares the recorded hashes with the working tree.
 //
 // The output is a report by default. `--check` exits 1 when any cited cell is
-// stale, but it is not wired into CI or `docs/pipeline.md` yet: the first run is
-// red on purpose, and promoting it to a gate is a follow-up after a clean pass.
+// stale or an uncited citation is present, but it is not wired into CI or
+// `docs/pipeline.md` yet: the first run is red on purpose, and promoting it to a
+// gate is a follow-up after a clean pass.
 //
 // Usage:
 //   node scripts/check-staleness.mjs
@@ -30,7 +31,7 @@ const USAGE = `Usage: node scripts/check-staleness.mjs [--check] [--store <runs-
 
 For every cell cited in coverage.md, compare the governed hashes recorded by the
 cited run with the working tree. Default: report, exit 0. --check: exit 1 when
-any cited cell is stale.
+any cited cell is stale or an uncited citation is present.
 `
 
 const sha256File = (file) => createHash("sha256").update(readFileSync(file)).digest("hex")
@@ -93,6 +94,13 @@ export function scanCitations(text, { store, storeRuns = [], knownSkills, manual
   // share the second, the citation is ambiguous and must be reported, never
   // guessed at from the whole store.
   const bareTimestamp = /(?<![\w-])(20\d{2}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2})(?!--)(?![\w-])/g
+  // The corpus also abbreviates a run to its bare time of day (`09-32-51`).
+  // Match the same slot in the directory name (`slice(11, 19)`); a time is
+  // unique per day here, but the rule stays the same: unique or `uncited`.
+  // An ellipsis-prefixed token (`…10-45-29`) is the date-relative shorthand, not
+  // a bare time: its date comes from the surrounding citation, so it is not
+  // re-resolved from the clock alone and never becomes a guess.
+  const timeOnly = /(?<![\w-…])(\d{2}-\d{2}-\d{2})(?!--)(?![\w-])/g
   const lines = String(text ?? "").split(/\r?\n/)
   lines.forEach((line, i) => {
     for (const m of line.matchAll(RUN_TOKEN)) {
@@ -108,6 +116,15 @@ export function scanCitations(text, { store, storeRuns = [], knownSkills, manual
         for (const cell of readRunCells(join(store, candidates[0]))) add(cell.skill, cell.case, candidates[0])
       } else {
         uncited.push({ timestamp, line: i + 1, candidates })
+      }
+    }
+    for (const m of line.matchAll(timeOnly)) {
+      const time = m[1]
+      const candidates = storeRuns.filter((name) => name.slice(11, 19) === time)
+      if (candidates.length === 1) {
+        for (const cell of readRunCells(join(store, candidates[0]))) add(cell.skill, cell.case, candidates[0])
+      } else {
+        uncited.push({ timestamp: time, line: i + 1, candidates })
       }
     }
     for (const m of line.matchAll(/`([a-z0-9-]+)`\s*#(\d+)(?:\s*[–-]\s*#?(\d+))?/g)) {
