@@ -28,6 +28,7 @@ files:
   - skills/audit-code-quality/references/evals/8/src/app.js
   - skills/audit-code-quality/references/evals/8/src/legacy.js
   - skills/audit-code-quality/references/evals/8/src/unused.js
+  - skills/audit-code-quality/references/evals/9/git.json
   - docs/evals/coverage.md
   - CHANGELOG.md
   - docs/specs/active/SPEC-0055-audit-code-quality-architecture-and-deterministic-checks.md
