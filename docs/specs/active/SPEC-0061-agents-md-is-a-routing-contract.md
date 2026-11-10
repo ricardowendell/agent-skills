@@ -24,7 +24,6 @@ files:
   - skills/bootstrap-project-harness/scripts/template-parity.test.mjs
   - skills/bootstrap-project-harness/scripts/template-reference-parity.test.mjs
   - docs/specs/active/SPEC-0061-agents-md-is-a-routing-contract.md
-  - CHANGELOG.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check
@@ -108,6 +107,9 @@ are updated to the new invariants; no test is deleted to make the change pass.
   them in this wave.
 - No new documentation file. A reference is added only if it removes a decision
   from `SKILL.md`; this spec reduces, it does not add.
+- **No `CHANGELOG.md` edit.** The entry for this spec is written by the wave's
+  publication commit after both branches land, so this spec can run in parallel
+  with SPEC-0058 without colliding on the hottest file in the repository.
 - No paid draw.
 - No `SKILL.md` behaviour change beyond replacing prose that pointed at removed
   content.
@@ -122,8 +124,8 @@ are updated to the new invariants; no test is deleted to make the change pass.
    conditional on the project.
 4. **F3 — references.** Trim the TypeScript reference's history; check Python.
 5. **F4 — parity.** Update the two parity tests to the new invariants.
-6. **F5 — publish.** `CHANGELOG.md` and a Results section with before/after line
-   counts.
+6. **F5 — publish.** A Results section with before/after line counts. The
+   `CHANGELOG.md` entry is written by the wave's publication commit, not here.
 
 ## Data
 
@@ -156,6 +158,8 @@ are updated to the new invariants; no test is deleted to make the change pass.
 9. No file under `skills/bootstrap-project-harness/references/evals*` and no file
    under `docs/specs/**` or `backlog/**` is modified except this spec.
 10. Zero paid draws; all gates in `tests:` pass.
+11. `CHANGELOG.md` is not in this spec's diff; the wave's publication commit
+    carries the entry.
 
 ## Decisions
 
