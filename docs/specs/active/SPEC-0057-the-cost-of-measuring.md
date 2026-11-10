@@ -221,4 +221,77 @@ None. The three policy choices above were settled at review on 2026-11-10.
   case, **stop and report it** with the case id and path instead of editing a
   skill file outside `files:`.
 
-_Filled during implementation._
+## Results
+
+### The two bugs closed
+
+1. **A fixture that resolves to nothing now fails loudly.** `stageFixture`
+   throws for a `git.json` whose `base` does not resolve, naming the case, the
+   resolved path and the fixture directory; a case with no `git.json` keeps the
+   old empty-tree behaviour. `parse.mjs validate()` reports the same pointer
+   from authoring data, so `run-evals.mjs --list --check` catches it in CI
+   without staging. The same validator compiles every regex-bearing assertion
+   (`reply`, `noreply`, `filematch`, `ran`, `ranpass`) through `safeRegex`, and
+   a stage-time oracle check rejects an `unchanged`/`changed` target that has no
+   staged match, plus a git-fixture `file`/`dir`/`filematch` target outside the
+   base and the patch. Negative assertions (`nofile`/`nodir`) are deliberately
+   not findings: they assert an absence, and the existing audit cases use them
+   for a path the fixture never creates. No existing case was flagged; the
+   `--list --check` corpus stayed at 97 cases (94 runnable, 3 manual).
+2. **Staleness is a query.** Every draw records `skillHashes: { rel: hash }`
+   for the files that govern it and the resolved `governs:` list (absent means
+   the whole skill tree); `skillHash` still carries the tree hash, and the run
+   manifest records both additively. `node scripts/check-staleness.mjs` scans
+   the cells cited in `docs/evals/coverage.md`, reads only the stored case
+   results (never `baseline.json`/`last-run.json`), and compares the recorded
+   hashes with the working tree. A legacy run's tree hash is compared against a
+   re-computed filtered skill tree. The default form is a report (exit 0);
+   `--check` exits 1.
+
+### Suite timing
+
+`node --test scripts/lib/evals/*.test.mjs`, same machine, runner `duration_ms`:
+
+| | before | after |
+| --- | --- | --- |
+| suite | 4 752.8 ms (wall 5.02 s) | 1 790–1 903 ms (wall 1.9–2.0 s), 460 tests |
+
+The watchdog tests now drive a fake clock: silence → `stalled` in 1.7 ms, a
+start-only stream at the first fake idle window in ~42 ms, and a live stream
+across many windows in ~150 ms. Exactly one integration test keeps the real
+clock with a 60 ms window and still proves a start-only stream dies as
+`stalled`. No CLI flag reaches the seam.
+
+### Initial stale list
+
+`node scripts/check-staleness.mjs` on 2026-11-10: **57 cited cells, 13 stale** —
+
+- `audit-code-quality` #1, #4
+- `implement-from-prompt` #5, #6
+- `review-code` #3, #4, #5, #6 (#5 and #6 have no recorded run; they are the
+  cells SPEC-0056 did not re-measure at `9a28572…`)
+- `survey-inflight-work` #1, #2, #3, #4
+- `write-implementation-prompt` #5
+
+`node scripts/check-staleness.mjs --check` is **red today by design** (exit 1
+with that list). It is not in CI and not in `docs/pipeline.md`; promoting it to
+a gate is a follow-up after the first clean pass (AC-11).
+
+### Gates
+
+All commands from `tests:`, run from the worktree root:
+
+| command | exit |
+| --- | --- |
+| `node scripts/validate-skills.mjs --root skills` | 0 |
+| `node scripts/run-evals.mjs --root skills --list --check` | 0 (97 cases: 94 runnable, 3 manual) |
+| `node --test scripts/lib/evals/*.test.mjs` | 0 (460 tests) |
+| `node --test scripts/lib/*.test.mjs` | 0 (13 tests) |
+| `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` | 0 |
+| `node scripts/check-sensor-parity.mjs` | 0 |
+| `node scripts/check-evidence.mjs` | 0 (8 documents, 0 errors, 99 pre-existing warnings) |
+| `node --test scripts/check-staleness.test.mjs` | 0 (5 tests) |
+| `node scripts/check-staleness.mjs` | 0 (13 stale, report form) |
+| `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0057-the-cost-of-measuring.md --base main` | 0 |
+
+Zero paid eval draws; no skill text, fixture or oracle was edited.

@@ -61,6 +61,26 @@ test("the manifest is closed with counts and keeps the skill hash per case", () 
   assert.ok(manifest.finishedAt)
 })
 
+// SPEC-0057: the tree hash stays the identity; the per-file set is additive so
+// a later reader can tell which files governed the draw.
+test("the manifest records governed file hashes and the resolved list", () => {
+  const root = mkdtempSync(join(tmpdir(), "runs-"))
+  const run = createRun({ ...base, root, label: "review-code" })
+  run.writeResult("review-code", 1, {
+    case: 1,
+    status: "passed",
+    skillHash: "tree",
+    skillHashes: { "SKILL.md": "abc" },
+    governs: ["SKILL.md"],
+  })
+  run.finish({ counts: { passed: 1, failed: 0 } })
+  const manifest = JSON.parse(readFileSync(join(run.dir, "manifest.json"), "utf8"))
+  assert.equal(manifest.skillHashes["review-code#1"], "tree")
+  assert.deepEqual(manifest.skillFileHashes["review-code#1"], { "SKILL.md": "abc" })
+  assert.deepEqual(manifest.governs["review-code#1"], ["SKILL.md"])
+  assert.deepEqual(JSON.parse(readFileSync(run.resultPath("review-code", 1), "utf8")).skillHashes, { "SKILL.md": "abc" })
+})
+
 test("the manifest records the scheduling parameters instead of leaving them inferred", () => {
   const root = mkdtempSync(join(tmpdir(), "runs-"))
   const params = { concurrency: 4, repeat: 12, stop: { passes: 5, fails: 3 }, stallMs: 120000 }

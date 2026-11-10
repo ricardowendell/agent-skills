@@ -63,6 +63,11 @@ export function createRun({ root, label, arm = "with-skill", model = null, agent
     status: "running",
     counts: null,
     skillHashes: {},
+    // SPEC-0057: the per-file governed hashes and the resolved `governs:` list,
+    // keyed like `skillHashes`. Additive — the tree hash above stays the identity
+    // every stored manifest and citation already uses.
+    skillFileHashes: {},
+    governs: {},
     // Declared siblings staged for a case (`stage:`), keyed like skillHashes.
     // Empty for a run whose cases declare none.
     stagedSkills: {},
@@ -121,8 +126,11 @@ function handle(dir, manifest) {
     writeResult(skill, n, result) {
       mkdirSync(caseDir(skill, n), { recursive: true })
       writeAtomic(join(caseDir(skill, n), "result.json"), JSON.stringify(result, null, 2))
-      if (result?.skillHash) manifest.skillHashes[`${skill}#${n}`] = result.skillHash
-      if (result?.stagedSkills?.length) manifest.stagedSkills[`${skill}#${n}`] = result.stagedSkills
+      const key = `${skill}#${n}`
+      if (result?.skillHash) manifest.skillHashes[key] = result.skillHash
+      if (result?.skillHashes) manifest.skillFileHashes[key] = result.skillHashes
+      if (result?.governs) manifest.governs[key] = result.governs
+      if (result?.stagedSkills?.length) manifest.stagedSkills[key] = result.stagedSkills
     },
     finish({ status = "completed", counts = null } = {}) {
       manifest.finishedAt = new Date().toISOString()

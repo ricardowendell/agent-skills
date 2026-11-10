@@ -7,9 +7,19 @@
 // front ends could disagree about what passed, which defeats the point of
 // measuring.
 
-import { evaluateAssertions, skillGate } from "./assertions.mjs"
+import { evaluateAssertions, oracleFindings, skillGate } from "./assertions.mjs"
 import { evidenceLedger, providerError, replyText, skillLoads, toolCalls, usageStats } from "./events.mjs"
-import { stageFixture, stageSkill, denySkillTool, snapshotTree, textHash, makeScratch } from "./fixture.mjs"
+import {
+  denySkillTool,
+  governedFiles,
+  hasGitFixture,
+  makeScratch,
+  skillFileHashes,
+  snapshotTree,
+  stageFixture,
+  stageSkill,
+  textHash,
+} from "./fixture.mjs"
 import { agentArgs, runAgent } from "./agent.mjs"
 import { classify } from "./result.mjs"
 import { evidenceCorpus, judgePrompt, runJudge, judgeOutcome } from "./judge.mjs"
@@ -74,6 +84,13 @@ export async function executeCase({
     let attemptPinned = { hash: null }
     let stagedSkills = []
     const attemptFixture = stageFixture(skill, c, target)
+    // SPEC-0057: an assertion no part of the fixture can satisfy is an authoring
+    // error, not a red cell worth paying for. This runs before the agent starts.
+    const dead = oracleFindings(c, target, { isGit: hasGitFixture(skill, c) })
+    if (dead.length) {
+      const detail = dead.map((d) => `${d.kind} ${d.arg} (${d.reason})`).join("; ")
+      throw new Error(`case ${c.n}: assertion target not produced by the fixture: ${detail}`)
+    }
     if (arm === "without-skill") denySkillTool(target)
     else {
       attemptPinned = stageSkill(skill, target)
@@ -124,6 +141,11 @@ export async function executeCase({
   // replaced behind a sum of both.
   const { out, err, code, durationMs } = attempt
   const { pinned, stagedSkills, fixture, snapshot } = staged
+  // The files that govern this draw, hashed from the working checkout. `governs:`
+  // narrows the set; absent means the whole skill tree, the conservative default
+  // (SPEC-0057). The set is recorded so a later reader never has to re-derive it.
+  const governs = governedFiles(skill.dir, c.governs)
+  const skillHashes = skillFileHashes(skill.dir, governs)
   const provenance = {
     fixtureHash: fixture.hash,
     promptHash: textHash(c.prompt),
@@ -147,6 +169,10 @@ export async function executeCase({
     infrastructure: Boolean(verdict.infrastructure),
     infrastructureReason: verdict.infrastructureReason ?? null,
     skillHash: pinned.hash,
+    // `skillHash` keeps the tree hash so every stored manifest and citation stays
+    // valid; `skillHashes` is the per-file evidence staleness compares against.
+    skillHashes,
+    governs,
     // The arm's skill hash stays `skillHash`; the declared stages are reported
     // apart so `skillGate` keeps answering only "did the arm's skill load".
     stagedSkills,

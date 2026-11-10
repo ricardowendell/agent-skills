@@ -38,6 +38,25 @@ skills, which cases, and which published measurements.
   never uses `npx --yes`. Cases 8–10 are new. The description and trigger are
   unchanged.
 
+### Changed
+
+- **Loud staging, a clock seam and a staleness report (SPEC-0057, TASK-93).**
+  A `git.json` whose `base` does not resolve now throws at staging, naming the
+  case, the resolved path and the fixture directory, and `--list --check`
+  reports the same pointer without staging anything. Every regex-bearing
+  assertion must compile through `safeRegex`, and a stage-time oracle check
+  rejects an `unchanged`/`changed` target no fixture can produce (plus a
+  git-fixture positive target outside the base and the patch), so a dead oracle
+  fails before a draw is spent. `runAgent` accepts injectable `now`,
+  `setTimeout` and `clearTimeout` — no CLI flag reaches them — which drops
+  `node --test scripts/lib/evals/*.test.mjs` from 4.75 s to 1.81–1.91 s while
+  keeping one real-clock watchdog integration test. Every draw now records
+  `skillHashes` and the resolved `governs:` list; `skillHash` still carries the
+  tree hash. New `node scripts/check-staleness.mjs` compares the cited cells'
+  governed hashes with the working tree and names the stale ones (13 on the
+  first run, including `review-code` #3–#6). It is report-only: the default
+  exits 0, `--check` exits 1, and promoting it to a gate is a follow-up.
+
 ### Measured
 
 - **SPEC-0056 wave, five draws per arm on `agentworks/deepseek-v4-1-flash`.**

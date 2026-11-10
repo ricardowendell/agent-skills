@@ -1,11 +1,21 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs"
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, readdirSync } from "node:fs"
 import { spawnSync } from "node:child_process"
 import { tmpdir } from "node:os"
 import { join, dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
-import { stageFixture, stageSkill, makeScratch, snapshotTree, treeHash } from "./fixture.mjs"
+import {
+  governedFiles,
+  hasGitFixture,
+  skillFileHashes,
+  stageFixture,
+  stageSkill,
+  makeScratch,
+  snapshotTree,
+  stagedTreeHash,
+  treeHash,
+} from "./fixture.mjs"
 
 function files(root, map) {
   for (const [rel, content] of Object.entries(map)) {
@@ -195,6 +205,60 @@ test("--check rejects an unknown stage id", () => {
   const unknown = checkRoot(stageRoot({ capture: "ghost" }))
   assert.equal(unknown.status, 1)
   assert.match(unknown.stderr, /unknown stage 'ghost'/)
+})
+
+// SPEC-0055 case 9 spent five paid draws on an empty scratch because a broken
+// `base` returned quietly. The contrast is `applyPatch`, which already threw.
+test("a git.json base that does not resolve throws and names case, path and fixture", () => {
+  const skillDir = files(mkdtempSync(join(tmpdir(), "fixture-dead-base-")), {
+    "SKILL.md": "---\nname: demo\n---\n",
+    "references/evals/1/git.json": JSON.stringify({ base: "../missing" }),
+  })
+  const scratch = makeScratch("demo", 1)
+  assert.throws(
+    () => stageFixture({ id: "demo", dir: skillDir }, { n: 1 }, scratch),
+    (e) => /case 1/.test(e.message) && /\.\.\/missing/.test(e.message) && /fixture directory/.test(e.message),
+  )
+  assert.equal(readdirSync(scratch).length, 0, "the throw must not leave a half-staged tree")
+})
+
+test("a case without git.json still stages its empty tree quietly", () => {
+  const skillDir = files(mkdtempSync(join(tmpdir(), "fixture-no-manifest-")), {
+    "SKILL.md": "---\nname: demo\n---\n",
+  })
+  const scratch = makeScratch("demo", 1)
+  const staged = stageFixture({ id: "demo", dir: skillDir }, { n: 1 }, scratch)
+  assert.match(staged.hash, /^[0-9a-f]{64}$/)
+})
+
+// Staleness compares a legacy run's `skillHash` with the working tree, so the
+// re-computed filtered hash must be the exact one `stageSkill` produced.
+test("the staged tree hash matches the copy stageSkill hashes", () => {
+  const skillDir = files(mkdtempSync(join(tmpdir(), "staged-hash-")), {
+    "SKILL.md": "---\nname: demo\n---\nbody\n",
+    "references/notes.md": "kept\n",
+    "references/evals.md": "1. **x**\n",
+    "references/evals/1/base/a.txt": "excluded\n",
+  })
+  const scratch = makeScratch("demo", 1)
+  const pinned = stageSkill({ id: "demo", dir: skillDir }, scratch)
+  assert.equal(stagedTreeHash(skillDir), pinned.hash)
+})
+
+test("governs narrows the hashed set; absent means the whole skill tree", () => {
+  const skillDir = files(mkdtempSync(join(tmpdir(), "governs-")), {
+    "SKILL.md": "---\nname: demo\n---\n",
+    "references/notes.md": "notes\n",
+    "references/evals.md": "1. **x**\n",
+  })
+  const all = governedFiles(skillDir, null)
+  assert.deepEqual(all, ["SKILL.md", "references/evals.md", "references/notes.md"])
+  const narrow = governedFiles(skillDir, ["references/notes.md"])
+  assert.deepEqual(narrow, ["references/notes.md"])
+  const hashes = skillFileHashes(skillDir, narrow)
+  assert.deepEqual(Object.keys(hashes), ["references/notes.md"])
+  assert.match(hashes["references/notes.md"], /^[0-9a-f]{64}$/)
+  assert.equal(hasGitFixture({ id: "demo", dir: skillDir }, { n: 1 }), false)
 })
 
 test("the snapshot records staged content, so a later edit is visible", () => {

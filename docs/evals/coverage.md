@@ -445,6 +445,30 @@ Decisions: `keep` for #8, #9, #1, #2 and #7; `change` for #10 (the fixture was
 strengthened before the fixed arm) and keep it. No case was dropped and no case
 is unresolved.
 
+## Staleness
+
+`node scripts/check-staleness.mjs` is a query, not an anecdote: it reads the run
+directories cited above, takes the governed hashes stored on each cited cell's
+`result.json`, and compares them with the working tree. It reads only the run
+manifests and case results — never `baseline.json` or `last-run.json`. A run that
+predates SPEC-0057 records the staged tree hash (`skillHash`); that is compared
+with a re-computed filtered skill tree. A new draw also records
+`skillHashes: { rel: hash }` for the files that govern it — `governs:` narrows
+that set, and absent means the whole skill tree. Manual cases are not checked:
+they are design intent, not a measurement.
+
+The default form prints the report and exits 0. `--check` exits 1 when any cited
+cell is stale. It is **report-only** for now: it is not wired into CI or
+`docs/pipeline.md`, and promoting it to a gate is a follow-up after the first
+clean pass.
+
+First run (2026-11-10, 57 cited cells): **13 stale** —
+`audit-code-quality` #1 and #4; `implement-from-prompt` #5 and #6;
+`review-code` #3–#6 (#5 and #6 have no stored run — they are the cells
+SPEC-0056 did not re-measure); `survey-inflight-work` #1–#4; and
+`write-implementation-prompt` #5. The cited cells that SPEC-0056 re-ran at
+`skillHash 9a28572…` (`review-code` #1, #2 and #7–#10) are fresh.
+
 ## Known holes
 
 - **The `verdict` stance vocabulary is closed (SPEC-0056).** It accepts

@@ -1,6 +1,18 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { parseCases, unquote } from "./parse.mjs"
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { dirname, join } from "node:path"
+import { parseCases, readEvals, unquote } from "./parse.mjs"
+
+function skillDir(files) {
+  const root = mkdtempSync(join(tmpdir(), "parse-skill-"))
+  for (const [rel, text] of Object.entries(files)) {
+    mkdirSync(dirname(join(root, rel)), { recursive: true })
+    writeFileSync(join(root, rel), text)
+  }
+  return root
+}
 
 const legacy = `# Evals
 
@@ -126,6 +138,90 @@ test("a stage no assertion uses is a warning", () => {
 test("without the skill id the consistency rule is not applied", () => {
   const { errors } = parseCases(`1. **T.**\n   - prompt: do it\n   - assert: skill other\n`)
   assert.deepEqual(errors, [])
+})
+
+// SPEC-0057: a bad regex is an authoring error, not a permanent red cell.
+test("every regex-bearing assertion compiles through safeRegex", () => {
+  const bad = `1. **T.**
+   - prompt: do it
+   - assert: reply (
+   - assert: noreply [z
+   - assert: filematch src/*.js (
+   - assert: ran (
+   - assert: ranpass [z
+`
+  const { errors } = parseCases(bad)
+  for (const kind of ["reply", "noreply", "filematch", "ran", "ranpass"]) {
+    assert.ok(errors.some((e) => e.includes(`'${kind}' does not compile`)), `${kind} was not rejected: ${errors.join(" | ")}`)
+  }
+})
+
+test("filematch without a regex is an error", () => {
+  const { errors } = parseCases(`1. **T.**\n   - prompt: do it\n   - assert: filematch src/*.js\n`)
+  assert.ok(errors.some((e) => /filematch' has no regex/.test(e)))
+})
+
+test("a valid regex is accepted", () => {
+  const { errors } = parseCases(
+    `1. **T.**\n   - prompt: do it\n   - assert: reply (approve|reject)\n   - assert: filematch src/*.js status:\n   - assert: ran npm test\n`,
+  )
+  assert.deepEqual(errors, [])
+})
+
+// SPEC-0057: `--list --check` must catch a broken pointer without staging.
+test("a git.json base that does not resolve is reported from the authoring side", () => {
+  const md = `1. **T.**\n   - prompt: do it\n   - assert: file a.txt\n`
+  const dir = skillDir({ "references/evals/1/git.json": JSON.stringify({ base: "../missing" }) })
+  const { errors } = parseCases(md, "demo", { skillDir: dir })
+  assert.ok(errors.some((e) => /case 1: git\.json base '\.\.\/missing' does not resolve/.test(e)), errors.join(" | "))
+})
+
+test("readEvals resolves the fixture pointer from the file's own skill directory", () => {
+  const dir = skillDir({
+    "references/evals.md": `1. **T.**\n   - prompt: do it\n   - assert: file a.txt\n`,
+    "references/evals/1/git.json": JSON.stringify({ base: "nowhere" }),
+  })
+  const { errors } = readEvals(join(dir, "references/evals.md"), "demo")
+  assert.ok(errors.some((e) => /does not resolve/.test(e)), errors.join(" | "))
+})
+
+test("a resolving base and a malformed manifest are reported honestly", () => {
+  const ok = skillDir({
+    "references/evals/1/base/a.txt": "a\n",
+    "references/evals/1/git.json": JSON.stringify({ base: "base" }),
+  })
+  const parsed = parseCases(`1. **T.**\n   - prompt: do it\n   - assert: file a.txt\n`, "demo", { skillDir: ok })
+  assert.deepEqual(parsed.errors, [])
+
+  const broken = skillDir({ "references/evals/1/git.json": "{ not json" })
+  const bad = parseCases(`1. **T.**\n   - prompt: do it\n   - assert: file a.txt\n`, "demo", { skillDir: broken })
+  assert.ok(bad.errors.some((e) => /git\.json is not valid JSON/.test(e)))
+})
+
+test("governs is parsed, and a path outside the skill is rejected", () => {
+  const dir = skillDir({ "SKILL.md": "x\n", "references/notes.md": "n\n" })
+  const ok = parseCases(
+    `1. **T.**\n   - prompt: do it\n   - governs: SKILL.md, references/notes.md\n   - assert: reply ok\n`,
+    "demo",
+    { skillDir: dir },
+  )
+  assert.deepEqual(ok.errors, [])
+  assert.deepEqual(ok.cases[0].governs, ["SKILL.md", "references/notes.md"])
+
+  for (const bad of ["missing.md", "../outside.md", "/etc/passwd", "references"]) {
+    const parsed = parseCases(`1. **T.**\n   - prompt: do it\n   - governs: ${bad}\n   - assert: reply ok\n`, "demo", {
+      skillDir: dir,
+    })
+    assert.ok(
+      parsed.errors.some((e) => e.includes(`governs '${bad}' is not a file in the skill`)),
+      `${bad} was accepted: ${parsed.errors.join(" | ")}`,
+    )
+  }
+})
+
+test("governs is absent by default and may only name a file", () => {
+  const parsed = parseCases(`1. **T.**\n   - prompt: do it\n   - assert: reply ok\n`, "demo")
+  assert.deepEqual(parsed.cases[0].governs, [])
 })
 
 test("unquote strips one layer of quotes only", () => {

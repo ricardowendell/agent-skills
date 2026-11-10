@@ -23,12 +23,15 @@
 // bold text becomes the prompt, the parenthetical becomes `why`. That split is
 // the fix — before, the parenthetical was concatenated onto the prompt.
 
-import { readFileSync } from "node:fs"
-import { basename, dirname } from "node:path"
+import { existsSync, readFileSync, statSync } from "node:fs"
+import { basename, dirname, isAbsolute, join, normalize, resolve } from "node:path"
 import { ASSERT_KINDS } from "./kinds.mjs"
+import { safeRegex } from "./assertions.mjs"
 
 const STATUSES = new Set(["run", "manual"])
-const FIELD = /^(prompt|expect|why|status|needs|tags|gate|stage|assert):\s*(.*)$/
+const FIELD = /^(prompt|expect|why|status|needs|tags|gate|stage|governs|assert):\s*(.*)$/
+// Assertions whose argument (or, for filematch, its second half) is a regex.
+const REGEX_KINDS = new Set(["reply", "noreply", "filematch", "ran", "ranpass"])
 const CASE = /^\s*(\d+)\.\s+\*\*(.+?)\*\*\s*(.*)$/
 const BULLET = /^\s*[-*]\s+(.*)$/
 const LEGACY_ASSERT = /^\[assert\]\s+(\w+)\s+(.+)$/
@@ -60,6 +63,7 @@ function emptyCase(n, title, note) {
     needs: [],
     tags: [],
     stage: [],
+    governs: [],
   }
 }
 
@@ -76,6 +80,7 @@ function finishCase(c) {
     needs: c.needs,
     tags: c.tags,
     stage: c.stage,
+    governs: c.governs,
   }
   if (!c.promptExplicit) {
     // Legacy convention: the bold text was the prompt, written in quotes. An
@@ -92,7 +97,7 @@ function finishCase(c) {
 
 // Parse the markdown body. Returns cases plus validation findings; nothing here
 // throws, so `--list` can report every problem in one pass.
-export function parseCases(md, selfId = null) {
+export function parseCases(md, selfId = null, { skillDir = null } = {}) {
   const cases = []
   let cur = null
   let target = null // field receiving wrapped continuation lines
@@ -159,6 +164,10 @@ export function parseCases(md, selfId = null) {
             cur.stage.push(value.trim())
             target = null
             break
+          case "governs":
+            cur.governs.push(...value.split(",").map((s) => s.trim()).filter(Boolean))
+            target = null
+            break
           case "expect":
             cur.expect.push(value.trim())
             target = "expect"
@@ -185,17 +194,20 @@ export function parseCases(md, selfId = null) {
   }
   close()
 
-  return { cases, ...validate(cases, selfId) }
+  return { cases, ...validate(cases, selfId, { skillDir }) }
 }
 
 // The eval corpus lives at `<skill>/references/evals.md`, so the skill under
 // review is derivable without the caller passing it. An explicit id still wins
 // for a corpus read from somewhere else.
 export function readEvals(file, selfId = basename(dirname(dirname(file)))) {
-  return parseCases(readFileSync(file, "utf8"), selfId)
+  return parseCases(readFileSync(file, "utf8"), selfId, { skillDir: dirname(dirname(file)) })
 }
 
-export function validate(cases, selfId = null) {
+// `skillDir` is the checkout whose `references/evals.md` was parsed. Without it
+// (a bare `parseCases` call) the filesystem checks cannot run and are skipped;
+// the CLI always passes it.
+export function validate(cases, selfId = null, { skillDir = null } = {}) {
   const errors = []
   const warnings = []
   const seen = new Set()
@@ -213,8 +225,54 @@ export function validate(cases, selfId = null) {
     for (const { kind, arg } of c.assert) {
       if (!ASSERT_KINDS.has(kind)) errors.push(`${at}: unknown assert kind '${kind}'`)
       if (!arg) errors.push(`${at}: assert '${kind}' has no argument`)
+      if (arg && REGEX_KINDS.has(kind)) {
+        // `filematch <glob> <regex>`: the glob is not a regex, the rest is.
+        let pattern = arg
+        if (kind === "filematch") {
+          const sp = arg.indexOf(" ")
+          if (sp === -1) errors.push(`${at}: assert 'filematch' has no regex ('${arg}')`)
+          pattern = sp === -1 ? "" : arg.slice(sp + 1).trim()
+        }
+        if (pattern && !safeRegex(pattern)) {
+          errors.push(`${at}: assert '${kind}' does not compile through safeRegex: ${pattern}`)
+        }
+      }
     }
     if (!c.assert.length && c.status !== "manual") warnings.push(`${at}: no assertions — it would score as unscored`)
+
+    // SPEC-0057: a `governs:` entry must be a file in the skill, or the draw
+    // would record a hash for something the checkout cannot answer for.
+    if (skillDir) {
+      for (const rel of c.governs ?? []) {
+        const path = normalize(String(rel).replace(/^\.\//, ""))
+        const inside = !isAbsolute(path) && !path.split(/[\\/]/).includes("..")
+        const full = join(skillDir, path)
+        if (!inside || !existsSync(full) || !statSync(full).isFile()) {
+          errors.push(`${at}: governs '${rel}' is not a file in the skill`)
+        }
+      }
+    }
+    // The pointer itself is authoring data: `--list --check` can prove it
+    // resolves without staging anything (SPEC-0057).
+    if (skillDir) {
+      const manifest = join(skillDir, "references/evals", String(c.n), "git.json")
+      if (existsSync(manifest)) {
+        let spec
+        try {
+          spec = JSON.parse(readFileSync(manifest, "utf8"))
+        } catch (e) {
+          errors.push(`${at}: git.json is not valid JSON (${e.message})`)
+          spec = null
+        }
+        if (spec) {
+          const base = spec.base ?? "."
+          const resolved = resolve(dirname(manifest), base)
+          if (!existsSync(resolved)) {
+            errors.push(`${at}: git.json base '${base}' does not resolve (resolved ${resolved})`)
+          }
+        }
+      }
+    }
 
     // A `skill`/`notskill` assertion can only pass for a skill the run stages:
     // the one under review, or a sibling the case declares with `stage:`

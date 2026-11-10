@@ -3,7 +3,7 @@ import assert from "node:assert/strict"
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, dirname } from "node:path"
-import { evaluateAssertions, skillGate } from "./assertions.mjs"
+import { evaluateAssertions, oracleFindings, skillGate, targetDirectory } from "./assertions.mjs"
 import { replyText, toolCalls, usageStats } from "./events.mjs"
 import { snapshotTree } from "./fixture.mjs"
 
@@ -253,6 +253,61 @@ test("tool and notool name the tool exactly", () => {
   assert.equal(one({ kind: "tool", arg: "write" }, "/tmp", out).pass, false)
   assert.equal(one({ kind: "notool", arg: "write" }, "/tmp", out).pass, true)
   assert.equal(one({ kind: "notool", arg: "read" }, "/tmp", out).pass, false)
+})
+
+// SPEC-0057: a filesystem assertion whose target no fixture can produce is an
+// authoring bug, not a red cell. This is the check that would have stopped the
+// SPEC-0055 case-9 wave before it spent five paid draws.
+test("targetDirectory reads the glob's literal container", () => {
+  assert.equal(targetDirectory("docs/backlog/*", "filematch"), "docs/backlog")
+  assert.equal(targetDirectory("docs/pipeline.md release_tier", "filematch"), "docs")
+  assert.equal(targetDirectory("AGENTS.md", "file"), ".")
+  assert.equal(targetDirectory(".husky", "nofile"), ".")
+  assert.equal(targetDirectory("docs/**/*.md", "unchanged"), "docs")
+})
+
+test("a dead unchanged target is an error at stage time", () => {
+  const scratch = tree({ "src/cart.js": "one\n" })
+  const findings = oracleFindings(
+    { assert: [{ kind: "unchanged", arg: "src/pricing/index.js" }, { kind: "unchanged", arg: "src/cart.js" }] },
+    scratch,
+  )
+  assert.equal(findings.length, 1)
+  assert.equal(findings[0].arg, "src/pricing/index.js")
+  assert.match(findings[0].reason, /no staged file matches/)
+})
+
+test("a git fixture rejects a filematch outside the base and the patch", () => {
+  const scratch = tree({ "src/cart.js": "one\n" })
+  const findings = oracleFindings(
+    {
+      assert: [
+        { kind: "filematch", arg: "docs/backlog/* status: draft" },
+        { kind: "file", arg: "src/cart.js" },
+        { kind: "file", arg: "lefthook.yml" },
+      ],
+    },
+    scratch,
+    { isGit: true },
+  )
+  assert.deepEqual(findings.map((f) => f.arg), ["docs/backlog/* status: draft"])
+})
+
+test("a plain tree may create a directory the agent needs, and absence is not dead", () => {
+  const scratch = tree({ "README.md": "x" })
+  const findings = oracleFindings(
+    {
+      assert: [
+        { kind: "file", arg: "docs/pipeline.md" },
+        { kind: "filematch", arg: "docs/inbox/*.md status: unprocessed" },
+        { kind: "nofile", arg: "docs/backlog/*" },
+        { kind: "nodir", arg: "docs/prompts" },
+      ],
+    },
+    scratch,
+    { isGit: false },
+  )
+  assert.deepEqual(findings, [])
 })
 
 test("usageStats sums tokens and cost across steps, both spellings", () => {

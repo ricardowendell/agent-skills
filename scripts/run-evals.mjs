@@ -82,7 +82,17 @@ import { homedir } from "node:os"
 import { readEvals } from "./lib/evals/parse.mjs"
 import { authProbe, scrubEnv } from "./lib/evals/agent.mjs"
 import { corpusRoots, isolateHome, isolationRecord, probeIsolation, resumeIsolation, wrapCommand } from "./lib/evals/isolation.mjs"
-import { stageFixture, stageSkill, makeScratch, denySkillTool, textHash } from "./lib/evals/fixture.mjs"
+import {
+  denySkillTool,
+  governedFiles,
+  hasGitFixture,
+  makeScratch,
+  skillFileHashes,
+  stageFixture,
+  stageSkill,
+  textHash,
+} from "./lib/evals/fixture.mjs"
+import { oracleFindings } from "./lib/evals/assertions.mjs"
 import { summarize, aggregateReps, caseResult, contaminate, PASSED, UNSCORED } from "./lib/evals/result.mjs"
 import { executeCase } from "./lib/evals/execute.mjs"
 import { leaksIn, DETECTOR_VERSION } from "./lib/evals/leak.mjs"
@@ -577,8 +587,19 @@ async function runCase(skill, c, rep = null) {
     let pinned = { hash: null }
     let stagedSkills = []
     let fixture = { hash: null }
+    let governs = []
+    let skillHashes = {}
     try {
       fixture = stageFixture(skill, c, scratch)
+      // Smoke is the one level that stages without a model, so it is where an
+      // assertion no fixture can satisfy is cheapest to catch (SPEC-0057).
+      const dead = oracleFindings(c, scratch, { isGit: hasGitFixture(skill, c) })
+      if (dead.length) {
+        const detail = dead.map((d) => `${d.kind} ${d.arg} (${d.reason})`).join("; ")
+        throw new Error(`case ${c.n}: assertion target not produced by the fixture: ${detail}`)
+      }
+      governs = governedFiles(skill.dir, c.governs)
+      skillHashes = skillFileHashes(skill.dir, governs)
       if (opt.noSkill) denySkillTool(scratch)
       else {
         pinned = stageSkill(skill, scratch)
@@ -616,6 +637,8 @@ async function runCase(skill, c, rep = null) {
       status: "staged",
       reason: "staged only (smoke)",
       skillHash: pinned.hash,
+      skillHashes,
+      governs,
       stagedSkills,
       fixtureHash: fixture.hash,
       promptHash: textHash(c.prompt),
@@ -761,6 +784,8 @@ function finalizeCase(state) {
     sequence: state.sequence,
     ...provenance,
     skillHash: first?.skillHash ?? null,
+    skillHashes: first?.skillHashes ?? {},
+    governs: first?.governs ?? [],
     stagedSkills: first?.stagedSkills ?? [],
     arm: first?.arm,
     meta: first?.meta ?? {},

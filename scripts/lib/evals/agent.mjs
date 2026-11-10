@@ -63,8 +63,22 @@ export function authProbe({ model, command = "opencode", spawnFn = spawnSync, en
   return { ok: true, provider, detail: `${provider}: credentials present` }
 }
 
-export function runAgent({ args, cwd, env, timeoutMs = 600000, stallMs = 120000, command = "opencode" }) {
-  const started = Date.now()
+// SPEC-0057 reverses SPEC-0053's "no clock seam" note: the watchdog test used
+// real seconds only because `runAgent` exposed no injectable time. The seam is
+// testability, not measurement — no CLI flag reaches it, so a paid draw cannot
+// set its own clock and a caller that passes nothing keeps the real one.
+export function runAgent({
+  args,
+  cwd,
+  env,
+  timeoutMs = 600000,
+  stallMs = 120000,
+  command = "opencode",
+  now = Date.now,
+  setTimeout: scheduleTimeout = setTimeout,
+  clearTimeout: cancelTimeout = clearTimeout,
+}) {
+  const started = now()
   return new Promise((resolve) => {
     // detached => the child leads its own process group, so the whole tree can
     // be killed. A lingering grandchild holding stdout can otherwise keep
@@ -90,10 +104,10 @@ export function runAgent({ args, cwd, env, timeoutMs = 600000, stallMs = 120000,
     // because the two lead to different retry and reporting decisions.
     const armStall = () => {
       if (!(stallMs > 0)) return
-      clearTimeout(stallTimer)
-      stallTimer = setTimeout(() => {
+      cancelTimeout(stallTimer)
+      stallTimer = scheduleTimeout(() => {
         if (finished) return
-        if (isStalled(lastActivity, Date.now(), stallMs)) finish("stalled")
+        if (isStalled(lastActivity, now(), stallMs)) finish("stalled")
         else armStall()
       }, stallMs)
     }
@@ -101,8 +115,8 @@ export function runAgent({ args, cwd, env, timeoutMs = 600000, stallMs = 120000,
     const finish = (code) => {
       if (finished) return
       finished = true
-      clearTimeout(timer)
-      clearTimeout(stallTimer)
+      cancelTimeout(timer)
+      cancelTimeout(stallTimer)
       try {
         process.kill(-child.pid, "SIGKILL")
       } catch {
@@ -117,12 +131,12 @@ export function runAgent({ args, cwd, env, timeoutMs = 600000, stallMs = 120000,
         child.stderr?.destroy()
         child.unref()
       } catch {}
-      resolve({ out, err, code, durationMs: Date.now() - started })
+      resolve({ out, err, code, durationMs: now() - started })
     }
 
-    const timer = setTimeout(() => finish("timeout"), timeoutMs)
+    const timer = scheduleTimeout(() => finish("timeout"), timeoutMs)
     const activity = (chunk) => {
-      lastActivity = Date.now()
+      lastActivity = now()
       armStall()
       return chunk
     }

@@ -46,45 +46,127 @@ test("the stall decision compares the idle gap with the window", () => {
   assert.equal(isStalled(1000, 999999, 0), false, "zero disables the watchdog")
 })
 
+// SPEC-0057 reverses SPEC-0053's "no clock seam" note: `runAgent` takes `now`,
+// `setTimeout` and `clearTimeout`, so the watchdog can be driven in fake
+// milliseconds. No CLI flag reaches the seam; a paid draw cannot set its clock.
+function fakeClock() {
+  let time = 0
+  let seq = 0
+  const timers = new Map()
+  return {
+    now: () => time,
+    setTimeout: (fn, ms) => {
+      const id = ++seq
+      timers.set(id, { at: time + Number(ms), fn })
+      return id
+    },
+    clearTimeout: (id) => timers.delete(id),
+    // Advance fake time, running every timer that comes due in order.
+    tick(ms) {
+      const end = time + ms
+      for (;;) {
+        let due = null
+        for (const [id, timer] of timers) {
+          if (timer.at <= end && (!due || timer.at < due.timer.at)) due = { id, timer }
+        }
+        if (!due) break
+        timers.delete(due.id)
+        time = due.timer.at
+        due.timer.fn()
+      }
+      time = end
+    },
+  }
+}
+
 test("a stream with no events is killed as stalled, distinct from timeout", async () => {
-  const result = await runAgent({
+  const clock = fakeClock()
+  const pending = runAgent({
     command: process.execPath,
     args: ["-e", "setTimeout(() => {}, 5000)"],
     cwd: process.cwd(),
     env: process.env,
     timeoutMs: 5000,
-    stallMs: 80,
+    stallMs: 1000,
+    now: clock.now,
+    setTimeout: clock.setTimeout,
+    clearTimeout: clock.clearTimeout,
   })
+  clock.tick(1000)
+  const result = await pending
   assert.equal(result.code, "stalled")
-  assert.ok(result.durationMs < 2000, `stalled after ${result.durationMs}ms, not the full timeout`)
+  assert.equal(result.durationMs, 1000, "the fake clock, not the wall clock, measured the stall")
+})
+
+test("a stream that emits only at the start dies at the first idle window", async () => {
+  const clock = fakeClock()
+  const pending = runAgent({
+    command: process.execPath,
+    args: ["-e", "process.stdout.write('start'); setTimeout(() => {}, 5000)"],
+    cwd: process.cwd(),
+    env: process.env,
+    timeoutMs: 5000,
+    stallMs: 200,
+    now: clock.now,
+    setTimeout: clock.setTimeout,
+    clearTimeout: clock.clearTimeout,
+  })
+  // Let the start chunk reach the parent, then fake the idle window. The
+  // assertion is on the verdict: whether the chunk arrived before the tick or
+  // not, there is no further activity, and only the watchdog can kill it (the
+  // hard timeout is ten fake seconds away).
+  await new Promise((r) => setTimeout(r, 40))
+  clock.tick(200)
+  const result = await pending
+  assert.equal(result.code, "stalled")
+  assert.ok(result.durationMs < 5000, "the watchdog fired, not the timeout")
 })
 
 test("a slow but live stream resets the watchdog and survives", async () => {
-  // A 301ms gap against a 300ms window was observed under load during the
-  // SPEC-0052 verify (TASK-88). The exact source was not isolated: a slip in the
-  // child's 30ms interval and parent scheduling are both plausible, and the
-  // watchdog only sees chunks the parent has read. The old shape left no margin
-  // for that. Keep the pacing well below the window and run for several windows
-  // instead, so the test still proves the reset: a stream that emitted only at
-  // the start would die at the first idle window. `runAgent` exposes no clock
-  // seam, so there is no smaller deterministic lever to pull.
-  const stallMs = 1500
-  const gapMs = 100
-  const ticks = Math.ceil((stallMs * 3) / gapMs)
-  const result = await runAgent({
+  // The child emits every 5 ms for ~100 ms; fake time advances faster than real
+  // time, so the idle gap stays tiny. If activity did not reset the timer, the
+  // first window would kill it. No real seconds are spent waiting.
+  const clock = fakeClock()
+  const stallMs = 2000
+  const pending = runAgent({
     command: process.execPath,
     args: [
       "-e",
-      `process.stdout.write('e'); let i = 0; const t = setInterval(() => { process.stdout.write('e'); if (++i === ${ticks}) clearInterval(t) }, ${gapMs})`,
+      "let i = 0; const t = setInterval(() => { process.stdout.write('e'); if (++i === 20) clearInterval(t) }, 5)",
     ],
     cwd: process.cwd(),
     env: process.env,
-    timeoutMs: 15000,
+    timeoutMs: 10000,
     stallMs,
+    now: clock.now,
+    setTimeout: clock.setTimeout,
+    clearTimeout: clock.clearTimeout,
   })
+  const ticker = setInterval(() => clock.tick(10), 5)
+  let result
+  try {
+    result = await pending
+  } finally {
+    clearInterval(ticker)
+  }
   assert.equal(result.code, 0, `expected a clean exit, got ${result.code}`)
-  assert.ok(result.durationMs > stallMs * 2, `ran ${result.durationMs}ms, not across multiple idle windows`)
-  assert.ok(result.out.length >= ticks / 2, `only ${result.out.length} events observed, not a live stream`)
+  assert.ok(result.out.length >= 20, `only ${result.out.length} events observed, not a live stream`)
+})
+
+// One integration test keeps the real clock: the fake tests prove the rule, but
+// a regression that bypassed the injected timers entirely would only show on the
+// real one. A short window keeps it cheap.
+test("the real clock still kills a start-only stream as stalled", async () => {
+  const result = await runAgent({
+    command: process.execPath,
+    args: ["-e", "process.stdout.write('start'); setTimeout(() => {}, 5000)"],
+    cwd: process.cwd(),
+    env: process.env,
+    timeoutMs: 5000,
+    stallMs: 60,
+  })
+  assert.equal(result.code, "stalled")
+  assert.ok(result.durationMs < 2000, `stalled after ${result.durationMs}ms, not the full timeout`)
 })
 
 // The probe is an auth check, not a model call: it reads the stored integrations

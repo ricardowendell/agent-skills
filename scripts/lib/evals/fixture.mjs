@@ -118,6 +118,17 @@ export function stageFixture(skill, c, scratch) {
   const isGit = existsSync(manifest)
   const spec = isGit ? JSON.parse(readFileSync(manifest, "utf8")) : {}
   const baseDir = isGit ? resolve(caseDir, spec.base ?? ".") : caseDir
+  // A `base` that does not resolve used to stage an empty scratch silently, so
+  // a broken pointer was audited as an empty directory and the draw was paid
+  // for anyway (SPEC-0055 case 9). A `patch` that fails already throws; the
+  // manifest is not a softer contract than the patch. A case with no `git.json`
+  // keeps the old behaviour: its prompt carries the situation and an empty
+  // starting tree can be meaningful.
+  if (isGit && !existsSync(baseDir)) {
+    throw new Error(
+      `case ${c.n}: git.json base '${spec.base ?? "."}' does not resolve (resolved ${baseDir}); fixture directory ${caseDir}`,
+    )
+  }
   if (!existsSync(baseDir)) return { hash: treeHash(scratch) }
   copyTree(baseDir, scratch, (src) => !/(^|\/)(git\.json|change\.patch)$/.test(src))
   if (!isGit) return { hash: treeHash(scratch) }
@@ -185,4 +196,62 @@ export function stageFixture(skill, c, scratch) {
   }
 
   return { hash: treeHash(scratch) }
+}
+
+// `stageSkill` copies the skill without its eval corpus, so a legacy run's
+// `skillHash` is the hash of that filtered tree. Recomputing it from the working
+// checkout (rather than copying to a temp dir) keeps `check-staleness` a query;
+// the filtered listing is the same shape `stageSkill` copies.
+function inCorpus(rel) {
+  const parts = rel.split("/")
+  return parts.some((p) => p === "node_modules" || p === ".git" || p === "evals") || parts[parts.length - 1] === "evals.md"
+}
+
+export function stagedTreeHash(root) {
+  const h = createHash("sha256")
+  for (const { rel, isDir } of expand(root, "**")) {
+    if (inCorpus(rel)) continue
+    h.update(`${rel}\u0000${isDir ? "d" : "f"}\u0000`)
+    if (!isDir) {
+      try {
+        h.update(createHash("sha256").update(readFileSync(join(root, rel))).digest("hex"))
+      } catch {
+        h.update("unreadable")
+      }
+    }
+    h.update("\n")
+  }
+  return h.digest("hex")
+}
+
+// A case may name the files that govern its result with `governs:`; absent
+// means the whole skill tree, the conservative default from review. Paths are
+// skill-relative and validated by `parse.mjs`.
+export function governedFiles(skillDir, governs = null) {
+  if (Array.isArray(governs) && governs.length) {
+    return governs.map((rel) => String(rel).replace(/^\.\//, "")).sort()
+  }
+  return expand(skillDir, "**")
+    .filter((e) => !e.isDir)
+    .map((e) => e.rel)
+    .sort()
+}
+
+// One hash per governed file, taken from the working tree at draw time. The
+// staged copy is not used: `governs:` may name a file the copy strips (the
+// answer key) and the later comparison is against the checkout, not the copy.
+export function skillFileHashes(skillDir, files) {
+  const out = {}
+  for (const rel of files) {
+    try {
+      out[rel] = createHash("sha256").update(readFileSync(join(skillDir, rel))).digest("hex")
+    } catch {
+      out[rel] = null
+    }
+  }
+  return out
+}
+
+export function hasGitFixture(skill, c) {
+  return existsSync(join(skill.dir, "references/evals", String(c.n), "git.json"))
 }
