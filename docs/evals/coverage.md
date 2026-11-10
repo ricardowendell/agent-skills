@@ -478,6 +478,13 @@ Decisions: `keep` for #8, #9, #1, #2 and #7; `change` for #10 (the fixture was
 strengthened before the fixed arm) and keep it. No case was dropped and no case
 is unresolved.
 
+The human-facing reading of this table — one screen per case, with the measured
+and replayed columns kept apart and attributed to their waves — is
+[`review-code-matrix.md`](review-code-matrix.md). It is a reading aid over the
+cells above, not a second count: it publishes no number that is not in this
+table or in the run directory it cites, and where the two would disagree this
+table wins.
+
 ## Staleness
 
 `node scripts/check-staleness.mjs` is a query, not an anecdote: it reads the run

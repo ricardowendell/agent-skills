@@ -1,327 +1,285 @@
-# `review-code` matrix — 2026-11-01, revised 2026-11-02 and 2026-11-05
+# `review-code` matrix — ten cases, measured and replayed
 
-Measured after `c876d88`, which stopped staging `references/evals.md` and
-`references/evals/` into the agent's workspace. **Three cases**, two models, two
-arms, **five repetitions per cell**: 60 agent runs. The with-skill cells are the
-2026-11-01 run (`2026-11-01T21-50-03--matrix` … `2026-11-01T22-18-10--matrix--…`);
-the control cells were re-measured on 2026-11-02 at `b44f0d4`
-(`2026-11-02T09-58-38--matrix--without-skill`,
-`2026-11-02T10-08-45--matrix--opencode-go-gpt-6-luna--without-skill`) because the
-first publication scored them with a broken assertion. The fourth case was
-retired on 2026-11-02; the measurement that retired it is below.
+The human-facing record of what `review-code` was measured to do. Every number
+here is already published in [`coverage.md`](coverage.md) or recorded in the run
+directory it cites: this file reorganises the evidence, it does not measure.
 
-## What the arms mean
+| | |
+| --- | --- |
+| model | `agentworks/deepseek-v4-1-flash` — the single route of the wave; the `opencode-go` default was over its weekly limit |
+| detector | v6 `9149d6ab1ca57343` |
+| isolation | macOS seatbelt; every wave manifest records `params.isolation.enforced: true` with `mechanism: "seatbelt"`, and `check-eval-run` on each of the twelve wave directories prints `findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0` |
+| repository state | `repoSha 2aec756`, `skillHash 9a28572…`; the case-10 control ran later, at `beca23e`, on the strengthened fixture and the same `fixtureHash` as its skill arm |
+| waves | **SPEC-0056 measured 2026-11-10** (five draws per arm); **SPEC-0062 re-judged the same transcripts 2026-11-10** (no model, no new draw) |
+| cost | 65 paid draws in the wave: 55 evidence draws, 5 on an invalid case-10 setup attempt, and the 5 case-10 control draws the human approved above the original ceiling |
 
-- **with skill** — the skill is copied into `<scratch>/.opencode/skills/review-code/`
-  and shadows any global install; the gate requires that copy to be the one that
-  loaded.
-- **without skill** — `--no-skill`: nothing is staged and the `skill` tool is
-  denied. This measures "not auto-loaded", not "text unreachable".
+Two cells predate the wave and are history, not measurement: case 3 was drawn
+2026-11-03 at `repoSha 8b74222` and case 4 on 2026-11-05 at `7a44564`, both
+pre-detector (`warnings=5`, no `fixtureHash`/`promptHash`, `isolated=unknown`).
+They are cited as historical direction and cannot underwrite a clean rate.
 
-A cell reads `passed/5`. The aggregate is over the three cases, out of 15.
+## How to read this file
 
-## Results
+- **with skill** — `review-code` is staged into the child's workspace and the
+  gate requires that copy to be the one that loaded. **without skill** —
+  `--no-skill`: nothing is staged and the `skill` tool is denied. The arm
+  measures "not auto-loaded", not "text unreachable".
+- A cell reads `passed/5`; five repetitions per arm. Five draws show a
+  direction, not a per-case population rate.
+- **clean draws** is the non-contaminated count for that arm: draws with no
+  skill or host read, no abort, no lost gate. A cell's rate is only as good as
+  its clean base.
+- **measured** is what the assertions said when the draws ran, under the stance
+  vocabulary that preceded SPEC-0062. **replayed** is the same stored
+  transcripts read under SPEC-0062's closed stance table
+  (`node scripts/replay-evals.mjs --run <dir>`; no model, no write into the run
+  directory), attributed to SPEC-0062 on every row. The two columns are not
+  averaged, not merged, and not interchangeable: `measured` is the historical
+  record of the token, `replayed` is the judgement-corrected reading of the
+  same draws.
+- The classes, and only these three:
+  - **separator** — the arms differ on the judgement.
+  - **token/contract separator** — the arms agree on the judgement and differ on
+    the required output contract (the stance token, the `Not verified` section,
+    the hash evidence, a `file:line`).
+  - **non-discriminator** — the arms agree on both.
+- Every path is post-SPEC-0058: the corpus is `evals/review-code/cases.md` with
+  its fixtures under `evals/review-code/fixtures/`. Paths from the older layout
+  appear only in *History*, labelled as such.
 
-**opencode-go/deepseek-v4.1-flash** (config default)
+## The ten cases
 
-| case | with skill | without skill |
-| --- | --- | --- |
-| #1 review against SPEC-0007 | 5/5 | 0/5 |
-| #3 branch with no spec | 5/5 | 0/5 |
-| #4 spec moved after the stamp | 5/5 | 0/5 |
-| **aggregate** | **15/15** | **0/15** |
-
-**opencode-go/gpt-6-luna**
-
-| case | with skill | without skill |
-| --- | --- | --- |
-| #1 review against SPEC-0007 | 5/5 | 0/5 |
-| #3 branch with no spec | 5/5 | 0/5 |
-| #4 spec moved after the stamp | 5/5 | 0/5 |
-| **aggregate** | **15/15** | **0/15** |
-
-With the skill: 30/30. Without it: 0/30.
-
-A perfect separation is exactly the kind of number that should make a reader
-suspicious, so read it with the next two sections: the cases that survived are
-the ones where the failure is procedural, and the case that was dropped is the
-one where the control could read the code well enough on its own.
-
-## Re-measured under home isolation
-
-These cells were produced before the harness isolated the child's home, so the
-agent saw every skill installed on the machine. Re-running the same four cells,
-same models, same five repetitions, same cases, on `61978f1`:
-
-| case | flash, with | flash, without | luna, with | luna, without |
+| case | what it stages | measured (with / without) | replayed (with / without) | class |
 | --- | --- | --- | --- | --- |
-| #1 review against SPEC-0007 | 5/5 | 0/5 | 5/5 | 0/5 |
-| #3 branch with no spec | 5/5 | **1/5** | 5/5 | **3/5** |
-| #4 spec moved after the stamp | 5/5 | 0/5 | 5/5 | 0/5 |
-| **aggregate** | **15/15** | **1/15** | **15/15** | **3/15** |
+| 1 | clean diff, every AC satisfied | 5/5 / 0/5 | 5/5 / 0/5 | token/contract separator |
+| 2 | rounding before tax, noisy test | 4/5 / 4/5 | 4/5 / 5/5 | non-discriminator |
+| 3 | no spec in the repo | 5/5 / 1/5 | — | separator |
+| 4 | spec moved after the stamp | 5/5 / 3/5 | — | token/contract separator |
+| 5 | trigger: a branch handed over | no arm cell | — | — |
+| 6 | near-miss: debugging a build | no arm cell | — | — |
+| 7 | gate already red on `main` | 5/5 / 0/5 | 5/5 / 0/5 | separator (holdout) |
+| 8 | interface break, green suite | 5/5 / 0/5 | 5/5 / 5/5 | token/contract separator |
+| 9 | introduced injection, green suite | 5/5 / 3/5 | 5/5 / 4/5 | token/contract separator |
+| 10 | risky-looking change that must pass | 5/5 / 0/5 | 5/5 / 0/5 | token/contract separator |
 
-The skill arm is unchanged at 30/30. The control is not 0/30 any more: it is
-**4/30**, and all four sit in case #3.
+`—` in the replayed column means SPEC-0062 did not re-judge that cell. It
+re-read the eight directories behind the four SPEC-0056 citations (cases 1, 8, 9
+and 10) and the two regression rows that cite the same wave (cases 2 and 7); cases
+3 and 4 were outside that set, and cases 5 and 6 have no draw to replay.
 
-That is the outcome worth having measured. The control run that passed did not
-approve a branch it had no spec for — it stayed silent: described the diff,
-mentioned the spec, emitted no verdict. Case #3's assertions ask for exactly
-that absence, so a bare agent that never judges satisfies them. The published
-`0/5` was a model that confidently approved; the model of today sometimes just
-describes, and the assertion cannot tell "refused because there is no spec" from
-"did not judge at all".
+## Case 1 — review against SPEC-0007
 
-So the honest reading of the matrix is narrower than the headline: the skill
-separates on #1 and #4 (0/5 either model, either way), and on #3 it separates
-from *confident approval*, not from silence.
+A clean diff that satisfies every acceptance criterion. The control approves it
+in prose 5/5 ("compliant — approve", "Passes SPEC-0007") and misses on the
+contract: `verdict APPROVE` in r1 and r4, `reply Not verified` in all five.
 
-That reading held until the #4 fixture was revised on 2026-11-05; see *Case #4
-fixture revision* below. The 0/5 control cells in the tables above belong to the
-previous fixture and no longer describe the current case.
+| arm | run directory | clean draws | measured | replayed | class |
+| --- | --- | --- | --- | --- | --- |
+| with skill | `2026-11-10T15-20-12--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 5/5 | token/contract separator |
+| without skill | `2026-11-10T15-23-10--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | 0/5 | token/contract separator |
 
-That gap was closed on 2026-11-03. Case #3 now requires the reply to name the
-missing basis — `provide the spec`, `withhold the verdict`, `can't review
-against` — instead of only forbidding approval, and the verdict guard names the
-stances it had missed: `no blockers`, `hold the merge`, and the unlabeled
-`**Hold the merge**` line under a `### Verdict` heading. Re-measured on fresh
-draws: **5/5 with the skill on each model, and 1/5 on deepseek against 0/5 on
-luna without it** — 1/10 against 10/10. The single control pass is
-`2026-11-03T09-56-47--review-code--without-skill` r1: it ended under a
-`### Verdict` heading with `**Hold the merge**`, a stance the guard did not name
-at the time — not a confident approval. Replaying every recorded #3 transcript
-under the new assertions keeps all
-skill runs passing and flips only control runs, which is the check that the
-tightening asks for a behaviour the skill actually produces rather than one the
-case invented.
+**Class: token/contract separator.** Both arms approve the change. SPEC-0062
+re-reads r1 and r4 as `APPROVE`, so the token moves 3/5 → 5/5, and the cell
+stays 0/5 because `reply Not verified` fails 5/5. The 0/5 is the missing
+response contract, not a different engineering judgement.
 
-## Case #4 fixture revision
+## Case 2 — rounding before tax
 
-The #4 cell was measured on a fixture where the branch changed the spec *and*
-the code: AC-3 grew a requirement the code did not meet, so `REJECT` could pass
-without the hash check, and the only rule-specific assertion quoted the skill's
-output template. The mutation control from SPEC-0006 showed the cost: a review
-that computed both hashes and rejected in prose was scored as a miss.
+The branch applies rounding to the subtotal, so the returned total still carries
+float noise, and the added test asserts the noisy value. Both arms find AC-2 and
+reject; a diff-reading case cannot separate reviewers that read the same code.
 
-The fixture was rewritten (SPEC-0009) so the branch rewords AC-3 and changes
-nothing else. The spec hashes to `36c915b0…`, the prompt still pins
-`feb763b1…`, the suite stays green, and the stale spec is the only defect. The
-assertions now require the verdict and the two hash prefixes, not the template
-sentence. Measured on the default model, five repetitions each:
+| arm | run directory | clean draws | measured | replayed | class |
+| --- | --- | --- | --- | --- | --- |
+| with skill | `2026-11-10T15-26-12--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 4/5 | 4/5 | non-discriminator |
+| without skill | `2026-11-10T15-28-46--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 4/5 | 5/5 | non-discriminator |
 
-| arm | result | run |
-| --- | --- | --- |
-| with skill | 5/5 | `2026-11-05T07-34-32--review-code` |
-| without skill | 3/5 | `2026-11-05T07-47-21--review-code--without-skill` |
+**Class: non-discriminator.** Measured 4/5 vs 4/5; replayed the control's r5
+(`changes requested`) reads `REJECT`, so it moves to 5/5, while the skill arm
+stays 4/5 because its r4 emits no `VERDICT:` line — a token miss on the skill
+side, not a judgement difference. Both arms reject the change in substance. The
+case is kept as a regression case: it fails a reviewer that misses an obvious AC
+violation, or one that approves because the suite is green.
 
-The 2/5 control failures are `reply feb763b1` and `reply 36c915b0`: those runs
-rejected the change without showing both hashes. Separation is therefore on the
-hash evidence, not on the verdict — a bare agent that notices the pin also
-rejects. The luna cells have not been re-measured on this fixture.
+## Case 3 — no spec in the repo
 
-The `ignore-spec-sha` control from SPEC-0006 was re-run against the revised case:
-3/3 runs compared the hashes and rejected (2 passed; 1 exited 1 after a passing
-review, recorded as environmental). Removing the skill's hash clause did not
-remove the behaviour, because the prompt's `spec_sha` field supplies the cue. The
-rule is redundant in this fixture; the case now documents the behaviour, not the
-skill clause that produces it.
+The case prunes `docs/specs` and `docs/prompts` before the base commit, so the
+review has to ask for the intent instead of inventing acceptance criteria.
 
-## Case #7: a gate that is already red
+| arm | run directory | clean draws | measured | replayed | class |
+| --- | --- | --- | --- | --- | --- |
+| with skill | `2026-11-03T10-06-33--review-code` | 5 draws, not checkable (pre-detector, `warnings=5`) | 5/5 | — | separator |
+| without skill | `2026-11-03T09-56-47--review-code--without-skill` | 5 draws, not checkable (pre-detector, `warnings=5`) | 1/5 | — | separator |
 
-A new case (SPEC-0008) stages a repository whose `main` already fails `npm test`:
-`test/legacy.test.js` asserts a packaging fee nobody implemented. The branch adds
-`total()` and its tests and does not touch the failing test, so the diff is clean
-and the gate is the only failing signal. `AGENTS.md` names the gate command but
-does not say it must pass.
+**Class: separator.** The skill withholds or names the missing basis 5/5; the
+control returns a verdict in 4/5. The single control pass ended under a
+`### Verdict` heading with `**Hold the merge**` — a stance the guard did not name
+at the time, not a confident approval. The current assertions name that stance
+and require the reply to say what is missing; replaying the recorded transcripts
+under them keeps every skill run passing and flips only control runs. The cell
+is historical: it was not re-measured at `skillHash 9a28572…`, and its published
+counts are pre-detector history.
 
-| arm | result | run |
-| --- | --- | --- |
-| with skill | 3/3 rejected on the assertions (one run exited 1 after the review; that exit is a `provider.transport` abort, TASK-54, not a behavioural difference) | `2026-11-05T09-05-36--review-code` |
-| without skill | 0/3 — approved and named the failure | `2026-11-05T09-32-10--review-code--without-skill` |
+## Case 4 — spec moved after the stamp
 
-This is three draws per arm, not the five the table above uses, so it is
-recorded as a preliminary cell: the case separates, and the control's failure is
-`verdict REJECT` in all three runs.
+The branch rewords AC-3 and changes nothing else: the spec hashes to `36c915b0…`
+while the prompt still pins `feb763b1…`. The stale spec is the only defect.
 
-### SPEC-0033 re-measure (v2, holdout)
+| arm | run directory | clean draws | measured | replayed | class |
+| --- | --- | --- | --- | --- | --- |
+| with skill | `2026-11-05T07-34-32--review-code` | 5 draws, not checkable (pre-detector, `warnings=5`) | 5/5 | — | token/contract separator |
+| without skill | `2026-11-05T07-47-21--review-code--without-skill` | 5 draws, not checkable (pre-detector, `warnings=5`) | 3/5 | — | token/contract separator |
 
-#7 was re-measured at `a7cb10e` under detector v2 on
-`agentworks/deepseek-v4-1-flash`, five draws per arm: **5/5 vs 0/5**, both clean
-(`findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes`). The control fails
-`verdict REJECT` in all five: `r3`/`r4`/`r5` approve despite the red gate,
-`r1`/`r2` name the gate but do not emit the token. This is the held-out case of
-the issue #5 set, frozen in SPEC-0033 before the first draw; see
-[`discriminating-cases.md`](discriminating-cases.md). Runs:
-`2026-11-07T09-07-52--review-code--agentworks-deepseek-v4-1-flash`,
-`2026-11-07T09-11-14--review-code--agentworks-deepseek-v4-1-flash--without-skill`.
+**Class: token/contract separator.** Both arms reject the change; the two
+control misses are `reply feb763b1` and `reply 36c915b0` — rejections that do
+not show both hash prefixes. The arms agree on the judgement and differ on the
+required contract. `coverage.md` publishes no class for this cell; the class
+here is the definition applied to the published cell, not a second count. It is
+historical: not re-measured at `skillHash 9a28572…`, and the luna cells were
+never re-measured on the revised fixture.
 
-## Audit note — SPEC-0023
+## Case 5 — trigger: a branch is handed over for review
 
-The #1 and #3 separator claims were re-checked against controls on the same
-fixture and prompt. #1's pair is `2026-11-02T20-26-40--matrix` /
-`2026-11-02T20-34-11--matrix--without-skill` at `61978f1`, and on luna
-`2026-11-02T20-43-48--matrix--opencode-go-gpt-6-luna` /
-`20-48-34--matrix--opencode-go-gpt-6-luna--without-skill` at `81cba18`. #3's
-re-measured pair is `2026-11-03T10-06-33--review-code` /
-`2026-11-03T09-56-47--review-code--without-skill` at `8b74222`, and on luna
-`10-10-09--review-code--opencode-go-gpt-6-luna` /
-`10-02-34--review-code--opencode-go-gpt-6-luna--without-skill`. The #4 and #7
-pairs above were re-checked the same way: both arms of each pair share
-`repoSha 7a44564` and the same case prompt. All of these runs predate the leak
-detector and are cited as history, not as clean rates; `coverage.md` carries the
-`warnings` counts.
+A prompt that never names the skill ("Review this branch before I merge it").
+The case measures reachability — `skill review-code` — with `gate: off`, so it
+is skipped at `--level behavior` and has no with/without arm cell.
 
-## Case #2 left the matrix
+`coverage.md` publishes no trigger run for `review-code`, and the store holds no
+run directory for this case. Nothing is measured here, so the case carries no
+class; inventing one would be a claim without a subject.
 
-`#2` was the fourth matrix case: a branch that misses AC-2 and deletes a test.
-On 2026-11-02 its fixture was replaced with a harder one — rounding applied to
-the subtotal instead of the total, with the added test asserting the noisy value
-`21.639174999999998` — on the theory that a defect visible only against the spec
-would separate the arms.
+## Case 6 — near-miss: a failure being debugged
 
-It did not. Both arms scored **5/5** on the new fixture, and the control
-transcripts say why: all five found `docs/specs/SPEC-0007-cart-tax.md`, computed
-`19.99 × 1.0825`, and cited AC-2 as blocking — without being told a spec existed.
-The control reads code and probes edge cases well. What it does not do is run the
-gate, withhold when there is no spec, or notice that the spec moved.
+Same vocabulary (branch, build, failure) without a change to approve. The case
+asserts `notskill review-code` and, like case 5, is a trigger case with
+`gate: off`. No run directory and no published number exist for it, so it has
+no arm cell and no class.
 
-A diff-reading case is therefore non-discriminating by construction: whatever a
-reviewer can see in the code, the control sees too. `#2` dropped the `matrix` tag
-and stays as a regression case — it fails a reviewer that misses an obvious AC
-violation, or one that approves because the suite is green. New-fixture runs:
-`2026-11-02T10-27-26--review-code` (5/5) and
-`2026-11-02T10-31-40--review-code--without-skill` (5/5).
+## Case 7 — a gate that is already red
 
-Decision recorded 2026-11-06 (TASK-34): **regression, not a discriminator** —
-kept rather than removed, on `2026-11-02T10-27-26--review-code` and
-`2026-11-02T10-31-40--review-code--without-skill` (both pre-detector,
-`warnings=5`).
+`main` already fails `npm test`: `test/legacy.test.js` asserts a packaging fee
+nobody implemented. The branch adds `total()` and its tests without touching the
+failing test, so the diff is clean and the gate is the only failing signal.
+`AGENTS.md` names the gate command but does not say it must pass.
 
-## Why the control failed
+| arm | run directory | clean draws | measured | replayed | class |
+| --- | --- | --- | --- | --- | --- |
+| with skill | `2026-11-10T15-31-48--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 5/5 | separator |
+| without skill | `2026-11-10T15-35-51--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | 0/5 | separator |
 
-Every red cell below 5/5, with the assertion that failed.
+**Class: separator.** The control fails `verdict REJECT` in all five draws: in
+the earlier v2 holdout measurement (`2026-11-07T09-07-52--review-code--agentworks-deepseek-v4-1-flash`
+against `2026-11-07T09-11-14--review-code--agentworks-deepseek-v4-1-flash--without-skill`,
+5/5 vs 0/5) three controls approved despite the red gate and two named the gate
+without emitting the token. The case was frozen in SPEC-0033 before the first
+draw; see [`discriminating-cases.md`](discriminating-cases.md).
 
-| case | deepseek | luna |
-| --- | --- | --- |
-| #1 | `verdict APPROVE`, `reply Not verified`, `ranpass npm test` | `verdict APPROVE`, `reply Not verified`, `reply AC-3` |
-| #3 | returns a verdict where the skill withholds | returns a verdict where the skill withholds |
-| #4 | `verdict REJECT`, `reply feb763b1`, `reply 36c915b0` (3/5 runs rejected without both hashes) | not re-measured on the revised fixture |
-| #7 | `verdict REJECT` (approved 3/3 after naming the failure) | not measured |
+## Case 8 — interface break with a green suite
 
-Without the skill the review is plausible and wrong in three directions: it
-approves a change whose gate was never run (#1), it rejects a moved spec without
-showing both hashes (#4, 3/5 on the revised fixture), and it answers a request
-with no spec at all by returning a verdict — mostly "request changes" — instead
-of asking for the intent or withholding (#3).
+The branch exports `total({ items, taxRate })` where AC-1 fixes
+`total(items, taxRate)` and updates every call and test, so `npm test` passes.
+The public contract is broken and the green suite does not make it acceptable.
 
-One caveat on the #1 row, from the mutation pilot: `ranpass npm test` proves the
-gate was executed, not that the skill's gate step caused it. The fixture's own
-`AGENTS.md` and implementation prompt name `npm test`, so a mutant that removes
-the skill's gate step still produces a green run. The assertion separates the
-arms but does not attribute the behaviour to that rule. See
-`docs/evals/experiments/mutation/review-code/`.
+| arm | run directory | clean draws | measured | replayed | class |
+| --- | --- | --- | --- | --- | --- |
+| with skill | `2026-11-10T15-02-35--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 5/5 | token/contract separator |
+| without skill | `2026-11-10T15-05-54--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | 5/5 | token/contract separator |
 
-## Correction: two assertion bugs, both flattering the skill
+**Class: token/contract separator.** The control rejects the same break in prose
+5/5 ("changes requested", "needs changes", "one blocking defect"); the closed
+stance table only accepts `request changes`/`reject`, so the measured token
+scores 0/5. SPEC-0062 re-reads all five as `REJECT`, and the cell becomes 5/5.
+The arms agree on the judgement; the 0/5 was the missing token.
 
-The four-case publication counted 1/20 and 0/20 in the control arms. Both numbers
-were wrong, in the direction that made the skill look indispensable. Two separate
-defects produced them, and neither was a behaviour.
+## Case 9 — introduced vulnerability with a green suite
 
-**1. `verdict` read capitalisation, not stance.** The assertion demanded a line
-beginning with uppercase `VERDICT:`. Both control arms wrote `Verdict: REJECT** —
-AC-2 is unimplemented…`: the stance, the evidence, the right answer, in sentence
-case. The assertion reported "no VERDICT: line", the rep failed, and the matrix
-credited the skill for a decision the control had already made. Seven reps were
-affected.
+The branch adds `exportCart`, which builds a shell string from `filename` — a
+value forwarded from the request query string — and runs it through `execSync`.
+The test asserts only the built string, so the suite stays green while the
+command path is injectable.
 
-**2. The #3 guard required a label.** `noreply` matched a stance only after
-`verdict:`. The control often writes the stance without one — `## Review:
-**Request changes**`, `**Request changes** — one issue found.`,
-`### Verdict` with the answer on the next line. Three reps passed #3 that should
-have failed, including the single pass behind the original "1/20".
+| arm | run directory | clean draws | measured | replayed | class |
+| --- | --- | --- | --- | --- | --- |
+| with skill | `2026-11-10T15-08-51--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 5/5 | token/contract separator |
+| without skill | `2026-11-10T15-12-14--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 3/5 | 4/5 | token/contract separator |
 
-What changed:
+**Class: token/contract separator.** The control rejects the injection in prose
+5/5; r1, r2 and r5 emit a recognised stance, r3 and r4 do not, so it measures
+3/5. SPEC-0062 re-reads r4 (`The branch as a whole should not merge`) as
+`REJECT`; r3 still names no listed stance, so the token and the cell both read
+4/5. The other red — `reply src/export\.js:[0-9]+` — is r3 only. Both arms
+reject; the gap is the token.
 
-- `verdict` reads the stance from a closed vocabulary — `VERDICT`, `Verdict`,
-  `Veredicto`, `Parecer`; accents, case and markdown ignored; the stance may sit
-  on the next line when the label is a heading. A word outside the list still
-  compares literally, so extending it is a change made on evidence.
-- `review-code` #3's guard names the stance in English and Portuguese and matches
-  it as a heading or in emphasis, not only after a label. It still ignores
-  "cannot approve", which is the withhold the case wants.
+## Case 10 — a risky-looking change that must not block
 
-How the numbers were obtained: the control cells were **run again** on
-2026-11-02 (40 agent runs) and the prose passes in luna #3 were re-judged with
-`node scripts/replay-evals.mjs`, which evaluates recorded transcripts without a
-model. The with-skill arm did not move for #1, #3 and #4 — verified by replay
-over all 80 transcripts.
+The branch adds a bounded exponential-backoff retry with its own spec
+(SPEC-0008) and tests for the waits, the defaults, the exhausted budget and the
+non-integer inputs. The timers, the `catch` and the exponent look risky to a
+scanner; the loop is bounded and the error is rethrown.
 
-One honest note on spread: on the retired fixture, luna #2 scored 0/5 in the
-2026-11-01 cell and 4/5 in the 2026-11-02 cell. Same model, same case — the
-difference is sampling, and it is larger than the one-repetition margin the spec
-allows. Five repetitions per cell is enough to see a direction, not to publish a
-per-case rate.
+| arm | run directory | clean draws | measured | replayed | class |
+| --- | --- | --- | --- | --- | --- |
+| with skill (fixed fixture) | `2026-11-10T15-39-17--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 5/5 | token/contract separator |
+| without skill | `2026-11-10T15-54-47--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | 0/5 | token/contract separator |
 
-## Parity with Promptfoo — the path, not the measurement
+**Class: token/contract separator.** The control approves the same correct retry
+in prose 5/5 but emits no `VERDICT: APPROVE` and no `Not verified` section, so it
+measures 0/5. SPEC-0062 reads r2, r3 and r5 as `APPROVE` — the token moves to
+3/5 — while r1 and r4 state the stance only in prose and `reply Not verified`
+fails 5/5, so the cell stays 0/5. Both arms approve; the gap is the contract.
 
-`review-code` #3, both arms, three repetitions each, through
-`scripts/promptfoo/provider.mjs`:
+The first skill arm of this case,
+`2026-11-10T15-15-21--review-code--agentworks-deepseek-v4-1-flash`, is **not
+evidence**: it reviewed the original fixture and correctly blocked it, because
+the tests did not cover AC-2's delay schedule or AC-3's defaults and non-integer
+inputs. The fixture was strengthened and the case re-measured; no `expect:` line
+or assertion was changed, and the fixture change did not lower the bar.
 
-| arm | Promptfoo | runner (same case) |
-| --- | --- | --- |
-| with skill | 3/3 | 5/5 |
-| without skill | 0/3 | 0/5 |
+## Where this file disagreed with `coverage.md`
 
-Both arms agree in direction, and the provider's `metadata.status` matched the
-generated assertion on all six runs (0 mismatches). The runner's single control
-pass on this case was the label-dependent false pass corrected above; once it is
-re-judged, the two front ends agree exactly. Parity is still checked on one case
-as a path test, not as a measurement.
+`coverage.md` is the source of numbers and classes; where the two documents
+disagreed, it won and this file was corrected. The disagreements found were in
+the older version of this file, not in the per-cell table:
 
-## Integrity
+- **Case 1 was called a separator.** The replaced version published a 15/15 vs
+  0/15 aggregate and read it as "the skill separates on #1 and #4". For the
+  current cell `coverage.md` publishes **token/contract separator**: both arms
+  approve and the control loses on `verdict APPROVE`/`reply Not verified`. The
+  aggregate was over three cases whose fixtures have since been revised or
+  retired, which is why it is history rather than a smaller version of these
+  numbers.
+- **Case 2 carried the retired fixture's 5/5 vs 5/5.** `coverage.md` publishes
+  the current cell at 4/5 vs 4/5, replayed 4/5 vs 5/5, still a
+  **non-discriminator**. The class did not move; the number did.
+- **Cases 3 and 4 have no published class.** `coverage.md` publishes classes for
+  cases 1, 2 and 7–10 only. For these two this file applies the definitions above
+  to the published cells and says so in the row, instead of claiming a published
+  class that does not exist. Case 3 separates on the judgement (withhold vs
+  verdict); case 4 agrees on the judgement and differs on the hash evidence.
+- **Cases 5 and 6 have no published measurement.** They are trigger cases with
+  `gate: off`; `coverage.md` lists `review-code` as ten cases with two triggers
+  and no manual case, and publishes no trigger run. Their rows say `no arm cell`
+  rather than inventing a rate.
 
-Zero transcripts from the matrix runs read `references/evals.md`. The staging fix
-holds:
+## History
 
-```sh
-grep -rn "references/evals.md" ~/.local/share/opencode/evals/runs/<run>/cases | wc -l
-# 0
-```
+The first publication (2026-11-01, revised 2026-11-02 and 2026-11-05) covered
+three cases and measured them with a layout in which the eval corpus still lived
+inside the skill (`references/evals.md` and `references/evals/`, retired by
+SPEC-0058) and before home isolation: the child saw every skill installed on the
+machine, so those numbers answer a different question and are not comparable
+with the ones above. That publication also counted two assertion defects in the
+skill's favour — `verdict` read capitalisation instead of stance, and the case-3
+guard required a label — and those are why the control cells were re-measured
+rather than carried forward. The runs from that period are cited in
+`coverage.md` as pre-detector history, with their `warnings` counts, and are not
+used here.
 
-## Reproducibility
-
-The with-skill cell was run again on 2026-11-01 (`2026-11-01T22-25-20--matrix`,
-repo sha `882807b`): identical case by case at the time, 5/5 on each of the four
-cases including the then-current #2. With #2 retired the claim is 15/15, which
-those runs already contain. The observed spread on the with-skill arm is zero,
-well inside the one-repetition margin the spec allows.
-
-## Not comparable with earlier figures
-
-Anything measured before `c876d88` was produced with the eval corpus readable
-inside the workspace. Those numbers are not a smaller or larger version of these;
-they answer a different question. The first case re-measured after the fix,
-`audit-docs` #3, moved from 3/3 to 0/3 loads, which is the size of the distortion
-this measurement avoids.
-
-One footnote on provenance: the first cell recorded repo sha `baf9a32` because
-the layout commit landed while it ran; the code that executed was the same
-working tree, and the other three cells recorded `d9b97a8`.
-
-These runs also predate home isolation (`lib/evals/isolation.mjs`): the child saw
-every skill installed on the machine, not just the one under test. All thirty
-loaded `review-code`, so no miss landed here, but the environment was the one
-that later produced a 23% miss rate on other cases. The cells were re-run under
-isolation anyway — see *Re-measured under home isolation* — and the control moved
-from 0/30 to 4/30.
-
-## Commands
+## Reproduce
 
 ```sh
-node scripts/run-evals.mjs --root skills --tag matrix --repeat 5 --run
-node scripts/run-evals.mjs --root skills --tag matrix --repeat 5 --no-skill --run
-node scripts/run-evals.mjs --root skills --tag matrix --repeat 5 --model opencode-go/gpt-6-luna --run
-node scripts/run-evals.mjs --root skills --tag matrix --repeat 5 --model opencode-go/gpt-6-luna --no-skill --run
-
-node scripts/emit-promptfoo.mjs --skill review-code --case 3 --arms with-skill,without-skill --models default --out /tmp/parity.yaml
-npx promptfoo eval -c /tmp/parity.yaml --repeat 3
+node scripts/run-evals.mjs --root skills --list
+node scripts/check-eval-run.mjs ~/.local/share/opencode/evals/runs/<run-dir>
+node scripts/replay-evals.mjs --run <run-id>
+node scripts/check-evidence.mjs
 ```

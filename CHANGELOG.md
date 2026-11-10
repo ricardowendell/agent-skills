@@ -11,6 +11,20 @@ skills, which cases, and which published measurements.
 
 ### Changed
 
+- **The `review-code` matrix covers the ten cases and separates measured from
+  replayed (SPEC-0063, TASK-98).** `docs/evals/review-code-matrix.md` now has a
+  row for every case 1–10 with its arm, run directory, clean draws and class,
+  and two labelled columns: `measured` is what the assertions said when the
+  draws ran, `replayed` is the same stored transcripts read under SPEC-0062's
+  closed stance table, attributed to SPEC-0062 and never averaged with the
+  measured one. The header names the model, detector v6, the seatbelt boundary,
+  the repository state and the two 2026-11-10 waves. Classes were copied from
+  `coverage.md`: cases 1, 4, 8, 9 and 10 are token/contract separators after the
+  re-judge, 7 is the separator holdout, 2 is a non-discriminator, 3 separates on
+  the judgement, and cases 5 and 6 are trigger cases with no arm cell. The old
+  header's 15/15 vs 0/15 aggregate and its reading that case 1 "separates" were
+  corrected against `coverage.md`. No draw was spent; every cited run directory
+  resolves.
 - **The verdict vocabulary is closed and the rates are re-judged (SPEC-0062,
   TASK-91).** The `verdict` assertion now maps a stance against a published table
   of 55 forms (18 approve, 30 reject, 7 withheld) and 26 blockers written the way

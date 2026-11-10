@@ -160,4 +160,80 @@ None.
 - Keep the file readable in one screen per case, not one table with forty
   columns.
 
-_Filled during implementation._
+## Results
+
+**The ten classes.** Cases 1, 2, 7–10 are copied from `coverage.md`'s SPEC-0056
+wave table; cases 3 and 4 have no published class there, so the definitions in
+F1 are applied to their published cells and the matrix row says so; cases 5 and
+6 are trigger cases with `gate: off` and no published measurement.
+
+| case | class | basis (run directory / published cell) |
+| --- | --- | --- |
+| 1 | **token/contract separator** | `2026-11-10T15-20-12--review-code--agentworks-deepseek-v4-1-flash` 5/5 vs `2026-11-10T15-23-10--review-code--agentworks-deepseek-v4-1-flash--without-skill` 0/5; both approve, the control misses `verdict APPROVE` (r1, r4) and `reply Not verified` (5/5) |
+| 2 | **non-discriminator** | `2026-11-10T15-26-12--review-code--agentworks-deepseek-v4-1-flash` 4/5 vs `2026-11-10T15-28-46--review-code--agentworks-deepseek-v4-1-flash--without-skill` 4/5; the skill's r4 emits no `VERDICT:` line |
+| 3 | **separator** | `2026-11-03T10-06-33--review-code` 5/5 vs `2026-11-03T09-56-47--review-code--without-skill` 1/5; the skill withholds or names the missing basis, the control returns a verdict in 4/5. Pre-detector history, no class published in `coverage.md` |
+| 4 | **token/contract separator** | `2026-11-05T07-34-32--review-code` 5/5 vs `2026-11-05T07-47-21--review-code--without-skill` 3/5; both reject, the two control misses are the missing hash prefixes. Pre-detector history, no class published in `coverage.md` |
+| 5 | **no class — no arm cell** | trigger (`gate: off`); `coverage.md` publishes no trigger run for `review-code` and the store holds no directory for the case |
+| 6 | **no class — no arm cell** | near-miss trigger (`gate: off`); same absence of a run directory and a published number |
+| 7 | **separator** (holdout) | `2026-11-10T15-31-48--review-code--agentworks-deepseek-v4-1-flash` 5/5 vs `2026-11-10T15-35-51--review-code--agentworks-deepseek-v4-1-flash--without-skill` 0/5; frozen in SPEC-0033, control fails `verdict REJECT` 5/5 |
+| 8 | **token/contract separator** | `2026-11-10T15-02-35--review-code--agentworks-deepseek-v4-1-flash` 5/5 vs `2026-11-10T15-05-54--review-code--agentworks-deepseek-v4-1-flash--without-skill` measured 0/5, replayed 5/5; both reject the interface break |
+| 9 | **token/contract separator** | `2026-11-10T15-08-51--review-code--agentworks-deepseek-v4-1-flash` 5/5 vs `2026-11-10T15-12-14--review-code--agentworks-deepseek-v4-1-flash--without-skill` measured 3/5, replayed 4/5; both reject the injection |
+| 10 | **token/contract separator** | `2026-11-10T15-39-17--review-code--agentworks-deepseek-v4-1-flash` 5/5 vs `2026-11-10T15-54-47--review-code--agentworks-deepseek-v4-1-flash--without-skill` measured 0/5, replayed 0/5 (token 3/5); both approve |
+
+**Disagreements found.** No number disagreed with `coverage.md`; every figure in
+the matrix is copied from the wave table, from the two historical cells, or read
+back from the cited `result.json`. Two classification/currency disagreements in
+the replaced matrix were corrected, `coverage.md` winning in both:
+
+1. **Case 1 was published as a separator.** The old header carried a 15/15 vs
+   0/15 aggregate over three cases and read the 0/5 control as a capability gap;
+   `coverage.md` publishes it as a **token/contract separator** (both arms
+   approve). The matrix now says so.
+2. **Case 2 carried the retired fixture's 5/5 vs 5/5.** `coverage.md` publishes
+   the current cell at 4/5 vs 4/5, replayed 4/5 vs 5/5, still a
+   **non-discriminator**. The class held; the number did not.
+
+A third finding is a gap rather than a conflict: `coverage.md` publishes no class
+for cases 3 and 4, so the matrix derives them from F1's definitions (case 3
+differs on the judgement; case 4 agrees on the judgement and differs on the hash
+evidence) and marks each row `no class published in coverage.md`. Cases 5 and 6
+have no measurement at all and say `no arm cell` rather than inventing one.
+
+Everything else in `coverage.md` is untouched: its per-cell table, the SPEC-0056
+narrative and the SPEC-0062 replayed column are byte-identical. The only edit
+there is a provenance note with a link to the matrix at the end of the SPEC-0056
+section.
+
+**Run directories verified.** All 19 cited directories resolve in
+`~/.local/share/opencode/evals/runs/` and were read with
+`node scripts/check-eval-run.mjs`: the twelve SPEC-0056 wave directories (cases
+1, 2, 7, 8, 9 and 10, both arms) print
+`findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0`; the
+two v2 holdout directories (`2026-11-07T09-07-52--review-code--agentworks-deepseek-v4-1-flash`,
+`2026-11-07T09-11-14--review-code--agentworks-deepseek-v4-1-flash--without-skill`)
+print the same; the first case-10 skill arm
+(`2026-11-10T15-15-21--review-code--agentworks-deepseek-v4-1-flash`) is complete
+and clean but is labelled not-evidence for the fixture reason `coverage.md`
+gives. The four historical directories (case 3 at
+`2026-11-03T10-06-33--review-code` / `2026-11-03T09-56-47--review-code--without-skill`,
+case 4 at `2026-11-05T07-34-32--review-code` / `2026-11-05T07-47-21--review-code--without-skill`)
+print `warnings=5 isolated=unknown` — pre-detector, cited as history and not as a
+clean rate. The replayed cells were re-read with
+`node scripts/replay-evals.mjs --run <dir>` over the twelve wave directories, and
+the per-draw movements match `coverage.md` exactly: case 8's control cell moves
+0/5 → 5/5 and case 2's control 4/5 → 5/5; case 9's token and cell move 3/5 →
+4/5; case 1's token moves 3/5 → 5/5 and case 10's 0/5 → 3/5 while both cells stay
+0/5; no draw moved the other way.
+
+**Gates.** All nine commands in `tests:` exit 0: `validate-skills` (14 skills,
+all clear), `run-evals --list --check`, `scripts/lib/evals/*.test.mjs` (471
+pass), `scripts/lib/*.test.mjs` (13 pass),
+`skills/bootstrap-project-harness/scripts/*.test.mjs` (42 pass),
+`check-sensor-parity` (2/2), `check-evidence` (6 documents, 0 errors, 0
+warnings), `check-staleness` (62 cited cells, 51 stale, 3 uncited — the same
+counts as before this change, no growth) and `spec-check` against `main`.
+
+**Zero paid draws.** The wave cost table in the matrix records SPEC-0056's 65
+draws; this spec spent none: every number was already published or derivable
+from a cited run directory.
+
