@@ -1,7 +1,7 @@
 ---
 id: SPEC-0053
 title: A watchdog test that does not race the machine
-status: ready
+status: implemented
 priority: P1
 task: TASK-88
 created_at: 2026-11-10
