@@ -4,6 +4,7 @@ title: 'spike: refinamento localizado sem spec completa (quick-refine)'
 status: To Do
 assignee: []
 created_date: '2026-11-08T00:48:00Z'
+updated_date: '2026-11-10T15:06:00Z'
 labels: []
 dependencies:
   - TASK-56
@@ -17,7 +18,7 @@ ordinal: 57000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Origem: issue #7 (P0, spike), 2026-11-08. Hipotese: um procedimento opcional de refinamento de baixo risco reduz overhead sem relaxar limites de edicao. Bloqueado pela TASK-56: sem corpus discriminativo, o spike nao tem como provar ganho. Se a fatia da 0.7.0 mostrar que implement-from-prompt ja cobre os casos, o spike fecha como 'do not add skill'.
+Origem: issue #7 (P1, spike), 2026-11-08. Hipotese: um procedimento opcional de refinamento de baixo risco reduz overhead sem relaxar limites de edicao. Bloqueado pela TASK-56: sem corpus discriminativo, o spike nao tem como provar ganho. Se a fatia da 0.7.0 mostrar que implement-from-prompt ja cobre os casos, o spike fecha como 'do not add skill'.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

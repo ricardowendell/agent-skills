@@ -4,6 +4,7 @@ title: 'skill: planejamento de mudanca visual ancorado em elemento e design toke
 status: To Do
 assignee: []
 created_date: '2026-11-08T00:48:00Z'
+updated_date: '2026-11-10T15:06:00Z'
 labels: []
 dependencies:
   - TASK-56
@@ -18,7 +19,7 @@ ordinal: 58000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Origem: issue #8 (P1), 2026-11-08. Resolver elemento -> componente/arquivo por evidencia observavel; sem correspondencia, responder unresolved em vez de inventar caminho. Bloqueada pela TASK-56 e pela TASK-61 (oraculo visual): enquanto o runner nao tiver caminho de browser, os casos ficam manuais e isso precisa ser declarado, nao escondido.
+Origem: issue #8 (P2), 2026-11-08. Resolver elemento -> componente/arquivo por evidencia observavel; sem correspondencia, responder unresolved em vez de inventar caminho. Bloqueada pela TASK-56 e pela TASK-61 (oraculo visual): enquanto o runner nao tiver caminho de browser, os casos ficam manuais e isso precisa ser declarado, nao escondido.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

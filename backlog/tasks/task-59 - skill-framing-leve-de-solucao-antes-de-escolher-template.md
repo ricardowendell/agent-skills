@@ -4,6 +4,7 @@ title: 'skill: framing leve de solucao antes de escolher template'
 status: To Do
 assignee: []
 created_date: '2026-11-08T00:48:00Z'
+updated_date: '2026-11-10T15:06:00Z'
 labels: []
 dependencies:
   - TASK-56
@@ -17,7 +18,7 @@ ordinal: 59000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Origem: issue #9 (P1), 2026-11-08. Comparar primeiro com capture-idea, groom-backlog e find-blind-spots: a saida precisa ser um recorte verificavel (problema, persona, resultado observavel, restricoes, hipoteses, duvidas bloqueantes), sem entrevista longa e sem marcar ready. Bloqueada pela TASK-56; se nao houver ganho incremental sobre as skills atuais, a decisao registrada e nao criar.
+Origem: issue #9 (P2), 2026-11-08. Comparar primeiro com capture-idea, groom-backlog e find-blind-spots: a saida precisa ser um recorte verificavel (problema, persona, resultado observavel, restricoes, hipoteses, duvidas bloqueantes), sem entrevista longa e sem marcar ready. Bloqueada pela TASK-56; se nao houver ganho incremental sobre as skills atuais, a decisao registrada e nao criar.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

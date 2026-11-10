@@ -4,7 +4,7 @@ title: 'evals: o eval store e oraculo e nao esta negado nem detectado'
 status: Done
 assignee: []
 created_date: '2026-11-09T17:25:00Z'
-updated_date: '2026-11-10T15:05:00Z'
+updated_date: '2026-11-10T15:07:00Z'
 labels: []
 dependencies: []
 references:
@@ -22,8 +22,8 @@ Descoberto no review da SPEC-0050 (2026-11-09). O controle da groom-backlog #2, 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 O eval store entra no corpus roots e e negado sob enforcement, como as raizes instaladas
-- [ ] #2 Uma leitura do eval store produz finding nomeado de answer key, com ou sem enforcement
-- [ ] #3 Teste cobre os dois estados e uma transcript real que le o store
-- [ ] #4 coverage.md e a regra nomeiam o eval store como corpus
+- [x] #1 O eval store entra no corpus roots e e negado sob enforcement, como as raizes instaladas
+- [x] #2 Uma leitura do eval store produz finding nomeado de answer key, com ou sem enforcement
+- [x] #3 Teste cobre os dois estados e uma transcript real que le o store
+- [x] #4 coverage.md e a regra nomeiam o eval store como corpus
 <!-- AC:END -->

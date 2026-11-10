@@ -1,10 +1,10 @@
 ---
 id: TASK-72
 title: 'evals: re-medir sob o deny layer e reclassificar as skills bloqueadas'
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-11-09T09:05:00Z'
-updated_date: '2026-11-09T17:45:00Z'
+updated_date: '2026-11-10T15:07:00Z'
 labels: []
 dependencies:
   - TASK-71
@@ -45,6 +45,14 @@ created: 2026-11-09T17:45:56.340Z
 ---
 
 Onda concluida em 2026-11-09, fechada via SPEC-0050 (49d1a81) depois de tres halts de harness: SPEC-0046 (boundary), SPEC-0048 (denied != leak) e SPEC-0049/SPEC-0051 (regra enforced e conteudo por caminho). Resultado publicado: tres separadores (process-inbox #1, write-implementation-prompt #1, capture-idea #1), um nao-discriminador (groom-backlog #2) e o #19 separador citado da SPEC-0047. AC-1 marcada com ressalva: os dois controles gravados sob v4 ainda imprimem isolated=no no artefato; o replay sob v5 diz isolated=yes e e a evidencia publicada. Custo: 55 draws no total, sem stall.
+
+---
+
+created: 2026-11-10T15:07:12.299Z
+
+---
+
+Fechada com a SPEC-0050 (implemented, merged): as quatro celulas restantes foram medidas sob o deny layer e a #19 foi medida na SPEC-0047. capture-idea #1, process-inbox #1 e write-implementation-prompt #1 sao separators; groom-backlog #2 e non-discriminator. A SPEC-0051 corrigiu dois falsos positivos por replay e a SPEC-0052 fechou o eval store. Nenhum draw novo nesta task.
 
 ---
 <!-- COMMENTS:END -->

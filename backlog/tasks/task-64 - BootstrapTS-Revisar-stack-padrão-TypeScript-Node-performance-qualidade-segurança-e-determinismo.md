@@ -3,9 +3,10 @@ id: TASK-64
 title: >-
   [Bootstrap][TS] Revisar stack padrão TypeScript/Node: performance, qualidade,
   segurança e determinismo
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-08T09:56:00Z'
+updated_date: '2026-11-10T15:07:00Z'
 labels: []
 dependencies: []
 references:
@@ -43,6 +44,14 @@ created: 2026-11-08T10:01:49.771Z
 ---
 
 Umbrella da issue #12. As fatias sao TASK-65..69, cada uma com spec em docs/specs/active/SPEC-0041..0045 (todas paused; SPEC-0041 e o gate). O pdlc lista TASK-64 em needs_groom porque o umbrella nao tem spec propria, o que e esperado; fecha quando as cinco fatias fecharem. Ordem proposta no docs/roadmap.md.
+
+---
+
+created: 2026-11-10T15:07:12.561Z
+
+---
+
+Umbrella fechada: SPEC-0041-0045 implemented e mergeadas (cd1fb1d), publicadas em 0.6.3. A AC comportamental foi fechada por SPEC-0047/0050 (bootstrap #19 separator 5/5 vs 0/4). Residuais: TASK-87 (#20/#15 assercoes over-strict) e TASK-77 (eval store, Done). O comentario anterior que dizia 0041-0045 'todas paused' e historia.
 
 ---
 <!-- COMMENTS:END -->
