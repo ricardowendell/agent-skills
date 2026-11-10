@@ -1,7 +1,7 @@
 ---
 id: SPEC-0062
 title: The verdict vocabulary is closed to valid forms
-status: ready
+status: implemented
 priority: P1
 task: TASK-91
 created_at: 2026-11-10
