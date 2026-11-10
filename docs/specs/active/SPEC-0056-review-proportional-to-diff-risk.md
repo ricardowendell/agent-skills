@@ -1,7 +1,7 @@
 ---
 id: SPEC-0056
 title: Review proportional to the risk of the diff
-status: ready
+status: implemented
 priority: P1
 task: TASK-80
 created_at: 2026-11-10
