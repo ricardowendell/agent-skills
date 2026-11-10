@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "external_run_id": "ba75acdf-75ee-4c68-b6a3-a28b9f308316",
+  "slug": "SPEC-0055-audit-code-quality-architecture-and-deterministic-checks",
+  "events": [
+    {
+      "stage": "dispatch",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-10T16:25:28.686Z",
+      "ended_at": "2026-11-10T16:25:29.529Z",
+      "duration_ms": 843,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "37fa42b1a26e34d6a1979a2ebce6aeec48381d3f734b99a2646296b6ab8a2240",
+        "head_sha": "cd37169ea873900cac3d85fa662b9b1a2155accb",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "review",
+      "attempt_id": 1,
+      "status": "approved",
+      "started_at": "2026-11-10T17:56:05.781Z",
+      "ended_at": "2026-11-10T17:56:05.865Z",
+      "duration_ms": 84,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "37fa42b1a26e34d6a1979a2ebce6aeec48381d3f734b99a2646296b6ab8a2240",
+        "head_sha": "55f610280eed3ee41b09c0df7f37c5df13f16942",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "verify",
+      "attempt_id": 1,
+      "status": "failed",
+      "started_at": "2026-11-10T17:56:09.512Z",
+      "ended_at": "2026-11-10T17:56:09.609Z",
+      "duration_ms": 97,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "review",
+      "attempt_id": 1,
+      "status": "approved",
+      "started_at": "2026-11-10T17:57:25.064Z",
+      "ended_at": "2026-11-10T17:57:25.141Z",
+      "duration_ms": 77,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "816d3ffe01f3571da263f93bd78e75775245e5873cea241ba0591cd910ca7873",
+        "head_sha": "60eaa2dd9763fa467aec2f48d748b98228cb56b5",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "lint",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-10T17:57:31.150Z",
+      "ended_at": "2026-11-10T17:57:31.216Z",
+      "duration_ms": 66,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "816d3ffe01f3571da263f93bd78e75775245e5873cea241ba0591cd910ca7873",
+        "head_sha": "60eaa2dd9763fa467aec2f48d748b98228cb56b5",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "selftest",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-10T17:57:31.217Z",
+      "ended_at": "2026-11-10T17:57:37.623Z",
+      "duration_ms": 6406,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "816d3ffe01f3571da263f93bd78e75775245e5873cea241ba0591cd910ca7873",
+        "head_sha": "60eaa2dd9763fa467aec2f48d748b98228cb56b5",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "verify",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-10T17:57:31.039Z",
+      "ended_at": "2026-11-10T17:57:37.775Z",
+      "duration_ms": 6736,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "816d3ffe01f3571da263f93bd78e75775245e5873cea241ba0591cd910ca7873",
+        "head_sha": "60eaa2dd9763fa467aec2f48d748b98228cb56b5",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "merge",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-10T17:57:43.609Z",
+      "ended_at": "2026-11-10T17:57:52.370Z",
+      "duration_ms": 8761,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "816d3ffe01f3571da263f93bd78e75775245e5873cea241ba0591cd910ca7873",
+        "head_sha": "60eaa2dd9763fa467aec2f48d748b98228cb56b5",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "audit",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-10T17:57:56.730Z",
+      "ended_at": "2026-11-10T17:57:56.844Z",
+      "duration_ms": 114,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "816d3ffe01f3571da263f93bd78e75775245e5873cea241ba0591cd910ca7873",
+        "head_sha": "60eaa2dd9763fa467aec2f48d748b98228cb56b5",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      },
+      "metrics": {
+        "tokens_in": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_out": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_cache": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "calls": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "cost": {
+          "value": null,
+          "provenance": "unknown"
+        }
+      },
+      "adapter": {
+        "source": "unavailable"
+      }
+    }
+  ]
+}

@@ -10,10 +10,9 @@ source_docs:
   - backlog/tasks/task-80 - review-review-code-proporcional-ao-risco-do-diff-issue-15.md
   - https://github.com/ricardowendell/agent-skills/issues/15
   - skills/review-code/references/evals.md
-  - docs/specs/active/SPEC-0055-audit-code-quality-architecture-and-deterministic-checks.md
+  - docs/specs/SPEC-0055-audit-code-quality-architecture-and-deterministic-checks.md
 related_decisions: []
-depends_on:
-  - SPEC-0055-audit-code-quality-architecture-and-deterministic-checks
+depends_on: []
 blocks: []
 files:
   - skills/review-code/SKILL.md

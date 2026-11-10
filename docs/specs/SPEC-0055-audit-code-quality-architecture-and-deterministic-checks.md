@@ -13,8 +13,7 @@ source_docs:
   - skills/audit-code-quality/references/evals.md
 related_decisions: []
 depends_on: []
-blocks:
-  - SPEC-0056-review-proportional-to-diff-risk
+blocks: []
 files:
   - skills/audit-code-quality/SKILL.md
   - skills/audit-code-quality/references/architecture.md
@@ -31,7 +30,7 @@ files:
   - skills/audit-code-quality/references/evals/9/git.json
   - docs/evals/coverage.md
   - CHANGELOG.md
-  - docs/specs/active/SPEC-0055-audit-code-quality-architecture-and-deterministic-checks.md
+  - docs/specs/SPEC-0055-audit-code-quality-architecture-and-deterministic-checks.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check
@@ -40,7 +39,7 @@ tests:
   - node --test skills/bootstrap-project-harness/scripts/*.test.mjs
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0055-audit-code-quality-architecture-and-deterministic-checks.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0055-audit-code-quality-architecture-and-deterministic-checks.md --base main
 ---
 
 # SPEC-0055: Audit architecture with deep modules and deterministic slots
@@ -245,7 +244,7 @@ Gates, all eight `tests:` commands from the worktree root:
 - `node scripts/check-sensor-parity.mjs` — 2/2 fixtures in parity, exit 0.
 - `node scripts/check-evidence.mjs` — 0 errors; the 99 warnings are the existing
   dirty-run citations already in `docs/evals/`.
-- `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0055-audit-code-quality-architecture-and-deterministic-checks.md --base main`
+- `node scripts/spec-check.mjs --spec docs/specs/SPEC-0055-audit-code-quality-architecture-and-deterministic-checks.md --base main`
   — 0 errors on the committed diff.
 
 Acceptance criteria: 1–5 and 7 are met. AC-6's read-only and no-install clauses
