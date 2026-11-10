@@ -7,8 +7,8 @@ spec_sha: 7bb28b503b11043ddf1cf624901489367ca67da0ca7c41a49f841ab78c9b35fc
 
 ## Source Spec
 
-- `docs/specs/active/SPEC-0048-a-denied-read-is-not-a-leak.md` (pin `7bb28b50…`)
-- Prerequisite: `docs/specs/active/SPEC-0046-deny-control-arm-corpus.md` (implemented)
+- `docs/specs/SPEC-0048-a-denied-read-is-not-a-leak.md` (pin `7bb28b50…`)
+- Prerequisite: `docs/specs/SPEC-0046-deny-control-arm-corpus.md` (implemented)
 - Blocked by this: `docs/specs/active/SPEC-0047-remeasure-under-deny-layer.md` (paused)
 
 ## Requirements

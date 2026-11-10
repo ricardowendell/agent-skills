@@ -7,7 +7,7 @@ spec_sha: 9790e0423d8b1f2e68110d8461ac17ca35780bdd68d2a6720fb0289771bc06cb
 
 ## Source Spec
 
-- `docs/specs/active/SPEC-0049-a-corpus-hit-under-enforcement-is-a-denied-attempt.md` (pin `9790e042…`)
+- `docs/specs/SPEC-0049-a-corpus-hit-under-enforcement-is-a-denied-attempt.md` (pin `9790e042…`)
 - Prerequisites: `SPEC-0046` (boundary, implemented), `SPEC-0048` (denied split, implemented)
 - Unblocks: `SPEC-0047` (paused at its second F0.1)
 

@@ -10,7 +10,7 @@ source_docs:
   - backlog/tasks/task-71 - evals-negar-a-skill-instalada-na-arm-de-controle-deny-layer.md
   - docs/evals/coverage.md
   - docs/roadmap.md
-  - docs/specs/active/SPEC-0045-stack-review-evals.md
+  - docs/specs/SPEC-0045-stack-review-evals.md
 related_decisions: []
 depends_on: []
 blocks:
@@ -36,7 +36,7 @@ files:
   - docs/evals/coverage.md
   - docs/roadmap.md
   - CHANGELOG.md
-  - docs/specs/active/SPEC-0046-deny-control-arm-corpus.md
+  - docs/specs/SPEC-0046-deny-control-arm-corpus.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check
@@ -45,7 +45,7 @@ tests:
   - node --test skills/bootstrap-project-harness/scripts/*.test.mjs
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0046-deny-control-arm-corpus.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0046-deny-control-arm-corpus.md --base main
 ---
 
 # SPEC-0046: Deny the control arm the installed corpus

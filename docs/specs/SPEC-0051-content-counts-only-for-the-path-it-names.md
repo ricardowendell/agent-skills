@@ -9,8 +9,8 @@ updated_at: 2026-11-09
 source_docs:
   - backlog/tasks/task-76 - evals-conteudo-so-conta-para-o-caminho-que-ele-nomeia.md
   - docs/evals/coverage.md
-  - docs/specs/active/SPEC-0049-a-corpus-hit-under-enforcement-is-a-denied-attempt.md
-  - docs/specs/active/SPEC-0050-measure-the-four-remaining-cells.md
+  - docs/specs/SPEC-0049-a-corpus-hit-under-enforcement-is-a-denied-attempt.md
+  - docs/specs/SPEC-0050-measure-the-four-remaining-cells.md
 related_decisions: []
 depends_on:
   - SPEC-0049-a-corpus-hit-under-enforcement-is-a-denied-attempt
@@ -22,7 +22,7 @@ files:
   - scripts/lib/evals/leak.test.mjs
   - docs/evals/coverage.md
   - CHANGELOG.md
-  - docs/specs/active/SPEC-0051-content-counts-only-for-the-path-it-names.md
+  - docs/specs/SPEC-0051-content-counts-only-for-the-path-it-names.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check
@@ -31,7 +31,7 @@ tests:
   - node --test skills/bootstrap-project-harness/scripts/*.test.mjs
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0051-content-counts-only-for-the-path-it-names.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0051-content-counts-only-for-the-path-it-names.md --base main
 ---
 
 # SPEC-0051: Content counts only for the path it names

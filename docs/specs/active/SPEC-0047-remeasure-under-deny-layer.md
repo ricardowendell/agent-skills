@@ -9,8 +9,8 @@ updated_at: 2026-11-09
 source_docs:
   - backlog/tasks/task-72 - evals-re-medir-sob-o-deny-layer-e-reclassificar-as-skills-bloqueadas.md
   - docs/evals/coverage.md
-  - docs/specs/active/SPEC-0045-stack-review-evals.md
-  - docs/specs/active/SPEC-0046-deny-control-arm-corpus.md
+  - docs/specs/SPEC-0045-stack-review-evals.md
+  - docs/specs/SPEC-0046-deny-control-arm-corpus.md
 related_decisions: []
 depends_on:
   - SPEC-0046-deny-control-arm-corpus

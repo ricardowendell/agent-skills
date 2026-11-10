@@ -7,7 +7,7 @@ spec_sha: 2b34ad0b1085d47c4000ed068a66e8a3787958aba45fc0288228fb9de17a03b2
 
 ## Source Spec
 
-- `docs/specs/active/SPEC-0050-measure-the-four-remaining-cells.md` (pin `2b34ad0b…`)
+- `docs/specs/SPEC-0050-measure-the-four-remaining-cells.md` (pin `2b34ad0b…`)
 - Prerequisites: SPEC-0046, SPEC-0048, SPEC-0049 (all implemented)
 - Predecessor: `docs/specs/active/SPEC-0047-remeasure-under-deny-layer.md` (#19 measured there; paused)
 

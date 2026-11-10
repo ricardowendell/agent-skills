@@ -7,10 +7,10 @@ spec_sha: 7226cbab7c8342181a2771fe94a64eade62fb02b7eb8248c4cffb572ff10b608
 
 ## Source Spec
 
-- `docs/specs/active/SPEC-0046-deny-control-arm-corpus.md` (pin `7226cbab…`)
+- `docs/specs/SPEC-0046-deny-control-arm-corpus.md` (pin `7226cbab…`)
 
 Related: `docs/evals/coverage.md`, `docs/roadmap.md`,
-`docs/specs/active/SPEC-0045-stack-review-evals.md` (the measurement that exposed
+`docs/specs/SPEC-0045-stack-review-evals.md` (the measurement that exposed
 the block), TASK-43 (the detector half, `Done`).
 
 ## Requirements

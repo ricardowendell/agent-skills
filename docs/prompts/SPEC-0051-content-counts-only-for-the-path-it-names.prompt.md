@@ -7,7 +7,7 @@ spec_sha: 206c2ec2f41412dd5ca86f0d9eedd6f8b86adc5b24ff90fe9f2e5a97420a4c31
 
 ## Source Spec
 
-- `docs/specs/active/SPEC-0051-content-counts-only-for-the-path-it-names.md` (pin `206c2ec2…`)
+- `docs/specs/SPEC-0051-content-counts-only-for-the-path-it-names.md` (pin `206c2ec2…`)
 - Prerequisite: SPEC-0049 (implemented)
 - Blocks: SPEC-0050 (its branch is alive; it publishes the two verdicts)
 

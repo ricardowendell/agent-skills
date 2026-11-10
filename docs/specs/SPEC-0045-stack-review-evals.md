@@ -11,7 +11,7 @@ source_docs:
   - backlog/tasks/task-69 - stack-evals-e-documentação-do-stack-review.md
   - skills/bootstrap-project-harness/references/evals.md
   - docs/evals/coverage.md
-  - docs/specs/active/SPEC-0041-typescript-stack-decision.md
+  - docs/specs/SPEC-0041-typescript-stack-decision.md
 related_decisions: []
 depends_on:
   - SPEC-0041-typescript-stack-decision
@@ -67,7 +67,7 @@ files:
   - skills/bootstrap-project-harness/references/evals/23/tsconfig.json
   - docs/evals/coverage.md
   - CHANGELOG.md
-  - docs/specs/active/SPEC-0045-stack-review-evals.md
+  - docs/specs/SPEC-0045-stack-review-evals.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check
@@ -76,7 +76,7 @@ tests:
   - node --test skills/bootstrap-project-harness/scripts/*.test.mjs
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0045-stack-review-evals.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0045-stack-review-evals.md --base main
 ---
 
 # SPEC-0045: Measure and publish the stack review

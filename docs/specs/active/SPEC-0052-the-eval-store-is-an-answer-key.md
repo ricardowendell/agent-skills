@@ -9,10 +9,10 @@ updated_at: 2026-11-09
 source_docs:
   - backlog/tasks/task-77 - evals-o-eval-store-e-oraculo-e-nao-esta-negado-nem-detectado.md
   - docs/evals/coverage.md
-  - docs/specs/active/SPEC-0046-deny-control-arm-corpus.md
-  - docs/specs/active/SPEC-0049-a-corpus-hit-under-enforcement-is-a-denied-attempt.md
-  - docs/specs/active/SPEC-0051-content-counts-only-for-the-path-it-names.md
-  - docs/specs/active/SPEC-0050-measure-the-four-remaining-cells.md
+  - docs/specs/SPEC-0046-deny-control-arm-corpus.md
+  - docs/specs/SPEC-0049-a-corpus-hit-under-enforcement-is-a-denied-attempt.md
+  - docs/specs/SPEC-0051-content-counts-only-for-the-path-it-names.md
+  - docs/specs/SPEC-0050-measure-the-four-remaining-cells.md
 related_decisions: []
 depends_on:
   - SPEC-0046-deny-control-arm-corpus

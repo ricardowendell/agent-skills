@@ -10,7 +10,7 @@ source_docs:
   - https://github.com/ricardowendell/agent-skills/issues/12
   - backlog/tasks/task-66 - stack-SKILL-detecta-e-preserva-a-stack-existente.md
   - skills/bootstrap-project-harness/SKILL.md
-  - docs/specs/active/SPEC-0041-typescript-stack-decision.md
+  - docs/specs/SPEC-0041-typescript-stack-decision.md
 related_decisions: []
 depends_on:
   - SPEC-0041-typescript-stack-decision
@@ -18,7 +18,7 @@ blocks:
   - SPEC-0045-stack-review-evals
 files:
   - skills/bootstrap-project-harness/SKILL.md
-  - docs/specs/active/SPEC-0042-preserve-existing-stack.md
+  - docs/specs/SPEC-0042-preserve-existing-stack.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check
@@ -27,7 +27,7 @@ tests:
   - node --test skills/bootstrap-project-harness/scripts/*.test.mjs
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0042-preserve-existing-stack.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0042-preserve-existing-stack.md --base main
 ---
 
 # SPEC-0042: Detect and preserve an existing TypeScript stack

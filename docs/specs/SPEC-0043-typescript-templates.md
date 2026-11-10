@@ -10,7 +10,7 @@ source_docs:
   - https://github.com/ricardowendell/agent-skills/issues/12
   - backlog/tasks/task-67 - stack-templates-TS-alinhados-à-decisão.md
   - skills/bootstrap-project-harness/templates/ts
-  - docs/specs/active/SPEC-0041-typescript-stack-decision.md
+  - docs/specs/SPEC-0041-typescript-stack-decision.md
 related_decisions: []
 depends_on:
   - SPEC-0041-typescript-stack-decision
@@ -47,7 +47,7 @@ files:
   - skills/bootstrap-project-harness/templates/ts/tsconfig.build.json.template
   - skills/bootstrap-project-harness/templates/ts/tsconfig.json.template
   - skills/bootstrap-project-harness/scripts/harness-state.mjs
-  - docs/specs/active/SPEC-0043-typescript-templates.md
+  - docs/specs/SPEC-0043-typescript-templates.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check
@@ -56,7 +56,7 @@ tests:
   - node --test skills/bootstrap-project-harness/scripts/*.test.mjs
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0043-typescript-templates.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0043-typescript-templates.md --base main
 ---
 
 # SPEC-0043: Make the TypeScript templates implement the stack decision

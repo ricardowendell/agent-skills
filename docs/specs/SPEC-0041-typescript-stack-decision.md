@@ -20,7 +20,7 @@ blocks:
   - SPEC-0045-stack-review-evals
 files:
   - skills/bootstrap-project-harness/references/typescript.md
-  - docs/specs/active/SPEC-0041-typescript-stack-decision.md
+  - docs/specs/SPEC-0041-typescript-stack-decision.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check
@@ -29,7 +29,7 @@ tests:
   - node --test skills/bootstrap-project-harness/scripts/*.test.mjs
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0041-typescript-stack-decision.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0041-typescript-stack-decision.md --base main
 ---
 
 # SPEC-0041: Decide the default TypeScript/Node stack with reproducible numbers
@@ -374,4 +374,4 @@ audit was tested offline); monorepos larger than two packages.
 - `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` — pass (17 tests)
 - `node scripts/check-sensor-parity.mjs` — pass (2/2 fixtures in parity)
 - `node scripts/check-evidence.mjs` — pass, exit 0 (8 documents, 0 errors, 97 pre-existing warnings in `docs/evals/write-implementation-prompt-matrix.md`)
-- `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0041-typescript-stack-decision.md --base main` — pass (contract holds)
+- `node scripts/spec-check.mjs --spec docs/specs/SPEC-0041-typescript-stack-decision.md --base main` — pass (contract holds)

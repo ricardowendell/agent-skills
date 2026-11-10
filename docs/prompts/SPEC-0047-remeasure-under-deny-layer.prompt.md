@@ -8,7 +8,7 @@ spec_sha: 62354bf96f33b213b168d8f06d1288c738ceef30e0b36cddbc191fbebb7c947f
 ## Source Spec
 
 - `docs/specs/active/SPEC-0047-remeasure-under-deny-layer.md` (pin `62354bf9…`)
-- Prerequisite: `docs/specs/active/SPEC-0046-deny-control-arm-corpus.md` (implemented)
+- Prerequisite: `docs/specs/SPEC-0046-deny-control-arm-corpus.md` (implemented)
 - Inventory: `docs/evals/coverage.md`
 
 ## Requirements

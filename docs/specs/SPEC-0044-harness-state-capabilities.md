@@ -10,8 +10,8 @@ source_docs:
   - https://github.com/ricardowendell/agent-skills/issues/12
   - backlog/tasks/task-68 - stack-harness-state-por-capacidades-e-slots.md
   - skills/bootstrap-project-harness/scripts/harness-state.mjs
-  - docs/specs/active/SPEC-0041-typescript-stack-decision.md
-  - docs/specs/active/SPEC-0043-typescript-templates.md
+  - docs/specs/SPEC-0041-typescript-stack-decision.md
+  - docs/specs/SPEC-0043-typescript-templates.md
 related_decisions: []
 depends_on:
   - SPEC-0041-typescript-stack-decision
@@ -22,7 +22,7 @@ files:
   - skills/bootstrap-project-harness/scripts/harness-state.mjs
   - skills/bootstrap-project-harness/scripts/harness-state.test.mjs
   - skills/bootstrap-project-harness/SKILL.md
-  - docs/specs/active/SPEC-0044-harness-state-capabilities.md
+  - docs/specs/SPEC-0044-harness-state-capabilities.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check
@@ -31,7 +31,7 @@ tests:
   - node --test skills/bootstrap-project-harness/scripts/*.test.mjs
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0044-harness-state-capabilities.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0044-harness-state-capabilities.md --base main
 ---
 
 # SPEC-0044: Check capabilities, not fixed file names, in harness-state

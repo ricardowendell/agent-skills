@@ -10,7 +10,7 @@ source_docs:
   - backlog/tasks/task-75 - evals-medir-as-quatro-celulas-restantes-do-corpus-bloqueado.md
   - docs/evals/coverage.md
   - docs/specs/active/SPEC-0047-remeasure-under-deny-layer.md
-  - docs/specs/active/SPEC-0049-a-corpus-hit-under-enforcement-is-a-denied-attempt.md
+  - docs/specs/SPEC-0049-a-corpus-hit-under-enforcement-is-a-denied-attempt.md
 related_decisions: []
 depends_on:
   - SPEC-0046-deny-control-arm-corpus
@@ -21,7 +21,7 @@ blocks: []
 files:
   - docs/evals/coverage.md
   - CHANGELOG.md
-  - docs/specs/active/SPEC-0050-measure-the-four-remaining-cells.md
+  - docs/specs/SPEC-0050-measure-the-four-remaining-cells.md
   - backlog/tasks/task-70 - evals-medir-e-publicar-a-cobertura-da-report-project-status-issue-11.md
 tests:
   - node scripts/validate-skills.mjs --root skills
@@ -31,7 +31,7 @@ tests:
   - node --test skills/bootstrap-project-harness/scripts/*.test.mjs
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0050-measure-the-four-remaining-cells.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0050-measure-the-four-remaining-cells.md --base main
 ---
 
 # SPEC-0050: Measure the four remaining blocked cells

@@ -9,7 +9,7 @@ updated_at: 2026-11-09
 source_docs:
   - backlog/tasks/task-73 - evals-distinguir-leitura-negada-de-leak-no-detector.md
   - docs/evals/coverage.md
-  - docs/specs/active/SPEC-0046-deny-control-arm-corpus.md
+  - docs/specs/SPEC-0046-deny-control-arm-corpus.md
   - docs/specs/active/SPEC-0047-remeasure-under-deny-layer.md
 related_decisions: []
 depends_on:
@@ -32,7 +32,7 @@ files:
   - scripts/replay-evals.mjs
   - docs/evals/coverage.md
   - CHANGELOG.md
-  - docs/specs/active/SPEC-0048-a-denied-read-is-not-a-leak.md
+  - docs/specs/SPEC-0048-a-denied-read-is-not-a-leak.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check
@@ -41,7 +41,7 @@ tests:
   - node --test skills/bootstrap-project-harness/scripts/*.test.mjs
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0048-a-denied-read-is-not-a-leak.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0048-a-denied-read-is-not-a-leak.md --base main
 ---
 
 # SPEC-0048: A denied read is not a leak

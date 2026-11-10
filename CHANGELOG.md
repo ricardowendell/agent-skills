@@ -47,7 +47,7 @@ skills, which cases, and which published measurements.
   `2026-11-09T12-55-35--groom-backlog--…--without-skill` go from
   `findings=1`/`findings=2` and `isolated=no` to five clean draws each with
   `isolated=yes`; the cell verdicts are SPEC-0050's. Source:
-  `docs/specs/active/SPEC-0051-content-counts-only-for-the-path-it-names.md`.
+  `docs/specs/SPEC-0051-content-counts-only-for-the-path-it-names.md`.
 - **The four remaining blocked cells are measured under the enforced boundary
   (SPEC-0050, TASK-75).** Five draws per arm, `agentworks/deepseek-v4-1-flash`;
   every manifest records `params.isolation.enforced: true`. Three cells separate:
@@ -68,7 +68,7 @@ skills, which cases, and which published measurements.
   `bootstrap-project-harness` #19 is cited from SPEC-0047, not re-run: 5/5 vs
   1/5, a separator on the rule, with the same artefact-vs-replay caveat. No rate
   is recomputed and no oracle, fixture or `why:` line changed. Source:
-  `docs/specs/active/SPEC-0050-measure-the-four-remaining-cells.md`.
+  `docs/specs/SPEC-0050-measure-the-four-remaining-cells.md`.
 - **A corpus hit under enforcement is a denied attempt (SPEC-0049, TASK-74).**
   The eval detector now receives the run's enforcement state, and under
   `params.isolation.enforced: true` a corpus hit that returned nothing for the
@@ -89,7 +89,7 @@ skills, which cases, and which published measurements.
   `isolated=yes`, and the v2 with-skill run
   `2026-11-09T07-37-44--bootstrap-project-harness--…` goes from
   `isolated=unknown` to `isolated=yes` with zero findings. Source:
-  `docs/specs/active/SPEC-0049-a-corpus-hit-under-enforcement-is-a-denied-attempt.md`.
+  `docs/specs/SPEC-0049-a-corpus-hit-under-enforcement-is-a-denied-attempt.md`.
 - **A denied read is not a leak (SPEC-0048, TASK-73).** The eval detector now
   classifies a corpus path whose call output shows a permission denial for that
   path as `denied` instead of `leak`/`host` (detector v3,
@@ -103,7 +103,7 @@ skills, which cases, and which published measurements.
   `skillLeaks=3 hostReads=1 contaminated=3` to zero leaks/hosts, three denied
   draws and five clean draws, while the with-skill run stays clean. Re-judging is
   `node scripts/replay-evals.mjs --leaks <run-dir>`. Source:
-  `docs/specs/active/SPEC-0048-a-denied-read-is-not-a-leak.md`.
+  `docs/specs/SPEC-0048-a-denied-read-is-not-a-leak.md`.
 - **The control arm is denied the installed corpus (SPEC-0046, TASK-71).** The
   eval runner now probes whether the host can deny corpus reads below the tool
   layer, and on macOS launches the child under a seatbelt profile that denies the
@@ -118,7 +118,7 @@ skills, which cases, and which published measurements.
   succeed), so the layer cannot pass vacuously. Manifests written before this
   change carry no record and keep the old `isolated=yes` rule. No model call: the
   probe is a PATH lookup and the canary is a local read. Source:
-  `docs/specs/active/SPEC-0046-deny-control-arm-corpus.md`.
+  `docs/specs/SPEC-0046-deny-control-arm-corpus.md`.
 - **`report-project-status`** — one-page project status: git/PR state delegated
   to `survey-inflight-work`, open GitHub issues, backlog and spec readiness, CI
   health, and at most three next steps. Read-only. Three trigger and near-miss
