@@ -94,6 +94,33 @@ machine load.
 4. All eight `tests:` commands pass.
 5. No paid draw and no new dependency.
 
+## Results
+
+**F0 — reproduced, source not isolated.** The original failure is the 301 ms gap
+against the 300 ms window observed under load during the SPEC-0052 verify
+(TASK-88). In the worker reproduction the old shape failed under a 350 ms block
+of the parent event loop (`stalled` at 352 ms, no events observed). A separate
+reviewer run that blocked the parent for 2000 ms did not reproduce it, so the
+exact source of the gap — a slip in the child `setInterval` or parent
+scheduling — is not isolated. The rewrite therefore does not depend on a claimed
+cause: it keeps a 15x margin between pacing and window and runs for three
+windows.
+
+**F1 — rewritten test.** `stallMs = 1500`, child gap 100 ms, 45 ticks,
+`timeoutMs = 15000`. It asserts a clean exit, `durationMs > 2 * stallMs`, and at
+least `ticks / 2` events observed.
+
+**F2 — proof.**
+
+- 10/10 consecutive `node --test scripts/lib/evals/*.test.mjs` runs under load
+  ~43 (24 busy loops) in the worker.
+- 15/15 under load ~34 in the independent review.
+
+**Mutation.** Shrinking the window 20x (`stallMs = 75`) makes the unchanged test
+fail with `stalled`, so the assertions are not vacuous.
+
+**Gates.** All eight `tests:` commands pass; `pdlc preflight` passes.
+
 ## Open Questions
 
 - **Handshake or clock seam?** The handshake is local to the test and proves the

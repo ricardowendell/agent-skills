@@ -60,14 +60,14 @@ test("a stream with no events is killed as stalled, distinct from timeout", asyn
 })
 
 test("a slow but live stream resets the watchdog and survives", async () => {
-  // The watchdog measures the time since the last output chunk. A producer paced
-  // close to the window loses that race on a loaded host: when the parent event
-  // loop is starved, Node drains expired timers before the pending stdout reads,
-  // so the watchdog sees a gap for events the parent had not read yet (the 301ms
-  // failure against a 300ms window). A handshake cannot fix that ordering, and
-  // `runAgent` exposes no clock seam. Keep the pacing well below the window and
-  // run for several windows instead, so the test still proves the reset: a
-  // stream that emitted only at the start would die at the first idle window.
+  // A 301ms gap against a 300ms window was observed under load during the
+  // SPEC-0052 verify (TASK-88). The exact source was not isolated: a slip in the
+  // child's 30ms interval and parent scheduling are both plausible, and the
+  // watchdog only sees chunks the parent has read. The old shape left no margin
+  // for that. Keep the pacing well below the window and run for several windows
+  // instead, so the test still proves the reset: a stream that emitted only at
+  // the start would die at the first idle window. `runAgent` exposes no clock
+  // seam, so there is no smaller deterministic lever to pull.
   const stallMs = 1500
   const gapMs = 100
   const ticks = Math.ceil((stallMs * 3) / gapMs)
