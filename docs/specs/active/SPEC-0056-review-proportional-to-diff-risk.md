@@ -192,12 +192,23 @@ deniedDraws=0`; the run directories are in `docs/evals/coverage.md`.
 
 | Case | Skill arm | Control arm | Result |
 | --- | --- | --- | --- |
-| 8 — interface break, green suite | 5/5 | 0/5 | separator, keep |
-| 9 — introduced injection | 5/5 | 3/5 | separator, keep |
-| 10 — correct retry, no blocking | 5/5 (fixed fixture) | not run | unresolved control, change + keep |
+| 8 — interface break, green suite | 5/5 | 0/5 | token/contract separator; both reject substantively, keep |
+| 9 — introduced injection | 5/5 | 3/5 | token/contract separator; both reject substantively, keep |
+| 10 — correct retry, no blocking | 5/5 (fixed fixture) | 0/5 | token/contract separator; both approve substantively, keep |
 | 1 — clean diff regression | 5/5 | 0/5 | separator, keep |
 | 2 — rounding defect regression | 4/5 | 4/5 | non-discriminator, keep |
 | 7 — red-gate holdout | 5/5 | 0/5 | separator, keep |
+
+Cases 8 and 9 are token/contract separators, not substantive ones: the control
+rejects the interface break and the injection in prose 5/5, but the `verdict`
+assertion's closed stance vocabulary does not accept `changes requested` or
+`needs changes`, so it scores 0/5; case 9's control scores 3/5 because r3/r4
+emit prose after the label. Case 10's fixed skill arm is 5/5. Its control
+(`2026-11-10T15-54-47--review-code--agentworks-deepseek-v4-1-flash--without-skill`)
+is 5/5 clean and 0/5 passed: it approves the same correct retry in prose 5/5 but
+emits no `VERDICT: APPROVE` and no `Not verified` section. The same
+classification applies: token/contract separator, non-discriminator on the
+substantive judgement.
 
 Case 10's first skill arm
 (`2026-11-10T15-15-21--review-code--agentworks-deepseek-v4-1-flash`) is **not
@@ -206,10 +217,23 @@ prove AC-2's delay schedule or AC-3's defaults and non-integer inputs. The
 fixture was strengthened (an injected `sleep` seam and tests for `[10, 20, 40]`,
 `[100, 200]`, the defaults and `1.5`/`2.5`), and the arm re-measured at
 `2026-11-10T15-39-17--review-code--agentworks-deepseek-v4-1-flash` (5/5). No
-`expect:` line or assertion was changed and the bar was not lowered. The control
-was not run because the 60-draw ceiling was reached; it is published as
-`unresolved`, not as a separator.
+`expect:` line or assertion was changed and the bar was not lowered.
 
-Paid draws: 60 (55 evidence + 5 invalid setup). Decisions: `keep` for 8, 9, 1, 2
-and 7; `change` for 10 (fixture strengthened) and keep it with its control
-unresolved. No case was dropped. All eight `tests:` commands pass.
+Paid draws: 65 — 55 evidence draws + 5 invalid setup draws + 5 case-10 control
+draws. The human approved the extra 5 above the original 60 ceiling to close the
+control. Decisions: `keep` for 8, 9, 1, 2 and 7; `change` for 10 (the
+fixture was strengthened before the fixed arm) and keep it. No case was dropped
+and no case is unresolved. All eight `tests:` commands pass.
+
+### Known holes
+
+- The `verdict` stance vocabulary is closed: it accepts
+  `request changes`/`reject` and `approve`, but not `changes requested`,
+  `needs changes` or `one blocking defect`. The control arms of cases 8 and 9
+  reject in prose 5/5 and still score 0/5 and 3/5 on the token; case 10's control
+  approves in prose 5/5 and scores 0/5 because it emits no `VERDICT: APPROVE` or
+  `Not verified`. The red is the contract token, not the substantive judgement.
+- Cases 3–6 were **not** re-measured at `skillHash 9a28572…`. Their published
+  cells in `docs/evals/coverage.md` are historical at older hashes and are not a
+  claim of green at this hash. The wave evidences cases 1, 2 and 7 at the new
+  hash, alongside the new cases 8–10.

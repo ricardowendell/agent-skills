@@ -43,17 +43,23 @@ skills, which cases, and which published measurements.
 - **SPEC-0056 wave, five draws per arm on `agentworks/deepseek-v4-1-flash`.**
   Cases 8, 9 and 10 plus regressions 1, 2 and 7; every cited cell is
   `findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0`
-  under detector v6. Case 8 (interface break, green suite) separates **5/5 vs
-  0/5**; case 9 (introduced injection) separates **5/5 vs 3/5**; case 10's fixed
-  skill arm is **5/5** and its control is **unresolved** because the 60-draw
-  ceiling was reached; regression #1 separates **5/5 vs 0/5**, #2 stays a
+  under detector v6. Cases 8 and 9 are **token/contract separators**: both arms
+  reject the interface break / injection in prose 5/5, but the control scores
+  0/5 and 3/5 because the `verdict` stance vocabulary misses `changes
+  requested`/`needs changes` (and, in #9, r3/r4 emit prose after the label).
+  They are non-discriminators on the substantive judgement. Case 10's fixed skill
+  arm is **5/5**; its control is 5/5 clean and **0/5** passed — it approves the
+  same correct retry in prose 5/5 but emits no `VERDICT: APPROVE` and no `Not
+  verified`, so #10 is the same token/contract separator and a non-discriminator
+  on judgement. Regression #1 separates **5/5 vs 0/5**, #2 stays a
   **non-discriminator** (4/5 vs 4/5), and the #7 holdout is **5/5 vs 0/5**. Case
   10's first skill arm (5 draws) correctly blocked a fixture whose tests did not
   prove AC-2's delay or AC-3's defaults/non-integer inputs; the fixture was
   strengthened and the arm re-run, with no `expect:` or assertion changed. The
-  wave spent 60 paid draws (55 evidence + 5 invalid setup). Decisions: `keep`
-  for #8, #9, #1, #2 and #7; `change` for #10 and keep the case with its control
-  unresolved. Run directories are in `docs/evals/coverage.md`.
+  wave spent 65 paid draws: 55 evidence + 5 invalid setup + 5 case-10 control,
+  with the human approving the extra 5 above the original 60 ceiling. Decisions: `keep` for #8, #9, #1, #2 and #7; `change` for #10 (fixture
+  strengthened) and keep it. #3–#6 were not re-measured at `skillHash 9a28572…`;
+  their cells are historical. Run directories are in `docs/evals/coverage.md`.
 - **SPEC-0055 wave, five draws per arm on `agentworks/deepseek-v4-1-flash`.**
   Cases 5–9 were run with and without the skill; every published cell is
   `findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0`

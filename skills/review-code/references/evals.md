@@ -35,7 +35,7 @@ Format: `- prompt:` (the only text sent to the agent), `- why:` (never sent), `-
 2. **Review this branch.**
    - prompt: Review this branch.
    - tags: regression
-   - why: rounding is applied to the subtotal, so the returned total still carries float noise (`19.99 × 1.0825` → `21.639174999999998`), and the added test asserts that noisy value. Not a matrix case: measured 5/5 in both arms, because a defect visible in the code is caught with or without the skill. It stays as a regression case — it fails a reviewer that misses an obvious AC violation, or one that approves because the suite is green.
+   - why: rounding is applied to the subtotal, so the returned total still carries float noise (`19.99 × 1.0825` → `21.639174999999998`), and the added test asserts that noisy value. It measured 5/5 in both arms on the earlier fixture; the SPEC-0056 wave measured 4/5 vs 4/5 (the skill's r4 produced no final reply, so no `VERDICT:` line) and it remains a non-discriminator. It stays as a regression case — it fails a reviewer that misses an obvious AC violation, or one that approves because the suite is green.
    - expect: Returns `VERDICT: REJECT`.
    - expect: Names AC-2 as `blocking`, with `file:line`, and says the rounding happens before tax instead of on the returned total.
    - expect: Treats the green suite as insufficient — cites the test that encodes the noise instead of counting it as proof.

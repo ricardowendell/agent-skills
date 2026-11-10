@@ -375,18 +375,19 @@ v6 `9149d6ab1ca57343`, level `behavior`. Every cited manifest records
 `params.isolation.enforced: true` (seatbelt), and `check-eval-run` on each
 directory prints `findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes
 deniedDraws=0`. "Clean draws" is the non-contaminated count; "passed" is the
-assertion count. New cases 8–10 plus regression cases 1, 2 and 7; 60 paid draws,
-the authorised ceiling (55 evidence draws plus 5 draws of an invalid case-10
-setup attempt).
+assertion count. New cases 8–10 plus regression cases 1, 2 and 7: **65 paid
+draws** — 55 evidence draws, 5 draws of an invalid case-10 setup attempt, and
+the 5 case-10 control draws. The human approved the extra 5 draws above the
+original 60 ceiling to close the case-10 control.
 
 | case | arm | run directory | clean draws | passed | red assertion(s) | verdict |
 | --- | --- | --- | --- | --- | --- | --- |
-| #8 | with-skill | `2026-11-10T15-02-35--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | **separator** (5/5 vs 0/5), keep |
-| #8 | control | `2026-11-10T15-05-54--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `verdict REJECT` | **separator** |
-| #9 | with-skill | `2026-11-10T15-08-51--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | **separator** (5/5 vs 3/5), keep |
-| #9 | control | `2026-11-10T15-12-14--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 3/5 | `verdict REJECT`, `reply src/export\.js:[0-9]+` (r3, r4) | **separator** |
-| #10 | with-skill (fixed fixture) | `2026-11-10T15-39-17--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | **unresolved control**, change + keep |
-| #10 | control | not run — ceiling reached | — | — | — | **unresolved** |
+| #8 | with-skill | `2026-11-10T15-02-35--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | **token/contract separator**; substantive judgement matches (both reject), keep |
+| #8 | control | `2026-11-10T15-05-54--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `verdict REJECT` (the control rejects in prose 5/5; the token misses `changes requested`/`needs changes`) | **token/contract separator**, non-discriminator on judgement |
+| #9 | with-skill | `2026-11-10T15-08-51--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | **token/contract separator**; substantive judgement matches (both reject), keep |
+| #9 | control | `2026-11-10T15-12-14--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 3/5 | `verdict REJECT` (r3, r4), `reply src/export\.js:[0-9]+` (r3 only) | **token/contract separator**, non-discriminator on judgement |
+| #10 | with-skill (fixed fixture) | `2026-11-10T15-39-17--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | **token/contract separator**; substantive judgement matches (both approve), keep |
+| #10 | control | `2026-11-10T15-54-47--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `verdict APPROVE`, `reply Not verified` (the control approves in prose; no token and no `Not verified` section) | **token/contract separator**, non-discriminator on judgement |
 | #1 | with-skill | `2026-11-10T15-20-12--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | **separator** (5/5 vs 0/5), keep |
 | #1 | control | `2026-11-10T15-23-10--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `verdict APPROVE`, `reply Not verified` | **separator** |
 | #2 | with-skill | `2026-11-10T15-26-12--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 4/5 | `verdict REJECT`, `reply AC-2`, `reply 21\.63\|noise\|float` (r4) | **non-discriminator** (4/5 vs 4/5), keep |
@@ -394,13 +395,27 @@ setup attempt).
 | #7 | with-skill | `2026-11-10T15-31-48--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | **separator** (5/5 vs 0/5), holdout, keep |
 | #7 | control | `2026-11-10T15-35-51--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | `verdict REJECT` | **separator** |
 
-Case 8's skill arm ran `npm test`, saw it pass and rejected on the public
-contract in 5/5; every control approved. Case 9's skill arm named `filename` →
-`buildExportCommand` → `execSync` in 5/5; the control rejected in 3/5, missing
-the `VERDICT:` stance in r3/r4 (r3 also missed the `file:line`), so the
-separator is 5/5 vs 3/5 rather than a clean control. Case 2 remains the
-non-discriminator it already was (4/5 vs 4/5); the r4 skill failure had no
-`VERDICT:` line. Case 7's holdout stands at 5/5 vs 0/5.
+Case 8's skill arm ran `npm test`, saw it pass and rejected the public-contract
+break in 5/5. Its control rejects the same break in prose 5/5 ("changes
+requested", "needs changes", "one blocking defect"), but the `verdict`
+assertion's closed stance vocabulary only accepts `request changes`/`reject`, so
+the control scores 0/5 on the token. The case is a token/contract separator, not
+a substantive one: both arms reject the change and the 0/5 is the missing token.
+
+Case 9's skill arm named `filename` → `buildExportCommand` → `execSync` in 5/5.
+Its control rejects the injection in prose 5/5; r1, r2 and r5 emit a recognised
+`VERDICT:` stance, r3 and r4 do not, so it scores 3/5. The `reply
+src/export\.js:[0-9]+` red is r3 only; r4 cites the `file:line`. Same
+classification: token/contract separator, non-discriminator on the substantive
+judgement (both reject).
+
+Case 10's fixed skill arm is 5/5. Its control
+(`2026-11-10T15-54-47--review-code--agentworks-deepseek-v4-1-flash--without-skill`)
+is 5/5 clean and 0/5 passed: it approves the same correct retry in prose 5/5 but
+emits no `VERDICT: APPROVE` and no `Not verified` section, so those two
+assertions fail. Same classification: token/contract separator,
+non-discriminator on the substantive judgement (both approve). The control
+closes the arm comparison; #10 is no longer unresolved.
 
 **Case 10's first skill arm is not evidence.** The run
 `2026-11-10T15-15-21--review-code--agentworks-deepseek-v4-1-flash` (5/5 clean,
@@ -411,20 +426,32 @@ premise was false. The fixture was strengthened — an injected `sleep` seam and
 tests for the `[10, 20, 40]`/`[100, 200]` waits, the defaults, and `1.5`/`2.5`
 rejections — and the case re-measured. The fixed arm is 5/5; no `expect:` line or
 assertion was changed, and the fixture change did not lower the bar. The control
-was **not run** because the 60-draw ceiling was reached; #10's control is
-`unresolved`, not a separator.
+was run after the human approved the extra 5 draws.
+
+Case 2 remains the non-discriminator it already was (4/5 vs 4/5); the r4 skill
+failure had no `VERDICT:` line. Case 7's holdout stands at 5/5 vs 0/5.
+
+**AC-6 disclosure.** The wave re-ran #1, #2 and #7 at `skillHash 9a28572…`.
+Cases #3–#6 were **not** re-measured at that hash; their published cells in this
+document are historical at older `skillHash` values and are not a claim of green
+at `9a28572…`.
 
 Decisions: `keep` for #8, #9, #1, #2 and #7; `change` for #10 (the fixture was
-strengthened) and keep the case with its control unresolved. No case was
-dropped. A later wave should run the #10 control on the fixed fixture.
+strengthened before the fixed arm) and keep it. No case was dropped and no case
+is unresolved.
 
 ## Known holes
 
-- **`review-code` #10's control is unmeasured (SPEC-0056).** The first skill arm
-  found the fixture under-tested; after the tests were strengthened, the 60-draw
-  ceiling was reached with the fixed skill arm (5/5) and no control. The case is
-  kept with its control `unresolved`; a later wave should run the control on the
-  fixed fixture.
+- **The `verdict` stance vocabulary is closed (SPEC-0056).** It accepts
+  `request changes`/`reject` and `approve`, but not `changes requested`,
+  `needs changes` or `one blocking defect`. The control arms of `review-code` #8
+  and #9 reject in prose 5/5 and still score 0/5 and 3/5 on the token; #10's
+  control approves in prose 5/5 and scores 0/5 because it emits no
+  `VERDICT: APPROVE` or `Not verified`. The red is the contract token, not the
+  substantive judgement. The cases are kept as token/contract separators.
+- **`review-code` #3–#6 are historical at older hashes (SPEC-0056).** The wave
+  re-ran #1, #2 and #7 at `skillHash 9a28572…`; #3–#6 were not re-measured, so
+  their published cells are not evidence of green at this hash.
 - **A successful bare `ls` of a corpus root reads as `denied` under
   enforcement.** v5's content rule needs a line naming the path, and an `ls`
   that returns only relative names has none, so the residual is `denied`. That
