@@ -13,8 +13,7 @@ source_docs:
   - skills/audit-code-quality/references/evals.md
 related_decisions: []
 depends_on: []
-blocks:
-  - SPEC-0055-audit-code-quality-architecture-and-deterministic-checks
+blocks: []
 files:
   - skills/audit-code-quality/references/evals.md
   - skills/audit-code-quality/references/evals/5/AGENTS.md

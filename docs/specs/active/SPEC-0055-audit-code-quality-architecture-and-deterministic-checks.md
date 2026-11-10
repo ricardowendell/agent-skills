@@ -12,8 +12,7 @@ source_docs:
   - docs/specs/SPEC-0054-architecture-corpus-slice.md
   - skills/audit-code-quality/references/evals.md
 related_decisions: []
-depends_on:
-  - SPEC-0054-architecture-corpus-slice
+depends_on: []
 blocks:
   - SPEC-0056-review-proportional-to-diff-risk
 files:
