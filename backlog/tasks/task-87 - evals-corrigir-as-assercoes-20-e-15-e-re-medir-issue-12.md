@@ -8,7 +8,7 @@ labels: []
 dependencies: []
 references:
   - https://github.com/ricardowendell/agent-skills/issues/12
-  - docs/specs/active/SPEC-0045-stack-review-evals.md
+  - docs/specs/SPEC-0045-stack-review-evals.md
 priority: medium
 type: task
 ordinal: 87000
