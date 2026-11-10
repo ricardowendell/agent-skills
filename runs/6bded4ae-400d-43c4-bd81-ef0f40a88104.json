@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "6bded4ae-400d-43c4-bd81-ef0f40a88104",
+  "started_at": "2026-11-10T17:58:46.617Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.5.0"
+  },
+  "base_commit": "2aec7564064c76a2abdbb909bb88e73a85846367",
+  "head_commit": "9ff9889f789674779f4bcde7e3a1129a6616ec26",
+  "task": "SPEC-0056",
+  "spec_sha": "4cdc059921578d59a0b48dbe30c9ccd081dc16fa89e3ffcd10b7393a3e1428ce",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0056-review-proportional-to-diff-risk.json",
+      "sha256": "7ac2619583a33f516da8863c50287959976ec4bbfc403713ea26e3333d8d4193"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0056-review-proportional-to-diff-risk.json",
+      "sha256": "89dd03f035cc4e63e126807edce9ce10744962aa747109a57ce70910610eb824"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "a84365e6cd8bcf3541d9e18964b6602933240f056da57562a1485840d60b5866"
+    }
+  ],
+  "attempts": 1,
+  "duration": 4127,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "9ff9889f789674779f4bcde7e3a1129a6616ec26"
+}

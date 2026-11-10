@@ -1,10 +1,10 @@
 ---
 id: TASK-80
 title: 'review: review-code proporcional ao risco do diff (issue #15)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-10T15:07:00Z'
-updated_date: '2026-11-10T15:58:00Z'
+updated_date: '2026-11-10T19:07:00Z'
 labels: []
 dependencies: []
 references:
