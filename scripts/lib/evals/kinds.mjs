@@ -56,7 +56,7 @@ export const VERDICT_FORMS = [
   ["do not merge", "REJECT"],
   ["don't merge", "REJECT"],
   ["should not merge", "REJECT"],
-  ["not merge", "REJECT"],
+  ["must not merge", "REJECT"],
   ["reject", "REJECT"],
   ["rejected", "REJECT"],
   ["rejects", "REJECT"],
@@ -87,22 +87,38 @@ export const VERDICT_FORMS = [
   ["retenho", "WITHHELD"],
 ]
 
-// A form is a stance only when the word directly before it does not negate or
-// condition it (SPEC-0062). Closed, and short on purpose: `not approved` and
-// `cannot approve` are not approvals, and `non-blocking` is not a `blocking`
-// finding. The guard is adjacent — one word — so `not approved — request
-// changes` still reads as the rejection it ends with.
+// A form is a stance only when the clause it sits in carries no negator or
+// conditional (SPEC-0062). The list is closed and written the way a reviewer
+// writes English and Portuguese, not as single tokens: `unable to approve` and
+// `not able to approve` are one negation, not a dead entry. `if`, `unless`,
+// `whether` and the conditionals are here because a conditional clause ending in
+// the form is not an assertion of it.
+//
+// The guard is the whole clause, not the word before the form, so post-modifiers
+// need no separate list: `not at all blocking`, `nothing whatsoever blocking` and
+// `no longer blocking` are blocked by `not`/`nothing`/`no longer`. Clause
+// boundaries (`.`, `;`, `:`, dashes — not the comma, which a conditional needs)
+// reset the guard, so `not approved — request changes` still reads the rejection.
 export const VERDICT_BLOCKERS = [
-  "not",
-  "no",
-  "nao",
-  "never",
+  "not able to",
+  "no way to",
+  "is not",
+  "no longer",
+  "unable to",
   "cannot",
   "can't",
   "cant",
-  "unable",
+  "won't",
+  "isn't",
+  "aren't",
+  "never",
+  "nothing",
   "without",
+  "not",
+  "nao",
+  "hardly",
   "non",
+  "no",
   "if",
   "unless",
   "whether",

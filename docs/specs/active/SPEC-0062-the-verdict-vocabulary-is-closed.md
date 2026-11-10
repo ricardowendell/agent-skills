@@ -155,22 +155,36 @@ table is the published list: 55 forms, English and Portuguese.
 | stance | forms (after accent/case normalisation) |
 | --- | --- |
 | `APPROVE` | `approve`, `approved`, `approves`, `approving`, `approve with nits`, `approve with minor nits`, `approved with nits`, `approve with should-fix`, `approve with should fix`, `compliant`, `passes spec`; `aprovar`, `aprovado`, `aprovada`, `aprovacao`, `aprovo`, `aprovado com ressalvas`, `aprovado com nits` |
-| `REJECT` | `request changes`, `request change`, `changes requested`, `change requested`, `needs changes`, `needs change`, `blocking`, `do not merge`, `don't merge`, `should not merge`, `not merge`, `reject`, `rejected`, `rejects`, `rejecting`; `rejeitar`, `rejeitado`, `rejeitada`, `recusar`, `recusado`, `mudancas solicitadas`, `solicito mudancas`, `solicitar mudancas`, `solicitando mudancas`, `precisa de mudancas`, `precisa de ajustes`, `nao aprovo`, `bloqueante`, `bloqueador`, `nao mergear` |
+| `REJECT` | `request changes`, `request change`, `changes requested`, `change requested`, `needs changes`, `needs change`, `blocking`, `do not merge`, `don't merge`, `should not merge`, `must not merge`, `reject`, `rejected`, `rejects`, `rejecting`; `rejeitar`, `rejeitado`, `rejeitada`, `recusar`, `recusado`, `mudancas solicitadas`, `solicito mudancas`, `solicitar mudancas`, `solicitando mudancas`, `precisa de mudancas`, `precisa de ajustes`, `nao aprovo`, `bloqueante`, `bloqueador`, `nao mergear` |
 | `WITHHELD` | `withheld`, `withhold`, `withholding`; `retido`, `retida`, `reter`, `retenho` |
 
-The matcher takes the **earliest** form in the stance line, longest first at the
-same position, so `compliant — approve with minor test nit` reads `compliant` and
-`one blocking defect` reads `blocking`. A form is void when the word immediately
-before it is in `VERDICT_BLOCKERS` (`not`, `no`, `nao`, `never`, `cannot`, `can't`,
-`cant`, `unable`, `without`, `non`, `if`, `unless`, `whether`, `would`, `could`,
-`might`, `may`): `not approved`, `cannot approve`, `would approve`,
-`non-blocking` and `não aprovado` are misses, while `not approved — request
-changes` still reads `REJECT` because the guard is adjacent, not whole-line. A
-form not in the table is a miss; there is no "mentions approve/reject" rule.
-`reply`/`noreply` are untouched (`assertions.test.mjs`, "reply and noreply are
-untouched by the stance vocabulary").
+**How a line is read.** Every form in the stance line is matched, and the stance
+is the polarity the line commits to: **a rejection wins over an approval when
+both appear**, because a line that names a blocking finding is not an approval
+whatever its first clause says (`Approve the tests; reject the change`,
+`approved, but do not merge`, `The cart change is compliant. The branch as a
+whole should not merge`). Within one polarity the earliest form decides, which is
+unobservable once the polarity is named; `WITHHELD` sits between the two. There
+is no "mentions approve/reject" rule: a form outside the table is a miss.
 
-Tests (`scripts/lib/evals/assertions.test.mjs`, 480 pass in
+**The negation guard is clause-scoped**, not one word. A form is void when the
+clause it sits in carries any of the 26 published `VERDICT_BLOCKERS` —
+`not able to`, `no way to`, `is not`, `no longer`, `unable to`, `cannot`, `can't`,
+`cant`, `won't`, `isn't`, `aren't`, `never`, `nothing`, `without`, `not`, `nao`,
+`hardly`, `non`, `no`, `if`, `unless`, `whether`, `would`, `could`, `might`,
+`may` (matched after the same accent/case normalisation, so `não` is `nao`). So
+`unable to approve`, `not able to approve`, `if the tests were fixed, approve`,
+`not at all blocking`, `nothing whatsoever blocking` and `não aprovado` are
+misses, while `not approved as written — request changes` still reads `REJECT`
+because a clause boundary (`.`, `;`, `:`, dashes — not the comma) resets the
+guard. Post-modifiers need no separate list: the guard is the clause, so `at all`
+and `whatsoever` cannot separate a negator from its form.
+
+Bare `not merge` is not a form: it matched "not merge blockers". The negative
+`merge` stances are `do not merge`, `should not merge` and `must not merge`,
+which cannot be read as a noun phrase.
+
+Tests (`scripts/lib/evals/assertions.test.mjs`, 483 pass in
 `scripts/lib/evals/*.test.mjs`):
 
 - "every accepted form scores as its stance and not as another" — one assertion
@@ -180,15 +194,22 @@ Tests (`scripts/lib/evals/assertions.test.mjs`, 480 pass in
   phrases, accent-normalised form, and at least one EN and one PT form per stance.
 - "a form is read in a prose verdict line, after a lead-in" — the seven shapes the
   SPEC-0056 controls actually wrote.
-- "a negated form is not its surface reading" — `not approved`, `cannot approve`,
-  `can't approve`, `never approved`, `without approval`, `I would approve this if
-  the tests were fixed.`, `I cannot approve in good conscience`, `não aprovado`,
-  `não aprove`.
-- "a negative form is not a rejection" — `no changes needed`, `non-blocking
-  findings only`, `not blocking`.
-- "the negation guard is adjacent, so a later stance still reads".
-- "the blocker list is the whole negation guard" — every listed blocker blocks
-  the adjacent form.
+- "a rejection in the stance line wins over an approval" — the three reviewer
+  lines above plus the `satisfies … should not merge` shape.
+- "a negated form is not its surface reading" — 16 lines, including
+  `not able to approve`, `unable to approve`, `There is no way to approve this`,
+  `If the tests were fixed, approve`, `Unless the export change is removed,
+  approve`, `não aprovado`.
+- "a negated rejection is not a stance, and a later stance still reads" —
+  `nothing blocking`, `isn't blocking`, `no longer blocking`, `hardly blocking`,
+  `not at all blocking`, `nothing whatsoever blocking` miss on `REJECT`, while
+  `nothing blocking; approve` and `Not at all blocking. Approve.` read `APPROVE`.
+- "the negation guard is clause-scoped, so a later stance still reads".
+- "a blocker inside a word does not block the stance" — `notably`, `nonplussed`.
+- "'not merge' takes a right boundary, so 'not merge blockers' is not a stance".
+- "every published blocker fires in a grammatical sentence" — one sentence per
+  blocker, and the test fails when a blocker has no sentence, so a dead entry
+  (`unable approve`, the first version's bug) cannot pass.
 
 **F2 — replay, no draw.** `node scripts/replay-evals.mjs --run <dir>` over the
 eight stored directories, before and after the table (before = HEAD, after = this
@@ -246,8 +267,34 @@ SPEC-0007" and then "should not merge", and #10 r1 says "the implementation
 *satisfies* AC-1" while listing gaps — reading those as the branch stance would
 answer the wrong question. `passes spec` is in the table because a verdict line
 that says the branch passes a named spec is stating a stance; "npm test passes" is
-not. `merge` alone is absent too: only the negative forms (`do not merge`, `should
-not merge`, `not merge`) are stances.
+not. `merge` alone is absent too, and bare `not merge` was dropped after review
+(it matched "not merge blockers"): the stances are `do not merge`, `should not
+merge` and `must not merge`.
+
+**Re-proof after review.** The first version of the matcher shipped three defects
+the reviewer found, all latent: the negation guard was one word (so `unable to
+approve` and `if the tests were fixed, approve` read as approvals, and five
+blockers were dead in natural word order), earliest-form made approval-before-
+rejection an approval, and negated rejections (`nothing blocking`, `isn't
+blocking`) read as `REJECT`. The fix widened the guard to the clause (26
+blockers, grammatical sentence per blocker), made a rejection win over an
+approval, and gave the `merge` forms a boundary. The re-proof is the same
+comparison rerun against the pre-SPEC-0062 reader:
+
+- verdict-bearing stored transcripts: **315**;
+- all-`verdict`-assertion-passing draws: **229 → 246**, unchanged by the fix;
+- draws whose result changed: **17, all `false → true`**, and the label set is
+  byte-identical to the set this Results published before the fix (diff of the
+  two runs: empty). No draw moved in either direction that did not move before;
+- `node scripts/replay-evals.mjs --changed` output is **byte-identical** to the
+  previous commit's, so the published table's numbers and red assertions are
+  unchanged.
+
+**Residual, not chased.** `the tests approve` and `approved?` still read
+`APPROVE`: the verb's subject is ambiguous. The `VERDICT:`/`Veredicto:` label is
+the declaration that a stance is being given, so the matcher reads the stance word
+and does not add a grammar heuristic to decide whether the subject of "approve" is
+the reviewer. That is the remaining false pass, stated rather than scored around.
 
 **F3 — what the assertion measures.** `docs/evals/coverage.md` gains the
 judgement-corrected paragraph under the replayed column, plus the updated Known
@@ -256,7 +303,7 @@ token/contract separator is not a capability separator.
 
 **Gates.** All exit 0: `validate-skills --root skills`; `run-evals --root skills
 --list --check` (97 cases, 94 runnable, 3 manual); `node --test
-scripts/lib/evals/*.test.mjs` (480 pass); `node --test scripts/lib/*.test.mjs`;
+scripts/lib/evals/*.test.mjs` (483 pass); `node --test scripts/lib/*.test.mjs`;
 `node --test skills/bootstrap-project-harness/scripts/*.test.mjs`;
 `check-sensor-parity`; `check-evidence` (0 errors, 100 warnings);
 `check-staleness` (62 cited cells, 51 stale, 3 uncited — identical to `main`);

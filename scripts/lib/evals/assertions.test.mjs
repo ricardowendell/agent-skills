@@ -214,6 +214,25 @@ test("a form is read in a prose verdict line, after a lead-in", () => {
   }
 })
 
+// A rejection wins over an approval when the stance line names both polarities.
+// The reviewer's point: a line that names a blocking finding is not an approval,
+// whatever its first clause says.
+test("a rejection in the stance line wins over an approval", () => {
+  const lines = [
+    "Approve the tests; reject the change",
+    "approved, but do not merge",
+    "The cart change is compliant. The branch as a whole should not merge",
+    "The cart change satisfies SPEC-0007. The branch as a whole should not merge: it ships a command-injection bug",
+    "Approve — one blocking defect in src/export.js",
+  ]
+  for (const line of lines) {
+    const out = transcript({ text: `VERDICT: ${line}` })
+    const r = one({ kind: "verdict", arg: "REJECT" }, "/tmp", out)
+    assert.equal(r.pass, true, `'${line}' did not read as a rejection (${r.detail})`)
+    assert.equal(one({ kind: "verdict", arg: "APPROVE" }, "/tmp", out).pass, false, `'${line}' also read as an approval`)
+  }
+})
+
 // A near-miss stays a miss. These are the forms the SPEC-0056 review warned
 // about: reading them as their surface reading is the bug this table replaced.
 test("a negated form is not its surface reading", () => {
@@ -221,9 +240,15 @@ test("a negated form is not its surface reading", () => {
     "not approved",
     "cannot approve",
     "can't approve",
+    "won't approve",
     "never approved",
-    "without approval",
+    "not able to approve",
+    "unable to approve",
+    "There is no way to approve this",
+    "Without approving the export change, the branch cannot land",
     "I would approve this if the tests were fixed.",
+    "If the tests were fixed, approve",
+    "Unless the export change is removed, approve",
     "I cannot approve in good conscience",
     "não aprovado",
     "não aprove",
@@ -235,25 +260,98 @@ test("a negated form is not its surface reading", () => {
   }
 })
 
-test("a negative form is not a rejection", () => {
-  for (const line of ["no changes needed", "non-blocking findings only", "not blocking"]) {
+test("a negated rejection is not a stance, and a later stance still reads", () => {
+  const misses = [
+    "no changes needed",
+    "non-blocking findings only",
+    "not blocking",
+    "nothing blocking",
+    "isn't blocking",
+    "no longer blocking",
+    "hardly blocking",
+    "not at all blocking",
+    "nothing whatsoever blocking",
+  ]
+  for (const line of misses) {
     const r = one({ kind: "verdict", arg: "REJECT" }, "/tmp", transcript({ text: `VERDICT: ${line}` }))
     assert.equal(r.pass, false, `'${line}' scored as a rejection (${r.detail})`)
   }
+  // The negated rejection does not stop an approval in the next clause.
+  for (const line of ["nothing blocking; approve", "Not at all blocking. Approve."]) {
+    const r = one({ kind: "verdict", arg: "APPROVE" }, "/tmp", transcript({ text: `VERDICT: ${line}` }))
+    assert.equal(r.pass, true, `'${line}' did not read as an approval (${r.detail})`)
+  }
 })
 
-test("the negation guard is adjacent, so a later stance still reads", () => {
+// The guard matches words, not fragments: `not` in `notably` and `non` in
+// `nonplussed` are not negations of the stance.
+test("a blocker inside a word does not block the stance", () => {
+  for (const line of ["A notably good change, approve.", "A nonplussed reviewer, approve."]) {
+    assert.equal(one({ kind: "verdict", arg: "APPROVE" }, "/tmp", transcript({ text: `VERDICT: ${line}` })).pass, true, line)
+  }
+})
+
+test("the negation guard is clause-scoped, so a later stance still reads", () => {
   const out = transcript({ text: "VERDICT: not approved as written — request changes" })
   assert.equal(one({ kind: "verdict", arg: "REJECT" }, "/tmp", out).pass, true)
   assert.equal(one({ kind: "verdict", arg: "APPROVE" }, "/tmp", out).pass, false)
 })
 
-test("the blocker list is the whole negation guard", () => {
-  // Every blocker is a word the table treats as a negator; the guard is listed,
-  // not inferred, so this asserts each one actually blocks its nearest form.
+test("'not merge' takes a right boundary, so 'not merge blockers' is not a stance", () => {
+  const out = transcript({ text: "VERDICT: Findings are not merge blockers; approve" })
+  assert.equal(one({ kind: "verdict", arg: "APPROVE" }, "/tmp", out).pass, true)
+  assert.equal(one({ kind: "verdict", arg: "REJECT" }, "/tmp", out).pass, false)
+  // The merge rejection is carried by the phrases that cannot be a noun phrase.
+  for (const line of ["do not merge", "should not merge", "must not merge"]) {
+    assert.equal(one({ kind: "verdict", arg: "REJECT" }, "/tmp", transcript({ text: `VERDICT: ${line}` })).pass, true, line)
+  }
+})
+
+// Every blocker in the published list must fire in a sentence a reviewer would
+// actually write. A blocker with no grammatical case here is a dead entry — the
+// defect the first version shipped with `unable` and `if`.
+const BLOCKER_SENTENCES = {
+  "not able to": "I am not able to approve this change.",
+  "no way to": "There is no way to approve this change.",
+  "is not": "The branch is not approved.",
+  "no longer": "The branch is no longer approved.",
+  "unable to": "I am unable to approve this change.",
+  cannot: "I cannot approve this change.",
+  "can't": "I can't approve this change.",
+  cant: "I cant approve this change.",
+  "won't": "I won't approve this change.",
+  "isn't": "The branch isn't approved.",
+  "aren't": "The criteria aren't approved.",
+  never: "I will never approve this change.",
+  nothing: "Nothing here makes me approve this change.",
+  without: "Without approving the export change, the branch cannot land.",
+  not: "The branch is not approved.",
+  nao: "O parecer não é aprovado.",
+  hardly: "The problem is hardly blocking.",
+  non: "The finding is non-blocking.",
+  no: "There is no blocking defect.",
+  if: "If the tests were fixed, approve.",
+  unless: "Unless the export change is removed, approve.",
+  whether: "Whether to approve is your call.",
+  would: "I would approve this if the tests were fixed.",
+  could: "I could approve this with more tests.",
+  might: "I might approve this later.",
+  may: "You may approve this after the fix.",
+}
+
+test("every published blocker fires in a grammatical sentence", () => {
   for (const blocker of VERDICT_BLOCKERS) {
-    const r = one({ kind: "verdict", arg: "APPROVE" }, "/tmp", transcript({ text: `VERDICT: ${blocker} approve` }))
-    assert.equal(r.pass, false, `'${blocker} approve' scored as an approval`)
+    assert.ok(blocker in BLOCKER_SENTENCES, `no sentence for blocker '${blocker}'`)
+  }
+  for (const [blocker, sentence] of Object.entries(BLOCKER_SENTENCES)) {
+    assert.ok(VERDICT_BLOCKERS.includes(blocker), `sentence for a blocker not in the list: '${blocker}'`)
+    const out = transcript({ text: `VERDICT: ${sentence}` })
+    const form = /approve|blocking/.exec(sentence)?.[0] === "blocking" ? "REJECT" : "APPROVE"
+    assert.equal(
+      one({ kind: "verdict", arg: form }, "/tmp", out).pass,
+      false,
+      `'${sentence}' still scored as ${form}`,
+    )
   }
 })
 
