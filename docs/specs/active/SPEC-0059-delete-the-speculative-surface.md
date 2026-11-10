@@ -28,6 +28,7 @@ files:
   - README.md
   - CONTRIBUTING.md
   - docs/README.md
+  - CHANGELOG.md
   - docs/specs/active/SPEC-0059-delete-the-speculative-surface.md
 tests:
   - node scripts/validate-skills.mjs --root skills
