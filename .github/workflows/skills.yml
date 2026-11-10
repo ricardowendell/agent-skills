@@ -22,9 +22,9 @@ jobs:
       # --root points discovery at the checkout (the scripts otherwise scan
       # HOME-based skill roots). Frontmatter, id/description budget, drift.
       - run: node scripts/validate-skills.mjs --root skills
-      # Cases parse, and every case has a prompt, a known assertion kind and a
-      # unique number. Behavioural runs need a model provider, so they stay local.
-      - run: node scripts/run-evals.mjs --root skills --list --check
+      # Cases parse, validate, resolve their fixtures and stage; no model is called.
+      # Behavioural runs need a model provider, so they stay local.
+      - run: node scripts/eval.mjs check --root skills
       # The spec contract: files: against the base diff, task: against
       # backlog/tasks, dependency symmetry, and the ready/implemented body rules.
       # Only a pull request has a per-spec base: the branch point. On a push to

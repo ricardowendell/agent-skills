@@ -186,7 +186,7 @@ to invoke one.
   `docs/prompts/` (recursive). Skills are flexible about layout; the sensor is
   not.
 - **Evals will not run.** They need the `opencode` binary and a model provider
-  key. `run-evals.mjs --list` works without either.
+  key. `eval.mjs list` and `eval.mjs check` work without either.
 - **I edited a skill and nothing changed.** A symlinked install only needs
   `git pull`; a copied install has to be re-copied.
 
@@ -196,16 +196,19 @@ The repo ships the same checks its CI runs:
 
 ```sh
 node scripts/validate-skills.mjs --root skills
-node scripts/run-evals.mjs --root skills --list --check
+node scripts/eval.mjs check --root skills
 node --test scripts/lib/evals/*.test.mjs
 node scripts/check-sensor-parity.mjs
 ```
 
 `validate-skills.mjs` checks frontmatter, the description budget, cross-tree
-drift, and broken symlinks. `--check` rejects a case with no prompt, an unknown
-assertion kind, or a duplicate number. The unit tests cover the runner itself —
-parser, globs, assertions, staging — and need neither `opencode` nor a provider.
-The behavioural run stays local, since it needs both.
+drift, and broken symlinks. `eval.mjs check` parses every case, validates it and
+stages its fixture without a model: a case with no prompt, an unknown assertion
+kind, a duplicate number, a `git.json` that does not resolve or an `unchanged`
+target the fixture cannot satisfy exits non-zero. The unit tests cover the
+runner itself — parser, globs, assertions, staging, the reuse predicate — and
+need neither `opencode` nor a provider. The behavioural run stays local, since it
+needs both.
 
 ### Case format
 
@@ -296,25 +299,34 @@ moved one trigger near-miss from 3/3 to 0/3 — rerun anything measured before.
 
 ### Does the skill add value?
 
-Two opt-in modes answer that without leaving the runner:
+`compare` answers that in one screen, and the `none` arm is the control:
 
 ```sh
-# with the skill pinned in the scratch dir (default)
-node scripts/run-evals.mjs --skill review-code --run
-# control arm: nothing staged, the skill tool denied
-node scripts/run-evals.mjs --skill review-code --run --no-skill
-# plus a second opinion over the expect: lines
-node scripts/run-evals.mjs --skill review-code --run --judge
+# one draw first: does the harness work on this case?
+node scripts/eval.mjs run review-code 7
+# none vs candidate, three draws per arm (screening)
+node scripts/eval.mjs compare review-code 7
+# plus the skill as it was at `main`
+node scripts/eval.mjs compare review-code 7 --against main
+# the control arm on its own
+node scripts/eval.mjs run review-code 7 --arm without
+# a second opinion over the expect: lines
+node scripts/eval.mjs run review-code 7 --judge
 # every trigger case, three times each
-node scripts/run-evals.mjs --tag trigger --repeat 3 --run
+node scripts/eval.mjs run --tag trigger --repeat 3
 ```
+
+The scorecard prints the numerator and denominator per arm and labels 1–3 draws
+**screening** and 5+ **evidence**; `compare` prints `reused <dir>` or `ran <dir>`
+so a reused arm is never mistaken for a fresh one, and `--refresh` forces a
+rerun.
 
 `--judge` records whether it graded its own homework: a judge that is also the
 model under test is reported as `selfJudged`, and it may only cite text the run
 actually produced — a quote it cannot find counts as `unverifiable`, never as
 `met`.
 
-`--no-skill` stages the same fixture with the skill tool denied and no copy in
+`--arm without` stages the same fixture with the skill tool denied and no copy in
 `.opencode/skills/`, and records `arm: without-skill`; the gate then requires
 that no skill loaded. It measures whether the skill is *used and needed*, not
 whether its text is unreachable — an agent can still read an installed copy from
@@ -401,7 +413,7 @@ skill loaded in 3/3, 0/3 and 3/3 runs respectively.
 ### Replay
 
 ```sh
-node scripts/replay-evals.mjs --quiet
+node scripts/eval.mjs inspect <run-dir> --replay
 ```
 
 Re-judges recorded transcripts without calling a model. `reply`, `noreply`,
@@ -417,7 +429,7 @@ Repetition, a model × arm matrix and cost reporting are commodity work. The
 published matrix — four cases, two models, both arms, five repetitions each —
 is in [`docs/evals/review-code-matrix.md`](docs/evals/review-code-matrix.md),
 including which assertion failed in every cell without the skill. Its
-Promptfoo-based exporter was retired in SPEC-0058; `run-evals.mjs --repeat`
+Promptfoo-based exporter was retired in SPEC-0058; `eval.mjs compare --repeat`
 covers the same ground, and `evals/<id>/cases.md` remains the source.
 
 ### Artifacts and regressions
@@ -437,11 +449,10 @@ Every invocation writes its own directory,
 
 No two runs share a directory, so a staging failure cannot be read as the
 previous run's green, and a filtered run cannot leave stale cases beside fresh
-ones. `last-run.json` holds the most recent summary; `--save-baseline` keeps one
-as `baseline.json`, and the next full run compares against it automatically. A
-case that moves from `passed` to `failed` (or to `unscored`) is a regression and
-fails the run; a case that disappears from an explicit `--baseline` comparison is
-reported as missing rather than assumed fine.
+ones. `last-run.json` holds the most recent summary. Regression is `compare`'s
+job: the `none` arm is the control, the `candidate` arm the working tree, and
+`--against <ref>` adds the skill at that commit, so "did this change anything"
+is one command with the reuse decision printed next to each number.
 
 ## Optional companion skills
 

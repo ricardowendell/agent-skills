@@ -26,7 +26,7 @@ and every assertion kind. This file covers only what changes when you contribute
 | `skills/<id>/references/` | material the skill loads on demand; never the eval corpus |
 | `evals/<id>/cases.md` | the cases for `<id>`, outside the skill and never staged |
 | `evals/<id>/fixtures/<n>/` | the fixture trees and `git.json` manifests |
-| `scripts/` | validator, eval runner, replay and the sensor-parity check |
+| `scripts/` | `eval.mjs` (the one eval CLI), the skill validator, the checkers and the sensor-parity check |
 | `commands/`, `agents/` | OpenCode command stubs and the `spec-reviewer` subagent |
 | `claude/` | Claude Code versions of the same stubs and subagent |
 | `docs/` | this repo's own record; see [`docs/README.md`](docs/README.md) |
@@ -143,19 +143,73 @@ Pick the assertion that matches what the skill may do, and make sure it can
 fail. A case that passes without the skill measures nothing: `review-code` #2
 left the matrix for exactly that reason.
 
+## The eval CLI
+
+There is one entry point, `scripts/eval.mjs`, with five operations:
+
+| Command | What it does | Model |
+| --- | --- | --- |
+| `list [skill]` | print cases for a skill, `--case` or `--tag` | no |
+| `check [skill]` | parse, validate, resolve every fixture and dry-stage | no |
+| `run <skill> [n]` | one arm, one skill (`--arm with` or `--arm without`), `--repeat` (default **1**) | yes |
+| `compare <skill> <n>` | none / baseline / candidate arms; `--against <ref>` | yes |
+| `inspect <run-dir>` | stored status, failing assertions, `--replay`, `--leaks`, `--judge` | no |
+
+The defaults are the ladder. `run` starts at **one** draw; `compare` at **three**
+per arm. One to three draws are **screening** — a direction, not a claim (four is
+still screening). Five or more (`--repeat 5`) is **evidence** and may be published
+in `docs/evals/`. The
+scorecard always prints the numerator and the denominator per arm, and `--stop`
+reports the draws that actually ran, never the ceiling. `--json` emits the same
+run/manifest record the artefacts use; `--verbose` expands failures.
+
+`compare` prints `reused <dir>` or `ran <dir>` per arm. An arm is reused only when
+model+provider, prompt hash, fixture hash, assertion/grading hash, the arm's skill
+hash and the isolation contract all match the stored run; `--refresh` forces a
+rerun, and `--against <ref>` pins the baseline by commit (the skill tree is read
+from that ref, never from a directory).
+
+**Flag mapping (old → new).** Anything not in this table is gone, not accepted and
+ignored:
+
+| Old | New |
+| --- | --- |
+| `--list` / `--check` / `--run` | `list` / `check` / `run` |
+| `--skill <id>` | positional `<skill>` |
+| `--no-skill` | `--arm without` |
+| `--full` | `--level full` |
+| `--case <n>` | `--case <n>` or the positional `<n>` |
+| `replay-evals.mjs --leaks <dir…>` | `inspect --leaks <dir…>` (or `--all`) |
+| `replay-evals.mjs --leaks --all` | `inspect --leaks --all` |
+| `replay-evals.mjs --run <id>` | `inspect <run-dir>` (a directory, not a prefix) |
+| `replay-evals.mjs --judge <model>` | `inspect --judge <model> <run-dir…>` |
+| `--baseline <file>` / `--save-baseline` | dropped: `compare` is the comparison, by arm |
+| `--shared` / `--i-know` / `--no-isolate` | dropped: a run is always standalone and isolated; the isolation contract is a reuse input |
+
+Kept with their meanings: `--root`, `--model`, `--agent`, `--case`, `--tag`,
+`--level`, `--timeout`, `--stall-seconds`, `--judge`, `--judge-threshold`,
+`--json`, `--resume`, `--repeat`, `--stop`, `--min-pass`, `--concurrency`.
+
 ## Measuring
 
 ```sh
-# one case, three draws, with the skill pinned in the scratch dir
-node scripts/run-evals.mjs --skill review-code --case 3 --repeat 3 --run
-# the control arm: nothing staged, the skill tool denied
-node scripts/run-evals.mjs --skill review-code --case 3 --repeat 3 --run --no-skill
+# one draw, one answer: does the harness work on this case?
+node scripts/eval.mjs run review-code 7
+# a screening comparison: three draws per arm, control included
+node scripts/eval.mjs compare review-code 7
+# the same, with the skill at `main` as the baseline arm
+node scripts/eval.mjs compare review-code 7 --against main
+# the control arm on its own
+node scripts/eval.mjs run review-code 7 --arm without
 # opt-in judge over the expect: lines
-node scripts/run-evals.mjs --skill review-code --case 3 --repeat 3 --run --judge
+node scripts/eval.mjs run review-code 7 --judge
+# inspect what a stored run actually recorded, offline
+node scripts/eval.mjs inspect ~/.local/share/opencode/evals/runs/<timestamp>--<label>
 ```
 
-- One verdict from a non-deterministic agent is one draw. Use `--repeat 3` (or
-  more) before claiming a rate.
+- One verdict from a non-deterministic agent is one draw. `compare` defaults to
+  three per arm; promote to `--repeat 5` only when the result is going to be
+  published.
 - Artefacts land in
   `~/.local/share/opencode/evals/runs/<timestamp>--<label>/`. A new measurement
   must name the run directory it came from; a clean measurement must also pass
@@ -194,7 +248,7 @@ node scripts/run-evals.mjs --skill review-code --case 3 --repeat 3 --run --judge
 - A run that died before its final write leaves
   `cases/<case>/draws/r<i>.json` and no `result.json`. It is incomplete evidence,
   not clean. Resume only the missing draws with `--resume <run-dir>` and the same
-  `--skill`/`--case`/`--repeat`/`--no-skill`; the persisted draws are skipped.
+  `<skill>`/`--case`/`--repeat`/`--arm`; the persisted draws are skipped.
 - Draws share one lane pool; `--concurrency` (default 4) is the number of draws
   in flight, even within one case. Six and eight produced no rate limits — 6
   lanes ran 10/11, 8 lanes 11/11 — but there was no gain from 6 to 8, so the
@@ -206,7 +260,7 @@ node scripts/run-evals.mjs --skill review-code --case 3 --repeat 3 --run --judge
 - Before building a matrix, run the load canary by hand:
 
   ```sh
-  node scripts/run-evals.mjs --skill <id> --case 1 --repeat 12 --stop 12/0 --run
+  node scripts/eval.mjs run <id> 1 --repeat 12 --stop 12/0
   ```
 
   It answers "does the skill load at all?" before a multi-case matrix spends
@@ -218,8 +272,10 @@ node scripts/run-evals.mjs --skill review-code --case 3 --repeat 3 --run --judge
   miss visible. `check-eval-run` prints
   `warn stopped-early … reps=N of requested 12` for a case that stopped short, so
   an eight-draw canary is never read as 12/12.
-- `--save-baseline` stores a run; the next full run compares against it and
-  fails on a case that moved `passed` → `failed`, or disappeared.
+- `compare` is the regression check: the `none` arm is the control, the
+  `candidate` arm is the working tree, and `--against <ref>` adds the skill as it
+  was at that commit. Reuse is explicit (`reused <dir>`), so a stale arm cannot
+  hide inside a fresh-looking table.
 - Publish a measured set in `docs/evals/review-code-matrix.md` (or a new doc
   beside it); publish a single case's measurement in its `why:` line. Update
   [`docs/evals/coverage.md`](docs/evals/coverage.md) either way.
@@ -261,7 +317,7 @@ pre-commit hook run `check-evidence`; CI cannot, because it has no eval store.
 
 ```sh
 node scripts/validate-skills.mjs --root skills
-node scripts/run-evals.mjs --root skills --list --check
+node scripts/eval.mjs check --root skills
 node scripts/spec-check.mjs --spec <changed spec> --base <PR base sha>   # pull requests only
 node --test scripts/lib/evals/*.test.mjs
 node --test skills/bootstrap-project-harness/scripts/*.test.mjs

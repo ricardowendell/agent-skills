@@ -11,6 +11,23 @@ skills, which cases, and which published measurements.
 
 ### Changed
 
+- **One eval CLI, one decision (SPEC-0060, TASK-99).** `scripts/run-evals.mjs`
+  (921 lines) and `scripts/replay-evals.mjs` (481) are deleted; `scripts/eval.mjs`
+  is the only entry point, with `list`, `check`, `run`, `compare` and `inspect`.
+  Defaults now follow the cost of the question: `run` is one draw and `compare`
+  is three per arm, with 1–3 labelled **screening** and 5+ **evidence**; the
+  scorecard prints the numerator and denominator per arm on one screen, and
+  `--stop` reports the draws that actually ran. `check` parses, validates,
+  resolves and dry-stages every fixture without a model. `compare` reuses an arm
+  only when model+provider, prompt hash, fixture hash, assertion/grading hash,
+  skill hash and the isolation contract all match, and prints `reused <dir>` or
+  `ran <dir>` for each; `--refresh` forces a rerun and `--against <ref>` pins the
+  baseline by commit. `--no-skill` became `--arm without`; `--baseline`,
+  `--save-baseline`, `--shared`, `--i-know` and `--no-isolate` are gone rather
+  than accepted and ignored. `docs/pipeline.md`'s `selftest:` names the new
+  command, so that policy edit is in this change and needs the human gate at
+  merge. No paid draw was spent.
+
 - **The `review-code` matrix covers the ten cases and separates measured from
   replayed (SPEC-0063, TASK-98).** `docs/evals/review-code-matrix.md` now has a
   row for every case 1–10 with its arm, run directory, clean draws and class,

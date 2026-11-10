@@ -1,104 +1,360 @@
-// cli.test.mjs — the CLI's contract on bad input.
+// cli.test.mjs — the one CLI's contract.
 //
-// These spawn the real scripts on purpose. The bugs live in how argv becomes
-// options: `--case abc` left the case filter as NaN, which is falsy, so the
-// filter was skipped and every case was selected; `--concurrency abc` left the
-// lane count as NaN, which starts zero lanes, runs nothing and exits 0. A unit
-// test of a helper would not prove the script wires it in.
+// These spawn the real `scripts/eval.mjs` on purpose. The old defects lived in
+// how argv became options: `--case abc` left the case filter as NaN, which is
+// falsy, so the filter was skipped and every case was selected; `--concurrency
+// abc` started zero lanes, ran nothing and exited 0. A unit test of a helper
+// would not prove the script wires it in.
 //
-// None of these invocations calls a model: a bad value exits before discovery,
-// and the valid one only lists.
+// Nothing here calls a model. A usage error exits before discovery; `list`,
+// `check`, `--level smoke` and the reuse path only read, stage or list.
 
 import { test } from "node:test"
 import assert from "node:assert/strict"
 import { spawnSync } from "node:child_process"
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { readEvals } from "./parse.mjs"
+import { makeScratch, stageFixture, stagedTreeHash, textHash } from "./fixture.mjs"
+import { gradingHash } from "./cache.mjs"
+import { probeIsolation } from "./isolation.mjs"
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "../../..")
-const RUN = join(REPO, "scripts/run-evals.mjs")
-const REPLAY = join(REPO, "scripts/replay-evals.mjs")
+const EVAL = join(REPO, "scripts/eval.mjs")
 
-function cli(script, args, { env = process.env } = {}) {
-  const r = spawnSync(process.execPath, [script, ...args], { cwd: REPO, encoding: "utf8", env })
+function cli(args, { env = process.env, cwd = REPO } = {}) {
+  const r = spawnSync(process.execPath, [EVAL, ...args], { cwd, encoding: "utf8", env })
   return { code: r.status, out: r.stdout, err: r.stderr }
 }
 
-function rejects(args, pattern, { script = RUN, code = 1 } = {}) {
-  const r = cli(script, args)
+function rejects(args, pattern, { code = 2, env } = {}) {
+  const r = cli(args, { env })
   assert.equal(r.code, code, `expected exit ${code}, got ${r.code}\n${r.err}`)
   assert.match(r.err, pattern)
   // A usage error must not look like a clean scan or an empty run.
   assert.doesNotMatch(r.out, /Parsed|passed,|Replayed/, "failed after it had already scanned or run")
 }
 
+function tempHome() {
+  return mkdtempSync(join(tmpdir(), "eval-home-"))
+}
+
+function envWith(home) {
+  return { ...process.env, HOME: home }
+}
+
+function makeCorpus({ name = "demo", cases, fixtures = {} } = {}) {
+  const root = mkdtempSync(join(tmpdir(), "eval-corpus-"))
+  mkdirSync(join(root, "skills", name), { recursive: true })
+  writeFileSync(join(root, "skills", name, "SKILL.md"), `---\nname: ${name}\ndescription: demo skill\n---\n\n# Demo\n`)
+  mkdirSync(join(root, "evals", name), { recursive: true })
+  writeFileSync(join(root, "evals", name, "cases.md"), cases)
+  for (const [n, files] of Object.entries(fixtures)) {
+    for (const [rel, body] of Object.entries(files)) {
+      const path = join(root, "evals", name, "fixtures", String(n), rel)
+      mkdirSync(dirname(path), { recursive: true })
+      writeFileSync(path, body)
+    }
+  }
+  return root
+}
+
+const DEMO_CASES = `
+1. **Write hello.**
+
+   - prompt: Create hello.txt and say hello.
+   - why: the fixture has nothing.
+   - expect: hello.txt exists.
+   - assert: file hello.txt
+
+2. **Second case.**
+
+   - prompt: Say nothing.
+   - assert: reply nothing
+`
+
 test("a non-numeric --case is rejected instead of selecting every case", () => {
-  rejects(["--case", "abc", "--list"], /--case/)
+  rejects(["list", "--root", "skills", "--case", "abc"], /--case/)
 })
 
 test("a zero --case is rejected", () => {
-  rejects(["--case", "0", "--list"], /--case/)
+  rejects(["list", "--root", "skills", "--case", "0"], /--case/)
 })
 
 test("a non-numeric --concurrency is rejected instead of running nothing", () => {
-  rejects(
-    ["--root", "skills", "--skill", "tighten-harness", "--case", "6", "--concurrency", "abc", "--run"],
-    /--concurrency/,
-  )
+  rejects(["run", "review-code", "7", "--root", "skills", "--concurrency", "abc"], /--concurrency/)
 })
 
 test("a non-numeric --timeout is rejected", () => {
-  rejects(["--timeout", "abc", "--list"], /--timeout/)
+  rejects(["run", "review-code", "7", "--root", "skills", "--timeout", "abc"], /--timeout/)
 })
 
 test("an out-of-range --judge-threshold is rejected", () => {
-  rejects(["--judge-threshold", "2", "--list"], /--judge-threshold/)
+  rejects(["run", "review-code", "7", "--root", "skills", "--judge-threshold", "2"], /--judge-threshold/)
 })
 
 test("a malformed --stop is rejected instead of running the full count", () => {
-  rejects(["--stop", "5-3", "--list"], /--stop/)
+  rejects(["run", "review-code", "7", "--root", "skills", "--stop", "5-3"], /--stop/)
 })
 
 test("a zero-pass --stop is rejected", () => {
-  rejects(["--stop", "0/3", "--list"], /--stop/)
+  rejects(["run", "review-code", "7", "--root", "skills", "--stop", "0/3"], /--stop/)
 })
 
 test("a non-numeric --stall-seconds is rejected", () => {
-  rejects(["--stall-seconds", "abc", "--list"], /--stall-seconds/)
+  rejects(["run", "review-code", "7", "--root", "skills", "--stall-seconds", "abc"], /--stall-seconds/)
 })
 
 test("an unknown flag is rejected", () => {
-  rejects(["--nope", "--list"], /unknown flag/)
+  rejects(["list", "--nope"], /unknown flag/)
+})
+
+test("an unknown subcommand is not a run directory", () => {
+  rejects(["skils", "review-code"], /expected one of|takes at most/)
 })
 
 test("a flag that needs a value does not swallow the next flag", () => {
-  rejects(["--skill", "--list"], /--skill needs a value/)
+  rejects(["list", "--root", "--tag", "trigger"], /--root needs a value/)
+})
+
+test("a flag with no meaning for the command is refused, not ignored", () => {
+  rejects(["run", "review-code", "7", "--root", "skills", "--against", "main"], /--against has no meaning/)
+  rejects(["list", "--root", "skills", "--refresh"], /--refresh has no meaning/)
 })
 
 test("valid input still filters and lists", () => {
-  const r = cli(RUN, ["--root", "skills", "--skill", "tighten-harness", "--case", "6", "--list", "--check"])
+  const r = cli(["list", "--root", "skills", "tighten-harness", "--case", "6"])
   assert.equal(r.code, 0, r.err)
   assert.match(r.out, /Parsed 1 case/)
   assert.match(r.out, /tighten-harness #6/)
 })
 
-test("replay rejects a non-numeric --case", () => {
-  const dir = mkdtempSync(join(tmpdir(), "replay-cli-"))
-  rejects(["--dir", dir, "--case", "abc"], /--case/, { script: REPLAY, code: 2 })
+test("list --json carries the same cases as the text view", () => {
+  const r = cli(["list", "--root", "skills", "tighten-harness", "--case", "6", "--json"])
+  assert.equal(r.code, 0, r.err)
+  const record = JSON.parse(r.out)
+  assert.equal(record.cases.length, 1)
+  assert.equal(record.cases[0].case, 6)
 })
 
-test("replay --judge refuses to swallow the next flag as a model", () => {
-  const dir = mkdtempSync(join(tmpdir(), "replay-cli-"))
-  rejects(["--dir", dir, "--judge"], /--judge needs a model/, { script: REPLAY, code: 2 })
+// `check` is the staging gate: it parses, validates, resolves and stages every
+// runnable fixture without a model.
+test("check stages a fixture and exits 0", () => {
+  const root = makeCorpus({ cases: DEMO_CASES, fixtures: { 1: { "hello.txt": "hello\n" } } })
+  const r = cli(["check", "--root", root])
+  assert.equal(r.code, 0, r.err)
+  assert.match(r.out, /2 runnable, 0 manual; 2 fixture\(s\) staged/)
+  assert.match(r.out, /No findings/)
+})
+
+test("check reports a snapshot assertion the fixture cannot satisfy", () => {
+  const root = makeCorpus({
+    cases: `
+1. **Keep the file.**
+
+   - prompt: Leave it alone.
+   - assert: unchanged missing.txt
+`,
+  })
+  const r = cli(["check", "--root", root])
+  assert.equal(r.code, 1, r.stdout)
+  assert.match(r.err, /no staged file matches missing\.txt/)
+})
+
+test("check reports a git.json base that does not resolve", () => {
+  const root = makeCorpus({
+    cases: `
+1. **Review.**
+
+   - prompt: Review it.
+   - assert: file a.txt
+`,
+  })
+  mkdirSync(join(root, "evals", "demo", "fixtures", "1"), { recursive: true })
+  writeFileSync(join(root, "evals", "demo", "fixtures", "1", "git.json"), JSON.stringify({ base: "../nope" }))
+  const r = cli(["check", "--root", root])
+  assert.equal(r.code, 1, r.stdout)
+  assert.match(r.err, /does not resolve/)
+})
+
+test("run --level smoke stages one draw and labels it staging", () => {
+  const home = tempHome()
+  const root = makeCorpus({ cases: DEMO_CASES, fixtures: { 1: { "hello.txt": "hello\n" } } })
+  const r = cli(["run", "demo", "1", "--root", root, "--level", "smoke"], { env: envWith(home) })
+  assert.equal(r.code, 0, r.err)
+  assert.match(r.out, /demo #1: staged \[0\/1\] — staging/)
+  const runDirs = join(home, ".local/share/opencode/evals/runs")
+  assert.equal(existsSync(runDirs), true)
+})
+
+test("run --arm without is the control arm, not a deleted flag", () => {
+  const home = tempHome()
+  const root = makeCorpus({ cases: DEMO_CASES, fixtures: { 1: { "hello.txt": "hello\n" } } })
+  const r = cli(["run", "demo", "1", "--root", root, "--level", "smoke", "--arm", "without"], { env: envWith(home) })
+  assert.equal(r.code, 0, r.err)
+  assert.match(r.out, /arm=without-skill/)
+  const dirs = join(home, ".local/share/opencode/evals/runs")
+  const [dir] = readdirSync(dirs)
+  const manifest = JSON.parse(readFileSync(join(dirs, dir, "manifest.json"), "utf8"))
+  assert.equal(manifest.arm, "without-skill")
+})
+
+// Resume is a directory, not a new run: the manifest and the per-draw files are
+// the state. A missing manifest must fail before discovery, like any usage error.
+test("--resume refuses a directory without a manifest", () => {
+  const dir = mkdtempSync(join(tmpdir(), "resume-empty-"))
+  rejects(["run", "capture-idea", "1", "--root", "skills", "--level", "smoke", "--resume", dir], /no manifest\.json/)
+})
+
+test("--resume reads the persisted draw and closes the case without a model", () => {
+  const home = tempHome()
+  const root = makeCorpus({ cases: DEMO_CASES, fixtures: { 1: { "hello.txt": "hello\n" } } })
+  const runDir = join(home, ".local/share/opencode/evals/runs/resume-demo")
+  const caseDir = join(runDir, "cases/demo--01")
+  mkdirSync(join(caseDir, "draws"), { recursive: true })
+  writeFileSync(
+    join(runDir, "manifest.json"),
+    JSON.stringify({
+      run: "resume-demo",
+      dir: runDir,
+      label: "demo",
+      arm: "with-skill",
+      model: "default",
+      agent: "build",
+      level: "smoke",
+      repoSha: "abc",
+      params: { repeat: 1 },
+      startedAt: "2026-01-01T00:00:00.000Z",
+      finishedAt: null,
+      status: "running",
+      counts: null,
+      skillHashes: {},
+      stagedSkills: {},
+    }),
+  )
+  writeFileSync(
+    join(caseDir, "draws/r1.json"),
+    JSON.stringify({
+      skill: "demo",
+      case: 1,
+      status: "passed",
+      reason: "",
+      fixtureHash: "fixture",
+      promptHash: "prompt",
+      detectorVersion: "71bfb85a91cd68ab",
+      skillHash: "skill",
+      skillGate: { ok: true, reason: "loaded", loaded: ["demo"] },
+      assertions: [],
+      execution: { exit: 0 },
+      arm: "with-skill",
+      leak: [],
+      contaminated: false,
+      meta: {},
+      transcript: join(caseDir, "transcript.md"),
+    }),
+  )
+
+  const r = cli(
+    ["run", "demo", "1", "--root", root, "--level", "smoke", "--repeat", "1", "--resume", runDir],
+    { env: envWith(home) },
+  )
+  assert.equal(r.code, 0, r.err)
+  assert.match(r.out, /demo #1: passed \[1\/1\]/)
+  assert.equal(existsSync(join(caseDir, "result.json")), true)
+  const manifest = JSON.parse(readFileSync(join(runDir, "manifest.json"), "utf8"))
+  assert.equal(manifest.status, "completed")
+})
+
+// `inspect` reads a stored run. No model, no write.
+test("inspect prints the stored status and the failing assertions", () => {
+  const home = tempHome()
+  const runDir = join(home, ".local/share/opencode/evals/runs/2026-01-01T00-00-00--demo")
+  const caseDir = join(runDir, "cases/demo--01")
+  mkdirSync(caseDir, { recursive: true })
+  writeFileSync(
+    join(runDir, "manifest.json"),
+    JSON.stringify({
+      run: "2026-01-01T00-00-00--demo",
+      dir: runDir,
+      label: "demo",
+      arm: "with-skill",
+      model: "default",
+      level: "behavior",
+      params: { repeat: 2, isolate: true, isolation: { enforced: true, mechanism: "seatbelt" } },
+      status: "completed",
+      counts: { passed: 0, failed: 1, unscored: 0 },
+    }),
+  )
+  writeFileSync(
+    join(caseDir, "result.json"),
+    JSON.stringify({
+      skill: "demo",
+      case: 1,
+      status: "failed",
+      reps: 2,
+      passed: 0,
+      repetitions: [
+        { rep: 1, status: "failed", assertions: [{ kind: "file", arg: "hello.txt", pass: false }] },
+        { rep: 2, status: "failed", assertions: [{ kind: "verdict", arg: "APPROVE", pass: false }] },
+      ],
+    }),
+  )
+  const r = cli(["inspect", runDir], { env: envWith(home) })
+  assert.equal(r.code, 0, r.err)
+  assert.match(r.out, /status=completed/)
+  assert.match(r.out, /demo#1: failed \[0\/2\]/)
+  assert.match(r.out, /r1: file hello\.txt/)
+  assert.match(r.out, /r2: verdict APPROVE/)
+  const json = JSON.parse(cli(["inspect", runDir, "--json"], { env: envWith(home) }).out)
+  assert.equal(json[0].cases[0].status, "failed")
+})
+
+test("inspect --replay re-reads stored transcripts and --changed exits 1 on a move", () => {
+  const home = tempHome()
+  const runDir = join(home, ".local/share/opencode/evals/runs/2026-01-01T00-00-00--demo")
+  const caseDir = join(runDir, "cases/implement-from-prompt--02")
+  mkdirSync(caseDir, { recursive: true })
+  writeFileSync(
+    join(caseDir, "transcript.md"),
+    "# Eval: implement-from-prompt case 2\n\n**Scratch:** /tmp/x\n**Exit:** 0\n**Status:** passed\n\n## Transcript\n\n```\n{}\n```\n",
+  )
+  const r = cli(["inspect", runDir, "--replay", "--verbose"], { env: envWith(home) })
+  assert.equal(r.code, 0, r.err)
+  assert.match(r.out, /Replayed 1 transcript\(s\)/)
+  assert.match(r.out, /failed passed -> failed/)
+  const changed = cli(["inspect", runDir, "--replay", "--changed"], { env: envWith(home) })
+  assert.equal(changed.code, 1, changed.out)
+  assert.match(changed.out, /verdict\(s\) differ/)
+})
+
+// One explicit directory must be measured, not a prefix match that silently
+// included a neighbour.
+test("inspect --replay selects exactly the named run directories", () => {
+  const home = tempHome()
+  const seed = (name) => {
+    const caseDir = join(home, ".local/share/opencode/evals/runs", name, "cases/implement-from-prompt--01")
+    mkdirSync(caseDir, { recursive: true })
+    writeFileSync(
+      join(caseDir, "transcript.md"),
+      "# Eval: implement-from-prompt case 1\n\n**Scratch:** /tmp/x\n**Exit:** 0\n**Status:** failed\n\n## Transcript\n\n```\n{}\n```\n",
+    )
+  }
+  seed("2026-01-01T00-00-00--demo")
+  seed("2026-01-02T00-00-00--demo")
+  const one = cli(["inspect", join(home, ".local/share/opencode/evals/runs/2026-01-02T00-00-00--demo"), "--replay"], {
+    env: envWith(home),
+  })
+  assert.equal(one.code, 0, one.err)
+  assert.match(one.out, /Replayed 1 transcript/)
 })
 
 // The CLI branch is exercised with a draw that failed deterministically: it is
 // skipped before the judge, so this test proves the wiring without a model call.
-test("replay --judge --json reports a skipped deterministic failure", () => {
-  const dir = mkdtempSync(join(tmpdir(), "replay-judge-cli-"))
-  const caseDir = join(dir, "runs", "2026-01-01T00-00-00--demo", "cases", "implement-from-prompt--01")
+test("inspect --judge --json reports a skipped deterministic failure", () => {
+  const home = tempHome()
+  const caseDir = join(home, ".local/share/opencode/evals/runs/2026-01-01T00-00-00--demo/cases/implement-from-prompt--01")
   mkdirSync(caseDir, { recursive: true })
   writeFileSync(
     join(caseDir, "result.json"),
@@ -121,7 +377,8 @@ test("replay --judge --json reports a skipped deterministic failure", () => {
     join(caseDir, "transcript.r1.md"),
     "# Eval: implement-from-prompt case 1\n\n**Scratch:** /tmp/x\n**Exit:** 0\n**Status:** failed\n\n## Transcript\n\n```\n{}\n```\n",
   )
-  const r = cli(REPLAY, ["--dir", dir, "--judge", "default", "--json"])
+  const dir = join(home, ".local/share/opencode/evals/runs/2026-01-01T00-00-00--demo")
+  const r = cli(["inspect", dir, "--judge", "default", "--json"], { env: envWith(home) })
   assert.equal(r.code, 0, r.err)
   const report = JSON.parse(r.out)
   assert.equal(report.length, 1)
@@ -129,129 +386,151 @@ test("replay --judge --json reports a skipped deterministic failure", () => {
   assert.match(report[0].draws[0].reason, /deterministic/)
   assert.deepEqual(report[0].tally, { total: 1, judged: 0, passed: 0, failed: 0, skipped: 1, deterministicFailed: 1 })
   // Human output must not reduce a skipped case to a meaningless `0/0 judged`.
-  const text = cli(REPLAY, ["--dir", dir, "--judge", "default"])
+  const text = cli(["inspect", dir, "--judge", "default"], { env: envWith(home) })
   assert.equal(text.code, 0, text.err)
   assert.match(text.out, /tally: 0\/1 judged passed, 1 skipped \(deterministic failures\)/)
   assert.match(text.out, /provenance: partial/)
 })
 
-test("replay --json without --judge is rejected instead of ignored", () => {
-  const dir = mkdtempSync(join(tmpdir(), "replay-json-"))
-  rejects(["--dir", dir, "--json"], /--json needs --judge/, { script: REPLAY, code: 2 })
+test("inspect --leaks is model-free and refuses --judge", () => {
+  const dir = mkdtempSync(join(tmpdir(), "inspect-leaks-"))
+  rejects(["inspect", dir, "--leaks", "--judge", "default"], /--leaks is model-free/)
 })
 
-// Without a filter, re-judging scans every stored run of a case; a measurement
-// that cites two directories must be able to select exactly those two.
-test("replay --run selects one stored run", () => {
-  const dir = mkdtempSync(join(tmpdir(), "replay-run-filter-"))
-  const makeRun = (id) => {
-    const caseDir = join(dir, "runs", id, "cases", "implement-from-prompt--01")
-    mkdirSync(caseDir, { recursive: true })
-    writeFileSync(
-      join(caseDir, "result.json"),
-      JSON.stringify({
-        skill: "implement-from-prompt",
-        case: 1,
-        status: "failed",
-        repetitions: [
-          {
-            rep: 1,
-            status: "failed",
-            assertions: [{ kind: "reply", arg: "must exist", pass: false }],
-            skillGate: { ok: true },
-            execution: { exit: 0 },
-          },
-        ],
-      }),
-    )
-    writeFileSync(
-      join(caseDir, "transcript.r1.md"),
-      "# Eval: implement-from-prompt case 1\n\n**Scratch:** /tmp/x\n**Exit:** 0\n**Status:** failed\n\n## Transcript\n\n```\n{}\n```\n",
-    )
-  }
-  makeRun("2026-01-01T00-00-00--demo")
-  makeRun("2026-01-02T00-00-00--demo")
-  // The same id embedded later in a directory name: `includes` selected it,
-  // though the documented rule is a prefix on the run directory's name.
-  makeRun("pre-2026-01-02T00-00-00--demo")
-  const all = JSON.parse(cli(REPLAY, ["--dir", dir, "--judge", "default", "--json"]).out)
-  assert.equal(all.length, 3)
-  const one = JSON.parse(cli(REPLAY, ["--dir", dir, "--judge", "default", "--json", "--run", "2026-01-02"]).out)
-  assert.equal(one.length, 1)
-  assert.match(one[0].dir, /^2026-01-02/)
+test("inspect --leaks needs a directory or --all", () => {
+  const dir = mkdtempSync(join(tmpdir(), "inspect-leaks-"))
+  rejects(["inspect", "--leaks", "--dir", dir], /--leaks needs one or more run directories/)
 })
 
-test("replay --run refuses to swallow the next flag as an id", () => {
-  const dir = mkdtempSync(join(tmpdir(), "replay-cli-"))
-  rejects(["--dir", dir, "--run", "--json"], /--run needs a run id/, { script: REPLAY, code: 2 })
-})
-
-// Resume is a directory, not a new run: the manifest and the per-draw files are
-// the state. A missing manifest must fail before discovery, like any usage error.
-test("--resume needs --run", () => {
-  rejects(["--resume", "/tmp/nope", "--list"], /--resume needs --run/)
-})
-
-test("--resume refuses a directory without a manifest", () => {
-  const dir = mkdtempSync(join(tmpdir(), "resume-empty-"))
-  rejects(["--resume", dir, "--run", "--root", "skills"], /no manifest\.json/)
-})
-
-test("--resume reads the persisted draw and closes the case without a model", () => {
-  const home = mkdtempSync(join(tmpdir(), "resume-home-"))
-  const runDir = join(home, ".local/share/opencode/evals/runs/resume-demo")
-  const caseDir = join(runDir, "cases/capture-idea--01")
-  mkdirSync(join(caseDir, "draws"), { recursive: true })
+test("inspect --leaks reports a clean stored draw", () => {
+  const home = tempHome()
+  const runDir = join(home, ".local/share/opencode/evals/runs/2026-01-01T00-00-00--demo")
+  const caseDir = join(runDir, "cases/demo--01")
+  mkdirSync(caseDir, { recursive: true })
   writeFileSync(
     join(runDir, "manifest.json"),
     JSON.stringify({
-      run: "resume-demo",
-      dir: runDir,
-      label: "capture-idea",
-      arm: "with-skill",
+      run: "2026-01-01T00-00-00--demo",
+      status: "completed",
+      params: { isolation: { enforced: true, mechanism: "seatbelt" } },
+    }),
+  )
+  writeFileSync(
+    join(caseDir, "transcript.md"),
+    "# Eval: demo case 1\n\n**Scratch:** /tmp/scratch\n**Exit:** 0\n**Status:** passed\n\n## Transcript\n\n```\n{}\n```\n",
+  )
+  const r = cli(["inspect", runDir, "--leaks"], { env: envWith(home) })
+  assert.equal(r.code, 0, r.err)
+  assert.match(r.out, /demo#1 → clean/)
+  assert.match(r.out, /1 cell\(s\), 0 dirty/)
+})
+
+// ---------------------------------------------------------------------------
+// compare: reuse, scorecard, artefact shape. Seeded arms mean no model call.
+// ---------------------------------------------------------------------------
+
+function seedArm(home, { id, arm, skillId, c, identity, statuses }) {
+  const dir = join(home, ".local/share/opencode/evals/runs", id)
+  const caseDir = join(dir, "cases", `${skillId}--${String(c.n).padStart(2, "0")}`)
+  mkdirSync(caseDir, { recursive: true })
+  const probe = probeIsolation()
+  const isolation = { enforced: probe.enforced, mechanism: probe.enforced ? probe.mechanism : null, reason: "seed" }
+  writeFileSync(
+    join(dir, "manifest.json"),
+    JSON.stringify({
+      run: id,
+      dir,
+      label: skillId,
+      arm,
       model: "default",
       agent: "build",
-      level: "smoke",
+      level: "behavior",
       repoSha: "abc",
-      params: { repeat: 1 },
+      params: { repeat: statuses.length, isolate: true, isolation, effectiveModel: "default", baseline: null },
       startedAt: "2026-01-01T00:00:00.000Z",
-      finishedAt: null,
-      status: "running",
-      counts: null,
+      finishedAt: "2026-01-01T00:10:00.000Z",
+      status: "completed",
+      counts: { passed: statuses.filter((s) => s === "passed").length, failed: 0, unscored: 0 },
       skillHashes: {},
       stagedSkills: {},
     }),
   )
+  const draw = (status, i) => ({
+    rep: i + 1,
+    status,
+    reason: status === "passed" ? "" : "file hello.txt",
+    assertions: c.assert.map((a) => ({ ...a, pass: status === "passed" })),
+    skillGate: { ok: true, reason: arm === "without-skill" ? "no skill loaded (control arm)" : "loaded" },
+    execution: { exit: 0, durationMs: 1000 + i * 100, tokens: { input: 1000, output: 200 } },
+    fixtureHash: identity.fixtureHash,
+    promptHash: identity.promptHash,
+    skillHash: identity.skillHash,
+  })
+  const passed = statuses.filter((s) => s === "passed").length
   writeFileSync(
-    join(caseDir, "draws/r1.json"),
+    join(caseDir, "result.json"),
     JSON.stringify({
-      skill: "capture-idea",
-      case: 1,
-      status: "passed",
-      reason: "",
-      fixtureHash: "fixture",
-      promptHash: "prompt",
-      detectorVersion: "71bfb85a91cd68ab",
-      skillHash: "skill",
-      skillGate: { ok: true, reason: "loaded", loaded: ["capture-idea"] },
-      assertions: [],
-      execution: { exit: 0 },
-      arm: "with-skill",
-      leak: [],
-      contaminated: false,
-      meta: {},
-      transcript: join(caseDir, "transcript.md"),
+      skill: skillId,
+      case: c.n,
+      status: passed === statuses.length ? "passed" : "failed",
+      reason: passed === statuses.length ? "" : "file hello.txt",
+      reps: statuses.length,
+      passed,
+      passRate: passed / statuses.length,
+      fixtureHash: identity.fixtureHash,
+      promptHash: identity.promptHash,
+      detectorVersion: "seed",
+      skillHash: identity.skillHash,
+      repetitions: statuses.map(draw),
     }),
   )
+}
 
-  const r = cli(
-    RUN,
-    ["--root", "skills", "--skill", "capture-idea", "--case", "1", "--level", "smoke", "--repeat", "1", "--resume", runDir, "--run"],
-    { env: { ...process.env, HOME: home } },
-  )
+test("compare reuses an arm only when all six inputs match, and prints its decision", () => {
+  const home = tempHome()
+  const root = makeCorpus({ cases: DEMO_CASES, fixtures: { 1: { "hello.txt": "hello\n" } } })
+  const skill = { id: "demo", dir: join(root, "skills", "demo") }
+  const { cases } = readEvals(join(root, "evals", "demo", "cases.md"), "demo", { skillDir: skill.dir })
+  const c = cases[0]
+
+  const scratch = makeScratch(skill.id, c.n)
+  let fixtureHash
+  try {
+    fixtureHash = stageFixture(skill, c, scratch).hash
+  } finally {
+    rmSync(scratch, { recursive: true, force: true })
+  }
+  const skillHash = stagedTreeHash(skill.dir)
+  const common = { promptHash: textHash(c.prompt), fixtureHash, gradingHash: gradingHash({ assert: c.assert, gate: c.gate }) }
+
+  seedArm(home, { id: "2026-01-01T00-00-01--demo--without-skill", arm: "without-skill", skillId: "demo", c, identity: { ...common, skillHash: null }, statuses: ["failed", "failed", "failed"] })
+  seedArm(home, { id: "2026-01-01T00-00-02--demo", arm: "with-skill", skillId: "demo", c, identity: { ...common, skillHash }, statuses: ["passed", "passed", "passed"] })
+
+  const r = cli(["compare", "demo", "1", "--root", root], { env: envWith(home) })
   assert.equal(r.code, 0, r.err)
-  assert.match(r.out, /capture-idea #1: passed/)
-  assert.equal(existsSync(join(caseDir, "result.json")), true)
-  const manifest = JSON.parse(readFileSync(join(runDir, "manifest.json"), "utf8"))
-  assert.equal(manifest.status, "completed")
+  assert.equal((r.err.match(/reused /g) ?? []).length, 2, r.err)
+  assert.match(r.out, /demo #1\s+default\s+screening \(3\/arm\)/)
+  assert.match(r.out, /none\s+3\/3\s+0\/3/)
+  assert.match(r.out, /candidate\s+3\/3\s+3\/3/)
+  assert.match(r.out, /-> improves/)
+
+  const record = JSON.parse(cli(["compare", "demo", "1", "--root", root, "--json"], { env: envWith(home) }).out)
+  assert.equal(record.repeat, 3)
+  assert.equal(record.arms.length, 2)
+  assert.deepEqual(record.arms.map((a) => a.arm), ["none", "candidate"])
+  assert.equal(record.arms.every((a) => a.reused), true)
+  // The summary is the existing run record, not a second schema.
+  assert.equal(record.arms[1].summary.results[0].status, "passed")
+  assert.equal(record.arms[1].manifest.run, "2026-01-01T00-00-02--demo")
+})
+
+test("compare --against refuses a ref that is not a commit", () => {
+  const root = makeCorpus({ cases: DEMO_CASES })
+  const r = cli(["compare", "demo", "1", "--root", root, "--against", "not-a-ref"])
+  assert.equal(r.code, 1, r.err)
+  assert.match(r.err, /is not a commit/)
+})
+
+test("compare needs exactly one case", () => {
+  rejects(["compare", "demo", "--root", "skills"], /compare needs <skill> <n>/)
 })

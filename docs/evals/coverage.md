@@ -2,14 +2,14 @@
 
 Inventory of the cases in `evals/*/cases.md`: what exists, how it is staged, and
 what has actually been measured. Counts come from
-`node scripts/run-evals.mjs --root skills --list` and from the fixture
+`node scripts/eval.mjs list --root skills` and from the fixture
 directories; they are not estimates. Paths quoted inside a measurement note name
 the layout at the time of that run; SPEC-0058 moved the corpus out of the skill.
 
 | Skill | Cases | Trigger | Manual | Fixture | Evidence recorded |
 | --- | --- | --- | --- | --- | --- |
 | `audit-docs` | 4 | 2 | 0 | tree 1; tree 3 staged via `git.json`; tree 4 drift fixture | case 3: 3/3, skill loaded 3/3 (`why:`, no run dir); case 4: 3/3, defect + intentional evolution + future filtered, no writes (`2026-11-05T08-46-00--audit-docs`) |
-| `bootstrap-project-harness` | 23 | 3 | 1 | trees 1, 2, 3, 5, 7, 9, 10, 11, 14, 15, 16–23; 14 and 15 via `git.json` | case 14: 12/12 re-judged (first pass 9/12 on a reply regex); case 15: 3/3 (`why:`, no run dir). Re-measured after the Oxlint rename (SPEC-0045, `agentworks/deepseek-v4-1-flash`, five draws): case 14 5/5 and case 15 1/5 (failing `unchanged justfile`) in `2026-11-08T23-32-34--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` (clean, `findings=0`, `isolated=yes`). Stack review, skill arm: #16 4/4 clean (1 stalled), #17 4/4 clean (1 stalled), #18 5/5, #19 5/5, #20 0/5 on `unchanged biome.json` (the skill merged the four Biome limits), #21 5/5, #22 5/5, #23 trigger 4/4 clean + 1 contaminated (host read), all in `2026-11-08T21-52-29--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` (dirty: 2 stalls + 1 host read, `isolated=no`). Control: no cell reached five clean draws; #19 reached 2 clean draws and both failed, the other cells 0 clean with 5 contaminated each, in `2026-11-08T22-51-39--bootstrap-project-harness--agentworks-deepseek-v4-1-flash--without-skill` (dirty: 33 skill leaks + 7 host reads, `isolated=no`); the control still read the real install, so every behavioural cell was **unresolved** at that point, not a separator. **#19 is measured without another draw (SPEC-0047):** with-skill `2026-11-09T07-37-44--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` is 5/5 passed and `isolated=yes`; the control `2026-11-09T10-59-41--bootstrap-project-harness--…--without-skill` replays under the current detector (v6) with `node scripts/replay-evals.mjs --leaks` to four clean draws, `deniedDraws=1`: r1 is a **store leak** (SPEC-0052), so the four other draws are the evidentiary base, with 0/4 passed (all four red on `file AGENTS.md`, `file justfile`, `filematch eslint.config.js` and `filematch justfile eslint`) — a **separator** on the rule (5/5 vs 0/4). The stored control `result.json` still records the older v3 contamination (`skillLeaks=1`, `isolated=no`) by design; the replay is the evidence, not the artefact |
+| `bootstrap-project-harness` | 23 | 3 | 1 | trees 1, 2, 3, 5, 7, 9, 10, 11, 14, 15, 16–23; 14 and 15 via `git.json` | case 14: 12/12 re-judged (first pass 9/12 on a reply regex); case 15: 3/3 (`why:`, no run dir). Re-measured after the Oxlint rename (SPEC-0045, `agentworks/deepseek-v4-1-flash`, five draws): case 14 5/5 and case 15 1/5 (failing `unchanged justfile`) in `2026-11-08T23-32-34--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` (clean, `findings=0`, `isolated=yes`). Stack review, skill arm: #16 4/4 clean (1 stalled), #17 4/4 clean (1 stalled), #18 5/5, #19 5/5, #20 0/5 on `unchanged biome.json` (the skill merged the four Biome limits), #21 5/5, #22 5/5, #23 trigger 4/4 clean + 1 contaminated (host read), all in `2026-11-08T21-52-29--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` (dirty: 2 stalls + 1 host read, `isolated=no`). Control: no cell reached five clean draws; #19 reached 2 clean draws and both failed, the other cells 0 clean with 5 contaminated each, in `2026-11-08T22-51-39--bootstrap-project-harness--agentworks-deepseek-v4-1-flash--without-skill` (dirty: 33 skill leaks + 7 host reads, `isolated=no`); the control still read the real install, so every behavioural cell was **unresolved** at that point, not a separator. **#19 is measured without another draw (SPEC-0047):** with-skill `2026-11-09T07-37-44--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` is 5/5 passed and `isolated=yes`; the control `2026-11-09T10-59-41--bootstrap-project-harness--…--without-skill` replays under the current detector (v6) with `node scripts/eval.mjs inspect --leaks` to four clean draws, `deniedDraws=1`: r1 is a **store leak** (SPEC-0052), so the four other draws are the evidentiary base, with 0/4 passed (all four red on `file AGENTS.md`, `file justfile`, `filematch eslint.config.js` and `filematch justfile eslint`) — a **separator** on the rule (5/5 vs 0/4). The stored control `result.json` still records the older v3 contamination (`skillLeaks=1`, `isolated=no`) by design; the replay is the evidence, not the artefact |
 | `capture-idea` | 3 | 2 | 0 | trees 1–3 | published matrix: #1 5/5 with the skill; control **unresolved** under v2 (`2026-11-07T08-27-30--capture-idea--agentworks-deepseek-v4-1-flash--without-skill`: 0/0 clean, 5 contaminated — every draw read the install under `/Users/wendell/.agents/skills` (`r1` the directory, the rest the `SKILL.md`)), after v1 clean subsets 0/2, 0/2 and 0/0 (every clean draw failed `status: unprocessed`; dirs `2026-11-06T16-40-32--capture-idea`, `…17-07-09--without-skill`, `…17-23-44…`, `…17-32-50…`, all dirty); #2 trigger 5/5; #3 routing **5/5** with `process-inbox` staged as the declared sibling in `2026-11-06T19-06-50--capture-idea` (v2, `isolated=yes`), replacing the pre-fix 0/4 clean cross-skill-staging record `2026-11-06T16-50-30--capture-idea` (findings=1); re-measured under the enforced boundary (SPEC-0050, `agentworks/deepseek-v4-1-flash`, five draws): #1 is 5/5 clean with the skill (`2026-11-09T12-39-33--capture-idea--agentworks-deepseek-v4-1-flash`, `findings=0 isolated=yes`); the control `2026-11-09T12-41-57--capture-idea--…--without-skill` is 5/5 clean and 1/5 passed under the v5 replay (SPEC-0051, `deniedDraws=2`), the other four red on `filematch docs/inbox/*.md status: unprocessed` — **separator** (5/5 vs 1/5). Its stored `result.json` still records r1 as a v4 `skillLeaks=1` on `/Users/wendell/.config/opencode/skills`; SPEC-0051 re-judged that draw as `denied` (empty listing, content from another file), so the replay is the evidence. See `pipeline-bookends-matrix.md` |
 | `find-blind-spots` | 4 | 2 | 0 | tree 4 | case 4: 3/3, skill loaded 3/3 (`why:`, no run dir) |
 | `groom-backlog` | 7 | 2 | 0 | trees 1, 3, 4, 5 | ablation on 4 fixture cases, 2026-11-05: both arms 4/4; index-first not promoted (tokens +65% on the adversarial case) (`09-32-51`, `09-34-43`, `09-39-15`, `09-43-45`); #2: pre-detector 3/3 with and 3/3 without at `3d38b31` (`2026-11-05T17-09-40--groom-backlog`, `2026-11-05T17-13-34--groom-backlog--without-skill`); re-run under the leak detector at `8777e0b`: with skill 3/3 clean (`2026-11-06T07-53-16--groom-backlog`), without it 0/3 with 2 contaminated — clean control 0/1 (`2026-11-06T07-47-34--groom-backlog--without-skill`), so #2 was unresolved at that point, not a regression case; re-measured under the enforced boundary (SPEC-0050, five draws): the skill arm is 5/5 clean (`2026-11-09T12-50-37--groom-backlog--agentworks-deepseek-v4-1-flash`, `findings=0 isolated=yes`) and the control `2026-11-09T12-55-35--groom-backlog--…--without-skill` is 4/5 clean under the v6 replay (`deniedDraws=2`): r2 is a **store leak** (`evals/groom-backlog/2.md`, the previous `result.json` and prior `2.r*.md` transcripts), so the four other draws are the evidentiary base (4/4 passed) — **non-discriminator** (5/5 vs 5/5). The store is corpus and the read is denied under enforcement (SPEC-0052). The control artefact still records r2 as v4 `skillLeaks=1` for `skills/groom/SKILL.md` and `hostReads=1` for `/Users/wendell/.agents/commands`; SPEC-0051 re-judged it as `denied` because the `cat` returned `No such file or directory`, not the file's content, so the replay is the evidence |
@@ -61,7 +61,7 @@ in [`discriminating-cases.md`](discriminating-cases.md).
     stored artefact predates the rule that would clear it (a v3 control that
     probed the corpus with `2>/dev/null`, the 10-59-41 case): history, never a
     clean measurement under the stored artefact. Citable as replay-verified
-    history only when `node scripts/replay-evals.mjs --leaks <run-dir>` prints
+    history only when `node scripts/eval.mjs inspect <run-dir> --leaks` prints
     `clean` (or `clean … deniedDraws=N`) and, when the manifest records an
     enforced boundary, `isolated=yes`; the citation names that replay. The
     replay re-judges the stored transcripts under the current detector. The
@@ -162,7 +162,7 @@ returned that path's content, which keeps the SPEC-0051 rule ahead of it. The
 deny is scoped to `evals`:
 `auth.json`, `evals-archive` and `evals-*-backup` are outside it.
 
-The store-wide re-judge (`node scripts/replay-evals.mjs --leaks --all`, no model,
+The store-wide re-judge (`node scripts/eval.mjs inspect --leaks --all`, no model,
 no write) found eight draws that touch the store. Five moved clean → `leak`, and
 every one reads the store:
 
@@ -184,7 +184,7 @@ are re-judged above: `groom-backlog` #2 is 4/5 clean with 4/4 passed
 (non-discriminator) and `bootstrap-project-harness` #19 is 4/5 clean with 0/4
 passed over the clean base (separator 5/5 vs 0/4).
 
-`node scripts/replay-evals.mjs --leaks <run-dir…>` (or `--leaks --all`)
+`node scripts/eval.mjs inspect --leaks <run-dir…>` (or `--all`)
 re-judged the 0.5.0 wave from its transcripts, with no model and no write into
 the run directories: 49 run directories and 57 cells (the four skills, their
 controls, the two `write-implementation-prompt` canaries, and the
@@ -290,7 +290,7 @@ row listed here is not a clean measurement.
 Measured 2026-11-09 on `agentworks/deepseek-v4-1-flash`, concurrency 4, detector
 v4 `d3e95ef948f983b7`, then re-judged read-only under detector v5
 `def64b2d6a1baa6e` (SPEC-0051) and again under v6 `9149d6ab1ca57343`
-(SPEC-0052), both with `node scripts/replay-evals.mjs --leaks`. Every manifest
+(SPEC-0052), both with `node scripts/eval.mjs inspect --leaks`. Every manifest
 records `params.isolation.enforced: true` (seatbelt); under v6 every run is
 `isolated=yes` except the two controls whose store-reading draw is named below;
 `check-eval-run` on the two stored v4 controls still prints `isolated=no`. The #19 row is SPEC-0047's evidence, re-judged by
@@ -396,7 +396,7 @@ original 60 ceiling to close the case-10 control.
 | #7 | control | `2026-11-10T15-35-51--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 0/5 | 0/5 / 0/5 | `verdict REJECT` | **separator** |
 
 The **replayed** column is the same stored transcripts read with the closed stance
-table of SPEC-0062, no new draw: `node scripts/replay-evals.mjs --run <dir>` over
+table of SPEC-0062, no new draw: `node scripts/eval.mjs inspect <dir> --replay` over
 the eight directories the four citations name (the `#1`, `#8`, `#9` and `#10`
 cells; the `#2` and `#7` rows replay with it and are shown for completeness). The
 measured `passed` column is untouched — it records what the assertion said when
@@ -751,7 +751,7 @@ has a clean control pair from SPEC-0050 (5/5 vs 0/5) and is a separator;
 
 ```sh
 # the inventory
-node scripts/run-evals.mjs --root skills --list
+node scripts/eval.mjs list --root skills
 
 # which cases stage a committed repo
 find evals -name git.json

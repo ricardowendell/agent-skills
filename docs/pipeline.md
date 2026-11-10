@@ -8,7 +8,7 @@ state_dir: .pdlc
 run_records_dir: runs
 agents_dir: .opencode/agents
 lint: node scripts/validate-skills.mjs --root skills
-selftest: node scripts/run-evals.mjs --root skills --list --check && node --test scripts/lib/evals/*.test.mjs && node --test scripts/lib/*.test.mjs && node --test skills/bootstrap-project-harness/scripts/*.test.mjs && node scripts/check-sensor-parity.mjs && node scripts/check-evidence.mjs
+selftest: node scripts/eval.mjs check --root skills && node --test scripts/lib/evals/*.test.mjs && node --test scripts/lib/*.test.mjs && node --test skills/bootstrap-project-harness/scripts/*.test.mjs && node scripts/check-sensor-parity.mjs && node scripts/check-evidence.mjs
 pdlc_version: ">=1.4.0"
 ---
 
@@ -47,7 +47,8 @@ declara `task:` e `files:`.
 ## Gates
 
 - `lint` — validador de skills; roda no worktree.
-- `selftest` — o mesmo conjunto do CI: `--list --check`, testes do harness,
+- `selftest` — o mesmo conjunto do CI: `check` (parse, valida e encena cada
+  fixture, sem modelo), testes do harness,
   testes do bootstrap, sensor parity, e `check-evidence` sobre o store local. O
   CI não tem o store, então lá roda o resto mais `spec-check` para as specs que
   o pull request altera.

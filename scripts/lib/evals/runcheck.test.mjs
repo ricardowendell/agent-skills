@@ -457,7 +457,7 @@ test("without a requested repeat the short case cannot be judged and stays silen
 // pure rule. These run the real script against synthetic run directories in
 // $TMPDIR so the exit codes and the summary cannot drift.
 const CLI = fileURLToPath(new URL("../../check-eval-run.mjs", import.meta.url))
-const REPLAY = fileURLToPath(new URL("../../replay-evals.mjs", import.meta.url))
+const EVAL = fileURLToPath(new URL("../../eval.mjs", import.meta.url))
 
 function makeRun(t, { manifest, cases = [] } = {}) {
   const dir = mkdtempSync(join(tmpdir(), "pdlc-runcheck-"))
@@ -536,7 +536,7 @@ test("replay --leaks re-judges stored transcripts and writes nothing", (t) => {
   writeFileSync(join(cleanDir, "transcript.r1.md"), transcriptMd({ n: 2, scratch, command: `cat ${scratch}/AGENTS.md` }))
 
   const before = snapshot(run)
-  const r = spawnSync(process.execPath, [REPLAY, "--leaks", run], { encoding: "utf8" })
+  const r = spawnSync(process.execPath, [EVAL, "inspect", "--leaks", run], { encoding: "utf8" })
   assert.equal(r.status, 0, r.stderr)
   assert.match(r.stdout, /demo#1 → dirty\(host\)  \[2 draw\(s\)\]/)
   assert.match(r.stdout, /demo#2 → clean  \[1 draw\(s\)\]/)
@@ -570,7 +570,7 @@ test("replay --leaks splits denied attempts and reports the isolation verdict", 
     transcriptMd({ n: 2, scratch, command: "cat /Users/me/.agents/skills/x/SKILL.md", output: "SKILL BODY" }),
   )
 
-  const r = spawnSync(process.execPath, [REPLAY, "--leaks", run], { encoding: "utf8" })
+  const r = spawnSync(process.execPath, [EVAL, "inspect", "--leaks", run], { encoding: "utf8" })
   assert.equal(r.status, 0, r.stderr)
   assert.match(r.stdout, /demo#1 → clean  \[2 draw\(s\)\]  isolated=yes  deniedDraws=2/)
   assert.match(r.stdout, /demo#2 → dirty\(leak\)  \[1 draw\(s\)\]  isolated=no/)
@@ -594,7 +594,7 @@ test("replay --leaks treats a suppressed probe as denied only under enforcement"
   make("enforced", { enforced: true, mechanism: "seatbelt", reason: "available" })
   make("unenforced", { enforced: false, mechanism: null, reason: "platform linux" })
 
-  const r = spawnSync(process.execPath, [REPLAY, "--leaks", "--all", "--dir", root], { encoding: "utf8" })
+  const r = spawnSync(process.execPath, [EVAL, "inspect", "--leaks", "--all", "--dir", root], { encoding: "utf8" })
   assert.equal(r.status, 0, r.stderr)
   assert.match(r.stdout, /enforced  demo#1 → clean  \[1 draw\(s\)\]  isolated=yes  deniedDraws=1/)
   assert.match(r.stdout, /unenforced  demo#1 → dirty\(leak\)  \[1 draw\(s\)\]  isolated=no/)
@@ -602,7 +602,7 @@ test("replay --leaks treats a suppressed probe as denied only under enforcement"
 
 test("replay --leaks exits 2 for a path that is not a run dir", () => {
   const missing = join(tmpdir(), `pdlc-replay-missing-${process.pid}-${Date.now()}`)
-  const r = spawnSync(process.execPath, [REPLAY, "--leaks", missing], { encoding: "utf8" })
+  const r = spawnSync(process.execPath, [EVAL, "inspect", "--leaks", missing], { encoding: "utf8" })
   assert.equal(r.status, 2)
   assert.match(r.stderr, /not a readable run dir/)
 })
@@ -610,7 +610,7 @@ test("replay --leaks exits 2 for a path that is not a run dir", () => {
 test("replay --leaks exits 2 for a directory without cases/", (t) => {
   const dir = mkdtempSync(join(tmpdir(), "pdlc-replay-empty-"))
   t.after(() => rmSync(dir, { recursive: true, force: true }))
-  const r = spawnSync(process.execPath, [REPLAY, "--leaks", dir], { encoding: "utf8" })
+  const r = spawnSync(process.execPath, [EVAL, "inspect", "--leaks", dir], { encoding: "utf8" })
   assert.equal(r.status, 2)
   assert.match(r.stderr, /not a run dir \(no cases\/\)/)
 })
@@ -619,13 +619,13 @@ test("replay --leaks exits 2 for a run dir with no transcripts", (t) => {
   const dir = mkdtempSync(join(tmpdir(), "pdlc-replay-notrans-"))
   t.after(() => rmSync(dir, { recursive: true, force: true }))
   mkdirSync(join(dir, "cases", "x--01"), { recursive: true })
-  const r = spawnSync(process.execPath, [REPLAY, "--leaks", dir], { encoding: "utf8" })
+  const r = spawnSync(process.execPath, [EVAL, "inspect", "--leaks", dir], { encoding: "utf8" })
   assert.equal(r.status, 2)
   assert.match(r.stderr, /no transcripts in run dir/)
 })
 
 test("replay --leaks with no run dir exits 2 instead of scanning the store", () => {
-  const r = spawnSync(process.execPath, [REPLAY, "--leaks"], { encoding: "utf8" })
+  const r = spawnSync(process.execPath, [EVAL, "inspect", "--leaks"], { encoding: "utf8" })
   assert.equal(r.status, 2)
   assert.match(r.stderr, /needs one or more run directories/)
   assert.match(r.stderr, /--all/)
@@ -634,7 +634,7 @@ test("replay --leaks with no run dir exits 2 instead of scanning the store", () 
 test("replay --leaks --all with an empty store exits 2", (t) => {
   const dir = mkdtempSync(join(tmpdir(), "pdlc-replay-all-"))
   t.after(() => rmSync(dir, { recursive: true, force: true }))
-  const r = spawnSync(process.execPath, [REPLAY, "--leaks", "--all", "--dir", dir], { encoding: "utf8" })
+  const r = spawnSync(process.execPath, [EVAL, "inspect", "--leaks", "--all", "--dir", dir], { encoding: "utf8" })
   assert.equal(r.status, 2)
   assert.match(r.stderr, /no run directories found/)
 })
@@ -657,7 +657,7 @@ test("replay --leaks --all skips an unfinished manifest-only run", (t) => {
   mkdirSync(join(broken, "cases"), { recursive: true })
   writeFileSync(join(broken, "manifest.json"), JSON.stringify({ status: "running" }))
 
-  const r = spawnSync(process.execPath, [REPLAY, "--leaks", "--all", "--dir", store], { encoding: "utf8" })
+  const r = spawnSync(process.execPath, [EVAL, "inspect", "--leaks", "--all", "--dir", store], { encoding: "utf8" })
   assert.equal(r.status, 0, r.stderr)
   assert.match(r.stdout, /good-run  demo#1 → dirty\(host\)  \[1 draw\(s\)\]/)
   assert.match(r.stdout, /skipped=1/)
@@ -681,7 +681,7 @@ test("replay reads params.isolation and does not upgrade a legacy isolate:true",
   make("unenforced", { isolate: true, isolation: { enforced: false, mechanism: null, reason: "platform linux" } })
   make("enforced", { isolate: true, isolation: { enforced: true, mechanism: "seatbelt", reason: "available" } })
 
-  const r = spawnSync(process.execPath, [REPLAY, "--leaks", "--all", "--dir", store], { encoding: "utf8" })
+  const r = spawnSync(process.execPath, [EVAL, "inspect", "--leaks", "--all", "--dir", store], { encoding: "utf8" })
   assert.equal(r.status, 0, r.stderr)
   assert.match(r.stdout, /legacy  isolation=legacy/)
   assert.match(r.stdout, /unenforced  isolation=unenforced/)

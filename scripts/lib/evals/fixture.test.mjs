@@ -205,7 +205,7 @@ test("two synthetic skills stage side by side, each with its own hash", () => {
 // `stage:` is case syntax validated by the CLI, so the check runs the real
 // script on synthetic roots: a known sibling is accepted, a self-reference and
 // an unknown id are refused.
-const RUN_EVALS = resolve(dirname(fileURLToPath(import.meta.url)), "../../run-evals.mjs")
+const EVAL = resolve(dirname(fileURLToPath(import.meta.url)), "../../eval.mjs")
 function stageRoot(skills) {
   const root = mkdtempSync(join(tmpdir(), "stage-check-"))
   for (const [id, stage] of Object.entries(skills)) {
@@ -216,7 +216,7 @@ function stageRoot(skills) {
   }
   return join(root, "skills")
 }
-const checkRoot = (root) => spawnSync(process.execPath, [RUN_EVALS, "--root", root, "--list", "--check"], { encoding: "utf8" })
+const checkRoot = (root) => spawnSync(process.execPath, [EVAL, "check", "--root", root], { encoding: "utf8" })
 
 test("--check accepts a declared sibling and rejects a self-reference", () => {
   const ok = checkRoot(stageRoot({ capture: "process", process: "capture" }))

@@ -28,6 +28,8 @@ files:
   - scripts/lib/evals/report.test.mjs
   - scripts/lib/evals/cache.mjs
   - scripts/lib/evals/cache.test.mjs
+  - scripts/lib/evals/fixture.test.mjs
+  - scripts/lib/evals/runcheck.test.mjs
   - package.json
   - .github/workflows/skills.yml
   - .githooks/pre-commit
@@ -243,4 +245,96 @@ None. The CLI shape was chosen at review on 2026-11-10.
 - If a flag turns out to have no honest mapping, say so in `CONTRIBUTING.md` and
   drop it. A compatibility flag nobody uses is how the 921 lines came back.
 
-_Filled during implementation._
+## Results
+
+**One entry point.** `scripts/eval.mjs` is the only eval CLI: `list`, `check`,
+`run`, `compare`, `inspect`. `scripts/run-evals.mjs` and `scripts/replay-evals.mjs`
+are deleted, and nothing delegates to them. The library kept the behaviour; the
+only additions are the scorecard/stored-run readers in `report.mjs` and the pure
+predicate in `cache.mjs`.
+
+**Line counts, before → after.**
+
+| file | before | after |
+| --- | ---: | ---: |
+| `scripts/run-evals.mjs` | 921 | 0 (deleted) |
+| `scripts/replay-evals.mjs` | 481 | 0 (deleted) |
+| `scripts/eval.mjs` | 0 | 1 385 |
+| `scripts/lib/evals/cache.mjs` | 0 | 88 |
+| `scripts/lib/evals/report.mjs` | 70 | 333 |
+| `scripts/lib/evals/report.test.mjs` | 86 | 167 |
+| `scripts/lib/evals/cli.test.mjs` | 257 | 536 |
+| `scripts/lib/evals/cache.test.mjs` | 0 | 132 |
+| `scripts/lib/evals/fixture.test.mjs` | 317 | 317 (repointed) |
+| `scripts/lib/evals/runcheck.test.mjs` | 997 | 997 (repointed) |
+
+The CLI code the spec replaces is 1 402 lines across the two deleted files; the
+replacement CLI is 1 385. `report.mjs` grew because the scorecard and the
+stored-run readers live there, not in the CLI; the two moved readers are why
+`fixture.test.mjs`/`runcheck.test.mjs` had to be repointed (they spawn the entry
+point) and are declared above as a correction to this spec's `files:`.
+
+**Flag mapping.** The full old → new table is in `CONTRIBUTING.md`. In short:
+`--list`/`--check`/`--run` became subcommands; `--skill` became the positional
+`<skill>`; `--case` stays and `run`/`compare` also take the positional `<n>`;
+`--no-skill` became `--arm without`; `--full` became `--level full`;
+`replay-evals --leaks` became `inspect --leaks`; `replay-evals --run <id>` became
+`inspect <run-dir>` (a directory, not a prefix); `replay-evals --judge` became
+`inspect --judge`. Dropped rather than accepted and ignored: `--baseline` and
+`--save-baseline` (compare is the comparison, by arm), `--shared`, `--i-know`
+and `--no-isolate` (a run is always standalone and isolated; the isolation
+contract is a reuse input). `--quick` was already gone and is still refused.
+
+**Defaults and labels.** `run` resolves `--repeat` to 1; `compare` to 3 per arm;
+neither exceeds the flag. `drawLabel` calls 1–3 **screening**, 4 screening, 5+
+**evidence**, and the scorecard heading carries it. Every arm row prints
+`passed/valid` (numerator/denominator over clean draws). `--stop` reports the
+repetitions that ran (`reps`), with `stopped early (N/requested)` when the ceiling
+was not reached.
+
+**The reuse predicate.** `cache.mjs` is pure: `reuseDecision({ current, stored,
+refresh })` compares exactly six inputs — model+provider, `promptHash`,
+`fixtureHash`, `gradingHash`, `skillHash`, isolation contract
+(`isolate`/`enforced`/`mechanism`) — and returns the mismatched names.
+`gradingHash` hashes the assertion list and the gate; a `gate: off` case
+reconstructs `off` from the stored gate reason. `--refresh` forces a rerun
+without a mismatch. Two honest carve-outs: a judged arm is never reused (the
+stored draw records the score, not the `expect:` text it was scored against), and
+an arm is only considered when it ran the requested repeat (otherwise the
+scorecard's `/arm` would describe a different experiment). `compare` prints
+`reused <dir>` or `ran <dir>` per arm on stderr, and `--json` carries the existing
+run/manifest record per arm unchanged.
+
+**The scorecard.** One screen for a single-case comparison: heading with skill,
+case, model and label; a row per arm with `valid`, `passed`, tokens, median and
+result. The result is the arm's status from its clean draws (`passed`/`failed`/
+`unscored`), with `-> improves`/`-> regresses` against the `none` arm. `--json`
+emits the record and `--verbose` expands failing draws and assertions. The
+`check` command stages all 94 runnable cases (3 manual excluded) in about ten
+seconds and exits 1 on any finding.
+
+**Gates.** All exit 0:
+
+- `node scripts/validate-skills.mjs --root skills` — 0
+- `node scripts/eval.mjs check --root skills` — 0 (97 parsed, 94 runnable, 3
+  manual, 94 staged, no findings)
+- `node --test scripts/lib/evals/*.test.mjs` — 0 (502 tests)
+- `node --test scripts/lib/*.test.mjs` — 0 (13 tests)
+- `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` — 0
+- `node scripts/check-sensor-parity.mjs` — 0
+- `node scripts/check-evidence.mjs` — 0
+- `node scripts/check-staleness.mjs` — 0 (report-only; 51 stale, 3 uncited)
+- `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0060-one-command-one-decision.md --base main` — see the commit message; the run that produced this file is recorded there.
+
+A `--level smoke` draw of `review-code` #7 staged the fixture and the pinned skill
+with no model and wrote a `staged` artifact. **Zero paid draws.** The behavioural
+suite still covers parse, staging, the assertion truth table, provider abort,
+timeout, isolation, cache eligibility, resume, early stop, comparison scoring
+and the artefact shape: `cli.test.mjs` has 31 tests (including the old usage and
+resume cases), `cache.test.mjs` has one test per input plus refresh, and
+`report.test.mjs` covers the ladder, the denominators, contamination and the
+verbose failures.
+
+**Policy.** `docs/pipeline.md`'s `selftest:` now runs `node scripts/eval.mjs check
+--root skills`. That is a policy edit: **the merge needs the human gate.**
+
