@@ -140,8 +140,9 @@ are updated to the new invariants; no test is deleted to make the change pass.
 1. `AGENTS.md` is at most 60 lines and contains: purpose, sources of truth,
    working agreement, check-before-reporting, and one pointer to
    `docs/README.md`/`CONTRIBUTING.md`.
-2. `AGENTS.md` names `docs/pipeline.md` as the only home of the pipeline policy
-   and does not restate the lifecycle as a second copy.
+2. `AGENTS.md` names `docs/pipeline.md` as the only home of the pipeline
+   **policy** (mode, tier, gates, paths) and does not restate it; a one-line
+   command index of the cycle is allowed.
 3. `AGENTS.md` keeps the operational PDLC instructions and the hard boundaries
    (no push, stay in the worktree, human gates) — verified by reading the diff
    against the current file, not by a keyword.
@@ -199,10 +200,10 @@ Line counts (`wc -l`), before → after:
 | `references/typescript.md` | 519 | 312 |
 | `references/python.md` | 50 | 50 (unchanged, on purpose) |
 
-`AGENTS.md` is under the 60-line cap but did not shrink: the ~20 lines of
-version-specific history were replaced by the sections the contract needs
-(headings, sources of truth, the working agreement). What it carries changed,
-not the count. The generated template more than halved.
+`AGENTS.md` is under the 60-line cap and grew by five lines (39 → 44): the ~20
+lines of version-specific history became a one-line command index of the cycle,
+sources of truth and the working agreement. The generated template more than
+halved.
 
 ### What was removed, and why
 
