@@ -178,7 +178,7 @@ None.
 
 ### Net line delta
 
-`git diff --numstat` over the branch: **+245 / −2042, net −1797 lines** across 14
+`git diff --numstat` over the branch: **+244 / −2042, net −1798 lines** across 14
 files. Excluding this spec's own publication and review edits, the deletion is
 **+147 / −2033, net −1886**.
 
@@ -192,7 +192,7 @@ files. Excluding this spec's own publication and review edits, the deletion is
 | `CONTRIBUTING.md` | 1 | −19 |
 | `docs/README.md` | 1 | 1 → 1 (the baseline phrase removed) |
 | `CHANGELOG.md` | 1 | +13 |
-| this spec | 1 | +89 (`files:`, this section and the review correction) |
+| this spec | 1 | +88 (`files:`, this section and the review corrections) |
 
 Nothing imports `provider-audit` or `health`; the only code references were the
 deleted CLI and its test. The 0.6.2 and 0.4.1 CHANGELOG entries that name
