@@ -230,7 +230,7 @@ control 0/5.
 The first case-9 with-skill attempt (`2026-11-10T13-51-55--audit-code-quality--agentworks-deepseek-v4-1-flash`) is **not evidence** (stall, `findings=1`): `evals/9` did not exist, so the staged tree held only the skill; r3 stalled for 171 s (the 120 s watchdog fired; 2 attempts, one runner retry) and the other draws failed `unchanged`. The fixture pointer was added and the cell re-run. The wave therefore spent 55 paid draws, not 50; the overrun is published, not hidden.
 
 Decisions: `keep` for all five cases; no `change`, no `drop`. The only skill-arm
-red is the strict `SCOPE:` line (a `## SCOPE` heading in four draws). It was not
+red is the strict `SCOPE:` line (a `## SCOPE` heading in five draws). It was not
 relaxed after the draws.
 
 Gates, all eight `tests:` commands from the worktree root:

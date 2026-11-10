@@ -33,7 +33,7 @@ skills, which cases, and which published measurements.
   control passed 0/5. Case 8's `ran dependency-cruiser`, `ran knip`, cycle and
   unused-file assertions passed in both arms; case 9 is the classification
   separator (the skill says `unmeasured` 5/5, the control 0/5). The only
-  skill-arm red is the strict `SCOPE:` line — four draws used a `## SCOPE`
+  skill-arm red is the strict `SCOPE:` line — five draws used a `## SCOPE`
   heading — and it stays. Decisions: `keep` for all five. One invalid case-9
   attempt (empty fixture, r3 stalled) is published and not counted; the wave
   spent 55 draws, not 50. Run directories are in `docs/evals/coverage.md`.
