@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "37d109af-3107-407b-b100-b9eaf5733c11",
+  "started_at": "2026-11-10T21:59:45.834Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.6.0"
+  },
+  "base_commit": "ce2348b609ee2e4f6e57e4d0b26319cf884702d2",
+  "head_commit": "3a8f3d131ab12560b52123982a35c6ab5f89bc27",
+  "task": "SPEC-0058",
+  "spec_sha": "ca773a31ebe57e74da33139df8d50d4810a4b51f4607776c0433e88d5f197dbc",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0058-the-corpus-leaves-the-skill.json",
+      "sha256": "7cdf779074d38eeed4a9363a7c5e84282a19b32ace9e90386b0460e18a117574"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0058-the-corpus-leaves-the-skill.json",
+      "sha256": "89e00d56f1c320875bf724a29061baf86e06151dc9e0feb6c4bf04ebc7b79ac6"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "e5bcbd042670611959e7cd3fa9c9b63ab33e1710fb8bc260be941cc8ba5952b4"
+    }
+  ],
+  "attempts": 1,
+  "duration": 1583,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "3a8f3d131ab12560b52123982a35c6ab5f89bc27"
+}

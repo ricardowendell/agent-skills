@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "d16d4bc7-397f-4ed6-b231-94a60c8cb50c",
+  "started_at": "2026-11-10T22:28:48.527Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.6.0"
+  },
+  "base_commit": "827b843a420a921c9d37be87a667e518d750a929",
+  "head_commit": "edffc6e8d4503c362354e88faab16c60137429aa",
+  "task": "SPEC-0062",
+  "spec_sha": "9f857c12a7322f2696658010f827aa9cd119e4546436c4bda424cd20823c02e1",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0062-the-verdict-vocabulary-is-closed.json",
+      "sha256": "ca5995eedc0884ab7a46f0fe24e6528ff7ba434007a8b1163b10d2b59571660c"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0062-the-verdict-vocabulary-is-closed.json",
+      "sha256": "6b25c6733068d4decbc0fcb42507a452a9d124574b479c2f0989f801e95904f5"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "e494bd0358f2fc08e87b5de4808da2a9541ed1d3bc9928c23734bec06297578c"
+    }
+  ],
+  "attempts": 1,
+  "duration": 1294,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "6a566b0b3c7b143ab2110fa0d6c20aa02f7427da"
+}

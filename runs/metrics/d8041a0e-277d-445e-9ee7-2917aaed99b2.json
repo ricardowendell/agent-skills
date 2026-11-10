@@ -108,6 +108,46 @@
         "head_sha": "1e84b38c4b592cb6c5bcc57781b02a94d7969c5e",
         "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
       }
+    },
+    {
+      "stage": "audit",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-10T22:50:52.524Z",
+      "ended_at": "2026-11-10T22:50:52.593Z",
+      "duration_ms": 69,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "9baddd23581d12dec5f43392a146ee0a0daa890da11d96a3ced4d6d449b3deb2",
+        "head_sha": "97f3698ab329e1f8097f5b1c617c2c1819870ff3",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      },
+      "metrics": {
+        "tokens_in": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_out": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_cache": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "calls": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "cost": {
+          "value": null,
+          "provenance": "unknown"
+        }
+      },
+      "adapter": {
+        "source": "unavailable"
+      }
     }
   ]
 }

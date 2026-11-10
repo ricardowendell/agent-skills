@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "d8041a0e-277d-445e-9ee7-2917aaed99b2",
+  "started_at": "2026-11-10T21:59:46.356Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.6.0"
+  },
+  "base_commit": "ce2348b609ee2e4f6e57e4d0b26319cf884702d2",
+  "head_commit": "97f3698ab329e1f8097f5b1c617c2c1819870ff3",
+  "task": "SPEC-0061",
+  "spec_sha": "9baddd23581d12dec5f43392a146ee0a0daa890da11d96a3ced4d6d449b3deb2",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0061-agents-md-is-a-routing-contract.json",
+      "sha256": "5dde98a1b208421275cfa0dcbe512ebd0714bca790f68cc257c272bcfe99e52a"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0061-agents-md-is-a-routing-contract.json",
+      "sha256": "8748be53c3c6e73628229d217477485222c3d692a57e5e1b73d3976da05e1497"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "64a12d9a5ca5882f7e40801dc747b0eb005c3d8f57635e34b99e442633cfa178"
+    }
+  ],
+  "attempts": 1,
+  "duration": 1639,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "1e84b38c4b592cb6c5bcc57781b02a94d7969c5e"
+}

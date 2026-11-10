@@ -3,9 +3,10 @@ id: TASK-98
 title: >-
   evals: atualizar review-code-matrix para os 10 casos e a coluna replayed
   (SPEC-0063)
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-10T22:51:00Z'
+updated_date: '2026-11-10T23:06:00Z'
 labels: []
 dependencies: []
 references:

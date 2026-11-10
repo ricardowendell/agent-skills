@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "c1d8c0cb-240b-4d56-87bb-b10abc0f189e",
+  "started_at": "2026-11-10T22:28:47.388Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.6.0"
+  },
+  "base_commit": "827b843a420a921c9d37be87a667e518d750a929",
+  "head_commit": "d992f2f57ccffd9c7e302c3ec6911f697809a9b7",
+  "task": "SPEC-0059",
+  "spec_sha": "f6ac1bbc2bcaf52137e1f31a0508e941b64b8ef2a4d20f23621c78f5d3e7ed5a",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0059-delete-the-speculative-surface.json",
+      "sha256": "dad0cdf66c53c554099684c5e6650203e1495132a70e576c4147643db65a5522"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0059-delete-the-speculative-surface.json",
+      "sha256": "1d71fb0a0ba3146d746c372f54c1133351fb98a52460df423148254409a070c8"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "98c67b35ac697b181a5091c612e381a0ffead9d34cfd1401e5dac2a479f5aabd"
+    }
+  ],
+  "attempts": 1,
+  "duration": 1290,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "d992f2f57ccffd9c7e302c3ec6911f697809a9b7"
+}
