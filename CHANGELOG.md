@@ -11,6 +11,16 @@ skills, which cases, and which published measurements.
 
 ### Changed
 
+- **The verdict vocabulary is closed and the rates are re-judged (SPEC-0062,
+  TASK-91).** The `verdict` assertion now maps a stance against a published table
+  of 55 forms (18 approve, 30 reject, 7 withheld) and 26 blockers written the way
+  a reviewer writes them, with negation scoped to the clause and a rejection
+  winning over an approval in the same line. A form not on the list still misses.
+  Re-judging the stored `review-code` draws moved exactly 17 of 315
+  verdict-bearing transcripts, all false → true, and no measured cell changed:
+  `coverage.md` gains a `replayed` column beside the historical one. Under the
+  corrected reading cases 1, 2, 8, 9 and 10 separate on the contract only, not on
+  the engineering judgement, and the table says so. No draw was spent.
 - **`AGENTS.md` is a routing contract (SPEC-0061, TASK-95).** The root file went
   from 39 to 44 lines and now carries only what an agent needs on the first turn:
   purpose, the four documents that are authoritative, the working agreement, the

@@ -1,9 +1,10 @@
 ---
 id: TASK-91
 title: 'evals: o vocabulario de veredito nao reconhece formas validas'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-10T19:07:00Z'
+updated_date: '2026-11-10T22:50:00Z'
 labels: []
 dependencies: []
 references:

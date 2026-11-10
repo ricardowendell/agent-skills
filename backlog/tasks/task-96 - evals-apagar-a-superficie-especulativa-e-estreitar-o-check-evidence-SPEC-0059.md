@@ -3,9 +3,10 @@ id: TASK-96
 title: >-
   evals: apagar a superficie especulativa e estreitar o check-evidence
   (SPEC-0059)
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-10T22:28:00Z'
+updated_date: '2026-11-10T22:50:00Z'
 labels: []
 dependencies: []
 references:

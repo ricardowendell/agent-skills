@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "external_run_id": "d16d4bc7-397f-4ed6-b231-94a60c8cb50c",
+  "slug": "SPEC-0062-the-verdict-vocabulary-is-closed",
+  "events": [
+    {
+      "stage": "dispatch",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-10T22:28:47.732Z",
+      "ended_at": "2026-11-10T22:28:48.705Z",
+      "duration_ms": 973,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "9f857c12a7322f2696658010f827aa9cd119e4546436c4bda424cd20823c02e1",
+        "head_sha": "827b843a420a921c9d37be87a667e518d750a929",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "review",
+      "attempt_id": 1,
+      "status": "approved",
+      "started_at": "2026-11-10T22:47:41.412Z",
+      "ended_at": "2026-11-10T22:47:41.524Z",
+      "duration_ms": 112,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "9f857c12a7322f2696658010f827aa9cd119e4546436c4bda424cd20823c02e1",
+        "head_sha": "edffc6e8d4503c362354e88faab16c60137429aa",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "lint",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-10T22:47:48.613Z",
+      "ended_at": "2026-11-10T22:47:48.690Z",
+      "duration_ms": 77,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "9f857c12a7322f2696658010f827aa9cd119e4546436c4bda424cd20823c02e1",
+        "head_sha": "edffc6e8d4503c362354e88faab16c60137429aa",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "selftest",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-10T22:47:48.691Z",
+      "ended_at": "2026-11-10T22:47:54.077Z",
+      "duration_ms": 5386,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "9f857c12a7322f2696658010f827aa9cd119e4546436c4bda424cd20823c02e1",
+        "head_sha": "edffc6e8d4503c362354e88faab16c60137429aa",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "verify",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-10T22:47:48.502Z",
+      "ended_at": "2026-11-10T22:47:54.222Z",
+      "duration_ms": 5720,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "9f857c12a7322f2696658010f827aa9cd119e4546436c4bda424cd20823c02e1",
+        "head_sha": "edffc6e8d4503c362354e88faab16c60137429aa",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "merge",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-10T22:50:18.317Z",
+      "ended_at": "2026-11-10T22:50:23.993Z",
+      "duration_ms": 5676,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "9f857c12a7322f2696658010f827aa9cd119e4546436c4bda424cd20823c02e1",
+        "head_sha": "6a566b0b3c7b143ab2110fa0d6c20aa02f7427da",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    }
+  ]
+}

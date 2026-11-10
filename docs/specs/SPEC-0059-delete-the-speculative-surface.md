@@ -29,7 +29,7 @@ files:
   - CONTRIBUTING.md
   - docs/README.md
   - CHANGELOG.md
-  - docs/specs/active/SPEC-0059-delete-the-speculative-surface.md
+  - docs/specs/SPEC-0059-delete-the-speculative-surface.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/run-evals.mjs --root skills --list --check
@@ -39,7 +39,7 @@ tests:
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
   - node scripts/check-staleness.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0059-delete-the-speculative-surface.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0059-delete-the-speculative-surface.md --base main
 ---
 
 ## Purpose
@@ -241,7 +241,7 @@ Every command from `tests:`, run from the worktree root, plus `npm run selftest`
 | `node scripts/check-sensor-parity.mjs` | 0 | 2/2 |
 | `node scripts/check-evidence.mjs` | 0 | 6 documents, 0 errors, 0 warnings |
 | `node scripts/check-staleness.mjs` | 0 | 62 cited, 51 stale, 3 uncited — report form, pre-existing |
-| `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0059-delete-the-speculative-surface.md --base main` | 0 | one `files-declared-untouched` warning: `README.md` had no mention to remove |
+| `node scripts/spec-check.mjs --spec docs/specs/SPEC-0059-delete-the-speculative-surface.md --base main` | 0 | one `files-declared-untouched` warning: `README.md` had no mention to remove |
 | `npm run selftest` | 0 | unchanged script |
 
 `docs/pipeline.md` is not in the diff. Zero paid draws.

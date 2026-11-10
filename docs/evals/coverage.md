@@ -94,11 +94,10 @@ in [`discriminating-cases.md`](discriminating-cases.md).
   design intent, not evidence.
 - A per-case number belongs in its `why:` line. A measured set belongs in a doc
   beside `review-code-matrix.md`.
-- Before a release, `node scripts/audit-provider-aborts.mjs` lists every stored
-  transcript with a `provider.*` abort and whether its result recorded it. An old
-  artefact can abort while the result says only `failed — exit 1`; the audit and
-  its dispositions are in [`provider-aborts.md`](provider-aborts.md). It reads the
-  store, writes nothing and spends no model call.
+- A provider abort is classified per draw and recorded in `execution.error`; the
+  0.6.2 audit that swept every stored transcript was deleted in SPEC-0059. That
+  audit and its dispositions stay in [`provider-aborts.md`](provider-aborts.md) as
+  history — the command it names no longer exists.
 - A draw that stalls **after** the skill loaded is provider noise until proven
   otherwise: if a paid run stalls post-load again, stop the wave, record the
   event gap and the attempt, and reopen `TASK-50` with those events. In the
