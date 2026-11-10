@@ -1,0 +1,181 @@
+{
+  "schema_version": 1,
+  "external_run_id": "37d109af-3107-407b-b100-b9eaf5733c11",
+  "slug": "SPEC-0058-the-corpus-leaves-the-skill",
+  "events": [
+    {
+      "stage": "dispatch",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-10T21:59:45.467Z",
+      "ended_at": "2026-11-10T21:59:45.958Z",
+      "duration_ms": 491,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "8fd3d6dbcc2f05b5f5a56578720e3461a69c46ed455aa8145cc3a362b98252ce",
+        "head_sha": "ce2348b609ee2e4f6e57e4d0b26319cf884702d2",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "review",
+      "attempt_id": 1,
+      "status": "approved",
+      "started_at": "2026-11-10T22:21:46.285Z",
+      "ended_at": "2026-11-10T22:21:46.436Z",
+      "duration_ms": 151,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "8fd3d6dbcc2f05b5f5a56578720e3461a69c46ed455aa8145cc3a362b98252ce",
+        "head_sha": "39a9049a4d352b0385bde42fa0362cc0cc34cda1",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "verify",
+      "attempt_id": 1,
+      "status": "failed",
+      "started_at": "2026-11-10T22:21:49.344Z",
+      "ended_at": "2026-11-10T22:21:49.550Z",
+      "duration_ms": 206,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "verify",
+      "attempt_id": 1,
+      "status": "failed",
+      "started_at": "2026-11-10T22:22:49.593Z",
+      "ended_at": "2026-11-10T22:22:49.725Z",
+      "duration_ms": 132,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "review",
+      "attempt_id": 1,
+      "status": "approved",
+      "started_at": "2026-11-10T22:23:49.981Z",
+      "ended_at": "2026-11-10T22:23:50.245Z",
+      "duration_ms": 264,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "8fd3d6dbcc2f05b5f5a56578720e3461a69c46ed455aa8145cc3a362b98252ce",
+        "head_sha": "cee18d55fb11306c938949e0c7b7c0da95cc1bac",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "verify",
+      "attempt_id": 1,
+      "status": "failed",
+      "started_at": "2026-11-10T22:23:50.381Z",
+      "ended_at": "2026-11-10T22:23:50.741Z",
+      "duration_ms": 360,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "verify",
+      "attempt_id": 1,
+      "status": "failed",
+      "started_at": "2026-11-10T22:24:24.408Z",
+      "ended_at": "2026-11-10T22:24:24.743Z",
+      "duration_ms": 335,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "review",
+      "attempt_id": 1,
+      "status": "approved",
+      "started_at": "2026-11-10T22:25:51.115Z",
+      "ended_at": "2026-11-10T22:25:51.625Z",
+      "duration_ms": 510,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "ca773a31ebe57e74da33139df8d50d4810a4b51f4607776c0433e88d5f197dbc",
+        "head_sha": "3a8f3d131ab12560b52123982a35c6ab5f89bc27",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "lint",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-10T22:25:52.206Z",
+      "ended_at": "2026-11-10T22:25:52.586Z",
+      "duration_ms": 380,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "ca773a31ebe57e74da33139df8d50d4810a4b51f4607776c0433e88d5f197dbc",
+        "head_sha": "3a8f3d131ab12560b52123982a35c6ab5f89bc27",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "selftest",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-10T22:25:52.588Z",
+      "ended_at": "2026-11-10T22:26:02.685Z",
+      "duration_ms": 10097,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "ca773a31ebe57e74da33139df8d50d4810a4b51f4607776c0433e88d5f197dbc",
+        "head_sha": "3a8f3d131ab12560b52123982a35c6ab5f89bc27",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "verify",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-10T22:25:51.764Z",
+      "ended_at": "2026-11-10T22:26:03.035Z",
+      "duration_ms": 11271,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "ca773a31ebe57e74da33139df8d50d4810a4b51f4607776c0433e88d5f197dbc",
+        "head_sha": "3a8f3d131ab12560b52123982a35c6ab5f89bc27",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "merge",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-10T22:26:06.787Z",
+      "ended_at": "2026-11-10T22:26:10.023Z",
+      "duration_ms": 3236,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "ca773a31ebe57e74da33139df8d50d4810a4b51f4607776c0433e88d5f197dbc",
+        "head_sha": "3a8f3d131ab12560b52123982a35c6ab5f89bc27",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    }
+  ]
+}

@@ -1,9 +1,10 @@
 ---
 id: TASK-95
 title: 'skill: AGENTS.md como contrato de roteamento (SPEC-0061)'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-11-10T21:58:00Z'
+updated_date: '2026-11-10T21:59:00Z'
 labels: []
 dependencies: []
 references:

@@ -1,7 +1,7 @@
 ---
 id: SPEC-0058
 title: The corpus leaves the skill
-status: ready
+status: implemented
 priority: P1
 task: TASK-94
 created_at: 2026-11-10

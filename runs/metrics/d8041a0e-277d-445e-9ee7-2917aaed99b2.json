@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "external_run_id": "d8041a0e-277d-445e-9ee7-2917aaed99b2",
+  "slug": "SPEC-0061-agents-md-is-a-routing-contract",
+  "events": [
+    {
+      "stage": "dispatch",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-10T21:59:46.037Z",
+      "ended_at": "2026-11-10T21:59:46.475Z",
+      "duration_ms": 438,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "9baddd23581d12dec5f43392a146ee0a0daa890da11d96a3ced4d6d449b3deb2",
+        "head_sha": "ce2348b609ee2e4f6e57e4d0b26319cf884702d2",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "review",
+      "attempt_id": 1,
+      "status": "approved",
+      "started_at": "2026-11-10T22:21:46.538Z",
+      "ended_at": "2026-11-10T22:21:46.631Z",
+      "duration_ms": 93,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "9baddd23581d12dec5f43392a146ee0a0daa890da11d96a3ced4d6d449b3deb2",
+        "head_sha": "97f3698ab329e1f8097f5b1c617c2c1819870ff3",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "lint",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-10T22:22:56.304Z",
+      "ended_at": "2026-11-10T22:22:56.397Z",
+      "duration_ms": 93,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "9baddd23581d12dec5f43392a146ee0a0daa890da11d96a3ced4d6d449b3deb2",
+        "head_sha": "97f3698ab329e1f8097f5b1c617c2c1819870ff3",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "selftest",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-10T22:22:56.399Z",
+      "ended_at": "2026-11-10T22:23:01.203Z",
+      "duration_ms": 4804,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "9baddd23581d12dec5f43392a146ee0a0daa890da11d96a3ced4d6d449b3deb2",
+        "head_sha": "97f3698ab329e1f8097f5b1c617c2c1819870ff3",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "verify",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-10T22:22:56.076Z",
+      "ended_at": "2026-11-10T22:23:01.354Z",
+      "duration_ms": 5278,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "9baddd23581d12dec5f43392a146ee0a0daa890da11d96a3ced4d6d449b3deb2",
+        "head_sha": "97f3698ab329e1f8097f5b1c617c2c1819870ff3",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    },
+    {
+      "stage": "merge",
+      "attempt_id": 1,
+      "status": "failed",
+      "started_at": "2026-11-10T22:26:10.041Z",
+      "ended_at": "2026-11-10T22:26:10.612Z",
+      "duration_ms": 571,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "9baddd23581d12dec5f43392a146ee0a0daa890da11d96a3ced4d6d449b3deb2",
+        "policy_hash": "f509838ad43e3374a220ab69c615f3f586eaa5918137902965ec200c95d01d3a"
+      }
+    }
+  ]
+}

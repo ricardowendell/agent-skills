@@ -1,9 +1,10 @@
 ---
 id: TASK-94
 title: 'evals: tirar o corpus de dentro do skill (SPEC-0058)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-10T21:58:00Z'
+updated_date: '2026-11-10T22:26:00Z'
 labels: []
 dependencies: []
 references:
