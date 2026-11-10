@@ -1,7 +1,7 @@
 ---
 id: SPEC-0057
 title: The cost of measuring
-status: ready
+status: implemented
 priority: P1
 task: TASK-93
 created_at: 2026-11-10
