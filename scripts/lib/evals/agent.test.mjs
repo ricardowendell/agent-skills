@@ -60,19 +60,31 @@ test("a stream with no events is killed as stalled, distinct from timeout", asyn
 })
 
 test("a slow but live stream resets the watchdog and survives", async () => {
+  // The watchdog measures the time since the last output chunk. A producer paced
+  // close to the window loses that race on a loaded host: when the parent event
+  // loop is starved, Node drains expired timers before the pending stdout reads,
+  // so the watchdog sees a gap for events the parent had not read yet (the 301ms
+  // failure against a 300ms window). A handshake cannot fix that ordering, and
+  // `runAgent` exposes no clock seam. Keep the pacing well below the window and
+  // run for several windows instead, so the test still proves the reset: a
+  // stream that emitted only at the start would die at the first idle window.
+  const stallMs = 1500
+  const gapMs = 100
+  const ticks = Math.ceil((stallMs * 3) / gapMs)
   const result = await runAgent({
     command: process.execPath,
     args: [
       "-e",
-      "process.stdout.write('e'); let i = 0; const t = setInterval(() => { process.stdout.write('e'); if (++i === 5) clearInterval(t) }, 30)",
+      `process.stdout.write('e'); let i = 0; const t = setInterval(() => { process.stdout.write('e'); if (++i === ${ticks}) clearInterval(t) }, ${gapMs})`,
     ],
     cwd: process.cwd(),
     env: process.env,
-    timeoutMs: 5000,
-    stallMs: 300,
+    timeoutMs: 15000,
+    stallMs,
   })
   assert.equal(result.code, 0, `expected a clean exit, got ${result.code}`)
-  assert.notEqual(result.code, "stalled")
+  assert.ok(result.durationMs > stallMs * 2, `ran ${result.durationMs}ms, not across multiple idle windows`)
+  assert.ok(result.out.length >= ticks / 2, `only ${result.out.length} events observed, not a live stream`)
 })
 
 // The probe is an auth check, not a model call: it reads the stored integrations
