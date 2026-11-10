@@ -1,7 +1,7 @@
 ---
 id: SPEC-0059
 title: Delete the speculative surface
-status: ready
+status: implemented
 priority: P2
 task: TASK-96
 created_at: 2026-11-10
