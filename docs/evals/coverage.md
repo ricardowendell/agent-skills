@@ -8,10 +8,10 @@ directories; they are not estimates.
 | Skill | Cases | Trigger | Manual | Fixture | Evidence recorded |
 | --- | --- | --- | --- | --- | --- |
 | `audit-docs` | 4 | 2 | 0 | tree 1; tree 3 staged via `git.json`; tree 4 drift fixture | case 3: 3/3, skill loaded 3/3 (`why:`, no run dir); case 4: 3/3, defect + intentional evolution + future filtered, no writes (`2026-11-05T08-46-00--audit-docs`) |
-| `bootstrap-project-harness` | 23 | 3 | 1 | trees 1, 2, 3, 5, 7, 9, 10, 11, 14, 15, 16–23; 14 and 15 via `git.json` | case 14: 12/12 re-judged (first pass 9/12 on a reply regex); case 15: 3/3 (`why:`, no run dir). Re-measured after the Oxlint rename (SPEC-0045, `agentworks/deepseek-v4-1-flash`, five draws): case 14 5/5 and case 15 1/5 (failing `unchanged justfile`) in `2026-11-08T23-32-34--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` (clean, `findings=0`, `isolated=yes`). Stack review, skill arm: #16 4/4 clean (1 stalled), #17 4/4 clean (1 stalled), #18 5/5, #19 5/5, #20 0/5 on `unchanged biome.json` (the skill merged the four Biome limits), #21 5/5, #22 5/5, #23 trigger 4/4 clean + 1 contaminated (host read), all in `2026-11-08T21-52-29--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` (dirty: 2 stalls + 1 host read, `isolated=no`). Control: no cell reached five clean draws; #19 reached 2 clean draws and both failed, the other cells 0 clean with 5 contaminated each, in `2026-11-08T22-51-39--bootstrap-project-harness--agentworks-deepseek-v4-1-flash--without-skill` (dirty: 33 skill leaks + 7 host reads, `isolated=no`); the control still read the real install, so every behavioural cell was **unresolved** at that point, not a separator. **#19 is measured without another draw (SPEC-0047):** with-skill `2026-11-09T07-37-44--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` is 5/5 passed and `isolated=yes`; the control `2026-11-09T10-59-41--bootstrap-project-harness--…--without-skill` replays under the current detector (v5; v4 gives the same result) with `node scripts/replay-evals.mjs --leaks` to five clean draws, `deniedDraws=1`, with 1/5 passed and four red on `file AGENTS.md`, `file justfile`, `filematch eslint.config.js` and `filematch justfile eslint` — a **separator** on the rule (5/5 vs 1/5). The stored control `result.json` still records the older v3 contamination (`skillLeaks=1`, `isolated=no`) by design; the replay is the evidence, not the artefact |
+| `bootstrap-project-harness` | 23 | 3 | 1 | trees 1, 2, 3, 5, 7, 9, 10, 11, 14, 15, 16–23; 14 and 15 via `git.json` | case 14: 12/12 re-judged (first pass 9/12 on a reply regex); case 15: 3/3 (`why:`, no run dir). Re-measured after the Oxlint rename (SPEC-0045, `agentworks/deepseek-v4-1-flash`, five draws): case 14 5/5 and case 15 1/5 (failing `unchanged justfile`) in `2026-11-08T23-32-34--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` (clean, `findings=0`, `isolated=yes`). Stack review, skill arm: #16 4/4 clean (1 stalled), #17 4/4 clean (1 stalled), #18 5/5, #19 5/5, #20 0/5 on `unchanged biome.json` (the skill merged the four Biome limits), #21 5/5, #22 5/5, #23 trigger 4/4 clean + 1 contaminated (host read), all in `2026-11-08T21-52-29--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` (dirty: 2 stalls + 1 host read, `isolated=no`). Control: no cell reached five clean draws; #19 reached 2 clean draws and both failed, the other cells 0 clean with 5 contaminated each, in `2026-11-08T22-51-39--bootstrap-project-harness--agentworks-deepseek-v4-1-flash--without-skill` (dirty: 33 skill leaks + 7 host reads, `isolated=no`); the control still read the real install, so every behavioural cell was **unresolved** at that point, not a separator. **#19 is measured without another draw (SPEC-0047):** with-skill `2026-11-09T07-37-44--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` is 5/5 passed and `isolated=yes`; the control `2026-11-09T10-59-41--bootstrap-project-harness--…--without-skill` replays under the current detector (v6) with `node scripts/replay-evals.mjs --leaks` to four clean draws, `deniedDraws=1`: r1 is a **store leak** (SPEC-0052), so the four other draws are the evidentiary base, with 1/5 passed and four red on `file AGENTS.md`, `file justfile`, `filematch eslint.config.js` and `filematch justfile eslint` — a **separator** on the rule (5/5 vs 1/5). The stored control `result.json` still records the older v3 contamination (`skillLeaks=1`, `isolated=no`) by design; the replay is the evidence, not the artefact |
 | `capture-idea` | 3 | 2 | 0 | trees 1–3 | published matrix: #1 5/5 with the skill; control **unresolved** under v2 (`2026-11-07T08-27-30--capture-idea--agentworks-deepseek-v4-1-flash--without-skill`: 0/0 clean, 5 contaminated — every draw read the install under `/Users/wendell/.agents/skills` (`r1` the directory, the rest the `SKILL.md`)), after v1 clean subsets 0/2, 0/2 and 0/0 (every clean draw failed `status: unprocessed`; dirs `2026-11-06T16-40-32--capture-idea`, `…17-07-09--without-skill`, `…17-23-44…`, `…17-32-50…`, all dirty); #2 trigger 5/5; #3 routing **5/5** with `process-inbox` staged as the declared sibling in `2026-11-06T19-06-50--capture-idea` (v2, `isolated=yes`), replacing the pre-fix 0/4 clean cross-skill-staging record `2026-11-06T16-50-30--capture-idea` (findings=1); re-measured under the enforced boundary (SPEC-0050, `agentworks/deepseek-v4-1-flash`, five draws): #1 is 5/5 clean with the skill (`2026-11-09T12-39-33--capture-idea--agentworks-deepseek-v4-1-flash`, `findings=0 isolated=yes`); the control `2026-11-09T12-41-57--capture-idea--…--without-skill` is 5/5 clean and 1/5 passed under the v5 replay (SPEC-0051, `deniedDraws=2`), the other four red on `filematch docs/inbox/*.md status: unprocessed` — **separator** (5/5 vs 1/5). Its stored `result.json` still records r1 as a v4 `skillLeaks=1` on `/Users/wendell/.config/opencode/skills`; SPEC-0051 re-judged that draw as `denied` (empty listing, content from another file), so the replay is the evidence. See `pipeline-bookends-matrix.md` |
 | `find-blind-spots` | 4 | 2 | 0 | tree 4 | case 4: 3/3, skill loaded 3/3 (`why:`, no run dir) |
-| `groom-backlog` | 7 | 2 | 0 | trees 1, 3, 4, 5 | ablation on 4 fixture cases, 2026-11-05: both arms 4/4; index-first not promoted (tokens +65% on the adversarial case) (`09-32-51`, `09-34-43`, `09-39-15`, `09-43-45`); #2: pre-detector 3/3 with and 3/3 without at `3d38b31` (`2026-11-05T17-09-40--groom-backlog`, `2026-11-05T17-13-34--groom-backlog--without-skill`); re-run under the leak detector at `8777e0b`: with skill 3/3 clean (`2026-11-06T07-53-16--groom-backlog`), without it 0/3 with 2 contaminated — clean control 0/1 (`2026-11-06T07-47-34--groom-backlog--without-skill`), so #2 was unresolved at that point, not a regression case; re-measured under the enforced boundary (SPEC-0050, five draws): the skill arm is 5/5 clean (`2026-11-09T12-50-37--groom-backlog--agentworks-deepseek-v4-1-flash`, `findings=0 isolated=yes`) and the control `2026-11-09T12-55-35--groom-backlog--…--without-skill` is 5/5 clean under the v5 replay (`deniedDraws=2`), but r2 read prior run artefacts in the eval store (`evals/groom-backlog/2.md`, the previous `result.json` and prior `2.r*.md` transcripts) and is **excluded from the evidentiary base**; the control's evidence is the other four draws (4/4 passed) — **non-discriminator** (5/5 vs 5/5). The store hole is **TASK-77**. The control artefact still records r2 as v4 `skillLeaks=1` for `skills/groom/SKILL.md` and `hostReads=1` for `/Users/wendell/.agents/commands`; SPEC-0051 re-judged it as `denied` because the `cat` returned `No such file or directory`, not the file's content, so the replay is the evidence |
+| `groom-backlog` | 7 | 2 | 0 | trees 1, 3, 4, 5 | ablation on 4 fixture cases, 2026-11-05: both arms 4/4; index-first not promoted (tokens +65% on the adversarial case) (`09-32-51`, `09-34-43`, `09-39-15`, `09-43-45`); #2: pre-detector 3/3 with and 3/3 without at `3d38b31` (`2026-11-05T17-09-40--groom-backlog`, `2026-11-05T17-13-34--groom-backlog--without-skill`); re-run under the leak detector at `8777e0b`: with skill 3/3 clean (`2026-11-06T07-53-16--groom-backlog`), without it 0/3 with 2 contaminated — clean control 0/1 (`2026-11-06T07-47-34--groom-backlog--without-skill`), so #2 was unresolved at that point, not a regression case; re-measured under the enforced boundary (SPEC-0050, five draws): the skill arm is 5/5 clean (`2026-11-09T12-50-37--groom-backlog--agentworks-deepseek-v4-1-flash`, `findings=0 isolated=yes`) and the control `2026-11-09T12-55-35--groom-backlog--…--without-skill` is 4/5 clean under the v6 replay (`deniedDraws=2`): r2 is a **store leak** (`evals/groom-backlog/2.md`, the previous `result.json` and prior `2.r*.md` transcripts), so the four other draws are the evidentiary base (4/4 passed) — **non-discriminator** (5/5 vs 5/5). The store is corpus and the read is denied under enforcement (SPEC-0052). The control artefact still records r2 as v4 `skillLeaks=1` for `skills/groom/SKILL.md` and `hostReads=1` for `/Users/wendell/.agents/commands`; SPEC-0051 re-judged it as `denied` because the `cat` returned `No such file or directory`, not the file's content, so the replay is the evidence |
 | `implement-from-prompt` | 8 | 2 | 0 | trees 1, 2, 3, 4, 7, 8 | discriminating set (SPEC-0033, v2, `agentworks/deepseek-v4-1-flash`): #1 **5/5 vs 0/5** (`2026-11-07T08-57-39--implement-from-prompt--agentworks-deepseek-v4-1-flash`, `…08-59-39--without-skill`, `findings=0 isolated=yes`) and #8 **5/5 vs 0/5** (`…09-01-25…`, `…09-04-41--without-skill`, clean); see `discriminating-cases.md`. Published matrix: #1 and #8 separate 12/12 vs 0/12 on the default (`2026-11-05T12-35-30--implement-from-prompt`, `2026-11-05T12-42-05--implement-from-prompt--without-skill`, `2026-11-05T12-48-46--implement-from-prompt`, `2026-11-05T12-56-03--implement-from-prompt--without-skill`; these four predate the leak field, so `check-eval-run` reports `warnings=12` — pre-detector history, the rates stand); on `gpt-6-luna` #1 is 5/5 vs **0/5** (the old 1/5 control pass read the installed `SKILL.md`; re-measured at `2026-11-06T07-05-38--implement-from-prompt--opencode-go-gpt-6-luna--without-skill`) and #8 is 5/5 vs 1/5 (`2026-11-05T13-18-27--implement-from-prompt--opencode-go-gpt-6-luna`, `2026-11-05T13-22-08--implement-from-prompt--opencode-go-gpt-6-luna--without-skill`, `2026-11-05T13-25-10--implement-from-prompt--opencode-go-gpt-6-luna`, `2026-11-05T13-28-38--implement-from-prompt--opencode-go-gpt-6-luna--without-skill`; the one #1 control pass read the real `SKILL.md`); #7 non-discriminator 5/5 both arms; #2 readable after SPEC-0019: gate 12/12 at `07f4fe6`, 11/12 passed (`2026-11-06T10-38-39--implement-from-prompt`), so the Gate A 2/5 did not reproduce (the delta includes the SPEC-0016 rule change, so the cause is not isolated); its control re-read under the detector is **0/3 draws**, 1 contaminated (`r3`) and the two clean draws failed the reply assertion (**0/2 clean**) at `2026-11-06T07-31-00--implement-from-prompt--without-skill`; the load across #1/#2/#5/#8 at n=12 was 45 of 46 clean draws loaded the skill (`2026-11-06T10-34-26`, `…10-38-39`, `…10-45-29`, `…10-53-13`); the one miss is #5 r9, which read the staged SKILL.md directly without calling the skill tool (a trigger case, so the tool call stays the routing signal — TASK-39), and #5's two exclusions are one contamination and one stall; #4 re-measured after SPEC-0016 (write target vs read dependency + fixture `package.json`): 5/5 with vs 3/5 without at `6dd38aa` (`2026-11-05T15-00-48--implement-from-prompt`, `2026-11-05T15-06-58--implement-from-prompt--without-skill`; two control reds are 600 s provider timeouts), so #4 is a non-discriminator and stays as a regression case; #1/#7/#8 kept 5/5 with skill (`2026-11-05T15-30-10--implement-from-prompt`, `2026-11-05T15-36-40--implement-from-prompt`, `2026-11-05T15-44-35--implement-from-prompt`); #3 is no longer `manual` after SPEC-0022: 1/1 with skill (`2026-11-06T11-28-49--implement-from-prompt`), no control, so it is a regression case, not a separator; trigger #5 4/5, #6 5/5 (`2026-11-05T11-52-43--implement-from-prompt`) |
 | `process-inbox` | 3 | 2 | 0 | tree 1 | published matrix: #1 5/5 with the skill; control **unresolved** under v2 — default `02-51-15` is 0/2 valid clean (1 abort, 2 contaminated), and `03-08-51` is 5 provider aborts, not evidence; agentworks 0/2. v1 subsets 0/1, 0/1 and 0/1 are history. #2 trigger 4/4 clean scored draws loaded (`2026-11-06T16-55-11--process-inbox`, findings=1); #3 routing **5/5** with `capture-idea` staged as the declared sibling in `2026-11-06T19-09-27--process-inbox` (v2, `isolated=yes`), replacing the pre-fix 0/5 cross-skill-staging record; re-measured under the enforced boundary (SPEC-0050, five draws): #1 is 5/5 clean with the skill (`2026-11-09T12-44-11--process-inbox--agentworks-deepseek-v4-1-flash`, `findings=0 isolated=yes`) and the control `2026-11-09T12-46-48--process-inbox--…--without-skill` is 0/5 clean (`deniedDraws=3`, `isolated=yes`), every draw red on `unchanged docs/inbox/2026-01-01-digest-email.md` and `nodir docs/backlog` — **separator** (5/5 vs 0/5). See `pipeline-bookends-matrix.md` |
 | `record-decision` | 5 | 2 | 0 | trees 1–5 | published matrix: #1 separator 4/5 vs **1/5** (`2026-11-06T16-43-33--record-decision`, `2026-11-06T17-11-37--record-decision--without-skill`); #2 separator 4/5 vs **0/5** (`2026-11-06T16-45-46--record-decision`, `2026-11-06T17-28-10--record-decision--without-skill`); #3 non-discriminator 4/5 vs 5/5 (`2026-11-06T16-48-00--record-decision`, `2026-11-06T17-20-53--record-decision--without-skill`); triggers #4/#5 5/5 in `2026-11-06T17-04-07--record-decision`; see `pipeline-bookends-matrix.md` |
@@ -39,7 +39,7 @@ in [`discriminating-cases.md`](discriminating-cases.md).
 - A run directory cited **as evidence** takes one of two explicit paths:
   - **A detector with the `host-reads` capability** (v2 `71bfb85a91cd68ab`, v3
     `d8478beab04a4e3e`, v4 `d3e95ef948f983b7`, v5
-    `def64b2d6a1baa6e`): `node
+    `def64b2d6a1baa6e`, v6 `9149d6ab1ca57343`): `node
     scripts/check-eval-run.mjs <run-dir>` reports `findings=0 warnings=0
     skillLeaks=0 hostReads=0 isolated=yes deniedDraws=N`. That means no skill or host
     read, no contaminated draw, no aborted draw (timeout, stall, provider
@@ -146,7 +146,40 @@ of the hit path; they fall to the enforced residual and are `denied`. Without
 enforcement the v4 rule is unchanged. The two SPEC-0050 control runs
 `2026-11-09T12-41-57--capture-idea--…--without-skill` and
 `2026-11-09T12-55-35--groom-backlog--…--without-skill` replay to five clean
-draws each with `isolated=yes`; SPEC-0050 publishes the cell verdicts.
+draws each with `isolated=yes`; SPEC-0050 publishes the cell verdicts. v6
+re-judges the groom control (the store rule below).
+
+Detector v6 (`9149d6ab1ca57343`, SPEC-0052) makes the eval store corpus. The
+store is `<home>/.local/share/opencode/evals` — every answer key
+(`<skill>/<n>.md`), every prior transcript and result, `baseline.json` and
+`last-run.json`. `corpusRoots` adds the whole subtree to the seatbelt deny (and
+its resolved path, because the throwaway home inherits the real `.local` as a
+symlink), and a store hit is a `leak` (an answer key), never `host`. The rule is
+checked before the isolated-home exclusion, so
+`<isolated-home>/.local/share/opencode/evals/…` is the real store. Without
+enforcement the hit is a leak; under enforcement it is `denied` unless the call
+returned that path's content, which keeps the SPEC-0051 rule ahead of it. The
+deny is scoped to `evals`:
+`auth.json`, `evals-archive` and `evals-*-backup` are outside it.
+
+The store-wide re-judge (`node scripts/replay-evals.mjs --leaks --all`, no model,
+no write) moved six draws; every one reads the store:
+
+| run dir | cell | draw | before → after | store path |
+| --- | --- | --- | --- | --- |
+| `2026-11-02T01-25-09--bootstrap-project-harness` | `#14` | r2 | clean → `leak` | answer keys under `evals/bootstrap-project-harness/`, `evals/last-run.json` |
+| `2026-11-06T15-33-16--write-implementation-prompt` | `#5` | r3, r5 | clean → `leak` | `evals/write-implementation-prompt/5.{md,json}` via the isolated `.local` symlink |
+| `2026-11-06T16-02-56--write-implementation-prompt` | `#5` | r4 | clean → `leak` | `evals/write-implementation-prompt--…/5.{md,json}` |
+| `2026-11-09T10-59-41--bootstrap-project-harness--…--without-skill` | `#19` | r1 | clean → `leak` | `evals/baseline.json`, `…/bootstrap-project-harness/12.json`, `13.json`, a prior transcript |
+| `2026-11-09T12-55-35--groom-backlog--…--without-skill` | `#2` | r2 | clean → `leak` | `evals/groom-backlog/2.md`, the previous `result.json` and `2.r*.md` |
+
+Two draws already dirty gained store hits without a verdict change:
+`2026-11-04T21-49-16--survey-inflight-work` #3 and
+`2026-11-06T15-49-43--write-implementation-prompt` #5 r3. No other draw changed
+and no cell that was clean for another reason became dirty. The two SPEC-0050
+controls affected are re-judged above: `groom-backlog` #2 is 4/5 clean with 4/4
+passed (non-discriminator) and `bootstrap-project-harness` #19 is 4/5 clean with
+1/5 passed (separator).
 
 `node scripts/replay-evals.mjs --leaks <run-dir…>` (or `--leaks --all`)
 re-judged the 0.5.0 wave from its transcripts, with no model and no write into
@@ -253,25 +286,27 @@ row listed here is not a clean measurement.
 
 Measured 2026-11-09 on `agentworks/deepseek-v4-1-flash`, concurrency 4, detector
 v4 `d3e95ef948f983b7`, then re-judged read-only under detector v5
-`def64b2d6a1baa6e` (SPEC-0051, `node scripts/replay-evals.mjs --leaks`). Every
-manifest records `params.isolation.enforced: true` (seatbelt), and every run is
-`isolated=yes` under the v5 replay; `check-eval-run` on the two stored v4
-controls still prints `isolated=no`. The #19 row is SPEC-0047's evidence, re-judged by
+`def64b2d6a1baa6e` (SPEC-0051) and again under v6 `9149d6ab1ca57343`
+(SPEC-0052), both with `node scripts/replay-evals.mjs --leaks`. Every manifest
+records `params.isolation.enforced: true` (seatbelt); under v6 every run is
+`isolated=yes` except the two controls whose store-reading draw is named below;
+`check-eval-run` on the two stored v4 controls still prints `isolated=no`. The #19 row is SPEC-0047's evidence, re-judged by
 replay, not a new draw; its stored control artefact still records the v3
 contamination. The `capture-idea` and `groom-backlog` control artefacts still
 record the v4 contamination (`skillLeaks=1`; the groom also `hostReads=1`) while
-the v5 replay is the evidence, exactly as with #19.
+the replay is the evidence, exactly as with #19. v6 turns the #19 control's r1
+and the groom control's r2 into store leaks; the counts below are the v6 ones.
 
 | cell | arm | run directory | clean draws | passed | deniedDraws | red assertion(s) | verdict |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `bootstrap-project-harness` #19 | with-skill (SPEC-0047) | `2026-11-09T07-37-44--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 0 | — | **separator** (5/5 vs 1/5) |
-| `bootstrap-project-harness` #19 | control (SPEC-0047, replay) | `2026-11-09T10-59-41--bootstrap-project-harness--…--without-skill` | 5/5 | 1/5 | 1 | `file AGENTS.md`, `file justfile`, `filematch eslint.config.js`, `filematch justfile eslint` | **separator** (5/5 vs 1/5) |
+| `bootstrap-project-harness` #19 | control (SPEC-0047, replay) | `2026-11-09T10-59-41--bootstrap-project-harness--…--without-skill` | 4/5 (v6; r1 read the store) | 1/5 | 1 | `file AGENTS.md`, `file justfile`, `filematch eslint.config.js`, `filematch justfile eslint` | **separator** (5/5 vs 1/5) |
 | `capture-idea` #1 | with-skill | `2026-11-09T12-39-33--capture-idea--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 0 | — | **separator** (5/5 vs 1/5) |
 | `capture-idea` #1 | control | `2026-11-09T12-41-57--capture-idea--…--without-skill` | 5/5 (v5 replay; stored r1 `skillLeaks=1`) | 1/5 | 2 | `filematch docs/inbox/*.md status: unprocessed` | **separator** (5/5 vs 1/5) |
 | `process-inbox` #1 | with-skill | `2026-11-09T12-44-11--process-inbox--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 0 | — | **separator** (5/5 vs 0/5) |
 | `process-inbox` #1 | control | `2026-11-09T12-46-48--process-inbox--…--without-skill` | 5/5 | 0/5 | 3 | `unchanged docs/inbox/2026-01-01-digest-email.md`, `nodir docs/backlog` | **separator** (5/5 vs 0/5) |
 | `groom-backlog` #2 | with-skill | `2026-11-09T12-50-37--groom-backlog--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 0 | — | **non-discriminator** (5/5 vs 5/5) |
-| `groom-backlog` #2 | control | `2026-11-09T12-55-35--groom-backlog--…--without-skill` | 4/5 evidentiary (r2 read the eval store and is excluded; v5 replay 5/5; stored r2 `skillLeaks=1`, `hostReads=1`) | 4/4 | 2 | — (r2 excluded; TASK-77) | **non-discriminator** (5/5 vs 5/5) |
+| `groom-backlog` #2 | control | `2026-11-09T12-55-35--groom-backlog--…--without-skill` | 4/5 (r2 is a store leak; stored r2 `skillLeaks=1`, `hostReads=1`) | 4/4 | 2 | — (r2 is a store leak) | **non-discriminator** (5/5 vs 5/5) |
 | `write-implementation-prompt` #1 | with-skill | `2026-11-09T13-07-02--write-implementation-prompt--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 0 | — | **separator** (5/5 vs 0/5) |
 | `write-implementation-prompt` #1 | control | `2026-11-09T13-11-33--write-implementation-prompt--…--without-skill` | 5/5 | 0/5 | 1 | `filematch docs/prompts/SPEC-0007-*.prompt.md spec_sha:` | **separator** (5/5 vs 0/5) |
 
@@ -279,11 +314,12 @@ The four measured cells resolve to three separators (`capture-idea` #1,
 `process-inbox` #1, `write-implementation-prompt` #1) and one
 non-discriminator (`groom-backlog` #2). The two cells that the v4 detector
 reported as leaked controls are clean under the v5 per-path rule — the stored
-artefacts keep the old contamination, the replay is the evidence. One
-`groom-backlog` control draw (`r2`) also read prior run artefacts in the eval
-store; it is excluded from the evidentiary base, and **TASK-77** owns the
-boundary/detector fix. No oracle, fixture, `why:` line or expected output
-changed after the draws.
+artefacts keep the old contamination, the replay is the evidence. The v6 store
+rule re-judges one draw in each of the two replayed controls: the `#19` control
+r1 and the `groom-backlog` control r2 read the eval store. The store is corpus
+and denied under enforcement, so both draws are store leaks; the evidentiary
+bases are the other four draws each, and no cell verdict moves. No oracle,
+fixture, `why:` line or expected output changed after the draws.
 
 ## Known holes
 
@@ -307,18 +343,19 @@ changed after the draws.
   (`2026-11-06T07-47-34--groom-backlog--without-skill`). SPEC-0050 re-measured
   both arms under the enforced boundary: the skill is 5/5 clean
   (`2026-11-09T12-50-37--groom-backlog--agentworks-deepseek-v4-1-flash`), and the
-  control is 5/5 clean in
-  `2026-11-09T12-55-35--groom-backlog--…--without-skill` (`deniedDraws=2`). Its
-  stored `result.json` still records the v4 contamination of r2 (`skillLeaks=1`
-  for `skills/groom/SKILL.md`, `hostReads=1` for `/Users/wendell/.agents/commands`);
-  SPEC-0051 re-judged that draw read-only as `denied`, because the `cat`
-  returned `No such file or directory`, not the file's content. Independently,
-  r2 read prior run artefacts in the eval store —
+  control is 4/5 clean in
+  `2026-11-09T12-55-35--groom-backlog--…--without-skill` (`deniedDraws=2`) under
+  detector v6. Its stored `result.json` still records the v4 contamination of r2
+  (`skillLeaks=1` for `skills/groom/SKILL.md`, `hostReads=1` for
+  `/Users/wendell/.agents/commands`); SPEC-0051 re-judged that draw read-only as
+  `denied`, because the `cat` returned `No such file or directory`, not the
+  file's content. Independently, r2 read prior run artefacts in the eval store —
   `evals/groom-backlog/2.md`, the previous `result.json` and prior `2.r*.md`
-  transcripts — and is **excluded from the evidentiary base**; the control's
-  evidence is the other four draws, all passed. Both arms pass at the same rate
-  on that base, so the case is a **non-discriminator**. The store read is
-  neither denied nor detected; **TASK-77** owns that fix.
+  transcripts — and is a **store leak** (SPEC-0052), so it is excluded from the
+  evidentiary base; the control's evidence is the other four draws, all passed.
+  Both arms pass at the same rate on that base, so the case is a
+  **non-discriminator**. The store is now corpus and the read is denied under
+  enforcement; no residual hole.
 - **`write-implementation-prompt` #1 is a separator (SPEC-0050).** Four v1
   control attempts never produced a five-draw clean run: clean subsets 0/3
   (`2026-11-06T15-15-52--write-implementation-prompt--without-skill`), 0/4

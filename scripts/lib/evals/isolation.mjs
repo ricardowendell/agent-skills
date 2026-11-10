@@ -109,10 +109,21 @@ export function installedSkillRoots(home = homedir()) {
   ]
 }
 
-// The full deny list: every installed root (always), the explicit `--root` when
-// given, and the host roots the runner already records. Deduplicated by both the
-// typed path and its real path, because seatbelt matches the resolved path and a
-// symlinked root (`~/.claude/skills`) would otherwise miss its target.
+// The eval store is the answer key: every case's `<skill>/<n>.md`, every prior
+// transcript and result, and `baseline.json`/`last-run.json`. It sits under the
+// state dir the child keeps (`~/.local/share/opencode`), so it is reachable
+// through the very `.local` symlink the throwaway home inherits (SPEC-0052).
+// The deny is scoped to the `evals` subtree: `auth.json` and the rest of
+// `.local` stay reachable.
+export function evalStoreRoot(home = homedir()) {
+  return join(home, ".local/share/opencode/evals")
+}
+
+// The full deny list: every installed root (always), the eval store (always),
+// the explicit `--root` when given, and the host roots the runner already
+// records. Deduplicated by both the typed path and its real path, because
+// seatbelt matches the resolved path and a symlinked root (`~/.claude/skills`,
+// or `~/.local` through the throwaway home) would otherwise miss its target.
 export function corpusRoots({
   home = homedir(),
   root = null,
@@ -124,9 +135,13 @@ export function corpusRoots({
   // hides it from the config, so a child that can still read it sees the skill
   // text anyway. Include the sibling of every installed root.
   const installed = installedSkillRoots(home).flatMap((skills) => [skills, join(dirname(skills), ".retired-skills")])
+  // The store is corpus in its own right: a control that reads it reads the
+  // answer (SPEC-0052). Derive it from `home` in one place so the boundary and
+  // the detector cannot disagree about which path the store is.
+  const store = evalStoreRoot(home)
   const seen = new Set()
   const out = []
-  for (const candidate of [...installed, ...(root ? [root] : []), ...hostRoots]) {
+  for (const candidate of [...installed, store, ...(root ? [root] : []), ...hostRoots]) {
     if (!candidate) continue
     const absolute = resolve(candidate)
     if (!exists(absolute)) continue

@@ -14,6 +14,12 @@
 // passes the roots (`hostRoots`) because they are machine-specific; the runner
 // records them in the run manifest and the replay derives them from it.
 //
+// The eval store (`~/.local/share/opencode/evals`) is the answer key in bulk
+// (SPEC-0052): every case's answer, every prior transcript and every result. It
+// is `leak`, not `host`, and it is checked before the isolated-home exclusion —
+// `isolateHome` symlinks the real `.local` into the throwaway home, so a path
+// under `<isolated-home>/.local/share/opencode/evals` is the real store.
+//
 // This is the detector the runner records per repetition and the replay tool
 // reads. Pure: it takes the tool calls, the scratch path and the host roots, and
 // never touches the filesystem, so a transcript can be re-read without the run
@@ -56,6 +62,14 @@ const RULES = {
     "(?:^|/)\\.config/opencode/skills(?:/|$)",
     "(?:^|/)T/opencode/(?:[^/]+/)*skills(?:/|$)",
   ],
+  // The eval store holds the answer keys (`<skill>/<n>.md`), every prior
+  // transcript and every result: the most direct oracle in the repository
+  // (SPEC-0052). It is reached through the state dir the child keeps
+  // (`~/.local/share/opencode/evals`), including via the throwaway home's
+  // `.local` symlink, so it is a `leak` (an answer key), not `host`. The match
+  // is the `evals` subtree only: `evals-archive`/`evals-backup` are not the
+  // store and `auth.json` stays outside the rule.
+  evalStore: "(?:^|/)\\.local/share/opencode/evals(?:/|$)",
   corpus: "/references/evals\\.md$",
   // The roots themselves are machine-specific and passed by the caller; this
   // rule pins the semantics: an absolute read inside one of them is a finding.
@@ -87,6 +101,7 @@ export const DETECTOR_RULES = Object.freeze([
   RULES.scratchExcluded,
   RULES.isolatedHome,
   ...RULES.skillRoots,
+  RULES.evalStore,
   RULES.corpus,
   RULES.hostCorpus,
   RULES.denied,
@@ -121,6 +136,10 @@ const LEGACY_CAPABILITIES = Object.freeze({
   // SPEC-0051 added the per-path content rule; v4 already had the two
   // capabilities its clean claims rest on, so a clean v4 run stays citable.
   d3e95ef948f983b7: Object.freeze(["host-reads", "denied-split"]),
+  // SPEC-0052 adds the eval store as corpus. v5 looked for host reads and the
+  // denied split, so its clean claims keep their two capabilities; the store
+  // rule narrows what "clean" means without adding a capability (AC-5).
+  def64b2d6a1baa6e: Object.freeze(["host-reads", "denied-split"]),
 })
 
 export function capabilitiesOf(version) {
@@ -166,6 +185,16 @@ function isCorpus(path) {
   return CORPUS.test(path)
 }
 
+// The eval store is the answer key too (SPEC-0052). It must be tested before
+// the throwaway-home exclusion: `isolateHome` symlinks the real `.local` into
+// the scratch home, so `<isolated-home>/.local/share/opencode/evals/…` reaches
+// the real store even though the rest of that home reaches nothing.
+const EVAL_STORE = new RegExp(RULES.evalStore)
+
+function isEvalStore(path) {
+  return EVAL_STORE.test(path)
+}
+
 // The host roots arrive as absolute paths (a directory or a file such as
 // `AGENTS.md`). A path is inside one when it is equal or sits below it; the
 // scratch check runs first, so a fixture that stages a `docs/` tree stays clean.
@@ -187,8 +216,13 @@ function classifies(path, scratch, hostRoots = []) {
   // home. A relative `references/evals.md` resolves inside the scratch, where
   // reading it is legitimate; `~/…` resolves inside the isolated home.
   if (!path.startsWith("/")) return null
-  if (ISOLATED_HOME.test(path)) return null
   if (inside(path, scratch)) return null
+  // Before the isolated-home exclusion: the store is reachable through the
+  // throwaway home's `.local` symlink, so silence there would be exactly the
+  // hole SPEC-0052 closes. A fixture that stages a store path inside the
+  // scratch stays clean (checked above).
+  if (isEvalStore(path)) return { kind: "leak" }
+  if (ISOLATED_HOME.test(path)) return null
   if (isSkillRoot(path) || isCorpus(path)) return { kind: "leak" }
   const root = hostRootOf(path, hostRoots)
   return root ? { kind: "host", root } : null

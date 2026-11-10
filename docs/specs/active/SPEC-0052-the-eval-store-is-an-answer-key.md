@@ -143,6 +143,59 @@ no case, no fixture.
 6. **Nothing else moves.** No case, fixture, skill text, template or Python
    change; every `tests:` command passes.
 
+## Results
+
+Replay-only: no draw was run and no run directory was written. Detector v6 is
+`9149d6ab1ca57343` (v5 was `def64b2d6a1baa6e`). `DETECTOR_CAPABILITIES` is
+unchanged (`host-reads`, `denied-split`), and `check-evidence` exits 0 with the
+published citations untouched.
+
+**The measured case (AC-3).**
+
+```
+# before (v5), replay --leaks
+groom-backlog#2 → clean  [5 draw(s)]  isolated=yes  deniedDraws=2
+Detector def64b2d6a1baa6e: 1 cell(s), 0 dirty. No model, no write.
+
+# after (v6), replay --leaks
+groom-backlog#2 → dirty(leak)  [5 draw(s)]  isolated=no  deniedDraws=2
+Detector 9149d6ab1ca57343: 1 cell(s), 1 dirty. No model, no write.
+```
+
+`r2` is a store leak (`evals/groom-backlog/2.md`, the previous `result.json` and
+prior `2.r*.md` transcripts); the other four draws are the evidentiary base and
+all four pass. The control is 4/5 clean with 4/4 passed, and the published
+`4/4 evidentiary` / non-discriminator row holds.
+
+**The store-wide re-judge (AC-4).** `node scripts/replay-evals.mjs --leaks --all`
+over the 321 stored run directories moved six draws; every one read the store:
+
+| run dir | cell | draw | before → after |
+| --- | --- | --- | --- |
+| `2026-11-02T01-25-09--bootstrap-project-harness` | `#14` | r2 | clean → `leak` |
+| `2026-11-06T15-33-16--write-implementation-prompt` | `#5` | r3, r5 | clean → `leak` |
+| `2026-11-06T16-02-56--write-implementation-prompt` | `#5` | r4 | clean → `leak` |
+| `2026-11-09T10-59-41--bootstrap-project-harness--…--without-skill` | `#19` | r1 | clean → `leak` |
+| `2026-11-09T12-55-35--groom-backlog--…--without-skill` | `#2` | r2 | clean → `leak` |
+
+Two already-dirty draws gained store hits without a verdict change
+(`2026-11-04T21-49-16--survey-inflight-work` #3 and
+`2026-11-06T15-49-43--write-implementation-prompt` #5 r3). Nothing else became
+dirty. The only published cell counts that move are the two controls:
+`bootstrap-project-harness` #19 is 4/5 clean with 1/5 passed (still a separator)
+and `groom-backlog` #2 is 4/5 clean with 4/4 passed (still a non-discriminator).
+The details are in `docs/evals/coverage.md`.
+
+**The boundary (AC-1).** The canary test
+(`node --test scripts/lib/evals/isolation.test.mjs`) reads a store answer key and
+a prior transcript, confirms both are readable without the boundary, and
+confirms both fail with `Operation not permitted` under the real profile; it also
+confirms `auth.json` beside the store stays readable. It ran on this host
+(seatbelt available, no skip).
+
+**Gates (AC-6).** All eight `tests:` commands pass; no case, fixture, skill text,
+template or Python file changed.
+
 ## Open Questions
 
 - **Whole store or only the answer keys?** Whole store, decided: prior

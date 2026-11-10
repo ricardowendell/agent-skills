@@ -7,6 +7,7 @@ import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import {
   corpusRoots,
+  evalStoreRoot,
   installedSkillRoots,
   isolateHome,
   isolationRecord,
@@ -244,6 +245,27 @@ test("corpusRoots includes the .retired-skills sibling of an installed root", ()
   }
 })
 
+// SPEC-0052: the store holds the answer keys and every prior transcript, so it
+// is corpus like the installed roots. Only the `evals` subtree is denied:
+// `auth.json` and the rest of `.local` stay reachable.
+test("corpusRoots includes the eval store and only its subtree", () => {
+  const home = mkdtempSync(join(tmpdir(), "iso-corpus-store-"))
+  try {
+    const store = evalStoreRoot(home)
+    mkdirSync(join(store, "groom-backlog"), { recursive: true })
+    writeFileSync(join(store, "groom-backlog/2.md"), "answer key\n")
+    writeFileSync(join(home, ".local/share/opencode/auth.json"), "{}")
+
+    const roots = corpusRoots({ home })
+    assert.ok(roots.includes(store), `missing eval store ${store}: ${roots.join(", ")}`)
+    assert.ok(roots.includes(realpathSync(store)), "the resolved store path is denied too")
+    assert.equal(roots.includes(join(home, ".local/share/opencode")), false, "the state dir is not corpus")
+    assert.equal(roots.includes(join(home, ".local/share/opencode/auth.json")), false, "auth stays reachable")
+  } finally {
+    rmSync(home, { recursive: true, force: true })
+  }
+})
+
 test("corpusRoots deduplicates repeated and symlinked roots", () => {
   const home = mkdtempSync(join(tmpdir(), "iso-corpus-dedup-"))
   try {
@@ -405,6 +427,63 @@ test("the canary denies a real installed corpus file", (t) => {
   // A sandbox-exec launch failure (bad profile, missing binary) is also
   // non-zero; without this the test would pass for the wrong reason.
   assert.match(denied.stderr, /Operation not permitted|permission denied/i)
+})
+
+// SPEC-0052: the store is the answer key in bulk. The deterministic read of an
+// answer key and of a prior transcript must fail under the real profile, while
+// `auth.json` next to the store stays readable. Skips with a reason when the
+// host has no boundary, never passes silently.
+test("the canary denies an eval-store answer key and a prior transcript", (t) => {
+  const probe = probeIsolation()
+  if (!probe.enforced) {
+    t.skip(`the boundary is not available on this host: ${probe.reason}; cannot prove the store deny`)
+    return
+  }
+  const home = mkdtempSync(join(tmpdir(), "iso-store-canary-"))
+  try {
+    const store = evalStoreRoot(home)
+    const answer = join(store, "groom-backlog/2.md")
+    const transcript = join(
+      store,
+      "runs/2026-11-09T12-55-35--groom-backlog--demo/cases/groom-backlog--02/transcript.r1.md",
+    )
+    const auth = join(home, ".local/share/opencode/auth.json")
+    mkdirSync(dirname(answer), { recursive: true })
+    mkdirSync(dirname(transcript), { recursive: true })
+    writeFileSync(answer, "the answer key\n")
+    writeFileSync(transcript, "a prior transcript\n")
+    writeFileSync(auth, '{"token":"x"}\n')
+
+    const roots = corpusRoots({ home })
+    const script = 'process.stdout.write(require("node:fs").readFileSync(process.argv[1], "utf8"))'
+    const launch = (target) =>
+      wrapCommand({ command: process.execPath, args: ["-e", script, target], roots, mechanism: probe.mechanism })
+
+    for (const [target, body] of [
+      [realpathSync(answer), /the answer key/],
+      [realpathSync(transcript), /a prior transcript/],
+    ]) {
+      const allowed = spawnSync(process.execPath, ["-e", script, target], { encoding: "utf8" })
+      assert.equal(allowed.status, 0, `${target} must be readable without the boundary: ${allowed.stderr}`)
+      assert.match(allowed.stdout, body)
+      const wrapped = launch(target)
+      const denied = spawnSync(wrapped.command, wrapped.args, { encoding: "utf8" })
+      assert.notEqual(denied.status, 0, `reading ${target} must fail under the boundary`)
+      assert.doesNotMatch(denied.stdout, body)
+      // A sandbox-exec launch failure (bad profile, missing binary) is also
+      // non-zero; without this the test would pass for the wrong reason.
+      assert.match(denied.stderr, /Operation not permitted|permission denied/i)
+    }
+
+    // The deny is scoped to the store: the credential file beside it is not
+    // corpus and must stay readable, or a real run could not authenticate.
+    const authWrapped = launch(realpathSync(auth))
+    const authRead = spawnSync(authWrapped.command, authWrapped.args, { encoding: "utf8" })
+    assert.equal(authRead.status, 0, `auth.json must stay readable under the boundary: ${authRead.stderr}`)
+    assert.match(authRead.stdout, /\{"token":"x"\}/)
+  } finally {
+    rmSync(home, { recursive: true, force: true })
+  }
 })
 
 // A full run needs a provider; `opencode --version` needs none. This is the

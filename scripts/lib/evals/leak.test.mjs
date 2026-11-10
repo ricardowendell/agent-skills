@@ -22,10 +22,11 @@ test("the detector version is derived from the rule list and pinned", () => {
   // citable. Recompute with `detectorVersion()`. SPEC-0048 added the per-path
   // denial rule (`per-path-permission-denial`); SPEC-0049 added the enforced
   // attempt rule (`enforced-corpus-attempt-is-denied`); SPEC-0051 added the
-  // per-path content rule (`per-path-content-evidence`), so v2's
-  // `71bfb85a91cd68ab`, v3's `d8478beab04a4e3e` and v4's `d3e95ef948f983b7` are
-  // now history.
-  assert.equal(DETECTOR_VERSION, "def64b2d6a1baa6e")
+  // per-path content rule (`per-path-content-evidence`); SPEC-0052 added the
+  // eval-store rule (`evalStore`), so v2's `71bfb85a91cd68ab`, v3's
+  // `d8478beab04a4e3e`, v4's `d3e95ef948f983b7` and v5's `def64b2d6a1baa6e`
+  // are now history.
+  assert.equal(DETECTOR_VERSION, "9149d6ab1ca57343")
 })
 
 // SPEC-0048: a claim is judged by what the detector could prove, not by its
@@ -37,6 +38,7 @@ test("the capability map is pinned", () => {
   assert.deepEqual(capabilitiesOf("71bfb85a91cd68ab"), ["host-reads"], "v2 added the host corpus")
   assert.deepEqual(capabilitiesOf("d8478beab04a4e3e"), ["host-reads", "denied-split"], "v3 added the denied split")
   assert.deepEqual(capabilitiesOf("d3e95ef948f983b7"), ["host-reads", "denied-split"], "v4 kept the v3 capabilities")
+  assert.deepEqual(capabilitiesOf("def64b2d6a1baa6e"), ["host-reads", "denied-split"], "v5 kept the v4 capabilities")
   assert.equal(capabilitiesOf("deadbeefdeadbeef"), null, "an unknown digest is credited with nothing")
   assert.equal(capabilitiesOf(undefined), null)
   assert.equal(capabilitiesOf(""), null)
@@ -133,6 +135,67 @@ test("the corpus staged inside the scratch is not a leak", () => {
   // The runner strips it from the staged skill; a fixture may still carry one
   // under another name, and that copy is inside the scratch.
   const hits = findLeaks([call("read", { path: `${SCRATCH}/references/evals.md` })], SCRATCH)
+  assert.deepEqual(hits, [])
+})
+
+// SPEC-0052: the eval store is the answer key in bulk — every case's answer,
+// every prior transcript and every result. It is `leak`, not `host`, and it is
+// checked through the throwaway home's inherited `.local` symlink too.
+const STORE = "/Users/wendell/.local/share/opencode/evals"
+
+test("a read of an eval-store answer key is a leak, not a host read", () => {
+  const path = `${STORE}/groom-backlog/2.md`
+  // Even when a caller puts the state dir in the host roots, the store rule
+  // wins: the finding is an answer key, not the host corpus.
+  const hits = findLeaks([call("read", { path })], SCRATCH, ["/Users/wendell/.local/share/opencode"])
+  assert.deepEqual(hits, [{ tool: "read", path }])
+  assert.equal(hits[0].kind, undefined, "a store hit keeps the v1 leak shape")
+})
+
+test("a read of a prior eval-store transcript is a store leak", () => {
+  const path = `${STORE}/runs/2026-11-09T12-55-35--groom-backlog--demo/cases/groom-backlog--02/transcript.r1.md`
+  assert.deepEqual(findLeaks([call("read", { path })], SCRATCH), [{ tool: "read", path }])
+})
+
+test("a store path reached through the throwaway home is still the store", () => {
+  // `isolateHome` symlinks the real `.local` into the scratch home, so this
+  // path is the real answer key even though the rest of that home is empty.
+  const home = "/var/folders/aa/T/opencode-eval-home-PJWuQN"
+  const path = `${home}/.local/share/opencode/evals/groom-backlog/2.md`
+  assert.deepEqual(findLeaks([call("read", { path })], SCRATCH), [{ tool: "read", path }])
+})
+
+test("a store hit is a leak without enforcement and denied under it", () => {
+  const path = `${STORE}/groom-backlog`
+  const probe = shell(`ls ${path} 2>/dev/null`, "", 0)
+  assert.deepEqual(findLeaks([probe], SCRATCH), [{ tool: "shell", path }])
+  assert.deepEqual(findLeaks([probe], SCRATCH, [], { enforced: true }), [
+    { tool: "shell", path, kind: "denied" },
+  ])
+})
+
+test("a store read that returned the answer's content stays a leak under enforcement", () => {
+  const path = `${STORE}/groom-backlog/2.md`
+  const read = { tool: "read", input: { path }, meta: {}, output: "# Eval: groom-backlog case 2\n", status: "completed" }
+  assert.deepEqual(findLeaks([read], SCRATCH, [], { enforced: true }), [{ tool: "read", path }])
+  const cat = shell(`cat ${path}`, "# Eval: groom-backlog case 2\n", 0)
+  assert.deepEqual(findLeaks([cat], SCRATCH, [], { enforced: true }), [{ tool: "shell", path }])
+})
+
+test("only the evals subtree is the store", () => {
+  const hits = findLeaks(
+    [
+      call("read", { path: "/Users/wendell/.local/share/opencode/auth.json" }),
+      call("read", { path: `${STORE}-archive/2026-10-15/bootstrap-project-harness/1.md` }),
+      call("read", { path: `${STORE}-e004-pre-triage/x.md` }),
+    ],
+    SCRATCH,
+  )
+  assert.deepEqual(hits, [], "auth, evals-archive and evals-* backups are not the store")
+})
+
+test("a store-shaped path staged inside the scratch is not a leak", () => {
+  const hits = findLeaks([call("read", { path: `${SCRATCH}/.local/share/opencode/evals/groom-backlog/2.md` })], SCRATCH)
   assert.deepEqual(hits, [])
 })
 

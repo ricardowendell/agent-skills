@@ -11,6 +11,23 @@ skills, which cases, and which published measurements.
 
 ### Added
 
+- **The eval store is an answer key (SPEC-0052, TASK-77).** `corpusRoots` now
+  denies `<home>/.local/share/opencode/evals` under the same seatbelt boundary
+  as the installed skill roots: every answer key (`<skill>/<n>.md`), every prior
+  transcript and result, `baseline.json` and `last-run.json`. The root is
+  resolved through `realpath` because the throwaway home inherits the real
+  `.local` as a symlink, and the deny is scoped to `evals` — `auth.json` and the
+  rest of `.local` stay reachable. The detector gained its own rule (v6,
+  `9149d6ab1ca57343`): a store hit is a `leak` (answer key), never `host`, and it
+  is checked through the isolated home's `.local` link; without enforcement it is
+  a leak, under enforcement it is `denied` unless the call returned that path's
+  content, so the SPEC-0051 rule stays ahead of it. Proven by replay, not a new
+  draw: `groom-backlog` #2's control r2 is a store leak, so the control is 4/5
+  clean with 4/4 passed and the published 4/4 evidentiary / non-discriminator row
+  holds; `bootstrap-project-harness` #19's control is 4/5 clean with 1/5 passed
+  (separator unchanged). The store-wide re-judge moved six draws, every one a
+  store read; nothing else became dirty. Source:
+  `docs/specs/active/SPEC-0052-the-eval-store-is-an-answer-key.md`.
 - **Content counts only for the path it names (SPEC-0051, TASK-76).** The eval
   detector now credits a corpus hit with content only when the call returned
   **that path's** content (detector v5, `def64b2d6a1baa6e`). A non-shell result
