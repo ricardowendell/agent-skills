@@ -153,13 +153,21 @@ for (const root of ROOTS) {
     // The eval corpus lives beside the skill roots, at `evals/<id>/cases.md`
     // (SPEC-0058). Run its structural checks from there so `lint` refuses an
     // assertion the run cannot stage, before a behavioural draw burns time
-    // proving it can never pass (SPEC-0030). A corpus file left inside the
-    // skill is an error: the boundary is what keeps the answer key out of a
-    // staged skill, and a warning would let it drift back.
+    // proving it can never pass (SPEC-0030). A `references/` entry whose name
+    // starts with `evals` (the canonical corpus, an archive, a `.bak`) is an
+    // error: the boundary is what keeps the answer key out of a staged skill,
+    // and a warning would let it drift back.
     if (rootArg >= 0) {
-      for (const stray of [join(dirname(file), "references/evals.md"), join(dirname(file), "references/evals")]) {
-        if (existsSync(stray))
-          errors.push(`stray eval corpus: ${stray} — the corpus lives at evals/${id}/cases.md (SPEC-0058)`)
+      const references = join(dirname(file), "references")
+      let entries = []
+      try {
+        entries = readdirSync(references, { withFileTypes: true })
+      } catch {}
+      for (const entry of entries) {
+        if (!entry.name.startsWith("evals")) continue
+        errors.push(
+          `stray eval corpus: ${join(references, entry.name)} — the corpus lives at evals/${id}/cases.md (SPEC-0058)`,
+        )
       }
       const evals = join(corpusDir(dirname(file)), "cases.md")
       if (existsSync(evals)) {

@@ -257,7 +257,8 @@ reports all 368 as renames. `parse.mjs` now resolves the corpus through
 `run-evals`, `replay-evals`, `check-staleness` and `validate-skills` use the same
 layout. There is no fallback: the remaining `references/evals` strings in
 `scripts/` are the leak detector's stale-copy rule, the validator's stray guard,
-and comments that name it as the old shape.
+comments that name it as the old shape, and the tests that assert the old path is
+absent (`fixture.test.mjs`, `corpus.test.mjs`, `leak.test.mjs`).
 
 **AC-1 — case parity.** Before the move, `evals/corpus-baseline.json` recorded,
 per skill, the `cases.md` sha256, every case's `{n, title, prompt, why, assert}`

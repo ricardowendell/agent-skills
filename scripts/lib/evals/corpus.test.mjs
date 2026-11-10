@@ -142,28 +142,38 @@ test("no skill checkout carries the eval corpus after the move", () => {
   const stray = []
   for (const skill of readdirSync(join(REPO, "skills"), { withFileTypes: true })) {
     if (!skill.isDirectory()) continue
-    for (const rel of ["references/evals.md", "references/evals"]) {
-      if (existsSync(join(REPO, "skills", skill.name, rel))) stray.push(`skills/${skill.name}/${rel}`)
+    const references = join(REPO, "skills", skill.name, "references")
+    if (!existsSync(references)) continue
+    for (const entry of readdirSync(references)) {
+      if (entry.startsWith("evals")) stray.push(`skills/${skill.name}/references/${entry}`)
     }
   }
   assert.deepEqual(stray, [])
 })
 
 // The guard that keeps the boundary from drifting back: `lint` fails when a
-// skill still carries the corpus, and this is the negative test for that rule.
-test("validate-skills fails on a stray references/evals path", () => {
-  const root = mkdtempSync(join(tmpdir(), "stray-evals-"))
-  try {
-    const skill = join(root, "skills", "demo")
-    mkdirSync(join(skill, "references"), { recursive: true })
-    writeFileSync(join(skill, "SKILL.md"), "---\nname: demo\ndescription: demo\n---\nbody\n")
-    writeFileSync(join(skill, "references", "evals.md"), "1. **T.**\n   - prompt: do it\n")
-    const cli = join(REPO, "scripts", "validate-skills.mjs")
-    const run = spawnSync(process.execPath, [cli, "--root", join(root, "skills")], { encoding: "utf8" })
-    assert.equal(run.status, 1, run.stdout + run.stderr)
-    assert.match(run.stdout, /stray eval corpus/)
-    assert.match(run.stdout, /references\/evals\.md/)
-  } finally {
-    rmSync(root, { recursive: true, force: true })
+// skill still carries the corpus under any `evals*` name, canonical or not.
+test("validate-skills fails on any references/evals* entry", () => {
+  const cli = join(REPO, "scripts", "validate-skills.mjs")
+  for (const name of ["evals.md", "evals", "evals-archive", "evals.md.bak"]) {
+    const root = mkdtempSync(join(tmpdir(), "stray-evals-"))
+    try {
+      const skill = join(root, "skills", "demo")
+      const references = join(skill, "references")
+      mkdirSync(references, { recursive: true })
+      writeFileSync(join(skill, "SKILL.md"), "---\nname: demo\ndescription: demo\n---\nbody\n")
+      if (name.endsWith(".md")) {
+        writeFileSync(join(references, name), "1. **T.**\n   - prompt: do it\n")
+      } else {
+        mkdirSync(join(references, name))
+        writeFileSync(join(references, name, "cases.md"), "1. **T.**\n   - prompt: do it\n")
+      }
+      const run = spawnSync(process.execPath, [cli, "--root", join(root, "skills")], { encoding: "utf8" })
+      assert.equal(run.status, 1, `${name}: ${run.stdout}${run.stderr}`)
+      assert.ok(run.stdout.includes("stray eval corpus"), `${name}: ${run.stdout}`)
+      assert.ok(run.stdout.includes(`references/${name}`), `${name}: ${run.stdout}`)
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
   }
 })
