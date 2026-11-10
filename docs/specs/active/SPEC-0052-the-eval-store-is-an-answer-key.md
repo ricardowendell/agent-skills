@@ -168,23 +168,26 @@ all four pass. The control is 4/5 clean with 4/4 passed, and the published
 `4/4 evidentiary` / non-discriminator row holds.
 
 **The store-wide re-judge (AC-4).** `node scripts/replay-evals.mjs --leaks --all`
-over the 321 stored run directories moved six draws; every one read the store:
+over the 321 stored run directories found eight draws that touch the store. Five
+moved clean → `leak`, every one a store read:
 
 | run dir | cell | draw | before → after |
 | --- | --- | --- | --- |
 | `2026-11-02T01-25-09--bootstrap-project-harness` | `#14` | r2 | clean → `leak` |
 | `2026-11-06T15-33-16--write-implementation-prompt` | `#5` | r3, r5 | clean → `leak` |
-| `2026-11-06T16-02-56--write-implementation-prompt` | `#5` | r4 | clean → `leak` |
 | `2026-11-09T10-59-41--bootstrap-project-harness--…--without-skill` | `#19` | r1 | clean → `leak` |
 | `2026-11-09T12-55-35--groom-backlog--…--without-skill` | `#2` | r2 | clean → `leak` |
 
-Two already-dirty draws gained store hits without a verdict change
-(`2026-11-04T21-49-16--survey-inflight-work` #3 and
-`2026-11-06T15-49-43--write-implementation-prompt` #5 r3). Nothing else became
-dirty. The only published cell counts that move are the two controls:
-`bootstrap-project-harness` #19 is 4/5 clean with 1/5 passed (still a separator)
-and `groom-backlog` #2 is 4/5 clean with 4/4 passed (still a non-discriminator).
-The details are in `docs/evals/coverage.md`.
+Three already-dirty draws gained store hits without a verdict change:
+`2026-11-04T21-49-16--survey-inflight-work` #3,
+`2026-11-06T15-49-43--write-implementation-prompt` #5 r3 and
+`2026-11-06T16-02-56--write-implementation-prompt` #5 r4 (already dirty from a
+host read of `/Users/wendell/.agents`). Nothing else became dirty: every verdict
+change is a store read and no draw gained a non-store hit. The only published
+cell counts that move are the two controls: `bootstrap-project-harness` #19 is
+4/5 clean with 0/4 passed over the clean base (still a separator, 5/5 vs 0/4)
+and `groom-backlog` #2 is 4/5 clean with 4/4 passed (still a
+non-discriminator). The details are in `docs/evals/coverage.md`.
 
 **The boundary (AC-1).** The canary test
 (`node --test scripts/lib/evals/isolation.test.mjs`) reads a store answer key and

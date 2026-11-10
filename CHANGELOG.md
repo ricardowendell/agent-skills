@@ -24,9 +24,12 @@ skills, which cases, and which published measurements.
   content, so the SPEC-0051 rule stays ahead of it. Proven by replay, not a new
   draw: `groom-backlog` #2's control r2 is a store leak, so the control is 4/5
   clean with 4/4 passed and the published 4/4 evidentiary / non-discriminator row
-  holds; `bootstrap-project-harness` #19's control is 4/5 clean with 1/5 passed
-  (separator unchanged). The store-wide re-judge moved six draws, every one a
-  store read; nothing else became dirty. Source:
+  holds; `bootstrap-project-harness` #19's control is 4/5 clean with 0/4 passed
+  over the clean base (separator unchanged, 5/5 vs 0/4). The store-wide re-judge
+  found eight store-affected draws: five moved clean → `leak` and three were
+  already dirty and gained a store hit without a verdict change. Every verdict
+  change is a store read, no draw gained a non-store hit, and nothing else
+  became dirty. Source:
   `docs/specs/active/SPEC-0052-the-eval-store-is-an-answer-key.md`.
 - **Content counts only for the path it names (SPEC-0051, TASK-76).** The eval
   detector now credits a corpus hit with content only when the call returned
