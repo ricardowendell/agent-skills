@@ -1,102 +1,50 @@
-# Project Name: AI Agents Context
+# {{project_name}}
 
-> Merge with project-specific instructions as needed.
+{{purpose}}
 
-## How to Work Here
-
-Spec-driven loop: **capture → process → groom → prompt → implement → docs-check**.
-Start with `/capture "idea"`, then move work forward with `/groom`, `/prompt`, and
-`/implement`. Full map: `docs/WORKFLOW.md`.
+This is the always-loaded contract: what this project is, where its rules live,
+and what to run before a change is called done. `docs/WORKFLOW.md` carries the
+loop and the command map; this file does not repeat either.
 
 ## Stack
 
-- Frontend: [tech stack]
-- Backend: [tech stack]
-- Database: [db info]
-- Language: [language/locale]
+{{stack}}
 
-## Quick Start
+The manifests and the lockfile own the versions. Do not restate one here.
 
-```bash
-just dev     # start dev server (if the project has one)
-just check   # typecheck + lint + format + security + docs
-just ci      # check + tests
-```
+## Where the rules live
 
-## Behavioral Guidelines
+- `docs/architecture.md` — architecture rules; the only normative owner.
+- `docs/pipeline.md` — gates, release tier and merge policy.
+- The linter, formatter and test config this repository ships — the limits it
+  enforces are the limits; this file states none of its own.
+- `docs/decisions/` — why a choice was made. Do not reverse one silently.
 
-### Think Before Coding
+## Commands this project has
 
-State assumptions. Ask when uncertain. Present multiple interpretations rather than picking silently. If something is unclear, stop and name what is confusing.
+Run them from the repository root with the package manager the project already
+uses. If a command is not listed here, do not invent one.
 
-### Simplicity First
+{{commands}}
 
-Minimum code that solves the problem. Nothing speculative. If 200 lines could be 50, rewrite it. No abstractions for single-use code.
+## Repository constraints
 
-### Surgical Changes
+{{constraints}}
 
-Every changed line traces directly to the user request. Do not improve adjacent code, comments, or formatting. Match existing style. If you find unrelated dead code, mention it. Do not delete it.
+## What an agent may change
 
-### Goal-Driven Execution
+{{change_scope}}
 
-Define success criteria before starting. For multi-step tasks:
+## Secrets and personal data
 
-1. Step: description. Verify: check.
-2. Step: description. Verify: check.
+{{secret_policy}}
 
-Loop until verified.
+## Approval points
 
-Tradeoff: These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+{{approval_points}}
 
-## Docs Layout
+## Before reporting done
 
-Structured thinking workspace. These paths are canonical — follow them unless
-this repo says otherwise.
-
-```
-docs/
-  inbox/                   raw captures
-  backlog/                 now-next-later.md, release-plan.md
-  product/                 vision.md, scope.md, language.md
-  principles/              design.md, visual-design.md, voice.md, product-principles.md
-  experience/              user journeys
-  system/                  descriptive docs (link to architecture.md)
-  decisions/               ADR-NNNN-*.md
-  specs/                   SPEC-NNNN-name.md
-  prompts/                 SPEC-NNNN-*.prompt.md
-  architecture.md          prescriptive architecture rules
-```
-
-- `docs/architecture.md` holds architecture **rules**; `docs/system/` holds
-  **descriptions** and must link to `architecture.md`, not restate its rules.
-- `experience/`, `system/`, and `decisions/` each open with a `README.md`
-  defining the shape of a new file there — follow it.
-- Raw ideas go to `docs/inbox` (`/capture`), then are classified with
-  `/process-inbox`.
-- Work flows backlog → specs → prompts → code via `/groom`, `/prompt`, and
-  `/implement`.
-
-## Linter Limits
-
-| Metric | Limit |
-|---|---|
-| Cyclomatic complexity | error 10 |
-| Max params per function | error 4 |
-| Max lines per function | warn 60 |
-| Max lines per file | warn 200 |
-| Min test coverage | optional |
-
-## Security
-
-Never commit .env, .db, data files, or credentials. .gitignore blocks these. Pre-commit hook enforces it.
-
-## Workflow
-
-Capture ideas in `docs/inbox` (raw) or `docs/backlog` (decided). Implementation flows spec → prompt → code → test → CI. Commit messages follow Conventional Commits (`feat:`, `fix:`, `refactor:`, `chore:`).
-
-## How to Know It's Working
-
-These guidelines are working if:
-- **Clean diffs** — only requested changes appear
-- **Fewer rewrites** — code is simple the first time
-- **Clarifying questions come first** — before implementation, not after mistakes
+Run the full check — the gate in the list above that runs the others — and
+report the exact command and its output. A red gate is not "almost done"; a
+skipped check is named as skipped, never reported as a pass.
