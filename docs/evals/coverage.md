@@ -471,11 +471,12 @@ the clock alone.
 
 First run (2026-11-10, 62 cited cells): **17 stale** —
 `audit-code-quality` #1–#4; `groom-backlog` #1, #3 and #4 (the ablation runs at
-`1ebd1f1c…`); `implement-from-prompt` #5 and #6; `review-code` #3–#6 (#3, #5 and
-#6 have no recorded run — they are the cells SPEC-0056 did not re-measure); and
-`survey-inflight-work` #1–#4. Three citations are `uncited`: the audit pair on
-line 20 and the two time-only tokens on lines 680–681 each match more than one
-directory. The cited cells that SPEC-0056 re-ran at `skillHash 9a28572…`
+`1ebd1f1c…`); `implement-from-prompt` #5 and #6; `review-code` #3–#6 (#5 and #6
+have no recorded run — they are the cells SPEC-0056 did not re-measure; #3 is
+stale against `2026-11-03T10-10-09--review-code--opencode-go-gpt-6-luna`,
+measured under a different model); and `survey-inflight-work` #1–#4. Three
+citations are `uncited`: the audit pair on line 20 and the two time-only tokens
+on lines 683–684 each match more than one directory. The cited cells that SPEC-0056 re-ran at `skillHash 9a28572…`
 (`review-code` #1, #2 and #7–#10) are fresh, and
 `write-implementation-prompt` #5 is fresh through its later
 `2026-11-06T19-53-34` citation.

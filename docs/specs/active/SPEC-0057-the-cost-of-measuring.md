@@ -294,11 +294,13 @@ plus 3 uncited citations.
 - `groom-backlog` #1, #3, #4 (the ablation runs at `1ebd1f1c…`, now read from
   the bare `09-32-51`/`09-34-43`/`09-39-15`/`09-43-45` citations)
 - `implement-from-prompt` #5, #6
-- `review-code` #3, #4, #5, #6 (#3, #5 and #6 have no recorded run; they are the
-  cells SPEC-0056 did not re-measure at `9a28572…`)
+- `review-code` #3, #4, #5, #6 (#5 and #6 have no recorded run; they are the
+  cells SPEC-0056 did not re-measure at `9a28572…`. #3 is stale against
+  `2026-11-03T10-10-09--review-code--opencode-go-gpt-6-luna`, measured under a
+  different model)
 - `survey-inflight-work` #1, #2, #3, #4
 - uncited: the audit pair on line 20 and the two time-only tokens on lines
-  680–681 each match more than one directory, so they are reported, not guessed
+  683–684 each match more than one directory, so they are reported, not guessed
 
 `write-implementation-prompt` #5 is fresh through its later
 `2026-11-06T19-53-34` citation; `write-implementation-prompt` #3 is `manual` and
