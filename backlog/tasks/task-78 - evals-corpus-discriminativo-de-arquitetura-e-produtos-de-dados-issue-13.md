@@ -4,6 +4,7 @@ title: 'evals: corpus discriminativo de arquitetura e produtos de dados (issue #
 status: To Do
 assignee: []
 created_date: '2026-11-10T15:07:00Z'
+updated_date: '2026-11-10T15:58:00Z'
 labels: []
 dependencies: []
 references:
@@ -16,5 +17,5 @@ ordinal: 78000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Origem: issue #13 (P1, spike), 2026-11-10. Gate do programa de dados, depois da #6. Fixtures pequenas com oraculos deterministas: modulo superficial, modulo saudavel sem findings, join que multiplica, migracao incremental com retry, schema incompativel e drift documentado. A/B/C so quando comparavel; holdout antes de iterar; decisao por capacidade (reuse/extend/build/do not add). Nao ampliar o runner sem prova.
+Origem: issue #13 (P1, spike), 2026-11-10. Fatia de DADOS do corpus, depois da TASK-89 (arquitetura). Fixtures: join que multiplica por chave duplicada, migracao incremental com retry/backfill, alteracao incompativel de schema/contrato e schema drift documentado. A/B/C so quando comparavel; holdout antes de iterar; decisao por capacidade (reuse/extend/build/do not add). Nao ampliar o runner sem prova.
 <!-- SECTION:DESCRIPTION:END -->

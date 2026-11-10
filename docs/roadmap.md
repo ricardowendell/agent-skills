@@ -80,7 +80,10 @@ depends on #6. The gate is a spike, not a mandate to create skills; each issue
 may end as `reuse external`, `extend existing`, `build new` or `do not add`.
 
 `TASK-78`–`TASK-86` mirror the issues; no spec is written before the task is
-groomed. The order is the one the issues declare:
+groomed. The architecture slice is pulled forward: `TASK-89` builds the three
+architecture fixtures so `TASK-79` (`audit-code-quality`) can start without
+waiting for the data half. `TASK-78` keeps the data fixtures and stays behind
+0.7.0. The order is otherwise the one the issues declare:
 
 ```
 13 ──► 14, 15, 16, 17
@@ -118,6 +121,7 @@ it.
 | **0.6.2** (released) | an aborted run is never clean | `TASK-52`, `TASK-38`, `TASK-39`, `TASK-40`, `TASK-54`; `TASK-36` documented, `TASK-35` done | 0 draws |
 | **0.6.3** (next) | the stack is chosen with numbers; the control arm is enforced | `SPEC-0041`–`SPEC-0045` (#12) and `SPEC-0046`–`SPEC-0052` | measurement, no new draws |
 | **0.7.0** | the corpus can see a small change | `TASK-56` (deterministic slice) and the verdict on `TASK-57`, resuming `SPEC-0034` from the parked tag | ~10 draws to finish, plus the holdout |
+| **unscheduled** | review and audit read architecture, with deterministic slots | `TASK-88` + `TASK-89` + `TASK-79` + `TASK-80` | ~50 draws |
 | **unscheduled** | data products are measured before any skill is built | `TASK-78`–`TASK-86` (#13–#21) | measurement |
 | **unscheduled** | the branch can be synced safely | `TASK-62` (`sync-branch`), after the corpus | ~10–20 draws, mostly deterministic |
 | **unscheduled** | a screen can be reviewed | `TASK-61` (oracle) and then `TASK-58`/`TASK-60` — no consumer today | measurement |
