@@ -1,9 +1,10 @@
 ---
 id: TASK-111
 title: 'harness: reduzir os arquivos gigantes de evals antes do freeze'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-11T20:43:00Z'
+updated_date: '2026-11-11T22:25:00Z'
 labels: []
 dependencies: []
 documentation:

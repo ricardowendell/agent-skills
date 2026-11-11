@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "external_run_id": "8b31bfba-2721-4ab5-8ad6-ce198bd7e0dd",
+  "slug": "SPEC-0081-before-the-freeze-the-giant-files-come-down",
+  "events": [
+    {
+      "stage": "dispatch",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T21:58:48.915Z",
+      "ended_at": "2026-11-11T21:58:50.048Z",
+      "duration_ms": 1133,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "d3a8b0e59772a3886e3b0f63ae522de61081f2a4fc3e60eb74ad61faa9b0b711",
+        "head_sha": "346e1c7d82e55cf35a6f1ff8d12bab68ab85eab9",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "review",
+      "attempt_id": 1,
+      "status": "approved",
+      "started_at": "2026-11-11T22:16:11.211Z",
+      "ended_at": "2026-11-11T22:16:11.301Z",
+      "duration_ms": 90,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "3f56b076539409a7a0bd19e2f879d04c2b41d50627f2a824780d0a2d8ac69648",
+        "head_sha": "d51b923c6c5273b3bdd07b8705520e25a5e6aef4",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "attempt_id": 1,
+      "status": "failed",
+      "started_at": "2026-11-11T22:16:11.382Z",
+      "ended_at": "2026-11-11T22:16:11.463Z",
+      "duration_ms": 81,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "attempt_id": 1,
+      "status": "failed",
+      "started_at": "2026-11-11T22:16:18.507Z",
+      "ended_at": "2026-11-11T22:16:18.586Z",
+      "duration_ms": 79,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "review",
+      "attempt_id": 1,
+      "status": "approved",
+      "started_at": "2026-11-11T22:17:03.152Z",
+      "ended_at": "2026-11-11T22:17:03.243Z",
+      "duration_ms": 91,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "13d8322780edd969c71a56740d56329c2783892003322570714ea95672697284",
+        "head_sha": "c67770350fffdcca9fb9fd6b97c04669a517acc2",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "lint",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T22:17:03.416Z",
+      "ended_at": "2026-11-11T22:17:03.474Z",
+      "duration_ms": 58,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "13d8322780edd969c71a56740d56329c2783892003322570714ea95672697284",
+        "head_sha": "c67770350fffdcca9fb9fd6b97c04669a517acc2",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "selftest",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T22:17:03.474Z",
+      "ended_at": "2026-11-11T22:17:10.958Z",
+      "duration_ms": 7484,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "13d8322780edd969c71a56740d56329c2783892003322570714ea95672697284",
+        "head_sha": "c67770350fffdcca9fb9fd6b97c04669a517acc2",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T22:17:03.325Z",
+      "ended_at": "2026-11-11T22:17:11.099Z",
+      "duration_ms": 7774,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "13d8322780edd969c71a56740d56329c2783892003322570714ea95672697284",
+        "head_sha": "c67770350fffdcca9fb9fd6b97c04669a517acc2",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "merge",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T22:25:45.057Z",
+      "ended_at": "2026-11-11T22:25:45.983Z",
+      "duration_ms": 926,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "13d8322780edd969c71a56740d56329c2783892003322570714ea95672697284",
+        "head_sha": "c67770350fffdcca9fb9fd6b97c04669a517acc2",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    }
+  ]
+}
