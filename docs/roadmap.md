@@ -5,7 +5,10 @@ pipeline (`docs/pipeline.md`) governs how work runs; this page says what the wor
 is and in which order. A change of direction is a human decision, and the
 releases themselves are the record of what shipped.
 
-Status: **0.7.6 released** on 2026-11-11 — the review-code corpus
+Status: **0.7.7 released** on 2026-11-11 — a verdict that opens with a
+negation is a rejection, so "not ready" / "not implemented" score instead of
+reading as silence; 6 stored verdict lines move, review-code #4's control goes
+2/5 → 5/5 replayed, and the class stays a non-discriminator. 0.7.6 released on 2026-11-11 — the review-code corpus
 re-measured at the current tree: #3 separates 5/5 vs 0/5, #4 is a
 non-discriminator whose control never approved, the triggers load/refuse 5/5, and
 the four cells that were history are now evidence (30 scored draws, 32 paid

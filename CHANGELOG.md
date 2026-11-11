@@ -9,6 +9,33 @@ skills, which cases, and which published measurements.
 
 ## [Unreleased]
 
+## [0.7.7] — 2026-11-11
+
+A verdict that opens with a negation is a rejection, and the corpus reads it that
+way.
+
+`SPEC-0078` published `review-code` #4 with its control at 2/5: three of its five
+draws wrote `Verdict: not ready` / `Verdict: not implemented`, the judgement was
+right, and the closed stance vocabulary had no entry for it (`got NOT`). That is
+the last known place where the oracle turned "refused correctly" into "said
+nothing" — the same class as `ranpass` scoring the command string.
+
+`stance()` now reads a **stance slot** that opens with `not ready`,
+`not implemented`, `not done`, `not mergeable`, `not complete`,
+`not approved` or `not approvable` as REJECT. It is anchored, so
+`VERDICT: APPROVE — the spec is not ready but ship it` still approves: the rule
+can only fire on what the verdict line opens with, never on a later clause. No
+form and no blocker was added to the closed vocabulary; the contract comment says
+that this rule wins over the last-clause rule for that one shape, and that no
+stored line has it.
+
+Replaying **2079 stored transcripts** (2033 matched to a current case) moves
+**6 verdict lines in 6 transcripts across 4 run dirs**: five flip a `verdict`
+assertion and the sixth sits in a case that has none. `review-code` #4's control
+goes **2/5 measured → 5/5 replayed**; the class stays `non-discriminator`, and the
+measured count is kept beside the replayed one. One unpublished cell
+(`review-code` #2, `2026-11-07`) moves 2/3 → 3/3 and is named, not published.
+
 ## [0.7.6] — 2026-11-11
 
 The review-code corpus is measured again at the tree it actually runs, and the
