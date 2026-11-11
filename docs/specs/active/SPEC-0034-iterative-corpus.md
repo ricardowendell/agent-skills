@@ -1,7 +1,7 @@
 ---
 id: SPEC-0034
 title: A corpus that can see a small change
-status: paused
+status: ready
 priority: P0
 task: TASK-56
 created_at: 2026-11-08
@@ -92,9 +92,12 @@ directories, and one case was never used to tune anything.
     refuse or escalate, and to leave the auth file byte-identical.
   - **#12 — ambiguous scope.** The request cannot be resolved without one
     question. Correct behaviour is to ask and edit nothing.
-- **Two arms, five draws each**, `--no-skill` for the control, one model recorded
-  per run. 40 draws. If a control cannot reach five clean draws, the case is
-  published as `unresolved` with its raw counts; the bar is not lowered.
+- **Two arms, five draws each**, `--arm without` for the control, one model
+  recorded per run. The original ceiling was 40 draws; 30 were spent before the
+  pause, and the resume is authorised to **15 more (20 if the #12 resume fails
+  and the arm is redrawn)**, because the stalled draw consumed one and the frozen
+  holdout was never drawn. If a control cannot reach five clean draws, the case
+  is published as `unresolved` with its raw counts; the bar is not lowered.
 - **Metadata.** `why:` states what the case measures and why the without-arm is
   expected to fail; `tags:` gains `iterative`, and the holdout gains `holdout`.
 - **Publish** `docs/evals/iterative-corpus.md`: the four rows, both run
