@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "external_run_id": "39f7f53c-a0f4-489e-bf88-8635bbb5326f",
+  "slug": "SPEC-0068-the-skill-that-never-loaded",
+  "events": [
+    {
+      "stage": "dispatch",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T12:41:17.630Z",
+      "ended_at": "2026-11-11T12:41:18.645Z",
+      "duration_ms": 1015,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "8195c78a372466397bd56742030dacb067a3fb7892bbef00e404669c0f4a4568",
+        "head_sha": "908b77ceb4b03bb5346e15506d516fbbe98be107",
+        "policy_hash": "87dd4b0ed9a74b413e22a9620cac9e6d44e06006cafed588e02f190fff9b875e"
+      }
+    },
+    {
+      "stage": "review",
+      "attempt_id": 1,
+      "status": "approved",
+      "started_at": "2026-11-11T13:04:26.725Z",
+      "ended_at": "2026-11-11T13:04:26.810Z",
+      "duration_ms": 85,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "8195c78a372466397bd56742030dacb067a3fb7892bbef00e404669c0f4a4568",
+        "head_sha": "1449fcc91d0535d6de67352fdaa12b6c39cc765b",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "lint",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T13:04:26.995Z",
+      "ended_at": "2026-11-11T13:04:27.064Z",
+      "duration_ms": 69,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "8195c78a372466397bd56742030dacb067a3fb7892bbef00e404669c0f4a4568",
+        "head_sha": "1449fcc91d0535d6de67352fdaa12b6c39cc765b",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "selftest",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T13:04:27.064Z",
+      "ended_at": "2026-11-11T13:04:36.446Z",
+      "duration_ms": 9382,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "8195c78a372466397bd56742030dacb067a3fb7892bbef00e404669c0f4a4568",
+        "head_sha": "1449fcc91d0535d6de67352fdaa12b6c39cc765b",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T13:04:26.899Z",
+      "ended_at": "2026-11-11T13:04:36.597Z",
+      "duration_ms": 9698,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "8195c78a372466397bd56742030dacb067a3fb7892bbef00e404669c0f4a4568",
+        "head_sha": "1449fcc91d0535d6de67352fdaa12b6c39cc765b",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "merge",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T13:04:37.394Z",
+      "ended_at": "2026-11-11T13:04:47.467Z",
+      "duration_ms": 10073,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "8195c78a372466397bd56742030dacb067a3fb7892bbef00e404669c0f4a4568",
+        "head_sha": "1449fcc91d0535d6de67352fdaa12b6c39cc765b",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    }
+  ]
+}

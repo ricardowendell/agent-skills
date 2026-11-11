@@ -18,7 +18,7 @@ files:
   - docs/evals/iterative-corpus.md
   - docs/evals/coverage.md
   - docs/specs/SPEC-0034-iterative-corpus.md
-  - docs/specs/active/SPEC-0068-the-skill-that-never-loaded.md
+  - docs/specs/SPEC-0068-the-skill-that-never-loaded.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/eval.mjs check --root skills
@@ -28,7 +28,7 @@ tests:
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
   - node scripts/check-staleness.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0068-the-skill-that-never-loaded.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0068-the-skill-that-never-loaded.md --base main
 ---
 
 ## Purpose
