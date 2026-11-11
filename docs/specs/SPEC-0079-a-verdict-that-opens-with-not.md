@@ -19,7 +19,7 @@ files:
   - scripts/lib/evals/kinds.mjs
   - docs/evals/coverage.md
   - docs/evals/review-code-matrix.md
-  - docs/specs/active/SPEC-0079-a-verdict-that-opens-with-not.md
+  - docs/specs/SPEC-0079-a-verdict-that-opens-with-not.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/eval.mjs check --root skills
@@ -29,7 +29,7 @@ tests:
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
   - node scripts/check-staleness.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0079-a-verdict-that-opens-with-not.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0079-a-verdict-that-opens-with-not.md --base main
 ---
 
 ## Purpose
@@ -272,7 +272,7 @@ All nine commands from `tests:` exit 0, run in this worktree at the commit:
 | `node scripts/check-sensor-parity.mjs` | exit 0 — 2/2 fixtures in parity |
 | `node scripts/check-evidence.mjs` | exit 0 — 6 documents, 0 errors, 0 warnings |
 | `node scripts/check-staleness.mjs` | exit 0 — 66 cited cells, 51 stale, 3 uncited (report-only) |
-| `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0079-a-verdict-that-opens-with-not.md --base main` | exit 0 — contract holds |
+| `node scripts/spec-check.mjs --spec docs/specs/SPEC-0079-a-verdict-that-opens-with-not.md --base main` | exit 0 — contract holds |
 
 `lint` (`validate-skills`) and `selftest` (`check` + the three test suites +
 sensor parity + evidence) are therefore green in the worktree.
