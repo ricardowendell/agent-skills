@@ -16,7 +16,6 @@ blocks: []
 files:
   - evals/implement-from-prompt/cases.md
   - evals/implement-from-prompt/fixtures/9/AGENTS.md
-  - evals/implement-from-prompt/fixtures/9/docs/statuses.md
   - evals/implement-from-prompt/fixtures/9/package.json
   - evals/implement-from-prompt/fixtures/9/src/components/CancelButton.js
   - evals/implement-from-prompt/fixtures/9/src/components/CancelButton.module.css
@@ -37,7 +36,9 @@ files:
   - evals/implement-from-prompt/fixtures/12/docs/statuses.md
   - evals/implement-from-prompt/fixtures/12/package.json
   - evals/implement-from-prompt/fixtures/12/src/components/StatusBadge.js
-  - evals/implement-from-prompt/fixtures/12/src/status.js
+  - evals/implement-from-prompt/fixtures/12/src/components/StatusBadge.module.css
+  - evals/implement-from-prompt/fixtures/12/src/styles/global.css
+  - scripts/lib/evals/corpus.test.mjs
   - docs/specs/active/SPEC-0065-recover-the-parked-corpus.md
 tests:
   - node scripts/validate-skills.mjs --root skills
@@ -97,11 +98,20 @@ Copy the tag's `skills/implement-from-prompt/references/evals/9`–`12` trees to
 fixture-local `AGENTS.md` files (they are test inputs, not copies of the repo
 root).
 
-### F3 — the corpus still parses and the parity proof still holds
+### F3 — the parity test means what it says
 
-`eval check` reports the new total (101 cases: 98 runnable, 3 manual) and stages
-every fixture. The SPEC-0058 parity test still passes: the pre-move baseline is a
-subset of the current corpus, so adding cases cannot break it.
+`corpus.test.mjs` currently asserts that the whole corpus equals the baseline,
+including a whole-file `cases.md` sha. That was the right shape while the corpus
+was being moved and no case could be added; it is the wrong shape for a corpus
+that grows, because it makes every new case a failure of the move.
+
+Change it to **subset semantics**: every case and fixture recorded in the
+baseline still exists, with the same parsed fields and the same tree hash. A new
+case is not a regression. `evals/corpus-baseline.json` itself is not edited — it
+stays the record of what the move had to carry.
+
+`eval check` then reports the new total (101 cases: 98 runnable, 3 manual) and
+stages every fixture.
 
 ## Non-Goals
 
@@ -109,7 +119,8 @@ subset of the current corpus, so adding cases cannot break it.
 - No change to `implement-from-prompt/SKILL.md`.
 - No re-tuning of a copied case, prompt or assertion — including #11.
 - No edit to `evals/corpus-baseline.json`: the baseline is the pre-move snapshot,
-  and adding cases does not falsify it.
+  and adding cases does not falsify it. The *test* changes shape (F3); the record
+  does not change.
 - No publish: the corpus doc, the classification and the coverage row belong to
   the resumed wave.
 - **No `CHANGELOG.md` edit.** The entry for this spec lands in the wave's
@@ -140,7 +151,9 @@ subset of the current corpus, so adding cases cannot break it.
 3. `#11` is still tagged `holdout` and its text is unchanged from the tag.
 4. `node scripts/eval.mjs check --root skills` stages all four new fixtures with
    no finding and reports 101 cases (98 runnable, 3 manual).
-5. The SPEC-0058 parity test still passes unchanged.
+5. The SPEC-0058 parity test keeps its guarantee under subset semantics: a
+   removed case, a changed field or a changed fixture tree hash fails it; a new
+   case does not. A test proves each direction, including a deliberate removal.
 6. No file under `skills/` is modified; `evals/corpus-baseline.json` is untouched.
 7. No draw is spent; every gate in `tests:` passes.
 8. `results` publishes the parity table: case, tag tree hash, current tree hash,
@@ -151,9 +164,11 @@ subset of the current corpus, so adding cases cannot break it.
 - **Copy, do not author.** The four cases were frozen before their wave and three
   of them were measured. Re-writing a prompt now would invalidate the thirty paid
   draws the store already holds, and would quietly unfreeze the holdout.
-- **The baseline is not updated.** `corpus-baseline.json` proves the SPEC-0058
-  move; re-baselining it to include new cases would make it a description of the
-  present instead of a record of the move.
+- **The baseline is not updated; the test is.** `corpus-baseline.json` proves the
+  SPEC-0058 move, so it must keep describing the pre-move corpus. What was wrong
+  was the test asserting *equality* with that record: a record of a past state
+  cannot be a constraint on every future state. Subset semantics keeps the proof
+  (nothing was lost) and drops the false one (nothing may be added).
 - **Nothing is published from this spec.** A corpus doc that lists four rows with
   no resumed measurement is a claim without a subject; the resumed wave publishes.
 
