@@ -18,7 +18,7 @@ files:
   - docs/evals/coverage.md
   - docs/specs/SPEC-0034-iterative-corpus.md
   - skills/implement-from-prompt/SKILL.md
-  - docs/specs/active/SPEC-0069-does-the-description-actually-route.md
+  - docs/specs/SPEC-0069-does-the-description-actually-route.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/eval.mjs check --root skills
@@ -28,7 +28,7 @@ tests:
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
   - node scripts/check-staleness.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0069-does-the-description-actually-route.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0069-does-the-description-actually-route.md --base main
 ---
 
 ## Purpose
@@ -288,7 +288,7 @@ as `TASK-107`; it is recorded here, not fixed in this spec.
 | `node scripts/check-sensor-parity.mjs` | `2/2 fixtures in parity` | 0 |
 | `node scripts/check-evidence.mjs` | `6 documents, 0 errors, 0 warnings; current detector cf2e2e319d975a5b` | 0 |
 | `node scripts/check-staleness.mjs` | `66 cited cell(s), 55 stale, 3 uncited` (report-only) | 0 |
-| `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0069-does-the-description-actually-route.md --base main` | `contract holds` (no warnings at the committed tree) | 0 |
+| `node scripts/spec-check.mjs --spec docs/specs/SPEC-0069-does-the-description-actually-route.md --base main` | `contract holds` (no warnings at the committed tree) | 0 |
 | `node scripts/check-eval-run.mjs ~/.local/share/opencode/evals/runs/2026-11-11T11-21-09--implement-from-prompt--agentworks-deepseek-v4-1-flash` | 3 routing `gate-miss` findings (the failure record) | 1 |
 
 ### Deviation

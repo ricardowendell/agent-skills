@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "external_run_id": "1b775947-debc-4631-9aad-c60c7d11e7bf",
+  "slug": "SPEC-0069-does-the-description-actually-route",
+  "events": [
+    {
+      "stage": "dispatch",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T14:20:26.271Z",
+      "ended_at": "2026-11-11T14:20:27.342Z",
+      "duration_ms": 1071,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "bada80695926e6a6d913a49f62277c4e430e3caa014015640bb4a86908ca07ca",
+        "head_sha": "e3b3c9242a0b1c8bb5a1fe7f6ec7b261003c73e0",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "review",
+      "attempt_id": 1,
+      "status": "approved",
+      "started_at": "2026-11-11T14:34:51.613Z",
+      "ended_at": "2026-11-11T14:34:51.691Z",
+      "duration_ms": 78,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "bada80695926e6a6d913a49f62277c4e430e3caa014015640bb4a86908ca07ca",
+        "head_sha": "098f4d27ce70764f04e4097d6b26c412b7ab75c3",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "lint",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T14:34:51.869Z",
+      "ended_at": "2026-11-11T14:34:51.938Z",
+      "duration_ms": 69,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "bada80695926e6a6d913a49f62277c4e430e3caa014015640bb4a86908ca07ca",
+        "head_sha": "098f4d27ce70764f04e4097d6b26c412b7ab75c3",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "selftest",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T14:34:51.938Z",
+      "ended_at": "2026-11-11T14:35:00.071Z",
+      "duration_ms": 8133,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "bada80695926e6a6d913a49f62277c4e430e3caa014015640bb4a86908ca07ca",
+        "head_sha": "098f4d27ce70764f04e4097d6b26c412b7ab75c3",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T14:34:51.778Z",
+      "ended_at": "2026-11-11T14:35:00.191Z",
+      "duration_ms": 8413,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "bada80695926e6a6d913a49f62277c4e430e3caa014015640bb4a86908ca07ca",
+        "head_sha": "098f4d27ce70764f04e4097d6b26c412b7ab75c3",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "merge",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T14:35:01.026Z",
+      "ended_at": "2026-11-11T14:35:09.733Z",
+      "duration_ms": 8707,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "bada80695926e6a6d913a49f62277c4e430e3caa014015640bb4a86908ca07ca",
+        "head_sha": "f027dfad27161144c74a740c5226d01e2a43d593",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    }
+  ]
+}
