@@ -11,6 +11,15 @@ skills, which cases, and which published measurements.
 
 ### Changed
 
+- **The parked corpus comes back (SPEC-0065, TASK-56).** The four iterative cases
+  and their 23 fixture files were recovered byte-identically from
+  `parked/SPEC-0034-iterative-corpus`: cases 9–12 land in
+  `evals/implement-from-prompt/cases.md` and the trees in
+  `evals/implement-from-prompt/fixtures/`, with all four `treeHash` values equal
+  to the tag's. `corpus.test.mjs` moved from whole-corpus equality to subset
+  semantics — a record of a past state cannot constrain every future state — so
+  the corpus grew from 97 to 101 cases (98 runnable, 3 manual) without weakening
+  the move proof. The holdout #11 was not read.
 - **`--resume` re-runs the draws the harness discarded (SPEC-0064, TASK-100).** A
   stored draw is reused only when it is a result: `passed`, `failed`, `unscored`
   without infrastructure, or `contaminated`. An `unscored` draw with

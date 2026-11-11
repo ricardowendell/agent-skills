@@ -19,7 +19,7 @@ files:
   - scripts/lib/evals/result.test.mjs
   - scripts/lib/evals/cli.test.mjs
   - CONTRIBUTING.md
-  - docs/specs/active/SPEC-0064-a-discarded-draw-is-not-a-result.md
+  - docs/specs/SPEC-0064-a-discarded-draw-is-not-a-result.md
   - CHANGELOG.md
 tests:
   - node scripts/validate-skills.mjs --root skills
@@ -30,7 +30,7 @@ tests:
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
   - node scripts/check-staleness.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0064-a-discarded-draw-is-not-a-result.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0064-a-discarded-draw-is-not-a-result.md --base main
 ---
 
 ## Purpose

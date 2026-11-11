@@ -39,7 +39,7 @@ files:
   - evals/implement-from-prompt/fixtures/12/src/components/StatusBadge.module.css
   - evals/implement-from-prompt/fixtures/12/src/styles/global.css
   - scripts/lib/evals/corpus.test.mjs
-  - docs/specs/active/SPEC-0065-recover-the-parked-corpus.md
+  - docs/specs/SPEC-0065-recover-the-parked-corpus.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/eval.mjs check --root skills
@@ -49,7 +49,7 @@ tests:
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
   - node scripts/check-staleness.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0065-recover-the-parked-corpus.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0065-recover-the-parked-corpus.md --base main
 ---
 
 ## Purpose

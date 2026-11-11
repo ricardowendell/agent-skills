@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "external_run_id": "d8b1e4b0-5631-4bcf-8ad8-47f3b1b18e6d",
+  "slug": "SPEC-0065-recover-the-parked-corpus",
+  "events": [
+    {
+      "stage": "dispatch",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T00:27:19.547Z",
+      "ended_at": "2026-11-11T00:27:20.059Z",
+      "duration_ms": 512,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "b0e185e7e52d46b6dc9956f59135de343dbeec392902ca4addcdfbe65addf694",
+        "head_sha": "c1020bab04acd4374f8e00face9b26d9ae2724ab",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "review",
+      "attempt_id": 1,
+      "status": "approved",
+      "started_at": "2026-11-11T00:43:30.578Z",
+      "ended_at": "2026-11-11T00:43:30.816Z",
+      "duration_ms": 238,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "eb5a5ba05372e37cc883cabb7a0195923a834ffc8a1c22d1c76545f3f72a46cf",
+        "head_sha": "f3e5178f0f9610a3f2aa99250a3003759fab6ba3",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "lint",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T00:44:00.171Z",
+      "ended_at": "2026-11-11T00:44:00.443Z",
+      "duration_ms": 272,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "eb5a5ba05372e37cc883cabb7a0195923a834ffc8a1c22d1c76545f3f72a46cf",
+        "head_sha": "f3e5178f0f9610a3f2aa99250a3003759fab6ba3",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "selftest",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T00:44:00.446Z",
+      "ended_at": "2026-11-11T00:44:21.853Z",
+      "duration_ms": 21407,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "eb5a5ba05372e37cc883cabb7a0195923a834ffc8a1c22d1c76545f3f72a46cf",
+        "head_sha": "f3e5178f0f9610a3f2aa99250a3003759fab6ba3",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T00:43:59.603Z",
+      "ended_at": "2026-11-11T00:44:22.140Z",
+      "duration_ms": 22537,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "eb5a5ba05372e37cc883cabb7a0195923a834ffc8a1c22d1c76545f3f72a46cf",
+        "head_sha": "f3e5178f0f9610a3f2aa99250a3003759fab6ba3",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "merge",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T00:44:52.574Z",
+      "ended_at": "2026-11-11T00:45:04.057Z",
+      "duration_ms": 11483,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "eb5a5ba05372e37cc883cabb7a0195923a834ffc8a1c22d1c76545f3f72a46cf",
+        "head_sha": "8290081f673465249372dae2fe0f626e1880de8e",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    }
+  ]
+}

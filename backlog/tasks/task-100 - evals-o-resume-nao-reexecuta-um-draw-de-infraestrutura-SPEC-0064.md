@@ -1,9 +1,10 @@
 ---
 id: TASK-100
 title: 'evals: o --resume nao reexecuta um draw de infraestrutura (SPEC-0064)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-11T00:25:00Z'
+updated_date: '2026-11-11T00:44:00Z'
 labels: []
 dependencies: []
 references:
