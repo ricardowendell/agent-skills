@@ -145,4 +145,115 @@ None.
 
 ## Results
 
-_Filled during implementation._
+Zero draws. The five draws below are the two stored `SPEC-0030` trigger runs,
+read through `result.json` first and through the transcript only for the last
+event and the tool spans. No `--resume`, no judge, no re-score, no `stallMs`
+change.
+
+### F1 — the five draws
+
+One correction to the Purpose's numbers: 161.6 s, 27.2 s, 355.0 s and 145.0 s are
+the **time to the last event** of the retried attempt, not draw durations.
+`execute.mjs:153` keeps only the final attempt ("the final attempt owns the
+duration"), so each of those four records the *retry*, which stalled as well; the
+first attempt's duration is not in the store. Each killed attempt is therefore
+about 120 s longer than the number the Purpose quotes: the work ran to that point
+and then stayed silent for the whole watchdog window.
+
+| draw | last event before the gap | kill | gap | last tool call before the silence | duration (`execution.durationMs`) | retry | recorded reason |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `19-32-45` r1 | `step_start` +161.6 s (22:45:30.897Z), 1.1 s after a `step_finish` | +285.3 s (22:47:34.629Z) | 123.7 s | `shell` `pwd; ls -la "$(dirname …)" \| grep eval-writ` at +160.4 s | 285.3 s | 1 retry, also `stalled` | `unscored`, `infrastructure: true`, `stalled` |
+| `19-32-45` r2 | `step_finish` (`stop`) +39.7 s (22:43:29.154Z) | none — exit 0 at +43.7 s (22:43:33.166Z) | — | `shell` at +29.8 s, then the reply | 43.7 s | 1 retry, **retry passed** | `passed`, `infrastructure: false`, `null` |
+| `19-32-45` r4 | `step_start` +27.2 s (22:38:58.947Z), 1.0 s after a `step_finish` | +150.9 s (22:41:02.583Z) | 123.6 s | `shell` `ls -la /private/var/folders/…/T \| head -50` at +26.2 s | 150.9 s | 1 retry, also `stalled` | `unscored`, `infrastructure: true`, `stalled` |
+| `19-53-34` r3 | `step_start` +355.0 s (23:03:36.712Z), 1.2 s after a `step_finish` | +477.7 s (23:05:39.430Z) | 122.7 s | `shell` `for v in 1 2 3 4; do d=$(ls -d /private/…` at +353.8 s | 477.7 s | 1 retry, also `stalled` | `unscored`, `infrastructure: true`, `stalled` |
+| `19-53-34` r5 | `step_start` +145.0 s (23:03:26.775Z), 1.3 s after a `step_finish` | +268.4 s (23:05:30.091Z) | 123.3 s | `glob` `**/*` under `/private/var/folders/…/T` at +143.8 s | 268.4 s | 1 retry, also `stalled` | `unscored`, `infrastructure: true`, `stalled` |
+
+The gap is `kill − last event`; the watchdog threshold is 120 s. Do not read
+`durationMs − last event` as silence: the passing `19-32-45` r2 shows 4.0 s for
+the same subtraction (43.670 vs 39.658) with no stall at all. Usage is the final
+attempt's, so it describes the retry: r1 6 steps / 10 calls / 596 output tokens,
+r4 4 / 4 / 345, r3 28 / 33 / 3153, r5 8 / 8 / 770; the passing r2 is 6 / 7 /
+1001. The four stalls therefore land after 10, 4, 33 and 8 tool calls — four
+different points of the draw.
+
+The comparison draw is `19-32-45` r2: same case, same skill hash, same prompt,
+same model, and its retry finished in 43.7 s. It passed **without doing the
+work** — its closing text is "I stopped before writing anything. The spec isn't
+here." The case's only assertion is "loaded the skill", so a draw that gives up
+passes and a draw that keeps looking is the one that gets killed.
+
+### F2 — the three candidates
+
+- **prompt — excluded.** The case-5 workload does not line up with the stalls.
+  They occur at four different points (27.2 s / 161.6 s / 145.0 s / 355.0 s,
+  after 4 / 10 / 8 / 33 tool calls), two of them before the model has read any
+  spec, so they are not "the step that generates the prompt file". The one clean
+  pass generates nothing at all (above), and the draws that completed the case in
+  those runs took 43.7–384.6 s. A long generation is neither necessary (the pass
+  generates nothing) nor sufficient: `#6`, the near-miss, has the same profile
+  (host-hunt tool runs of 111.5 s and 90.7 s) and passed 5/5 in `19-32-45`. What
+  the case *does* contribute, and the store shows it
+  plainly: the fixture is empty (`fixtureHash e3b0c442…` is the sha256 of the
+  empty file), so the prompt names a `SPEC-0012` that was never staged and the
+  draw hunts for it on the host — tool runs of 102.31 s and 17.34 s in r1 and
+  108.12 s in r5 (`state.time`). That condition makes the silent windows long;
+  it is not the candidate as stated, and changing the case is out of this
+  spec's scope.
+- **runner — confirmed at the level of the record.** `agent.mjs:138–148` counts
+  *bytes* on stdout/stderr, and this stream writes a line only when an event
+  completes, so a generation and a running tool both produce no bytes at all.
+  The store shows the second directly: in `19-53-34` r3 the model emitted its
+  `ls -la …/docs/specs; find … -name 'SPEC-0012*'` call 0.48 s after the
+  `step_start` (+193.993 → +194.472 s), the shell then ran **118.51 s** with
+  nothing on the stream and `exit 0` (`state.time` +194.472 → +312.980 s), and
+  that same attempt was killed at +477.748 s, 122.7 s after its last event.
+  Host-hunt runs of 102.31 s and 17.34 s (r1) and 108.12 s (r5) have the same
+  shape, and the near-miss `#6` reached 111.5 s (`19-32-45` r5) and 98.5 s
+  (`19-53-34` r2). A live child doing
+  118.5 s of legitimate work is 1.5 s from the watchdog, and a byte-based
+  watchdog cannot tell it from a dead stream at all. What this does not
+  establish: what was happening inside the *killed* window — the last event
+  before every kill is a `step_start`, no `tool_use` completed after it, so a
+  tool run, a generation and a dead stream are indistinguishable there.
+- **provider — undecided.** The expected signature is present in all four: the
+  last event is the child's own `step_start` (it records a step opening, not that
+  a request was sent), then no tool call, no text, and no `provider.*` frame
+  anywhere in the stream — the `error` field is absent from every stalled
+  `execution` — while normal draws of the same case exist. That is not decisive:
+  a 121 s silent generation produces the same zero bytes, the store keeps no
+  heartbeat, no token-delta trace and no provider log, and a **third state** is
+  just as invisible: a long host-hunt tool (118.51 s observed) emits zero bytes
+  with no provider involved at all. The killed window cannot be separated from
+  that live-but-quiet tool either — the same condition the empty fixture
+  creates.
+
+**Published pair: runner confirmed, provider undecided; prompt excluded.** The
+store separates the case from the silence and the threshold from the child's
+state. It cannot separate "the stream died" from "the child is working quietly" —
+a generation and a host-hunt tool both emit zero bytes — and that is cheaper to
+instrument than to draw again.
+
+**Falsifier for the runner verdict:** a stall that opens with a `provider.*`
+frame, or a kill that lands well before 120 s of silence (bytes still arriving).
+
+### F3 — published row and follow-up
+
+`docs/evals/coverage.md`, the `write-implementation-prompt` row: `#5` stays a
+**trigger case** with `loaded 5/5` in both runs and **no behavioural cell**; the
+four stalls are named with their durations (285.3 s, 150.9 s, 477.7 s, 268.4 s,
+each killed at the 120 s watchdog, 122.7–123.7 s after its last event, retried
+once, retry stalled too); the row
+states the supported cause — the runner's byte-based watchdog, with the provider
+undecided and prompt excluded — and does not promote the case.
+
+**Named follow-up (one, not a timeout change):** give the child a **heartbeat** —
+a liveness line from the child process itself, independent of its event output,
+so a live-but-quiet child (a 118.5 s tool run, a long generation) is
+distinguishable from a dead stream. That is the signal that would have fired on
+these four kills, and the same trace would decide the provider. It would not
+raise `stallMs`, would not make `#5` a behavioural cell, and would not re-score
+these four draws.
+
+### Gates
+
+Every command in `tests:` exits 0; see the commit for the recorded output.
