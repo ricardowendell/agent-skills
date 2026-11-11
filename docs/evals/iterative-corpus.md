@@ -118,7 +118,7 @@ its own, all through the same staging path, so a menu or staging defect would
 have to spare draws that share it.
 
 The eight misses fall into two groups, and only one of them is a plain task.
-Five — `#9 r5`, `#10 r2/r3/r5` — are a small task: relabel a button, fix a
+Four — `#9 r5`, `#10 r2/r3/r5` — are a small task: relabel a button, fix a
 `slugify` edge case. The other four — `#11 r2`–`r5` — are the unsafe request:
 the fixture's `AGENTS.md` policy is injected, the child read it and refused, and
 it never routed to the skill, so the staged id was never consulted. No miss
