@@ -53,4 +53,12 @@ created: 2026-11-09T02:46:35.666Z
 Reaberta em 2026-11-08 pelo stall pos-load da onda da SPEC-0045 (stack review). Skill arm, run 2026-11-08T21-52-29--bootstrap-project-harness--agentworks-deepseek-v4-1-flash, 2 de 40 draws: #16 r1 exit=stalled, stallMs=120000, durationMs=318637, attempts=2, retries=1, steps=30, toolCalls=30, gate 'loaded bootstrap-project-harness'; #17 r1 exit=stalled, stallMs=120000, durationMs=395435, attempts=2, retries=1, steps=22, toolCalls=38, same gate. Padrao identico ao registrado (pos-load, 1 retry, watchdog de 120 s). DESVIO DE PROTOCOLO: a onda NAO foi parada; o runner seguiu apos o retry automatico e completou 38/40 draws uteis, e a arm de controle rodou em seguida. O resultado foi publicado como unresolved (as duas celulas tem 4 draws limpos + 1 stall, nao 5), sem --resume e sem retry manual. Decidir com evidencia se a causa e provider-side, watchdog ou prompt (AC-1/AC-2 seguem abertas).
 
 ---
+
+created: 2026-11-11T00:25:20.799Z
+
+---
+
+Revisita 2026-11-10, com o CLI novo. Cinco stalls registrados no store, todos pos-load e todos com cadeia longa de steps: corpus #12 controle r3 (2 tentativas, 223 s, steps=10), stack review #16 r1 (318,6 s, steps=30, toolCalls=30) e #17 r1 (395,4 s, steps=22, toolCalls=38), mais os dois da SPEC-0030. A janela e de 120 s e e medida ENTRE chunks: um modelo lento porem vivo emite eventos de step e reseta o watchdog, entao um silencio de 120 s com o processo ativo e silencio, nao lentidao. Isso nao fecha a causa (provider x watchdog), mas fecha a politica operacional: 120 s fica, stall e infraestrutura, e o draw descartado e retomado, nao 'aumenta o timeout ate passar'. Achado colateral, medido: `--resume` NAO reexecuta um draw de infraestrutura — `readDraw` devolve o r3 stallado e a onda nunca chega a 5 draws limpos, que e exatamente o resume que a SPEC-0034 assumia. Corrigir isso (SPEC-0064) e o desbloqueio real do corpus; nao o limite.
+
+---
 <!-- COMMENTS:END -->
