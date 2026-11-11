@@ -36,6 +36,16 @@ files:
   - docs/README.md
   - README.md
   - docs/evals/coverage.md
+  - scripts/lib/evals/fixture.test.mjs
+  - scripts/lib/evals/runcheck.test.mjs
+  - evals/implement-from-prompt/cases.md
+  - evals/write-implementation-prompt/cases.md
+  - evals/corpus-baseline.json
+  - docs/evals/implement-from-prompt-matrix.md
+  - docs/evals/pipeline-bookends-matrix.md
+  - docs/evals/write-implementation-prompt-matrix.md
+  - docs/evals/review-code-matrix.md
+  - docs/evals/discriminating-cases.md
   - docs/specs/active/SPEC-0060-one-command-one-decision.md
   - CHANGELOG.md
 tests:
