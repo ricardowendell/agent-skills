@@ -58,7 +58,7 @@ is a check, a decision, and — if the check holds — **no code change**.
 ### F1 — read every loaded bare-request draw
 
 The draws where the skill loaded and the request had no prompt file: `#9` r1–r4,
-`#10` r1 and r4, `#12` r1–r5 (12 draws; `#9 r5`, `#10 r2/r3/r5` never loaded and
+`#10` r1 and r4, `#12` r1–r5 (11 draws; `#9 r5`, `#10 r2/r3/r5` never loaded and
 are not evidence here). For each, from the transcript's **assistant text parts
 only** (not the `SKILL.md` content the read tool echoes):
 
@@ -87,14 +87,14 @@ Do not do both. The evidence chooses.
 ### F3 — publish the decision
 
 - `docs/evals/iterative-corpus.md` — one paragraph in the iterative section: the
-  12 loaded bare-request draws, how many mention the prompt framing, how many
+  11 loaded bare-request draws, how many mention the prompt framing, how many
   were derailed (expected zero), and the decision.
 - `docs/evals/coverage.md` — one clause on the `implement-from-prompt` row
   pointing at that paragraph.
 
 ## Non-Goals
 
-- **No paid draw.** The 12 draws are stored; the question is about them.
+- **No paid draw.** The 11 draws are stored; the question is about them.
 - **No description change.** `SPEC-0069` tested and reverted it; the description
   is the 0.7.0 wording and stays.
 - **No case, prompt, fixture or assertion edit.**
@@ -105,7 +105,7 @@ Do not do both. The evidence chooses.
 
 ## Flow
 
-1. **F1** — extract the assistant text parts of the 12 draws; classify each as
+1. **F1** — extract the assistant text parts of the 11 draws; classify each as
    mentions / derailed / clean.
 2. **F2** — apply the rule.
 3. **F3** — publish the paragraph and the clause.
@@ -121,7 +121,7 @@ Do not do both. The evidence chooses.
 
 ## Acceptance Criteria
 
-1. All 12 loaded bare-request draws are listed with the count of assistant-text
+1. All 11 loaded bare-request draws are listed with the count of assistant-text
    mentions and a derailed/clean verdict.
 2. The verdict is derived from the assistant's own text, not from `SKILL.md`
    content echoed by a read tool.
