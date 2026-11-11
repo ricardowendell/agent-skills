@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "external_run_id": "205c838d-bcc1-450d-beaf-2a8e6962ab6e",
+  "slug": "SPEC-0073-the-stance-is-the-last-clause",
+  "events": [
+    {
+      "stage": "dispatch",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T16:19:44.757Z",
+      "ended_at": "2026-11-11T16:19:45.299Z",
+      "duration_ms": 542,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "13375dc3f64cf5d7ce65e0bdc7e5909d0f3add17310722cabe79a593f7e0729a",
+        "head_sha": "7e38845be5a0233e2334cf8ab410dc57f1d5e310",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "review",
+      "attempt_id": 1,
+      "status": "failed",
+      "started_at": "2026-11-11T16:35:31.423Z",
+      "ended_at": "2026-11-11T16:35:31.463Z",
+      "duration_ms": 40,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    }
+  ]
+}
