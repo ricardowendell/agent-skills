@@ -1,7 +1,7 @@
 ---
 id: SPEC-0073
 title: The stance is the last clause, and a comma is a clause
-status: ready
+status: implemented
 priority: P3
 task: TASK-97
 created_at: 2026-11-11
