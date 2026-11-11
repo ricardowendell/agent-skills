@@ -218,16 +218,23 @@ no retry. Ten paid draws.
 | case | with skill | control | class | red cell |
 | --- | --- | --- | --- | --- |
 | #9 | 4/5 (4/4 loaded passed) | 5/5 | non-discriminator | r5 is a routing `gate-miss`, not an assertion |
-| #10 | 1/5 (2 loaded, 1 passing) | 5/5 | **unresolved** (routing) | `ranpass node --test` on r1; r2/r3/r5 `gate-miss` |
+| #10 | 1/5 (2 loaded, 1 harness-passing) | 5/5 | **unresolved** (routing) | `ranpass node --test` on r1 is an oracle artifact (`npm test` vs `node --test`); r2/r3/r5 `gate-miss` |
 | #11 (holdout) | 1/5 scored, 5/5 on both assertions (1/5 loaded) | 5/5 | non-discriminator | no behavioural red; r2–r5 `gate-miss` |
-| #12 | 4/5 | 0/5 | **separator** | with r2 `reply \?`; control `unchanged **` (5/5), `reply \?` on r1/r3/r4 |
+| #12 | 4/5 | 0/5 | **separator** | with r2 the literal `?` matcher; control `unchanged **` (5/5), `reply \?` on r1/r3/r4 |
 
 Four of the ten `#9`/`#10` skill-arm draws stored on 2026-11-08 — `#9 r5`,
 `#10 r2/r3/r5` — were scored `failed` because `skill 'implement-from-prompt' was
-not loaded`, and the holdout added `#11 r2–r5`. That is a routing failure of the artefact, not a
-behavioural verdict. `#10` is therefore `unresolved` with the honest sub-count:
-2 draws where the skill loaded, 1 of them passing. No assertion, fixture, prompt
-or oracle was edited to make a cell separate.
+not loaded`, and the holdout added `#11 r2–r5`. That is a routing failure of the
+artefact, not a behavioural verdict. The remaining `#10` red is an oracle
+artifact: r1 ran `npm test` twice — the first call red on the unfixed code, the
+second printing `pass 3 / fail 0` and `exit: 0` (the fixture's `package.json` maps
+`test` to `node --test`) — and `ranpass` compares the case regex against
+`input.command` (`scripts/lib/evals/assertions.mjs:267-274`), so `npm test` cannot
+match `node --test`. `#10` is therefore `unresolved` with the honest sub-count: 2 draws
+where the skill loaded, 1 of them harness-passing; r1 behaved correctly and
+failed only the literal matcher, and the control passed the same assertion 5/5,
+so #10 shows no incumbent-vs-control difference. No assertion, fixture, prompt or
+oracle was edited to make a cell separate.
 
 **F5 — published.** `docs/evals/iterative-corpus.md` holds the eight arm rows,
 the full hashes, the detectors and the per-cell red assertion;
@@ -239,20 +246,23 @@ holdout. No stall, no retry, no discarded draw. That is inside the 15-draw
 target and well inside the 20-draw ceiling; the original 40-draw contract is not
 reopened.
 
-**Gap for `SPEC-0035`.** The incumbent separates on exactly one case, **#12**
-(4/5 vs 0/5); #9 and #11 are non-discriminators because the control passes them
-outright, and #10 is `unresolved`. None of #9, #10 or #11 justifies a refinement
-skill. The loss is **#10, assertion `ranpass node --test`**: the one loaded draw
-that failed never ran `node --test`, and the case remains `unresolved` because
-only two draws loaded the skill. `SPEC-0035` cannot take its
-zero-draw branch on this corpus and must either re-measure #10 after the routing
-defect is fixed or treat that assertion as the gap to extend. The baseline is not
-directly reusable either: #9/#10/#12 were scored under detector
-`71bfb85a91cd68ab` and `skillHash 0389466e…`, the holdout under
-`cf2e2e319d975a5b` and `skillHash 9147487f…` (`SKILL.md` byte-identical; the tree
-hash moved when `SPEC-0058` removed the in-skill corpus copy), so `SPEC-0035`'s
-comparability rule forces a re-run or a documented replay of the old three cells
-before the A arm can be reused.
+**Gap for `SPEC-0035`.** The corpus demonstrates **no loss** for the incumbent on
+#9–#11: #9 and #11 are non-discriminators because the control passes them
+outright, and #10's only loaded red is the `ranpass` oracle artifact, with the
+control 5/5, so #10 shows no incumbent-vs-control difference either. The single
+separation is **#12**, in the incumbent's favour (stored 4/5 vs 0/5): the control
+always edits the component while the question is open, and no with-skill draw
+edits. `#10` remains `unresolved` on the harness record — two of five draws
+loaded the skill, and the stored count stays 1/5 — but that is a routing defect
+plus the matcher defect, not a behavioural gap. `SPEC-0035` therefore has no loss
+to extend on these four cases; what it inherits is harness work: the routing that
+left #10 at two loaded draws, and the `ranpass` matcher that reads `npm test` as
+"the command never ran". The baseline is not directly reusable either: #9/#10/#12
+were scored under detector `71bfb85a91cd68ab` and `skillHash 0389466e…`, the
+holdout under `cf2e2e319d975a5b` and `skillHash 9147487f…` (`SKILL.md`
+byte-identical; the tree hash moved when `SPEC-0058` removed the in-skill corpus
+copy), so `SPEC-0035`'s comparability rule forces a re-run or a documented replay
+of the old three cells before the A arm can be reused.
 
 ## Open Questions
 
