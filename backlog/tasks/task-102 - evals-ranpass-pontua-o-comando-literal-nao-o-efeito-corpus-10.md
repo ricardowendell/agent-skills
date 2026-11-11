@@ -1,9 +1,10 @@
 ---
 id: TASK-102
 title: 'evals: ranpass pontua o comando literal, nao o efeito (corpus #10)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-11T09:57:00Z'
+updated_date: '2026-11-11T12:00:00Z'
 labels: []
 dependencies: []
 references:
