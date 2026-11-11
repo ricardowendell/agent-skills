@@ -1,7 +1,7 @@
 ---
 id: SPEC-0066
 title: A passing run is an effect, not a command string
-status: ready
+status: implemented
 priority: P1
 task: TASK-102
 created_at: 2026-11-11
