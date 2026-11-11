@@ -16,7 +16,7 @@ files:
   - scripts/lib/evals/assertions.mjs
   - scripts/lib/evals/assertions.test.mjs
   - docs/evals/coverage.md
-  - docs/specs/active/SPEC-0073-the-stance-is-the-last-clause.md
+  - docs/specs/SPEC-0073-the-stance-is-the-last-clause.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/eval.mjs check --root skills
@@ -26,7 +26,7 @@ tests:
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
   - node scripts/check-staleness.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0073-the-stance-is-the-last-clause.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0073-the-stance-is-the-last-clause.md --base main
 ---
 
 ## Purpose
@@ -290,7 +290,7 @@ moves."
 - `check-sensor-parity` — 2/2 fixtures in parity;
 - `check-evidence` — 6 documents, 0 errors, 0 warnings;
 - `check-staleness` — 66 cited cells, 55 stale, 3 uncited, same as `main`;
-- `spec-check --spec docs/specs/active/SPEC-0073-the-stance-is-the-last-clause.md
+- `spec-check --spec docs/specs/SPEC-0073-the-stance-is-the-last-clause.md
   --base main` — no errors.
 
 **Cost.** Zero paid draws, no resume, no judge: every number above comes from
