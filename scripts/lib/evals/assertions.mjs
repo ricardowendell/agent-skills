@@ -105,8 +105,11 @@ const STANCE_PRECEDENCE = ["APPROVE", "WITHHELD", "REJECT"]
 // (SPEC-0079). The phrase is ambiguous mid-line (`AC-2 is not implemented` is a
 // finding, not the verdict), but it is unambiguous as the first thing after the
 // label, so this rule is anchored and runs before the form scan: the stance slot
-// answers the question the closed vocabulary cannot. `not applicable` is not in
-// the set and still names no stance; `no blockers` is untouched.
+// answers the question the closed vocabulary cannot. Because the scan is skipped,
+// it also wins over SPEC-0073's last-clause rule for this shape: `not ready, but
+// approve after the fix` reads REJECT, not APPROVE (no stored line has that
+// shape; the stance slot is the rejection). `not applicable` is not in the set
+// and still names no stance; `no blockers` is untouched.
 const NEGATED_STANCES = /^not\s+(?:ready|implemented|done|mergeable|complete|approved|approvable)\b/i
 
 function stance(line) {

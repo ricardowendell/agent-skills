@@ -44,7 +44,9 @@ The judgement was right and the token was missing — the same class as `ranpass
 scoring the command string (`TASK-102`) and the `#10` false red. It is the last
 known place where the oracle can turn "refused correctly" into "said nothing".
 
-The store has **6 verdict lines in 5 transcripts** that open with `not`:
+The store has **6 negated-opening verdict lines in 6 transcript files across 4
+run directories**; 5 of them flip a `verdict` assertion, and the sixth is in a
+case that has none:
 
 | line opens with | transcript |
 | --- | --- |
@@ -98,9 +100,12 @@ counter-case that the rule does not fire mid-line:
 Replay every stored transcript carrying a `verdict` assertion (the `SPEC-0073`
 harness: `inspect --replay` over the run dirs) and publish the delta:
 
-- expected: **6 verdict lines in 5 transcripts** move from red to green;
+- expected: **6 negated-opening verdict lines in 6 transcript files across 4
+  run directories** move from red to green; **5 flip a `verdict` assertion**, and
+  the sixth (`audit-docs#3`, `2026-11-02T12-38-42`) is in a case with no
+  `verdict` assertion, so it moves in no cell;
 - expected class changes: `review-code` #4 control `2/5 → 5/5` (the class stays
-  `non-discriminator`; the evidence gets stronger), and whatever the other four
+  `non-discriminator`; the evidence gets stronger), and whatever the other three
   cells do;
 - any cell whose class changes is republished; any cell that does not is left
   byte-identical except for a date if it carries one.
@@ -147,8 +152,8 @@ reader knows a stance can be named without being in `VERDICT_FORMS`.
 2. A line that mentions a negation after the first clause is unaffected:
    `VERDICT: APPROVE — the spec is not ready but ship it` → APPROVE.
 3. A negated non-stance (`not applicable`) still names no stance.
-4. The replay moves exactly the 6 verdict lines in the 5 transcripts and nothing
-   else; the table is published.
+4. The replay moves exactly those 6 verdict lines, 5 of which flip a `verdict`
+   assertion and one is never judged, and nothing else; the table is published.
 5. `review-code` #4's control is republished at 5/5 with the class unchanged, and
    any other moved cell is republished with its before/after.
 6. `kinds.mjs` states the rule; no `VERDICT_FORMS` entry is added.
@@ -216,10 +221,13 @@ Three tests through `evaluateAssertions` in
 
 ### F3 — replay and republish
 
-`node scripts/eval.mjs inspect --replay` over the whole store (2033 stored
-transcripts across 362 run directories and the flat legacy layout; 353 carry a
-`verdict` assertion), before and after the rule. Exactly **6 verdict lines in 5
-transcripts** move red → green, and no other verdict line changes:
+`node scripts/eval.mjs inspect --replay` over the whole store (2033 of 2079
+stored transcripts matched to a current case — 46 have no matching case — across
+362 run directories and the flat legacy layout; 353 carry a `verdict`
+assertion), before and after the rule. Exactly **6 negated-opening verdict lines
+in 6 transcript files across 4 run directories** move red → green; 5 flip a
+`verdict` assertion, the sixth is never judged, and no other verdict line
+changes:
 
 | transcript | line opens with | verdict assertion | cell |
 | --- | --- | --- | --- |
@@ -252,5 +260,20 @@ the store.
 
 ### Gates
 
-All commands in `tests:` exit 0 (see the commit report).
+All nine commands from `tests:` exit 0, run in this worktree at the commit:
+
+| command | outcome |
+| --- | --- |
+| `node scripts/validate-skills.mjs --root skills` | exit 0 — 14 skills, all clear |
+| `node scripts/eval.mjs check --root skills` | exit 0 — 101 cases parsed, 98 runnable, 98 fixtures staged, no findings |
+| `node --test scripts/lib/evals/*.test.mjs` | exit 0 — 568 tests pass, 0 fail |
+| `node --test scripts/lib/*.test.mjs` | exit 0 — 13 tests pass, 0 fail |
+| `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` | exit 0 — 42 tests pass, 0 fail |
+| `node scripts/check-sensor-parity.mjs` | exit 0 — 2/2 fixtures in parity |
+| `node scripts/check-evidence.mjs` | exit 0 — 6 documents, 0 errors, 0 warnings |
+| `node scripts/check-staleness.mjs` | exit 0 — 66 cited cells, 51 stale, 3 uncited (report-only) |
+| `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0079-a-verdict-that-opens-with-not.md --base main` | exit 0 — contract holds |
+
+`lint` (`validate-skills`) and `selftest` (`check` + the three test suites +
+sensor parity + evidence) are therefore green in the worktree.
 

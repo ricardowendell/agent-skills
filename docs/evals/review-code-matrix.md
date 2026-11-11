@@ -83,9 +83,11 @@ cell. SPEC-0062 re-read
 the eight directories behind the four SPEC-0056 citations (cases 1, 8, 9
 and 10) and the two regression rows that cite the same wave (cases 2 and 7); cases
 3 and 4 were outside that set, and the cases 5 and 6 routing draws assert a skill
-load, which the replay does not re-judge. SPEC-0079 re-judged the cases 3–6
-directory set for the verdict-line rule and moved case 4's control to `5/5`; the
-cases 3, 5 and 6 cells did not change.
+load, which the replay does not re-judge. SPEC-0079 replayed the **whole store**
+for the verdict-line rule and moved case 4's published control to `5/5`; one
+unpublished cell outside that set also moved (`2026-11-07T15-46-26…--without-skill`,
+`review-code#2`, `2/3 → 3/3`) and is reported in the spec's Results but has no
+published number to republish. The cases 3, 5 and 6 cells did not change.
 
 ## Case 1 — review against SPEC-0007
 
