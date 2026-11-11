@@ -13,7 +13,7 @@ source_docs:
   - docs/specs/SPEC-0058-the-corpus-leaves-the-skill.md
 related_decisions: []
 depends_on:
-  - SPEC-0080
+  - SPEC-0080-the-trigger-is-the-contract
 blocks: []
 files:
   - scripts/lib/evals/
