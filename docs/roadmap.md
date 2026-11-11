@@ -5,8 +5,10 @@ pipeline (`docs/pipeline.md`) governs how work runs; this page says what the wor
 is and in which order. A change of direction is a human decision, and the
 releases themselves are the record of what shipped.
 
-Status: **0.7.2 released** on 2026-11-11 — the description hypothesis was tested
-and failed. Three paid draws on `#11` (0/3 loaded, $0.0189), the fix reverted to
+Status: **0.7.3 released** on 2026-11-11 — the tree hash ignores an empty
+directory (staleness no longer depends on the checkout) and the prompt-artifacts
+rule was checked against the loaded draws and left in place (0 derailed of 11).
+0.7.2 tested and reverted the description hypothesis. Three paid draws on `#11` (0/3 loaded, $0.0189), the fix reverted to
 the 0.7.0 wording, and no class or count moved. 0.7.1 fixed the instrument without
 a paid draw: `ranpass` scores the effect, isolation is recorded per draw, and the
 routing misses are diagnosed (8 of 15, all offered-not-chosen). The iterative corpus is measured:

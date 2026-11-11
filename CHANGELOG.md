@@ -9,6 +9,28 @@ skills, which cases, and which published measurements.
 
 ## [Unreleased]
 
+## [0.7.3] — 2026-11-11
+
+Two closes, no behaviour change to a skill and no paid draw.
+
+- **An empty directory is not part of a skill (`SPEC-0071`).** The published tree
+  hash hashed directory entries, so an empty, untracked directory changed it and
+  `check-staleness` answered 54 or 55 stale depending on the checkout — a number
+  that moved with the working directory. The hash now skips a directory only when
+  it is physically empty; a directory with content is hashed exactly as before,
+  and all 14 skill hashes are identical before and after. `groom-backlog`'s cell
+  was the one that flipped in practice, and it is the only one the fix touches —
+  by staying put.
+- **The body already matches what the skill does (`SPEC-0070`).** The suspicion
+  was that "This skill starts from prompt artifacts" derailed bare requests. It
+  did not: of the 11 loaded bare-request draws, 7 mention the rule, **0 stopped or
+  redirected because of it**, and the 4 that never mention it are clean. The 5
+  `#12` draws stop and ask precisely because that is what the case measures.
+  `SKILL.md` is byte-identical and the decision carries its reopening condition.
+
+The corpus keeps its counts. `#9` 4/5, `#10` unresolved at 2/5 on routing,
+`#11` a non-discriminator, `#12` the only separator at 4/5 vs 0/5.
+
 ## [0.7.2] — 2026-11-11
 
 The description hypothesis was tested and failed; it ships reverted.
