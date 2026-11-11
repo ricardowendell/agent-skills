@@ -235,6 +235,10 @@ table changed.
 | `docs/evals/coverage.md` | 86,462 / 938 | **47,613 / 427** |
 | `docs/evals/coverage-history.md` | — | 42,249 / 560 |
 
+The Purpose's `85,112 B` is the 0.7.6 measurement (`dbffe15`); implementation ran
+on 0.7.7 after SPEC-0080's fourth staleness reading, so the before column here is
+`86,462 B`. Both are correct baselines for their own point in history.
+
 **F4 — the before/after.** `node scripts/eval.mjs check --root skills` is
 unchanged: `Parsed 101 case(s): 98 runnable, 3 manual; 98 fixture(s) staged.` /
 `No findings.` (same before and after).
@@ -272,7 +276,8 @@ run: **66 cited / 51 stale / 3 uncited**, same runs, same reasons.
 The original 45,000-byte ceiling cannot hold with that surface: the named
 keep-set alone (inventory, Discriminating set, Iterative corpus, Evidence rules,
 `## Staleness` with only the latest reading, Known holes, Dispositions including
-the audit, How to update) measures **49,312 B** before any pointer. AC5 is
+the audit, How to update) measures **47,182 B** before any pointer (49,313 B once
+the moved provenance notes are counted). AC5 is
 recalibrated to **≤50,000 bytes**; the document is **47,613 B**, leaving 2,387 B
 of headroom. Summary of the resolved contract: 45,000 B or 66/51/3, not both;
 the repo requires the measurement, so the ceiling moved.

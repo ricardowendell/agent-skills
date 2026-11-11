@@ -4,7 +4,9 @@ The material below is the historical record behind [`coverage.md`](coverage.md)
 and it is moved from there verbatim (SPEC-0081): the detector evolution and its
 re-judgements, the per-wave evidence, the staleness readings the current one
 superseded, the iterative corpus's provenance and the discrimination audit. The
-scorecard cites this file instead of carrying it.
+scorecard cites this file instead of carrying it. Some blocks were lifted
+mid-section: where a preserved line says "the rows above", it refers to the
+`coverage.md` section the block came from, not to the archive's preceding text.
 
 ## Detector v2
 
@@ -515,7 +517,7 @@ stored `result.json` reports the first draw's detector. `SKILL.md` is
 byte-identical; the tree hash moved because `SPEC-0058` removed the in-skill
 corpus copy.
 
-## Discrimination audit
+## Dispositions
 
 ### Discrimination audit
 
