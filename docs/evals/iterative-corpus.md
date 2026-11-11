@@ -249,14 +249,19 @@ Full values:
 Every hash above is the tree the draws ran against, and the draws predate the
 `SPEC-0068` description edit. `#9`–`#10` and `#12` ran at `0389466e…` and `#11`
 at `9147487f…`; the edit briefly made this checkout produce `218f51bb…`, and
-`SPEC-0069` reverted it, so this checkout produces `9147487f…` again. `#11` is
-therefore fresh again; `#9`–`#10` stay stale (the `SPEC-0058` layout move took
-`0389466e…` to `9147487f…`), and the `#12` rows cite control runs with no
-governed hashes and were stale before the edit too. The smoke run at
-`218f51bb…` is the one row the revert leaves stale — it is the dated record of
-the failed description hypothesis, not a cell. That is a provenance statement,
-not a re-judgement: the stored draws keep their verdicts and no hash in this
-section is rewritten.
+`SPEC-0069` reverted it, so this checkout produces `9147487f…` again. `#9`–`#10`
+stay stale (the `SPEC-0058` layout move took `0389466e…` to `9147487f…`), and
+the `#12` rows cite control runs with no governed hashes and were stale before
+the edit too. The revert restores `#11`'s stored cell to fresh, but the cited
+`#11` row swaps to the `SPEC-0069` smoke (`11-21-09`, `218f51bb…`) and reads
+stale in the second and third readings alike: the swap does not change the stale
+count. The cell the third reading adds is not `#11` but `groom-backlog` #2, by an
+unrelated harness artefact — its recorded hash `e2a3b99f…` included an empty,
+untracked `skills/groom-backlog/references/` directory, which `stagedTreeHash`
+hashes; with the directory gone the tree hashes `724bb8ad…` and the cell is
+stale. The smoke run at `218f51bb…` is the dated record of the failed description
+hypothesis, not a cell. That is a provenance statement, not a re-judgement: the
+stored draws keep their verdicts and no hash in this section is rewritten.
 
 ## The gap for `SPEC-0035`
 

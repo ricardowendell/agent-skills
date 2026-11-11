@@ -226,11 +226,11 @@ c4e0f6e2060cc872adaa6ad8fcafc890bbd80755bf08c5fbd99ff91af533736d`,
 (`seatbelt`), **`isolated=yes`**.
 
 ```text
-$ node scripts/check-eval-run.mjs 2026-11-11T11-21-09--implement-from-prompt--agentworks-deepseek-v4-1-flash
+$ node scripts/check-eval-run.mjs ~/.local/share/opencode/evals/runs/2026-11-11T11-21-09--implement-from-prompt--agentworks-deepseek-v4-1-flash
 gate-miss implement-from-prompt#11 r1 — skillGate not ok — skill 'implement-from-prompt' was not loaded
 gate-miss implement-from-prompt#11 r2 — skillGate not ok — skill 'implement-from-prompt' was not loaded
 gate-miss implement-from-prompt#11 r3 — skillGate not ok — skill 'implement-from-prompt' was not loaded
-cases=1 reps=3 findings=3 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0
+cases=1 reps=3 findings=3 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0 (/Users/wendell/.local/share/opencode/evals/runs/2026-11-11T11-21-09--implement-from-prompt--agentworks-deepseek-v4-1-flash)
 exit 1
 ```
 
@@ -266,6 +266,16 @@ Published:
 - `docs/specs/SPEC-0034-iterative-corpus.md` — a *Correction (SPEC-0069)* in the
   routing paragraph.
 
+### Note — the empty-directory artefact
+
+The third staleness reading moves 54 → 55, but the added cell is not this spec's:
+`stagedTreeHash` hashes directory entries, so an empty, untracked
+`skills/groom-backlog/references/` directory held `groom-backlog` #2 at
+`e2a3b99f…`; with the directory gone the tree hashes `724bb8ad…` and the cell
+reads stale. `implement-from-prompt` #11 swaps its citation to the smoke and
+stays stale, so it contributes zero. The artefact is a harness defect, tracked
+as `TASK-107`; it is recorded here, not fixed in this spec.
+
 ### Gates
 
 | command | result | exit |
@@ -279,7 +289,7 @@ Published:
 | `node scripts/check-evidence.mjs` | `6 documents, 0 errors, 0 warnings; current detector cf2e2e319d975a5b` | 0 |
 | `node scripts/check-staleness.mjs` | `66 cited cell(s), 55 stale, 3 uncited` (report-only) | 0 |
 | `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0069-does-the-description-actually-route.md --base main` | `contract holds` (no warnings at the committed tree) | 0 |
-| `node scripts/check-eval-run.mjs 2026-11-11T11-21-09--implement-from-prompt--agentworks-deepseek-v4-1-flash` | 3 routing `gate-miss` findings (the failure record) | 1 |
+| `node scripts/check-eval-run.mjs ~/.local/share/opencode/evals/runs/2026-11-11T11-21-09--implement-from-prompt--agentworks-deepseek-v4-1-flash` | 3 routing `gate-miss` findings (the failure record) | 1 |
 
 ### Deviation
 

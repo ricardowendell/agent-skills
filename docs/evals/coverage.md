@@ -577,14 +577,17 @@ this spec. The draws keep their stored verdicts; this paragraph is dated so the
 first run stays history.
 
 Third run (2026-11-11, after the `SPEC-0069` revert): **66 cited cells, 55
-stale, 3 uncited**. The revert restores `9147487f…`, so `implement-from-prompt`
-#11's stored cell is fresh again; the one `#11` row the checker still reads
-stale is the `SPEC-0069` smoke run it now resolves first
-(`2026-11-11T11-21-09--implement-from-prompt--agentworks-deepseek-v4-1-flash`,
-`skillHash 218f51bb…`) — stale by design, because it ran against the description
-that was reverted. The other 54 stale cells and the three uncited citations are
-the second run's unchanged history. The draws keep their stored verdicts; this
-paragraph is dated too.
+stale, 3 uncited**, taken in the primary checkout and reproduced in a clean
+worktree after an empty, untracked directory was removed. The delta from the
+second reading (54) is **`groom-backlog` #2**, and it is not this spec's: its
+recorded tree hash `e2a3b99f…` was computed over a tree that included an empty,
+untracked `skills/groom-backlog/references/` directory; with that directory gone
+the tree hashes `724bb8ad…` and the cell is stale. `implement-from-prompt` #11
+**swaps citation** — control `2026-11-11T06-43-38…` → smoke
+`2026-11-11T11-21-09…` — and stays stale in both readings, so it contributes
+**zero** to the count; the smoke is routing evidence, not the cell. The three
+uncited citations are the second run's unchanged history. The draws keep their
+stored verdicts; this paragraph is dated too.
 
 ## Known holes
 
