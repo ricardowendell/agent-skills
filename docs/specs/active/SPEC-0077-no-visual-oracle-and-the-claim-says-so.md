@@ -1,7 +1,7 @@
 ---
 id: SPEC-0077
 title: No visual oracle, and the claim says so
-status: ready
+status: implemented
 priority: P2
 task: TASK-61
 created_at: 2026-11-11
