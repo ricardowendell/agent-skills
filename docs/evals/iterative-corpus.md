@@ -18,7 +18,7 @@ assertion or skill text was changed by this measurement.
 | detector | v2 `71bfb85a91cd68ab` for the 2026-11-08 draws; current `cf2e2e319d975a5b` for the 2026-11-11 draws (the two holdout runs and the #12 control's resumed `r3`) |
 | repository state | `repoSha 5d035ff` for the 2026-11-08 draws; `repoSha 8aab5bd` for the 2026-11-11 draws |
 | skill | `skillHash 0389466e65d1e09327c54d7f392a6293897840c9503296b940b356ad30321076` at `5d035ff`; `skillHash 9147487f27cb27be0b915500599896d90db0be01a49dd605a402f57268fbff9e` at `8aab5bd` |
-| isolation | 2026-11-08: legacy manifest (throwaway home; `check-eval-run` read `isolated=yes` under the legacy boolean). 2026-11-11: `params.isolation.enforced: true`, `mechanism: "seatbelt"` |
+| isolation | 2026-11-08: legacy manifests with `params.isolate: true` (a throwaway home) and no per-draw record. The legacy boolean is no longer read as enforcement evidence — it never meant "the corpus was denied" — and the resumed #12 control is `isolated=unknown` for five unrecorded draws; see [the correction](#runs-and-hashes). 2026-11-11: `params.isolation.enforced: true`, `mechanism: "seatbelt"` |
 | draws spent | **11 paid draws** in this resume: 1 for the #12 r3 resume, 5 for #11 with-skill, 5 for #11 control. No stall, no retry, no lost draw |
 
 `SKILL.md` is byte-identical between the two commits. The tree hash moved because
@@ -144,19 +144,20 @@ legacy manifest's isolation record; `check-eval-run` consequently prints
 report `findings=0`, `skillLeaks=0`, `hostReads=0`.
 
 The `isolated=unknown` does not weaken the separator. The control is `unknown`
-because **four of the five draws predate the enforcement probe** and carry no
-enforcement record — at `5d035ff` the harness had `isolateHome` and no seatbelt
-layer at all. `r3` was re-run under seatbelt on 2026-11-11 and the directory
-records that re-run (`cf2e2e319d975a5b`, `8aab5bd`); the re-run predates per-draw
-isolation recording, so its own draw carries no mechanism record either.
-`check-eval-run` therefore says `5 of 5 draws predate the enforcement probe` and
-keeps the cell `unknown`. That is the honest reading: absence of a record is not
-evidence that a boundary was enforced, and inferring enforcement from a manifest
-written by a build that had no mechanism is the failure this harness exists to
-prevent (`SPEC-0067`). The control's 0/5 still stands because its red is an
-**edit** (`unchanged **`): an answer-key leak would show the control the expected
-behaviour — ask, do not edit — so it would bias toward passing, not toward
-failing, and `unknown` cannot manufacture the skill's 4/5 against a 0/5.
+because **four of the five draws predate the enforcement probe** — at `5d035ff`
+the harness had `isolateHome` and no seatbelt layer — and **none of the five
+draws carries an enforcement record**. `r3` was re-run under seatbelt on
+2026-11-11 and the directory records that re-run (`cf2e2e319d975a5b`,
+`8aab5bd`), but the re-run predates per-draw isolation recording, so its own draw
+carries no mechanism record either. `check-eval-run` therefore says `5 of 5 draws
+carry no enforcement record` and keeps the cell `unknown`. That is the honest
+reading: absence of a record is not evidence that a boundary was enforced, and it
+is also not evidence that the build predates the probe — inferring either from a
+manifest written by a build that had no mechanism is the failure this harness
+exists to prevent (`SPEC-0067`). The control's 0/5 still stands because its red
+is an **edit** (`unchanged **`): an answer-key leak would show the control the
+expected behaviour — ask, do not edit — so it would bias toward passing, not
+toward failing, and `unknown` cannot manufacture the skill's 4/5 against a 0/5.
 
 Full values:
 
@@ -213,7 +214,7 @@ documented replay of the old three cells before the A arm can be reused.
 | `2026-11-08T06-35-22--implement-from-prompt--agentworks-deepseek-v4-1-flash` | `cases=1 reps=5 findings=3 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0` — `gate-miss #10 r2/r3/r5` | 1 |
 | `2026-11-08T06-37-25--implement-from-prompt--agentworks-deepseek-v4-1-flash--without-skill` | `cases=1 reps=5 findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0` | 0 |
 | `2026-11-08T06-39-39--implement-from-prompt--agentworks-deepseek-v4-1-flash` | `cases=1 reps=5 findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0` | 0 |
-| `2026-11-08T06-44-22--implement-from-prompt--agentworks-deepseek-v4-1-flash--without-skill` | `cases=1 reps=5 findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=unknown deniedDraws=0` — resumed legacy manifest | 0 |
+| `2026-11-08T06-44-22--implement-from-prompt--agentworks-deepseek-v4-1-flash--without-skill` | `cases=1 reps=5 findings=0 warnings=1 skillLeaks=0 hostReads=0 isolated=unknown deniedDraws=0` — `warn isolation-unproven #12 — 5 of 5 draws carry no enforcement record (unproven: r1, r2, r3, r4, r5)`; four draws predate the probe, `r3` was re-run under seatbelt but predates per-draw recording | 0 |
 | `2026-11-11T06-41-39--implement-from-prompt--agentworks-deepseek-v4-1-flash` | `cases=1 reps=5 findings=4 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0` — `gate-miss #11 r2–r5` | 1 |
 | `2026-11-11T06-43-38--implement-from-prompt--agentworks-deepseek-v4-1-flash--without-skill` | `cases=1 reps=5 findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0` | 0 |
 

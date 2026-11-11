@@ -76,8 +76,10 @@ seatbelt. A resume must not be able to do that.
 - `{ enforced: true, mechanism, reason }` — the draw ran wrapped by the mechanism;
 - `{ enforced: false, mechanism: null, reason }` — this build asked and could not
   enforce (the existing `isolationRecord` contract, unchanged);
-- `null` — the draw has no record, because it predates the probe. Absence is
-  absence; it is never rewritten into a claim.
+- `null` — the draw has no record: either the build predates the probe, or it
+  had the probe but predates per-draw recording. The record cannot tell these
+  apart, so it says "unrecorded" and neither rewrites absence into a claim nor
+  invents a build order.
 
 ### F2 — the manifest stops lying and starts summarising
 
@@ -86,7 +88,10 @@ manifest summary that is derived from the draws:
 
 - `enforced: true` only when **every** behavioural draw records `enforced: true`;
 - otherwise `enforced: false` with a reason that names the count, e.g.
-  `"4 of 5 draws predate the enforcement probe; r3 ran under seatbelt"`;
+  `"4 of 5 draws carry no enforcement record; r3 ran under seatbelt"`. A draw
+  with no record is *unrecorded*: absence has two causes (a build before the
+  probe, or a build with the probe but before per-draw recording) and the fold
+  cannot tell them apart, so it never says "predates the probe";
 - `RESUMED_LEGACY_REASON` becomes `"resumed legacy run — earlier draws carry no
   enforcement record"`, because that is the fact. A claim that they *were not*
   enforced requires evidence this harness does not have.
@@ -158,8 +163,9 @@ caveat lives.
 2. `resumeIsolation` never writes "earlier draws were not enforced". The reason
    distinguishes *unproven* from *known-unenforced*.
 3. A resumed cell with four unrecorded draws and one enforced draw summarises as
-   `4 of 5 draws predate the enforcement probe`, and the enforced draw's own
-   record survives.
+   `4 of 5 draws carry no enforcement record`, and the enforced draw's own
+   record survives. Draws built after the deny layer (`repoSha 8aab5bd`) must not
+   be described as "predating the probe".
 4. `checkRun` returns `isolated=unknown` for that cell — failing closed — and the
    finding names the unproven draws.
 5. A cell whose every behavioural draw records enforcement is still
@@ -180,6 +186,11 @@ caveat lives.
 - **Absence is not evidence of absence.** "No record" and "recorded as not
   enforced" are different facts and must read differently. The old string
   collapsed them, and the corpus quoted it.
+- **Unrecorded is not unenforced, and it is also not "older than the probe".**
+  A draw without a record could have been built before the probe or after it but
+  before per-draw recording; the harness cannot tell which from an absent field,
+  so the reason says `carry no enforcement record` and adds no build-order claim
+  unless the draw itself proves it.
 - **Fail closed stays.** `unknown` is the correct cell verdict while four of five
   draws are unproven, even though this makes the separator's control arm look
   weaker. The alternative — inferring enforcement from a manifest written by a
@@ -205,19 +216,21 @@ None.
 ## Results
 
 **F1 — per draw.** `runCase` writes `isolation: ctx.isolation` beside
-`detectorVersion` in the draw artifact (`draws/rN.json` and `repetitions[]`), and
-in the smoke draw as the `not applied: smoke stages only, no child draw` refusal.
-A draw without the field parses back as `null` (`drawIsolation`); nothing is
-invented for it.
+`detectorVersion` in the draw artifact (`draws/rN.json` and `repetitions[]`), in
+the smoke draw as the `not applied: smoke stages only, no child draw` refusal, and
+in both `fixture failed to stage` paths as provenance (the missing `leak` field
+keeps those draws `unknown`). A draw without the field parses back as `null`
+(`drawIsolation`); nothing is invented for it.
 
 **F2 — derived summary.** `resumeIsolation(manifest, current, draws)` derives the
 manifest record from the draws: `enforced: true` only when every behavioural draw
-proves it; otherwise the counted reason (`4 of 5 draws predate the enforcement
-probe; r3 ran under seatbelt`). `RESUMED_LEGACY_REASON` is now `resumed legacy
-run — earlier draws carry no enforcement record`. A resume that cannot enforce
-still lowers the summary and says so (`mixes enforced and unenforced draws …`).
-`eval.mjs` calls it again after the draws so the persisted summary covers the
-reused and the re-run draws.
+proves it; otherwise the counted reason (`4 of 5 draws carry no enforcement
+record; r3 ran under seatbelt`). A draw with no field is *unrecorded* — the fold
+does not infer that it predates the probe. `RESUMED_LEGACY_REASON` is now `resumed
+legacy run — earlier draws carry no enforcement record`. A resume that cannot
+enforce still lowers the summary and says so (`mixes enforced and unenforced
+draws …`). `eval.mjs` calls it again after the draws so the persisted summary
+covers the reused and the re-run draws.
 
 **F3 — readers.** `manifestIsolation(manifest, draws)` and `checkRun` fold the
 draws first, then the manifest record, then the legacy boolean. The stored
@@ -231,18 +244,21 @@ post-change checker differs only on the reference cell, and only in the reason.
 ```text
 before  cases=1 reps=5 findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=unknown
         (no reason printed)
-after   warn isolation-unproven implement-from-prompt#12 — 5 of 5 draws predate the enforcement probe (unproven: r1, r2, r3, r4, r5)
+after   warn isolation-unproven implement-from-prompt#12 — 5 of 5 draws carry no enforcement record (unproven: r1, r2, r3, r4, r5)
         cases=1 reps=5 findings=0 warnings=1 skillLeaks=0 hostReads=0 isolated=unknown
 ```
 
 The five stored draws carry no `isolation`; `r3` is distinguished only by its
-provenance (`cf2e2e319d975a5b`, `8aab5bd`), so the reader counts five unproven
-draws rather than asserting that four of them were unenforced.
+provenance (`cf2e2e319d975a5b`, `8aab5bd`), so the reader counts five unrecorded
+draws rather than asserting that four of them predate the probe or that any of
+them was unenforced.
 
 **F4 — republished.** `docs/evals/iterative-corpus.md`, `docs/evals/coverage.md`
 and `SPEC-0034` now state the control is `isolated=unknown` because four of five
-draws predate the enforcement probe, that `r3` was re-run under seatbelt and the
-directory records that re-run, and repeat why the separator still stands (the
-control's red is an edit; a leak biases toward passing).
+draws predate the enforcement probe and none of the five carries an enforcement
+record; `r3` was re-run under seatbelt and the directory records that re-run. They
+repeat why the separator still stands (the control's red is an edit; a leak biases
+toward passing), and the corpus Gates row is quoted from the command's current
+output (`warnings=1`, `isolated=unknown`).
 
 **Gates.** Every `tests:` command exited 0; zero draws were spent.

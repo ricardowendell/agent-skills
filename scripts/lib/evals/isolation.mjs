@@ -193,6 +193,13 @@ export function drawIsolation(draw) {
 
 // Fold a set of draws into one summary. `r3` is the label a draw has in the run
 // directory (`rep`), so the reason points at something a reader can open.
+//
+// A draw with no field is *unrecorded*: absence has two causes (a build before
+// the probe, or a build with the probe but before per-draw recording) and this
+// fold cannot tell them apart, so it states neither. The parenthetical
+// "(built before the enforcement probe)" is only permissible when a caller can
+// prove the build's order from the draw itself; no such evidence is threaded
+// here, so the reason never guesses.
 export function summarizeDrawIsolation(draws = []) {
   const entries = (Array.isArray(draws) ? draws : [])
     .filter(Boolean)
@@ -214,7 +221,7 @@ export function summarizeDrawIsolation(draws = []) {
     }
   }
   const parts = []
-  if (unrecorded.length) parts.push(`${unrecorded.length} of ${entries.length} draws predate the enforcement probe`)
+  if (unrecorded.length) parts.push(`${unrecorded.length} of ${entries.length} draws carry no enforcement record`)
   if (unproven.length) parts.push(`${unproven.length} of ${entries.length} draws recorded no mechanism`)
   if (provenEntries.length === 1) parts.push(`${provenEntries[0].label} ran under ${mechanisms(provenEntries)}`)
   else if (provenEntries.length) {
@@ -254,14 +261,14 @@ export function resumeIsolation(manifest, current = null, draws = null) {
       params.isolation = { enforced: false, mechanism: null, reason }
       return params.isolation
     }
-    // No draw has a record. The count is the only fact available, and the
-    // mechanism is not one of them.
+    // No draw has a record. The count is the only fact available, and neither
+    // the mechanism nor the build's order is one of them.
     const total = list.length
     params.isolation = {
       enforced: false,
       mechanism: null,
       reason:
-        `${total} of ${total} draws predate the enforcement probe` +
+        `${total} of ${total} draws carry no enforcement record` +
         (enforcedNow ? "" : `; the current invocation could not enforce (${currentReason(current)})`),
     }
     return params.isolation

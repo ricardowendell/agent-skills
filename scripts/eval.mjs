@@ -602,6 +602,10 @@ async function runCase(ctx, c, rep = null) {
           fixtureHash: null,
           promptHash: textHash(c.prompt),
           detectorVersion: DETECTOR_VERSION,
+          // SPEC-0067: the draw wears the boundary the invocation asked for,
+          // even when staging failed before a child ran. The missing `leak`
+          // field still keeps the cell `unknown`; this is provenance only.
+          isolation: ctx.isolation,
           assertions: [],
           transcript: file,
         }),
@@ -671,6 +675,8 @@ async function runCase(ctx, c, rep = null) {
         fixtureHash: null,
         promptHash: textHash(c.prompt),
         detectorVersion: DETECTOR_VERSION,
+        // SPEC-0067: provenance, not a verdict — see the smoke failure above.
+        isolation: ctx.isolation,
         assertions: [],
         transcript: file,
       }),

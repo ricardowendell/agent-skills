@@ -126,8 +126,10 @@ function leakPaths(result, kind) {
 // was denied".
 //
 // A stored "earlier draws were not enforced" is restated as what it can support:
-// no record. The count comes from the draws the caller read.
-const unprovenReason = (draws) => `${draws.length} of ${draws.length} draws predate the enforcement probe`
+// no record. The count comes from the draws the caller read. A draw with no
+// record is unrecorded, not "older than the probe": absence has two causes and
+// this module cannot tell them apart (SPEC-0067).
+const unprovenReason = (draws) => `${draws.length} of ${draws.length} draws carry no enforcement record`
 
 function restateLegacy(record, draws = []) {
   if (!isRecord(record)) return record

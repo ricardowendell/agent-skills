@@ -383,17 +383,21 @@ test("a smoke draw records why nothing was applied instead of claiming a boundar
 })
 
 test("a resumed cell with four unrecorded draws and one enforced draw summarises the count", () => {
+  // All five ran at `8aab5bd`, a build that already had the deny layer. The
+  // missing field is still only "unrecorded" — the fold must not infer that the
+  // four are older than the probe.
   const draws = [
-    { rep: 1 },
-    { rep: 2 },
-    { rep: 3, isolation: ENFORCED_NOW },
-    { rep: 4 },
-    { rep: 5 },
+    { rep: 1, meta: { repoSha: "8aab5bd" } },
+    { rep: 2, meta: { repoSha: "8aab5bd" } },
+    { rep: 3, isolation: ENFORCED_NOW, meta: { repoSha: "8aab5bd" } },
+    { rep: 4, meta: { repoSha: "8aab5bd" } },
+    { rep: 5, meta: { repoSha: "8aab5bd" } },
   ]
   const summary = summarizeDrawIsolation(draws)
   assert.equal(summary.enforced, false)
   assert.equal(summary.mechanism, null)
-  assert.equal(summary.reason, "4 of 5 draws predate the enforcement probe; r3 ran under seatbelt")
+  assert.equal(summary.reason, "4 of 5 draws carry no enforcement record; r3 ran under seatbelt")
+  assert.doesNotMatch(summary.reason, /predate|older than|built before/)
 
   // The enforced draw keeps its own record beside the summary.
   assert.deepEqual(draws[2].isolation, ENFORCED_NOW)
