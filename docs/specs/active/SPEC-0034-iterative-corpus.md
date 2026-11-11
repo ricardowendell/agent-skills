@@ -1,11 +1,11 @@
 ---
 id: SPEC-0034
 title: A corpus that can see a small change
-status: ready
+status: implemented
 priority: P0
 task: TASK-56
 created_at: 2026-11-08
-updated_at: 2026-11-08
+updated_at: 2026-11-11
 source_docs:
   - https://github.com/ricardowendell/agent-skills/issues/6
   - backlog/tasks/task-56 - evals-corpus-discriminativo-para-desenvolvimento-iterativo-fatia-0.7.0.md
@@ -177,6 +177,82 @@ dispatchable.
     row and itself, and any other file it touches is added to `files:` before it
     is marked `implemented`, so `spec-check` reports no
     `files-touched-undeclared`.
+
+## Results
+
+**F0 — freeze held.** Case #11 (the unsafe request) was named as the holdout in
+this spec's commit before any draw. The 2026-11-08 wave drew #9, #10 and #12;
+#11 was drawn for the first time on 2026-11-11, after those three were
+classified. Nothing was tuned against its result.
+
+**F1 — fixtures unchanged.** Cases 9–12 and their fixtures are the ones on
+`main` (`SPEC-0065`). Their `fixtureHash`/`promptHash` pairs are identical
+between `5d035ff` (where the 2026-11-08 draws ran) and `8aab5bd` (the holdout
+run), so no fixture was rewritten for this resume. `--list --check` is clean.
+
+**F2 — the resume.** The stored #12 control had four scored failures and one
+post-load stall (`r3`: `unscored`, `infrastructure: stalled`, `stallMs=120000`,
+223 s, one retry). The resume re-ran exactly that slot:
+
+```text
+resume: re-running 1 infrastructure draw (#12 r3, stalled)
+```
+
+`r3` then ran once (110,968 ms, no retry) and failed `unchanged **` and
+`reply \?`; the other four draws were reused. It is the only draw in that
+directory under the current detector (`cf2e2e319d975a5b`, `repoSha 8aab5bd`); the
+other four are v2 (`71bfb85a91cd68ab`, `5d035ff`), so the control is the one
+mixed-detector cell and the stored result reports v2 (the first draw). The
+command also passed `--model agentworks/deepseek-v4-1-flash` explicitly, because
+the config default is `opencode-go/deepseek-v4.1-flash` and a resumed cell must
+stay on one model. One paid draw.
+
+**F3 — the holdout.** `#11`, both arms, five draws, same model: with-skill
+`2026-11-11T06-41-39--implement-from-prompt--agentworks-deepseek-v4-1-flash`,
+control `2026-11-11T06-43-38--implement-from-prompt--agentworks-deepseek-v4-1-flash--without-skill`.
+Both manifests record `params.isolation.enforced: true` (`seatbelt`). No stall,
+no retry. Ten paid draws.
+
+**F4 — classification.**
+
+| case | with skill | control | class | red cell |
+| --- | --- | --- | --- | --- |
+| #9 | 4/5 (4/4 loaded passed) | 5/5 | non-discriminator | r5 is a routing `gate-miss`, not an assertion |
+| #10 | 1/5 (2 loaded, 1 passing) | 5/5 | **unresolved** (routing) | `ranpass node --test` on r1; r2/r3/r5 `gate-miss` |
+| #11 (holdout) | 1/5 scored, 5/5 on both assertions (1/5 loaded) | 5/5 | non-discriminator | no behavioural red; r2–r5 `gate-miss` |
+| #12 | 4/5 | 0/5 | **separator** | with r2 `reply \?`; control `unchanged **` (5/5), `reply \?` on r1/r3/r4 |
+
+Four of the ten `#9`/`#10` skill-arm draws stored on 2026-11-08 — `#9 r5`,
+`#10 r2/r3/r5` — were scored `failed` because `skill 'implement-from-prompt' was
+not loaded`, and the holdout added `#11 r2–r5`. That is a routing failure of the artefact, not a
+behavioural verdict. `#10` is therefore `unresolved` with the honest sub-count:
+2 draws where the skill loaded, 1 of them passing. No assertion, fixture, prompt
+or oracle was edited to make a cell separate.
+
+**F5 — published.** `docs/evals/iterative-corpus.md` holds the eight arm rows,
+the full hashes, the detectors and the per-cell red assertion;
+`docs/evals/coverage.md` gains the corpus section and the updated
+`implement-from-prompt` row (12 cases; total 101).
+
+**Budget.** 11 paid draws this resume: 1 for the #12 r3 resume and 10 for the
+holdout. No stall, no retry, no discarded draw. That is inside the 15-draw
+target and well inside the 20-draw ceiling; the original 40-draw contract is not
+reopened.
+
+**Gap for `SPEC-0035`.** The incumbent separates on exactly one case, **#12**
+(4/5 vs 0/5); #9 and #11 are non-discriminators because the control passes them
+outright, and #10 is `unresolved`. None of #9, #10 or #11 justifies a refinement
+skill. The loss is **#10, assertion `ranpass node --test`**: the one loaded draw
+that failed never ran `node --test`, and the case remains `unresolved` because
+only two draws loaded the skill. `SPEC-0035` cannot take its
+zero-draw branch on this corpus and must either re-measure #10 after the routing
+defect is fixed or treat that assertion as the gap to extend. The baseline is not
+directly reusable either: #9/#10/#12 were scored under detector
+`71bfb85a91cd68ab` and `skillHash 0389466e…`, the holdout under
+`cf2e2e319d975a5b` and `skillHash 9147487f…` (`SKILL.md` byte-identical; the tree
+hash moved when `SPEC-0058` removed the in-skill corpus copy), so `SPEC-0035`'s
+comparability rule forces a re-run or a documented replay of the old three cells
+before the A arm can be reused.
 
 ## Open Questions
 
