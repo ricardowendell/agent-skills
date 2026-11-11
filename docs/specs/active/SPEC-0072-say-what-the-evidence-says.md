@@ -1,7 +1,7 @@
 ---
 id: SPEC-0072
 title: Say what the evidence says, in seven places
-status: ready
+status: implemented
 priority: P3
 task: TASK-104
 created_at: 2026-11-11
