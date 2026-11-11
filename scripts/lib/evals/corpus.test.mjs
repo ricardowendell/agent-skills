@@ -102,10 +102,36 @@ test("the detector reports the mismatch it exists for", () => {
 // the pre-move snapshot (generated from skills/<id>/references/evals.md and
 // .../references/evals/<n>/); this compares the moved corpus against it. The
 // baseline is the "before", so the check is reproducible after the fact.
+//
+// SPEC-0065: the comparison is a subset, not an equality. A record of a past
+// state cannot constrain every future state — every case and fixture the
+// baseline records must still be present and unchanged, and a new case is an
+// addition, not a regression in the move. `caseFileSha256` is still recorded in
+// the baseline, but no longer asserted: a whole-file hash is that same mistake
+// one level up, since adding a case necessarily rewrites the file.
 const BASELINE = join(REPO, "evals", "corpus-baseline.json")
 const sha256 = (text) => createHash("sha256").update(text).digest("hex")
 const fieldsSha = (c) =>
   sha256(JSON.stringify({ n: c.n, title: c.title, prompt: c.prompt, why: c.why, assert: c.assert }))
+
+// The subset rule, pure so both directions can be proven without a checkout.
+// `fixtureHashes` maps a baseline fixture name to the tree hash on disk and
+// omits the name when the directory does not exist, so a deletion is reported
+// as a deletion rather than as changed bytes.
+function parityFindings(expected, cases, fixtureHashes) {
+  const findings = []
+  const byN = new Map(cases.map((c) => [c.n, c]))
+  for (const want of expected.cases) {
+    const got = byN.get(want.n)
+    if (!got) findings.push(`case ${want.n} is missing`)
+    else if (fieldsSha(got) !== want.fieldsSha256) findings.push(`case ${want.n} fields changed`)
+  }
+  for (const [name, hash] of Object.entries(expected.fixtures)) {
+    if (!(name in fixtureHashes)) findings.push(`fixture ${name} was deleted`)
+    else if (fixtureHashes[name] !== hash) findings.push(`fixture ${name} bytes changed`)
+  }
+  return findings
+}
 
 test("every case and fixture survived the move byte-for-byte", () => {
   const baseline = JSON.parse(readFileSync(BASELINE, "utf8")).cases
@@ -123,19 +149,57 @@ test("every case and fixture survived the move byte-for-byte", () => {
       mismatches.push(`${id}: evals/${id}/cases.md is missing`)
       continue
     }
-    const text = readFileSync(casesFile, "utf8")
-    if (sha256(text) !== expected.caseFileSha256) mismatches.push(`${id}: cases.md bytes changed`)
     const { cases } = readEvals(casesFile, id, { skillDir })
-    const actual = cases.map((c) => ({ n: c.n, title: c.title, fieldsSha256: fieldsSha(c) }))
-    const wanted = expected.cases.map(({ n, title, fieldsSha256 }) => ({ n, title, fieldsSha256 }))
-    if (JSON.stringify(actual) !== JSON.stringify(wanted)) mismatches.push(`${id}: parsed cases changed`)
-    for (const [name, hash] of Object.entries(expected.fixtures)) {
+    const fixtureHashes = {}
+    for (const name of Object.keys(expected.fixtures)) {
       const fixture = join(REPO, "evals", id, "fixtures", name)
-      if (!existsSync(fixture)) mismatches.push(`${id}: fixture ${name} is missing`)
-      else if (treeHash(fixture) !== hash) mismatches.push(`${id}: fixture ${name} bytes changed`)
+      if (existsSync(fixture)) fixtureHashes[name] = treeHash(fixture)
     }
+    for (const finding of parityFindings(expected, cases, fixtureHashes)) mismatches.push(`${id}: ${finding}`)
   }
   assert.deepEqual(mismatches, [])
+})
+
+// The four directions of the subset rule. A regression in the move still fails;
+// growth does not.
+const sampleCase = (n, over = {}) => ({
+  n,
+  title: `Case ${n}`,
+  prompt: `Do thing ${n}.`,
+  why: `because ${n}`,
+  assert: [{ kind: "file", arg: `src/${n}.js` }],
+  ...over,
+})
+const sampleBaseline = (cases, fixtures = {}) => ({
+  caseFileSha256: "recorded-but-not-asserted",
+  cases: cases.map((c) => ({ n: c.n, title: c.title, fieldsSha256: fieldsSha(c) })),
+  fixtures,
+})
+
+test("the parity check fails when a baseline case is removed", () => {
+  const expected = sampleBaseline([sampleCase(1), sampleCase(2)])
+  assert.deepEqual(parityFindings(expected, [sampleCase(1)], {}), ["case 2 is missing"])
+})
+
+test("the parity check fails when a baseline case's fields change", () => {
+  const expected = sampleBaseline([sampleCase(1)])
+  const changed = sampleCase(1, { prompt: "Do something else." })
+  assert.deepEqual(parityFindings(expected, [changed], {}), ["case 1 fields changed"])
+})
+
+test("the parity check fails when a baseline fixture's tree hash changes", () => {
+  const expected = sampleBaseline([], { 1: "aaaa" })
+  assert.deepEqual(parityFindings(expected, [], { 1: "bbbb" }), ["fixture 1 bytes changed"])
+})
+
+test("the parity check fails when a baseline fixture is deleted", () => {
+  const expected = sampleBaseline([], { 1: "aaaa" })
+  assert.deepEqual(parityFindings(expected, [], {}), ["fixture 1 was deleted"])
+})
+
+test("the parity check passes when a case is added", () => {
+  const expected = sampleBaseline([sampleCase(1)], { 1: "aaaa" })
+  assert.deepEqual(parityFindings(expected, [sampleCase(1), sampleCase(2)], { 1: "aaaa" }), [])
 })
 
 test("no skill checkout carries the eval corpus after the move", () => {
