@@ -15,7 +15,12 @@ related_decisions: []
 depends_on: []
 blocks: []
 files:
-  - scripts/lib/evals/
+  - scripts/lib/evals/assertions.mjs
+  - scripts/lib/evals/assertions.test.mjs
+  - scripts/lib/evals/commands.mjs
+  - scripts/lib/evals/commands.test.mjs
+  - scripts/lib/evals/verdict.mjs
+  - scripts/lib/evals/verdict.test.mjs
   - docs/evals/coverage.md
   - docs/evals/coverage-history.md
   - docs/specs/active/SPEC-0081-before-the-freeze-the-giant-files-come-down.md
