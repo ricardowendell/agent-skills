@@ -171,7 +171,7 @@ directories contain exactly those 11 with `skillGate.ok: true` (`#9 r5` and
 | #9 r1–r4 | no prompt reference; label in the component, spacing in its module, global sheet untouched | clean |
 | #10 r1 | "No spec/prompt files exist in this repo, so no prompt sync was needed"; fixes the edge case, adds the regression test, runs the suite | mention |
 | #10 r4 | "no `docs/specs/` or `docs/prompts/` artifacts in this repo, so there was no spec to move"; same fix + test + run | mention |
-| #12 r1–r5 | all five name the absent prompt/spec, and all five stop with one clarifying question and no edit | mention |
+| #12 r1–r5 | all five name the absent prompt/spec; four put one clarifying question in the final text, while r2 asked through the `question` tool, which the non-interactive harness cancelled, so its text carries no `?` and it is the one stored red; none edits | mention |
 
 **7 mention, 0 derailed, 4 clean.** No loaded draw stopped or redirected
 *because* of the prompt framing: `#10`'s two mentions are a note that prompt sync

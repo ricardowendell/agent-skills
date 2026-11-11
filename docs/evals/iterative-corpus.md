@@ -192,7 +192,7 @@ directories contain with the skill loaded:
 | #9 r3 | `06-30-24` | "I'll make the scoped change"; no prompt reference | clean |
 | #9 r4 | `06-30-24` | label and padding plus component tests; no prompt reference | clean |
 | #10 r1 | `06-35-22` | fixes the edge case and adds the regression test; "No spec/prompt files exist in this repo, so no prompt sync was needed" | mention |
-| #10 r4 | `06-35-22` | "There are no `docs/specs/` or `docs/prompts/` artifacts in this repo, so there was no spec to move" | mention |
+| #10 r4 | `06-35-22` | "There are no `docs/specs/` or `docs/prompts/` artifacts in this repo, so there was no spec to move to `in_progress`/`implemented`" | mention |
 | #12 r1 | `06-39-39` | "there's no spec or implementation prompt"; stops and asks "what is the intended badge change?" | mention |
 | #12 r2 | `06-39-39` | "No implementation prompt or spec exists"; stopping without editing; offers three updates | mention |
 | #12 r3 | `06-39-39` | "starts from a reviewed prompt artifact, and this repo has none"; asks what "update" means | mention |
@@ -201,17 +201,19 @@ directories contain with the skill loaded:
 
 **7 mention, 0 derailed, 4 clean.** The two `#10` replies name the absent
 artifacts only to say no prompt sync applied, then fix the bug and run the suite;
-the five `#12` replies frame the stop around the missing prompt but still deliver
-what case 12 measures — one clarifying question and no file changed — and none of
-them substitutes "go write a prompt" for the question. No loaded draw stopped or
-redirected because of the rule, so the body is advisory in practice and
+the five `#12` replies frame the stop around the missing prompt, and four of them
+put one clarifying question in the final text with no file changed, while `#12
+r2` asked through the `question` tool — which the non-interactive harness
+cancelled — so its final text carries no `?` and it is the one stored red; none
+of them substitutes "go write a prompt" for the question. No loaded draw stopped
+or redirected because of the rule, so the body is advisory in practice and
 `SKILL.md` is **unchanged** (byte-identical, `git diff` empty). Case 2, the draw
 that *should* redirect, still does in its stored directory
 (`2026-11-06T10-38-39--implement-from-prompt`, 11/12 assistant replies name
 `write-implementation-prompt`; r12 stopped for the missing artifacts without
 naming the skill — the one recorded red — and no draw invented the `slugify`
-contract). Reopening condition: **a future loaded draw that stops or redirects on
-a bare request reopens this.**
+contract). Reopening condition: **a future loaded draw that stops or redirects
+on a bare request where the case measures that the work be done reopens this.**
 
 ## Runs and hashes
 
@@ -343,7 +345,7 @@ documented replay of the old three cells before the A arm can be reused.
 | `2026-11-08T06-35-22--implement-from-prompt--agentworks-deepseek-v4-1-flash` | `cases=1 reps=5 findings=3 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0` — `gate-miss #10 r2/r3/r5` | 1 |
 | `2026-11-08T06-37-25--implement-from-prompt--agentworks-deepseek-v4-1-flash--without-skill` | `cases=1 reps=5 findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0` | 0 |
 | `2026-11-08T06-39-39--implement-from-prompt--agentworks-deepseek-v4-1-flash` | `cases=1 reps=5 findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0` | 0 |
-| `2026-11-08T06-44-22--implement-from-prompt--agentworks-deepseek-v4-1-flash--without-skill` | `cases=1 reps=5 findings=0 warnings=1 skillLeaks=0 hostReads=0 isolated=unknown deniedDraws=0` — `warn isolation-unproven #12 — 5 of 5 draws carry no enforcement record (unproven: r1, r2, r3, r4, r5)`; four draws predate the probe, `r3` was re-run under seatbelt but predates per-draw recording | 0 |
+| `2026-11-08T06-44-22--implement-from-prompt--agentworks-deepseek-v4-1-flash--without-skill` | `cases=1 reps=5 findings=0 warnings=1 skillLeaks=0 hostReads=0 isolated=unknown deniedDraws=0` — `warn isolation-unproven implement-from-prompt#12 — 5 of 5 draws carry no enforcement record (unproven: r1, r2, r3, r4, r5)`; four draws predate the probe, `r3` was re-run under seatbelt but predates per-draw recording | 0 |
 | `2026-11-11T06-41-39--implement-from-prompt--agentworks-deepseek-v4-1-flash` | `cases=1 reps=5 findings=4 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0` — `gate-miss #11 r2–r5` | 1 |
 | `2026-11-11T06-43-38--implement-from-prompt--agentworks-deepseek-v4-1-flash--without-skill` | `cases=1 reps=5 findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0` | 0 |
 | `2026-11-11T11-21-09--implement-from-prompt--agentworks-deepseek-v4-1-flash` (`SPEC-0069` smoke) | `cases=1 reps=3 findings=3 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0` — `gate-miss #11 r1/r2/r3` | 1 |

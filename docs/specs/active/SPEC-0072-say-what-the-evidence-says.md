@@ -149,4 +149,26 @@ None.
 
 ## Results
 
-_Filled during implementation._
+Seven prose edits, zero draws spent:
+
+- **F1** — `docs/evals/coverage.md`: the `#12` control caveat now names the
+  re-run's build (`cf2e2e319d975a5b`, `8aab5bd`) and attributes the seatbelt to
+  the invocation that recorded `enforced: true` in the `2026-11-11T06-41-39` and
+  `06-43-38` runs, while stating in the same sentence that the re-run's own draw
+  carries no mechanism record. The stored `r3` has no `isolation` field.
+- **F2** — `docs/evals/iterative-corpus.md`: the quoted `check-eval-run` warning
+  now reads `warn isolation-unproven implement-from-prompt#12 …`, matching the
+  command's output.
+- **F3** — `scripts/lib/evals/isolation.mjs`: deleted the comment sentence that
+  sanctioned a "(built before the enforcement probe)" parenthetical no caller can
+  produce. Comment-only diff; behaviour unchanged.
+- **F4** — `docs/evals/iterative-corpus.md`: the `#10 r4` quote is restored to
+  end "so there was no spec to move to `in_progress`/`implemented`"; the `#12`
+  aggregation says `r2` asked through the `question` tool the non-interactive
+  harness cancelled, so its final text has no `?` and it is the one stored red;
+  the reopening condition now adds "where the case measures that the work be
+  done". `docs/specs/SPEC-0070-the-body-already-matches-what-the-skill-does.md`
+  carries the same corrected aggregation.
+
+Gates: every command in `tests:` exits 0; `check-evidence` reports `0 errors, 0
+warnings`. No measured number, class, run directory or hash changed.

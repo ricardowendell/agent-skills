@@ -196,10 +196,7 @@ export function drawIsolation(draw) {
 //
 // A draw with no field is *unrecorded*: absence has two causes (a build before
 // the probe, or a build with the probe but before per-draw recording) and this
-// fold cannot tell them apart, so it states neither. The parenthetical
-// "(built before the enforcement probe)" is only permissible when a caller can
-// prove the build's order from the draw itself; no such evidence is threaded
-// here, so the reason never guesses.
+// fold cannot tell them apart, so it states neither.
 export function summarizeDrawIsolation(draws = []) {
   const entries = (Array.isArray(draws) ? draws : [])
     .filter(Boolean)
