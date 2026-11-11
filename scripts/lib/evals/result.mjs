@@ -107,6 +107,23 @@ export function infrastructureReps(result) {
   return isInfrastructure(result) ? 1 : 0
 }
 
+// `--resume` asks one question of a stored draw: is this a result the harness
+// will keep? A draw it discarded is not. An infrastructure draw (a stall, a
+// timeout, a provider abort) is `unscored` because the harness killed it, not
+// because the agent behaved badly; replaying it reproduces the same empty cell,
+// so it is re-run. An `unscored` draw without infrastructure ("no assertions")
+// is an authoring defect and repeating the draw buys the same nothing. A
+// contaminated draw was paid and produced a behaviour; excluding it is a
+// judgement about the wave, not a resume default, so it is reused too.
+// Precedence matches `contaminatedReps`: a draw that both stalled and leaked is
+// infrastructure — the kill happened before the leak could be attributed.
+// A status this build does not know is re-run rather than trusted.
+export function resumeSkip(result) {
+  if (!result) return false
+  if (isInfrastructure(result)) return false
+  return result.status === PASSED || result.status === FAILED || result.status === UNSCORED || result.status === "staged"
+}
+
 // A case whose only draws were contaminated is `unscored`, never `failed`; the
 // contaminated count is reported apart from the status counts. Infrastructure
 // draws get their own count for the same reason: they are incomplete evidence,

@@ -163,4 +163,66 @@ None.
   legacy-manifest fix), the predicate must read the normalised result, not the
   raw file.
 
-_Filled during implementation._
+## Results
+
+**F1 — predicate.** `resumeSkip(result)` lives in `scripts/lib/evals/result.mjs`,
+beside the status vocabulary. It reads `isInfrastructure`, so a legacy draw with
+no `infrastructure` field but `reason: "infrastructure: stalled"` is classified
+the same as a current one. Precedence matches `contaminatedReps`: a draw that
+both stalled and leaked is infrastructure, because the kill happened first. A
+status this build does not know is re-run rather than trusted.
+
+| Stored draw | `resumeSkip` | Why |
+| --- | --- | --- |
+| `passed` | `true` (reuse) | already scored, already paid |
+| `failed` | `true` (reuse) | already scored, already paid |
+| `unscored` + `infrastructure: true` | `false` (**re-run**) | the harness discarded it; replaying reproduces the empty cell |
+| `unscored` without infrastructure | `true` (reuse) | authoring defect ("no assertions"); repeating buys the same nothing |
+| `contaminated` (`unscored` + `contaminated: true`) | `true` (reuse) | paid and produced a behaviour; re-running is a named decision |
+| infrastructure **and** contaminated | `false` (**re-run**) | infrastructure wins, as in the aggregate |
+
+One test per case in `result.test.mjs`, plus the precedence case.
+
+**F2 — wired.** `scripts/eval.mjs` reads `if (resumeSkip(cached)) return cached`
+inside the resume branch of `runDraw`, and reports every re-run slot to stderr so
+`--json` stdout stays one document:
+`resume: re-running 1 infrastructure draw (#1 r2, stalled)`. Slot entries are
+sorted by case and index. The existing arm/level/repeat/label guards are
+untouched.
+
+**F3 — end to end.** `cli.test.mjs`, test `--resume re-runs a discarded
+infrastructure draw and reuses the scored one`: a run directory seeded with a
+`passed` r1 and a `stalled` r2 is resumed at `--repeat 2 --concurrency 1` with an
+`opencode` shim that logs each spawn and exits 0. Result: exactly **one spawn**
+(the stalled slot), stderr carries `resume: re-running 1 infrastructure draw (#1
+r2, stalled)`, `draws/r1.json` is byte-identical to the seed, `draws/r2.json` is
+replaced by a scored draw, and the case completes as `failed [1/2]` (1/2
+repetitions passed: skill not loaded) with `reps: 2`, `infrastructure: 0` and
+`manifest.status: completed`. It is `failed`, not `unscored`, because the no-op
+shim never loads the skill — TASK-101's question, deliberately untouched.
+
+**Reference run (AC5).** The SPEC-0034 control run
+`2026-11-08T06-44-22--implement-from-prompt--agentworks-deepseek-v4-1-flash--without-skill`
+was copied to a temporary directory and its five `#12` draws were read through
+the predicate; the store was not resumed and no process was spawned:
+
+| Slot | Stored | Decision |
+| --- | --- | --- |
+| `#12 r1` | `failed` (`unchanged **, reply \?`) | reuse |
+| `#12 r2` | `failed` (`unchanged **`) | reuse |
+| `#12 r3` | `unscored`, `infrastructure: true`, `infrastructure: stalled` | **re-run** |
+| `#12 r4` | `failed` (`unchanged **, reply \?`) | reuse |
+| `#12 r5` | `failed` (`unchanged **`) | reuse |
+
+4 reused, 1 re-run. Before this change the same resume returned the stored stall
+for r3 and the case never left `unscored`.
+
+**Gates.** Every command in `tests:` exited 0: `validate-skills` (14 skills),
+`eval.mjs check` (`Parsed 97 case(s): 94 runnable, 3 manual; 94 fixture(s)
+staged. No findings.`), `scripts/lib/evals/*.test.mjs` (526 pass),
+`scripts/lib/*.test.mjs` (13 pass),
+`skills/bootstrap-project-harness/scripts/*.test.mjs` (42 pass),
+`check-sensor-parity`, `check-evidence`, `check-staleness` and `spec-check`.
+Zero paid draws.
+
+No status value, contamination rule, detector or watchdog changed.

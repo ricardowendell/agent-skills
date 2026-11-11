@@ -26,7 +26,7 @@ import { authProbe, scrubEnv } from "./lib/evals/agent.mjs"
 import { corpusRoots, isolateHome, isolationRecord, probeIsolation, resumeIsolation, wrapCommand } from "./lib/evals/isolation.mjs"
 import { denySkillTool, fixtureEntries, governedFiles, makeScratch, skillFileHashes, stageFixture, stageSkill, stagedTreeHash, textHash } from "./lib/evals/fixture.mjs"
 import { oracleFindings, oracleWarnings } from "./lib/evals/assertions.mjs"
-import { summarize, aggregateReps, caseResult, contaminate, PASSED } from "./lib/evals/result.mjs"
+import { summarize, aggregateReps, caseResult, contaminate, resumeSkip, PASSED } from "./lib/evals/result.mjs"
 import { executeCase } from "./lib/evals/execute.mjs"
 import { leaksIn, DETECTOR_VERSION } from "./lib/evals/leak.mjs"
 import { parseStop, runScheduled } from "./lib/evals/schedule.mjs"
@@ -792,6 +792,25 @@ function finalizeCase(state, { run, minPass }) {
   }
 }
 
+// Why a stored draw was discarded. The field was added after the first stalled
+// runs, so an older artifact only carries it in the reason.
+function discardedReason(draw) {
+  if (draw?.infrastructureReason) return draw.infrastructureReason
+  const match = /^infrastructure:\s*(.+)$/.exec(draw?.reason ?? "")
+  return match ? match[1] : "infrastructure"
+}
+
+// `--resume` says which slots it refused to reuse, so a resumed wave is never
+// silently a different wave. stderr keeps `--json` stdout one document; the
+// label already names the skill, so a slot is `#<case> r<index>`.
+function reportReran(reran) {
+  if (!reran.length) return
+  const slots = [...reran]
+    .sort((a, b) => a.case - b.case || a.index - b.index)
+    .map((r) => `#${r.case} r${r.index}, ${discardedReason(r.draw)}`)
+  console.error(`resume: re-running ${slots.length} infrastructure ${slots.length === 1 ? "draw" : "draws"} (${slots.join("; ")})`)
+}
+
 // Every draw of a selection through one lane pool, then one run artifact.
 async function executeSelection({ items, arm, level, repeat, label, known, baseline = null, resumeDir = null }) {
   const started = Date.now()
@@ -834,15 +853,21 @@ async function executeSelection({ items, arm, level, repeat, label, known, basel
   if (resumeDir) resumeIsolation(run.manifest, isolation)
 
   const scheduledItems = items.map(({ skill: itemSkill, c }) => ({ skill: itemSkill, c, times: level === "smoke" ? 1 : repeat }))
+  // Slots the harness discarded in the original run: `--resume` re-runs them.
+  const reran = []
   const scheduled = await runScheduled({
     cases: scheduledItems,
     concurrency,
     stop,
     runDraw: ({ skill: drawSkill, c, rep }) => {
-      // A resumed draw is already paid for: return it, do not stage or spawn.
+      // A scored draw is already paid for: return it, do not stage or spawn. A
+      // draw the harness discarded (infrastructure) is not a result; re-run it.
       if (resumeDir) {
         const cached = run.readDraw(drawSkill.id, c.n, rep?.index ?? 1)
-        if (cached) return cached
+        if (cached) {
+          if (resumeSkip(cached)) return cached
+          reran.push({ case: c.n, index: rep?.index ?? 1, draw: cached })
+        }
       }
       return runCase(
         {
@@ -860,6 +885,7 @@ async function executeSelection({ items, arm, level, repeat, label, known, basel
       )
     },
   })
+  if (resumeDir) reportReran(reran)
   const results = scheduled.map((state) => finalizeCase(state, { run, minPass: opt.minPass }))
   const totals = summarize(results)
 

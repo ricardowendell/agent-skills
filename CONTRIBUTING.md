@@ -260,7 +260,18 @@ node scripts/eval.mjs inspect ~/.local/share/opencode/evals/runs/<timestamp>--<l
 - A run that died before its final write leaves
   `cases/<case>/draws/r<i>.json` and no `result.json`. It is incomplete evidence,
   not clean. Resume only the missing draws with `--resume <run-dir>` and the same
-  `<skill>`/`--case`/`--repeat`/`--arm`; the persisted draws are skipped.
+  `<skill>`/`--case`/`--repeat`/`--arm`. A persisted draw is skipped only when it
+  is a result the harness kept: `passed` and `failed` (already scored and paid
+  for), an `unscored` draw without infrastructure (an authoring defect such as
+  "no assertions", which repeating does not fix), and a `contaminated` draw (it
+  was paid and it produced a behaviour; re-running it is a decision for a named
+  flag, not a resume default). A discarded draw is re-run: `unscored` with
+  `infrastructure: true` (a stall, a timeout or a provider abort) is not evidence,
+  so `--resume` repeats it and prints
+  `resume: re-running N infrastructure draw(s) (#<case> r<i>, <reason>)` — a
+  resumed wave is never silently a different wave. If the arm, level, repeat or
+  label does not match the manifest, the resume is a usage error and nothing is
+  staged.
 - Draws share one lane pool; `--concurrency` (default 4) is the number of draws
   in flight, even within one case. Six and eight produced no rate limits — 6
   lanes ran 10/11, 8 lanes 11/11 — but there was no gain from 6 to 8, so the

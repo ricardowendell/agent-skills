@@ -1,6 +1,6 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { classify, aggregateReps, caseResult, contaminate, summarize, PASSED, FAILED, UNSCORED } from "./result.mjs"
+import { classify, aggregateReps, caseResult, contaminate, resumeSkip, summarize, PASSED, FAILED, UNSCORED } from "./result.mjs"
 
 const pass = { kind: "file", arg: "AGENTS.md", pass: true }
 const fail = { kind: "verdict", arg: "APPROVE", pass: false }
@@ -273,4 +273,41 @@ test("summarize counts infrastructure draws apart, never as failed", () => {
     },
   ])
   assert.deepEqual(totals, { passed: 2, failed: 0, unscored: 1, contaminated: 0, infrastructure: 3, total: 3 })
+})
+
+// SPEC-0064: a resumed slot is reused only when the draw is a result the
+// harness kept. Each case below is one branch of `resumeSkip`.
+test("resume reuses a passed draw", () => {
+  assert.equal(resumeSkip({ status: PASSED, reason: "" }), true)
+})
+
+test("resume reuses a failed draw: it was scored and it was paid for", () => {
+  assert.equal(resumeSkip({ status: FAILED, reason: "1/2 assertion(s) failed: file hello.txt" }), true)
+})
+
+test("resume re-runs an infrastructure draw instead of replaying the stall", () => {
+  const stalled = classify({ exit: "stalled", asserts: [], skillGate: null })
+  assert.equal(resumeSkip(stalled), false)
+  // The legacy shape has no `infrastructure` field: the reason still names it.
+  assert.equal(resumeSkip({ status: UNSCORED, reason: "infrastructure: stalled" }), false)
+})
+
+test("resume reuses an unscored draw that is not infrastructure: it is an authoring defect", () => {
+  const noAsserts = classify({ exit: 0, asserts: [], skillGate: okGate })
+  assert.equal(noAsserts.reason, "no assertions — nothing was checked")
+  assert.equal(resumeSkip(noAsserts), true)
+})
+
+test("resume reuses a contaminated draw: re-running it is a decision, not a default", () => {
+  const contaminated = contaminate(classify({ exit: 0, asserts: [pass], skillGate: okGate }), ["/repo/skills/review-code/SKILL.md"])
+  assert.equal(contaminated.status, UNSCORED)
+  assert.equal(contaminated.contaminated, true)
+  assert.equal(resumeSkip(contaminated), true)
+})
+
+test("a draw that is both stalled and contaminated is re-run as infrastructure", () => {
+  const both = contaminate(classify({ exit: "stalled", asserts: [], skillGate: null }), ["/repo/skills/review-code/SKILL.md"])
+  assert.equal(both.infrastructure, true)
+  assert.equal(both.contaminated, true)
+  assert.equal(resumeSkip(both), false)
 })

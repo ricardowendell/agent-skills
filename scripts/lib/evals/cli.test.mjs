@@ -267,6 +267,90 @@ test("--resume reads the persisted draw and closes the case without a model", ()
   assert.equal(manifest.status, "completed")
 })
 
+// SPEC-0064: a draw the harness discarded is not a result. The seeded run has
+// one scored draw and one stall; the resume must reuse the first and re-run the
+// second. The shim logs every spawn, so "exactly one" is counted, not inferred.
+test("--resume re-runs a discarded infrastructure draw and reuses the scored one", () => {
+  const home = tempHome()
+  const root = makeCorpus({ cases: DEMO_CASES, fixtures: { 1: { "hello.txt": "hello\n" } } })
+  const spawnLog = join(home, "spawns.log")
+  const bin = join(home, "bin")
+  mkdirSync(bin, { recursive: true })
+  writeFileSync(join(bin, "opencode"), `#!/bin/sh\necho "$@" >> "${spawnLog}"\nexit 0\n`, { mode: 0o755 })
+  const env = { ...process.env, HOME: home, PATH: `${bin}:${process.env.PATH}` }
+
+  const runDir = join(home, ".local/share/opencode/evals/runs/resume-stall")
+  const caseDir = join(runDir, "cases/demo--01")
+  mkdirSync(join(caseDir, "draws"), { recursive: true })
+  writeFileSync(
+    join(runDir, "manifest.json"),
+    JSON.stringify({
+      run: "resume-stall",
+      dir: runDir,
+      label: "demo",
+      arm: "with-skill",
+      model: "default",
+      agent: "build",
+      level: "behavior",
+      repoSha: "abc",
+      params: { repeat: 2 },
+      startedAt: "2026-01-01T00:00:00.000Z",
+      finishedAt: null,
+      status: "running",
+      counts: null,
+      skillHashes: {},
+      stagedSkills: {},
+    }),
+  )
+  const base = {
+    skill: "demo",
+    case: 1,
+    fixtureHash: "fixture",
+    promptHash: "prompt",
+    detectorVersion: "seed",
+    skillHash: "skill",
+    skillGate: { ok: true, reason: "loaded", loaded: ["demo"] },
+    assertions: [],
+    arm: "with-skill",
+    leak: [],
+    contaminated: false,
+    meta: {},
+  }
+  const scored = { ...base, rep: 1, status: "passed", reason: "", execution: { exit: 0 } }
+  const stalled = {
+    ...base,
+    rep: 2,
+    status: "unscored",
+    reason: "infrastructure: stalled",
+    infrastructure: true,
+    infrastructureReason: "stalled",
+    execution: { exit: "stalled" },
+  }
+  const scoredText = JSON.stringify(scored)
+  writeFileSync(join(caseDir, "draws/r1.json"), scoredText)
+  writeFileSync(join(caseDir, "draws/r2.json"), JSON.stringify(stalled))
+
+  const r = cli(
+    ["run", "demo", "1", "--root", root, "--level", "behavior", "--repeat", "2", "--concurrency", "1", "--resume", runDir],
+    { env },
+  )
+
+  const spawns = existsSync(spawnLog) ? readFileSync(spawnLog, "utf8").trim().split("\n").filter(Boolean) : []
+  assert.equal(spawns.length, 1, `expected exactly the stalled slot to spawn, got ${spawns.length}\n${r.out}\n${r.err}`)
+  assert.match(r.err, /resume: re-running 1 infrastructure draw \(#1 r2, stalled\)/)
+  // The scored draw is returned, not rewritten: no second payment for r1.
+  assert.equal(readFileSync(join(caseDir, "draws/r1.json"), "utf8"), scoredText)
+  // The discarded draw was replaced by an observation, so the case is complete.
+  const artifact = JSON.parse(readFileSync(join(caseDir, "result.json"), "utf8"))
+  assert.equal(artifact.reps, 2)
+  assert.equal(artifact.infrastructure, 0)
+  assert.ok(["passed", "failed"].includes(artifact.status), `case stayed incomplete: ${artifact.status} (${artifact.reason})`)
+  const rewritten = JSON.parse(readFileSync(join(caseDir, "draws/r2.json"), "utf8"))
+  assert.notEqual(rewritten.reason, "infrastructure: stalled")
+  const manifest = JSON.parse(readFileSync(join(runDir, "manifest.json"), "utf8"))
+  assert.equal(manifest.status, "completed")
+})
+
 // `inspect` reads a stored run. No model, no write.
 test("inspect prints the stored status and the failing assertions", () => {
   const home = tempHome()

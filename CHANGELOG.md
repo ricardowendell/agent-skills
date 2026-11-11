@@ -11,6 +11,16 @@ skills, which cases, and which published measurements.
 
 ### Changed
 
+- **`--resume` re-runs the draws the harness discarded (SPEC-0064, TASK-100).** A
+  stored draw is reused only when it is a result: `passed`, `failed`, `unscored`
+  without infrastructure, or `contaminated`. An `unscored` draw with
+  `infrastructure: true` — a stall, a timeout or a provider abort — was discarded
+  by the harness and is not evidence, so resuming the SPEC-0034 control wave now
+  repeats `#12 r3` instead of replaying the stall, and the case can reach a
+  complete cell. The resumed run prints
+  `resume: re-running N infrastructure draw(s) (#<case> r<i>, <reason>)`. No status
+  value, contamination rule or watchdog changed; no paid draw was spent.
+
 - **One eval CLI, one decision (SPEC-0060, TASK-99).** `scripts/run-evals.mjs`
   (921 lines) and `scripts/replay-evals.mjs` (481) are deleted; `scripts/eval.mjs`
   is the only entry point, with `list`, `check`, `run`, `compare` and `inspect`.
