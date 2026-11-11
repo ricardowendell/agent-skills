@@ -1,10 +1,10 @@
 ---
 id: TASK-57
 title: 'spike: refinamento localizado sem spec completa (quick-refine)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-08T00:48:00Z'
-updated_date: '2026-11-10T15:06:00Z'
+updated_date: '2026-11-11T10:14:00Z'
 labels: []
 dependencies:
   - TASK-56
@@ -38,7 +38,7 @@ created: 2026-11-08T01:41:00Z
 
 ---
 
-Groomed em 2026-11-08 para docs/specs/active/SPEC-0035-quick-refine-spike.md (status: ready, depende de SPEC-0034). Condicao de parada: se a SPEC-0034 mostrar que o incumbent cobre os 4 casos, a spec fecha como 'do not add skill' com zero draws. Extensao e a hipotese preferida; skill nova exige razao escrita.
+Groomed em 2026-11-08 para docs/specs/SPEC-0035-quick-refine-spike.md (status: ready, depende de SPEC-0034). Condicao de parada: se a SPEC-0034 mostrar que o incumbent cobre os 4 casos, a spec fecha como 'do not add skill' com zero draws. Extensao e a hipotese preferida; skill nova exige razao escrita.
 
 ---
 
