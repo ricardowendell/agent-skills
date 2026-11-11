@@ -16,7 +16,7 @@ blocks: []
 files:
   - docs/roadmap.md
   - docs/evals/coverage.md
-  - docs/specs/active/SPEC-0077-no-visual-oracle-and-the-claim-says-so.md
+  - docs/specs/SPEC-0077-no-visual-oracle-and-the-claim-says-so.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/eval.mjs check --root skills
@@ -26,7 +26,7 @@ tests:
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
   - node scripts/check-staleness.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0077-no-visual-oracle-and-the-claim-says-so.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0077-no-visual-oracle-and-the-claim-says-so.md --base main
 ---
 
 ## Purpose

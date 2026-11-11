@@ -1,9 +1,10 @@
 ---
 id: TASK-61
 title: 'evals: oraculo visual para casos de UI (screenshot, DOM, contraste)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-08T01:42:00Z'
+updated_date: '2026-11-11T17:18:00Z'
 labels: []
 dependencies:
   - TASK-56
@@ -40,6 +41,14 @@ created: 2026-11-08T02:13:00Z
 ---
 
 Repriorizada em 2026-11-08: high -> low, e fica deferida. O oraculo so existe para servir a TASK-58 e a TASK-60; com as duas em paused/P3, ele perde consumidor e nao se paga. Nao ha status 'paused' no backlog, entao fica To Do com prioridade low e este registro: reabre quando uma das duas voltar a ready, ou quando a SPEC-0034 mostrar que o determinístico nao enxerga 'mudanca pequena' e um oraculo passar a ser pre-requisito do corpus.
+
+---
+
+created: 2026-11-11T17:18:48.997Z
+
+---
+
+Done via SPEC-0077. Decisao (b): nenhum oraculo visual; TASK-58/TASK-60 ficam em declaracao de revisao humana. O roadmap deixou de prometer o oraculo como primeiro passo da 0.8.0 (a frase literal vivia na task, nao no roadmap) e agora diz que nenhum claim de separacao medida cobre caso visual. coverage.md: report-project-status com evidencia de revisao humana declarada, TASK-58/60 nomeadas fora das 101, e status manual definido como revisao declarada. Zero draws.
 
 ---
 <!-- COMMENTS:END -->
