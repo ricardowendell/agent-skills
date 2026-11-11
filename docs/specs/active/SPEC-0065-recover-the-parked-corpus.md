@@ -39,7 +39,6 @@ files:
   - evals/implement-from-prompt/fixtures/12/src/components/StatusBadge.js
   - evals/implement-from-prompt/fixtures/12/src/status.js
   - docs/specs/active/SPEC-0065-recover-the-parked-corpus.md
-  - CHANGELOG.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/eval.mjs check --root skills
@@ -113,6 +112,8 @@ subset of the current corpus, so adding cases cannot break it.
   and adding cases does not falsify it.
 - No publish: the corpus doc, the classification and the coverage row belong to
   the resumed wave.
+- **No `CHANGELOG.md` edit.** The entry for this spec lands in the wave's
+  publication commit, so it can run in parallel with SPEC-0064.
 
 ## Flow
 
@@ -120,7 +121,8 @@ subset of the current corpus, so adding cases cannot break it.
 2. **F2 — append and copy.** Cases into `cases.md`; trees into `fixtures/`.
 3. **F3 — prove.** `eval check --root skills`; compare each copied fixture tree
    hash with the tag's tree hash; confirm #11's text is unchanged.
-4. **F4 — publish.** `CHANGELOG.md` and a Results section with the parity table.
+4. **F4 — publish.** A Results section with the parity table. The
+   `CHANGELOG.md` entry lands in the wave's publication commit.
 
 ## Data
 
