@@ -236,6 +236,18 @@ failed only the literal matcher, and the control passed the same assertion 5/5,
 so #10 shows no incumbent-vs-control difference. No assertion, fixture, prompt or
 oracle was edited to make a cell separate.
 
+**Correction (SPEC-0066).** The two defects named above were fixed, and the
+stored transcripts replayed with no new draw (`node scripts/eval.mjs inspect
+<run-dir> --replay`). The effect-aware `ranpass` resolves `npm test` through the
+fixture's `package.json`, so r1 now **passes**; and a masked exit is read from
+what the command printed, so r4's `node --test 2>&1 | tail -20` and the
+control's r1/r3/r4 (same `| tail` mask, nothing printed) **fail closed**. The
+cell counts move to **1/5 with-skill vs 2/5 control**, still `unresolved` on the
+routing failure (2 of 5 draws loaded): the class is not re-derived into a
+separator by a single `ranpass` pass. The current reading is in
+[`docs/evals/iterative-corpus.md`](../evals/iterative-corpus.md) and
+[`SPEC-0066`](active/SPEC-0066-a-passing-run-is-an-effect.md#results).
+
 **F5 — published.** `docs/evals/iterative-corpus.md` holds the eight arm rows,
 the full hashes, the detectors and the per-cell red assertion;
 `docs/evals/coverage.md` gains the corpus section and the updated
@@ -263,6 +275,12 @@ holdout under `cf2e2e319d975a5b` and `skillHash 9147487f…` (`SKILL.md`
 byte-identical; the tree hash moved when `SPEC-0058` removed the in-skill corpus
 copy), so `SPEC-0035`'s comparability rule forces a re-run or a documented replay
 of the old three cells before the A arm can be reused.
+
+**Correction (SPEC-0066).** The sentence above that reads "#10's only loaded red
+is the `ranpass` oracle artifact, with the control 5/5" is superseded by the
+replay in the F4 correction: r1 now passes and r4 fails closed, and the control
+is 2/5. The class stays `unresolved` on the routing failure; the gap for
+`SPEC-0035` is unchanged in direction.
 
 ## Open Questions
 

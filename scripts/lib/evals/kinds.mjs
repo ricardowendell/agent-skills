@@ -140,7 +140,12 @@ export const KINDS = [
   { name: "noreply", scope: "transcript", summary: "the assistant's own text does not match" },
   { name: "verdict", scope: "transcript", summary: "the reply's verdict line names the expected stance" },
   { name: "ran", scope: "transcript", summary: "a shell command matching the regex executed" },
-  { name: "ranpass", scope: "transcript", summary: "a matching command executed and at least one exited 0" },
+  {
+    name: "ranpass",
+    scope: "transcript",
+    summary:
+      "a matching command executed and the gate's own exit was 0; the match is resolved through the fixture's package.json scripts, and a masked exit with no printed status fails closed",
+  },
   { name: "tool", scope: "transcript", summary: "the named tool was used" },
   { name: "notool", scope: "transcript", summary: "the named tool was not used" },
   { name: "skill", scope: "transcript", summary: "the id's skill was loaded" },

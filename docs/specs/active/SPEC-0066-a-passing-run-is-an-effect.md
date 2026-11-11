@@ -204,4 +204,87 @@ None.
 
 ## Results
 
-_Filled during implementation._
+### What changed
+
+- **F1 — `resolveCommands(command, scratch)`** (`scripts/lib/evals/assertions.mjs`).
+  Splits a shell call quote-aware into commands (keeping `2>&1`/`&>file`
+  redirections whole), maps `npm test`/`npm start` to `scripts.test`/`scripts.start`,
+  `npm run[ -script] X` / `yarn X` / `pnpm X` / `bun run X` / `bun X` to
+  `scripts.X`, and recurses through the script body at depth ≤ 3 with a
+  per-chain visited set. The literal command is always returned first. A missing,
+  unreadable or non-JSON `package.json` returns the literal alone; nothing throws.
+  `ran` and `ranpass` both match the literal **and** every resolved form.
+- **F2 — `effectiveExit(call, { gateLast })`**. The recorded `exit` is the gate's
+  only when the matched command is the last command of the shell call. Otherwise
+  the status is read from the call's output — `exit: N`, `EXIT: N`, `exit code N`,
+  `NAME-exit: N`, last match wins. A masked call with no printed status is
+  `unknown` and `ranpass` fails with `exit masked, no recorded status`. A masked
+  call whose **recorded** exit is non-zero is already red and keeps that code
+  (this is what keeps the existing `events.test.mjs` stream at `exit 1`); only a
+  zero recorded exit can manufacture a green, so only that case is treated as
+  unknown.
+- **F4 —** `kinds.mjs`'s `ranpass` summary states both the resolution and the
+  fail-closed rule.
+
+### F3 — replay (no draw, no resume)
+
+`node scripts/eval.mjs inspect <run-dir> --replay` over every published cell whose
+case asserts `ran`/`ranpass`. "Before" is the stored/transcript verdict; "after"
+is the current code on the same transcript. Zero paid draws.
+
+| cell | arm | run dir | before | after | assertion that moved |
+| --- | --- | --- | --- | --- | --- |
+| `implement-from-prompt` #10 | with-skill | `2026-11-08T06-35-22--implement-from-prompt--agentworks-deepseek-v4-1-flash` | 1/5 | 1/5 | `ranpass node --test`: r1 `failed`→`passed` (`npm test` → `node --test`), r4 `passed`→`failed` (`node --test \| tail`, nothing printed) |
+| `implement-from-prompt` #10 | control | `2026-11-08T06-37-25--implement-from-prompt--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 2/5 | `ranpass node --test`: r1/r3/r4 `passed`→`failed` (same `\| tail` mask) |
+| `implement-from-prompt` #7 | with-skill | `2026-11-05T15-36-40--implement-from-prompt` | 5/5 | 5/5 | none (`ran` only; the literal already matched) |
+| `implement-from-prompt` #7 | control | `2026-11-05T12-00-00--implement-from-prompt--without-skill` | 5/5 judged | 5/5 deterministic | none from this change; r2–r5 are the SPEC-0062 stance re-read, and the stored 1/5 is the judge, which `--replay` does not re-run |
+| `review-code` #1 | with-skill | `2026-11-10T15-20-12--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 3/5 | `ranpass npm test`: r1, r3 `passed`→`failed` |
+| `review-code` #1 | control | `2026-11-10T15-23-10--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 0/5 | 0/5 | none (already red; `ranpass` also fails) |
+| `review-code` #2 | with-skill | `2026-11-10T15-26-12--review-code--agentworks-deepseek-v4-1-flash` | 4/5 | 4/5 | none (no `ranpass` in the case) |
+| `review-code` #2 | control | `2026-11-10T15-28-46--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 4/5 | 5/5 | none from this change; r5 is the SPEC-0062 stance re-read |
+| `review-code` #7 | with-skill | `2026-11-10T15-31-48--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | none (`ran` only) |
+| `review-code` #7 | control | `2026-11-10T15-35-51--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 0/5 | 0/5 | none (`verdict REJECT`) |
+| `review-code` #8 | with-skill | `2026-11-10T15-02-35--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 2/5 | `ranpass npm test`: r1, r4, r5 `passed`→`failed` |
+| `review-code` #8 | control | `2026-11-10T15-05-54--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 0/5 | 0/5 | none (already red; `ranpass` also fails) |
+| `review-code` #9 | with-skill | `2026-11-10T15-08-51--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 3/5 | `ranpass npm test`: r4, r5 `passed`→`failed` |
+| `review-code` #9 | control | `2026-11-10T15-12-14--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 3/5 | 0/5 | `ranpass npm test`: r1, r2, r5 `passed`→`failed` |
+| `review-code` #10 | with-skill | `2026-11-10T15-39-17--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 2/5 | `ranpass npm test`: r2, r4, r5 `passed`→`failed` |
+| `review-code` #10 | control | `2026-11-10T15-54-47--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 0/5 | 0/5 | none (already red; `ranpass` also fails) |
+| `audit-code-quality` #8 | with-skill | `2026-11-10T13-45-48--audit-code-quality--agentworks-deepseek-v4-1-flash` | 3/5 | 3/5 | none (`ran` passed before and after) |
+| `audit-code-quality` #8 | control | `2026-11-10T13-49-08--audit-code-quality--agentworks-deepseek-v4-1-flash--without-skill` | 0/5 | 0/5 | none |
+| `audit-code-quality` #9 | with-skill | `2026-11-10T13-59-02--audit-code-quality--agentworks-deepseek-v4-1-flash` | 4/5 | 4/5 | none |
+| `audit-code-quality` #9 | control | `2026-11-10T14-02-40--audit-code-quality--agentworks-deepseek-v4-1-flash--without-skill` | 0/5 | 0/5 | none |
+
+Masked calls also appear in `bootstrap-project-harness` #16/#17/#19 and
+`tighten-harness` #5 transcripts, but those cases assert no `ran`/`ranpass`
+(read from `evals/*/cases.md`), so no published verdict depends on the fix and
+none is republished.
+
+The `ranpass` reds on the with-skill cells are the masked-exit rule, not a
+judgement change: each draw piped the suite through `tail`, the pipeline's
+recorded `exit: 0` is `tail`'s, and the output printed no status. The `verdict`
+token reading is unchanged (5/5 on every with-skill cell), so every classification
+stays a token/contract separator; no cell is promoted or demoted.
+
+### `#10`
+
+`#10 r1` now **passes** `ranpass node --test` (verified:
+`... transcript.r1.md  passed  failed -> passed`). The passing draw moves from
+`r4` to `r1`: `r4` ran `node --test 2>&1 | tail -20`, so its exit is masked and
+unproven. With-skill stays **1/5** (r2/r3/r5 routing gate-misses) and the control
+is **2/5** (r1/r3/r4 fail closed on the same mask; r2/r5 ran `node --test`
+unmasked). The class is **`unresolved`** on the routing failure — only 2 of 5
+draws loaded the skill — and a single `ranpass` pass does not make `#10` a
+separator. The routing finding (TASK-101) is still named and untouched.
+
+### Gates
+
+All commands from `tests:` exit 0 (see the worker report for the recorded
+outputs). Draws spent: **0**. No resume, no `run`.
+
+### Out of scope
+
+- `docs/evals/review-code-matrix.md` is a reading aid over the SPEC-0056 table;
+  its rows predate this replay and would need the same footnote. It is not in
+  this spec's `files:` allow-list, so it was left untouched.
+- `TASK-101` (the routing failure) is not fixed here.

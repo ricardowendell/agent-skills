@@ -3,7 +3,15 @@ import assert from "node:assert/strict"
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, dirname } from "node:path"
-import { evaluateAssertions, oracleFindings, oracleWarnings, skillGate, targetDirectory } from "./assertions.mjs"
+import {
+  effectiveExit,
+  evaluateAssertions,
+  oracleFindings,
+  oracleWarnings,
+  resolveCommands,
+  skillGate,
+  targetDirectory,
+} from "./assertions.mjs"
 import { VERDICT_BLOCKERS, VERDICT_FORMS } from "./kinds.mjs"
 import { replyText, toolCalls, usageStats } from "./events.mjs"
 import { snapshotTree } from "./fixture.mjs"
@@ -24,7 +32,13 @@ function one(assertion, scratch, out = "", text = "", snapshot = new Map()) {
 // A transcript in the shape `opencode run --format json` emits.
 function transcript({ text = "", tools = [] }) {
   const lines = tools.map((t) =>
-    JSON.stringify({ type: "tool_use", part: { tool: t.tool, state: { status: t.status ?? "completed", input: t.input ?? {}, metadata: { metadata: t.meta ?? {} } } } }),
+    JSON.stringify({
+      type: "tool_use",
+      part: {
+        tool: t.tool,
+        state: { status: t.status ?? "completed", input: t.input ?? {}, output: t.output ?? "", metadata: { metadata: t.meta ?? {} } },
+      },
+    }),
   )
   if (text) lines.push(JSON.stringify({ type: "text", part: { text } }))
   return lines.join("\n")
@@ -480,6 +494,138 @@ test("ranpass passes when any execution of the gate exited 0", () => {
     ],
   })
   assert.equal(one({ kind: "ranpass", arg: "npm test" }, "/tmp", out).pass, true)
+})
+
+// A command can name a script instead of the gate. The fixture's `package.json`
+// is the data that says what that script runs; the oracle should read it rather
+// than encode one fixture's script name in the corpus.
+test("the resolver expands every package manager through the fixture's scripts", () => {
+  const scratch = tree({
+    "package.json": JSON.stringify({
+      scripts: {
+        test: "node --test",
+        build: "tsc -p .",
+        chain: "npm run build",
+        loop: "npm run loop",
+      },
+    }),
+  })
+  for (const invocation of [
+    "npm test",
+    "npm run test",
+    "npm run-script test",
+    "yarn test",
+    "pnpm test",
+    "bun run test",
+    "bun test",
+  ]) {
+    assert.ok(resolveCommands(invocation, scratch).includes("node --test"), `${invocation} did not resolve`)
+  }
+  for (const invocation of ["npm run build", "npm run-script build", "yarn build", "pnpm build", "bun run build", "bun build"]) {
+    assert.ok(resolveCommands(invocation, scratch).includes("tsc -p ."), `${invocation} did not resolve`)
+  }
+  // A script may call another script; the expansion follows the chain.
+  assert.ok(resolveCommands("npm run chain", scratch).includes("tsc -p ."))
+  // A compound call resolves the segment that names the script.
+  assert.ok(resolveCommands('npm test 2>&1; echo "exit: $?"', scratch).includes("node --test"))
+  // The literal is always present, and a cycle ends the expansion.
+  assert.equal(resolveCommands("npm run loop", scratch)[0], "npm run loop")
+  assert.deepEqual(resolveCommands("npm run loop", scratch), ["npm run loop"])
+})
+
+test("a malformed or missing package.json leaves the call literal", () => {
+  const broken = tree({ "package.json": "{ scripts: nope" })
+  assert.deepEqual(resolveCommands("npm test", broken), ["npm test"])
+  const missing = tree({ "README.md": "x" })
+  assert.deepEqual(resolveCommands("npm test", missing), ["npm test"])
+  // No manifest at all is normal for most fixtures.
+  assert.deepEqual(resolveCommands("npm test", "/tmp"), ["npm test"])
+})
+
+test("the effective exit is the gate's own status", () => {
+  // The gate is the last command: the recorded exit is its exit.
+  assert.deepEqual(effectiveExit({ input: { command: "npm test" }, exit: 0, output: "" }), {
+    code: 0,
+    why: "recorded exit",
+  })
+  const masked = (output, exit = 0) => effectiveExit({ input: { command: 'npm test 2>&1; echo "exit: $?"' }, exit, output }, { gateLast: false })
+  assert.deepEqual(masked("pass 3 / fail 0\nexit: 0\n"), { code: 0, why: "printed status" })
+  assert.deepEqual(masked("pass 2 / fail 1\nexit: 1\n"), { code: 1, why: "printed status" })
+  assert.deepEqual(masked("pass 2 / fail 1\n"), { code: null, why: "exit masked, no recorded status" })
+  // Every printed spelling is read, and the last one wins.
+  assert.equal(masked("exit: 2\nEXIT: 0\n").code, 0)
+  assert.equal(masked("exit code 3").code, 3)
+  assert.equal(masked("test-exit: 4").code, 4)
+})
+
+test("ranpass resolves npm test to node --test", () => {
+  const scratch = tree({ "package.json": JSON.stringify({ scripts: { test: "node --test" } }) })
+  const out = transcript({
+    tools: [
+      {
+        tool: "shell",
+        input: { command: 'npm test 2>&1; echo "exit: $?"' },
+        output: "pass 3 / fail 0\nexit: 0\n",
+        meta: { exit: 0 },
+      },
+    ],
+  })
+  assert.equal(one({ kind: "ranpass", arg: "node --test" }, scratch, out).pass, true)
+  assert.equal(one({ kind: "ran", arg: "node --test" }, scratch, out).pass, true)
+})
+
+test("ranpass resolves a nested npm run build to the script it chains", () => {
+  const scratch = tree({
+    "package.json": JSON.stringify({ scripts: { build: "tsc -p .", all: "npm run build" } }),
+  })
+  const out = transcript({ tools: [{ tool: "shell", input: { command: "npm run all" }, meta: { exit: 0 } }] })
+  assert.equal(one({ kind: "ranpass", arg: "tsc -p" }, scratch, out).pass, true)
+  assert.equal(one({ kind: "ranpass", arg: "node --test" }, scratch, out).pass, false)
+})
+
+test("a masked non-zero gate is red even when the call recorded exit 0", () => {
+  const scratch = tree({ "package.json": JSON.stringify({ scripts: { test: "node --test" } }) })
+  const out = transcript({
+    tools: [
+      {
+        tool: "shell",
+        input: { command: 'npm test 2>&1; echo "exit: $?"' },
+        output: "pass 2 / fail 1\nexit: 1\n",
+        meta: { exit: 0 },
+      },
+    ],
+  })
+  const r = one({ kind: "ranpass", arg: "node --test" }, scratch, out)
+  assert.equal(r.pass, false, "a masked failure scored as a pass")
+  assert.match(r.detail, /exit 1/)
+})
+
+test("a masked exit with nothing printed fails closed", () => {
+  const out = transcript({
+    tools: [{ tool: "shell", input: { command: "npm test; echo done" }, output: "done\n", meta: { exit: 0 } }],
+  })
+  const r = one({ kind: "ranpass", arg: "npm test" }, "/tmp", out)
+  assert.equal(r.pass, false)
+  assert.equal(r.detail, "exit masked, no recorded status")
+})
+
+test("| tail and || true both hide the gate's status", () => {
+  for (const command of ["npm test 2>&1 | tail -5", "npm test || true", "npm test; echo finished"]) {
+    const out = transcript({ tools: [{ tool: "shell", input: { command }, output: "finished\n", meta: { exit: 0 } }] })
+    const r = one({ kind: "ranpass", arg: "npm test" }, "/tmp", out)
+    assert.equal(r.pass, false, `${command} scored as a pass`)
+    assert.equal(r.detail, "exit masked, no recorded status")
+  }
+})
+
+test("a script body that masks its own status is not green", () => {
+  const scratch = tree({ "package.json": JSON.stringify({ scripts: { test: "node --test; echo done" } }) })
+  const out = transcript({
+    tools: [{ tool: "shell", input: { command: "npm test" }, output: "done\n", meta: { exit: 0 } }],
+  })
+  const r = one({ kind: "ranpass", arg: "node --test" }, scratch, out)
+  assert.equal(r.pass, false, "the script's echo owned the exit")
+  assert.equal(r.detail, "exit masked, no recorded status")
 })
 
 test("tool and notool name the tool exactly", () => {

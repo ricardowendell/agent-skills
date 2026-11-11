@@ -240,6 +240,198 @@ export function oracleWarnings(c, entries) {
   return findings
 }
 
+// A shell call is not one command: `npm test 2>&1; echo "exit: $?"` is two, and
+// the second owns the status. Splitting is quote-aware (and keeps redirections
+// such as `2>&1` whole) so the matcher can tell which command the gate is.
+// This is not a shell parser: pipes, `;`, `&&`, `||`, newlines and background
+// `&` are the separators the corpus uses.
+function splitCommands(command) {
+  const text = String(command ?? "")
+  const parts = []
+  let cur = ""
+  let quote = null
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]
+    if (quote) {
+      cur += ch
+      if (ch === "\\" && quote === '"' && i + 1 < text.length) cur += text[++i]
+      else if (ch === quote) quote = null
+      continue
+    }
+    if (ch === '"' || ch === "'") {
+      quote = ch
+      cur += ch
+      continue
+    }
+    if (ch === "\\") {
+      cur += ch
+      if (i + 1 < text.length) cur += text[++i]
+      continue
+    }
+    if (ch === ";") {
+      parts.push(cur)
+      cur = ""
+      continue
+    }
+    if (ch === "\n") {
+      parts.push(cur)
+      cur = ""
+      continue
+    }
+    if (ch === "&") {
+      // `2>&1` and `&>file` are redirections, not backgrounds.
+      if (text[i + 1] === ">" || />\s*$/.test(cur)) {
+        cur += ch
+        continue
+      }
+      if (text[i + 1] === "&") i++
+      parts.push(cur)
+      cur = ""
+      continue
+    }
+    if (ch === "|") {
+      if (text[i + 1] === "|") i++
+      parts.push(cur)
+      cur = ""
+      continue
+    }
+    cur += ch
+  }
+  parts.push(cur)
+  return parts.map((p) => p.trim()).filter(Boolean)
+}
+
+// The command word and its arguments, with leading `FOO=bar` assignments removed.
+function words(text) {
+  const found = String(text ?? "").match(/"(?:[^"\\]|\\.)*"|'[^']*'|[^\s]+/g) ?? []
+  return found.map((w) => (w.length > 1 && (w[0] === '"' || w[0] === "'") && w[0] === w[w.length - 1] ? w.slice(1, -1) : w))
+}
+
+// The `package.json` script a package-manager invocation names, if any. The
+// alias set is the corpus's, not the package manager's: `yarn install` resolves
+// only if the fixture happens to define that script.
+function scriptName(text) {
+  const list = words(text)
+  let i = 0
+  while (i < list.length && /^[A-Za-z_][A-Za-z0-9_]*=/.test(list[i])) i++
+  const exe = list[i]
+  if (!exe) return null
+  const base = exe.split("/").pop()
+  const rest = list.slice(i + 1)
+  const at = (n) => rest[n] ?? null
+  if (base === "npm") {
+    if (at(0) === "run" || at(0) === "run-script") return at(1)
+    if (at(0) === "test" || at(0) === "start") return at(0)
+    return null
+  }
+  if (base === "yarn" || base === "pnpm" || base === "bun") {
+    return at(0) === "run" ? at(1) : at(0)
+  }
+  return null
+}
+
+// A missing, unreadable or non-JSON manifest leaves the call literal: the
+// expansion adds evidence, it never invents it.
+function readScripts(scratch) {
+  try {
+    const parsed = JSON.parse(readFileSync(join(scratch, "package.json"), "utf8"))
+    const scripts = parsed?.scripts
+    if (!scripts || typeof scripts !== "object" || Array.isArray(scripts)) return {}
+    const out = {}
+    for (const [name, body] of Object.entries(scripts)) if (typeof body === "string") out[name] = body
+    return out
+  } catch {
+    return {}
+  }
+}
+
+const SCRIPT_DEPTH = 3
+
+// Every command a shell call names, and whether that command owns the call's
+// exit status. The literal is always present; a script body adds itself and
+// whatever it invokes, capped at three levels with a per-chain visited set so a
+// cycle ends the expansion instead of the process.
+function commandEntries(command, scratch) {
+  const literal = String(command ?? "")
+  const parts = splitCommands(literal)
+  const scripts = readScripts(scratch)
+  const entries = []
+  const seen = new Set()
+  const add = (form, segment, gateLast) => {
+    if (typeof form !== "string") return
+    const key = `${segment}\u0000${form}\u0000${gateLast}`
+    if (seen.has(key)) return
+    seen.add(key)
+    entries.push({ form, segment, gateLast })
+  }
+
+  // A single-command call is the gate entire. A compound call is matched one
+  // command at a time, so a wrapper cannot lend the gate its status.
+  if (parts.length <= 1) add(literal, parts[0] ?? literal, true)
+  parts.forEach((part, i) => add(part, part, i === parts.length - 1))
+
+  const walk = (text, segment, containerLast, depth, ancestors) => {
+    if (depth > SCRIPT_DEPTH) return
+    const local = splitCommands(text)
+    local.forEach((part, i) => {
+      const name = scriptName(part)
+      if (!name || !Object.prototype.hasOwnProperty.call(scripts, name) || ancestors.has(name)) return
+      const next = new Set(ancestors)
+      next.add(name)
+      const last = containerLast && i === local.length - 1
+      const body = scripts[name]
+      const bodyParts = splitCommands(body)
+      if (!bodyParts.length) add(body, segment, last)
+      bodyParts.forEach((bp, j) => add(bp, segment, last && j === bodyParts.length - 1))
+      walk(body, segment, last, depth + 1, next)
+    })
+  }
+  parts.forEach((part, i) => walk(part, part, i === parts.length - 1, 1, new Set()))
+  return entries
+}
+
+// `resolveCommands` is the public shape of the resolver: the literal command
+// plus every form reachable through the fixture's `package.json` `scripts`.
+export function resolveCommands(command, scratch) {
+  const literal = String(command ?? "")
+  const forms = [literal]
+  for (const { form } of commandEntries(command, scratch)) if (!forms.includes(form)) forms.push(form)
+  return forms
+}
+
+// `exit: N`, `EXIT: N`, `exit code N`, `NAME-exit: N` — the status a command
+// printed for itself. Last match wins: a command that reports more than once
+// ends with its final status.
+const PRINTED_EXIT = /\b(?:[A-Za-z0-9_.-]+-)?exit(?:\s+code)?\s*[:=]?\s*(-?\d+)\b/gi
+
+function printedExit(output) {
+  const text = String(output ?? "")
+  PRINTED_EXIT.lastIndex = 0
+  let last = null
+  let m
+  while ((m = PRINTED_EXIT.exec(text))) {
+    last = Number(m[1])
+    if (PRINTED_EXIT.lastIndex === m.index) PRINTED_EXIT.lastIndex++
+  }
+  return last
+}
+
+// The gate's status, not the wrapper's. When the matched command is the last
+// command of the call, the recorded exit is the gate's. Otherwise the recorded
+// exit belongs to whatever came after — `; echo "exit: $?"`, `| tail`, `|| true`
+// — and the status is read from what the command printed. A zero recorded exit
+// with nothing printed is unknown, and unknown is not a pass. A non-zero
+// recorded exit is already a red gate, so it is kept as the conservative
+// reading rather than rewritten to unknown.
+export function effectiveExit(call, { gateLast = true } = {}) {
+  const recorded = Number.isInteger(call?.exit) ? call.exit : null
+  if (gateLast) return { code: recorded, why: recorded === null ? "no recorded exit" : "recorded exit" }
+  if (recorded !== null && recorded !== 0) return { code: recorded, why: "wrapper failed" }
+  const printed = printedExit(call?.output)
+  if (printed !== null) return { code: printed, why: "printed status" }
+  return { code: null, why: "exit masked, no recorded status" }
+}
+
 function check(kind, arg, { scratch, out, text, snapshot }) {
   const push = (pass, detail = "") => ({ kind, arg, pass, detail })
 
@@ -267,11 +459,27 @@ function check(kind, arg, { scratch, out, text, snapshot }) {
   if (kind === "ran" || kind === "ranpass") {
     const re = safeRegex(arg)
     if (!re) return push(false, "invalid regex")
-    const calls = toolCalls(out).filter((t) => t.tool === "shell" && re.test(String(t.input.command ?? "")))
-    if (!calls.length) return push(false, "the command never ran")
-    if (kind === "ran") return push(true, `${calls.length} run(s)`)
-    const green = calls.filter((t) => t.exit === 0)
-    return push(green.length > 0, `exit ${calls.map((t) => t.exit ?? "?").join(", ")}`)
+    // `ran` and `ranpass` share the resolver: the kinds differ on exit status,
+    // not on what counts as running the gate.
+    const hits = []
+    for (const call of toolCalls(out)) {
+      if (call.tool !== "shell") continue
+      const entries = commandEntries(String(call.input.command ?? ""), scratch).filter((e) => re.test(e.form))
+      if (entries.length) hits.push({ call, entries })
+    }
+    if (!hits.length) return push(false, "the command never ran")
+    if (kind === "ran") return push(true, `${hits.length} run(s)`)
+    // One verdict per call: the gate is green only if one of its invocations is
+    // the last command and exited 0. Otherwise report the most specific status,
+    // and the fail-closed phrase when the mask printed nothing.
+    const codes = hits.map(({ call, entries }) => {
+      const exits = entries.map((e) => effectiveExit(call, { gateLast: e.gateLast }))
+      if (exits.some((e) => e.code === 0)) return 0
+      return exits.find((e) => e.code !== null)?.code ?? null
+    })
+    const green = codes.filter((code) => code === 0)
+    const detail = codes.map((code) => (code === null ? "exit masked, no recorded status" : `exit ${code}`)).join(", ")
+    return push(green.length > 0, detail)
   }
 
   if (kind === "tool" || kind === "notool") {
