@@ -61,14 +61,14 @@ The #12 control is the resumed directory: `r3` stalled post-load on 2026-11-08
 and `--resume` re-ran only that slot on 2026-11-11 (one paid draw). The control is
 `isolated=unknown`, not `isolated=yes`, because **four of the five draws predate
 the enforcement probe** and carry no enforcement record; `r3` was re-run on
-2026-11-11 by the build `cf2e2e319d975a5b` at `8aab5bd` — the same build that
-recorded `enforced: true` (seatbelt) in the `2026-11-11T06-41-39` and `06-43-38`
-runs that morning — but the re-run's own draw carries no mechanism record, so
-`check-eval-run` reports five unproven draws and `findings=0`. The record is per
-draw now (`SPEC-0067`): a resumed cell is enforced only when every behavioural
-draw proves it, and a draw with no record is unproven, not "not enforced". That
-does not weaken the separator: the control's
-red is an **edit** (`unchanged **`), so a leak would bias toward passing, not
+2026-11-11 by the build at `8aab5bd` under detector `cf2e2e319d975a5b` — the same
+pair that recorded `enforced: true` (seatbelt) in the `2026-11-11T06-41-39` and
+`06-43-38` runs that morning — but the re-run's own draw carries no mechanism
+record, so `check-eval-run` reports five unproven draws and `findings=0`. The
+record is per draw now (`SPEC-0067`): a resumed cell is enforced only when every
+behavioural draw proves it, and a draw with no record is unproven, not "not
+enforced". That does not weaken the separator: the control's red is an **edit**
+(`unchanged **`), so a leak would bias toward passing, not
 toward the 0/5. The other seven directories keep their stored verdicts, three of
 them exiting 1 for a recorded routing `gate-miss` (#9 r5, #10 r2/r3/r5, #11
 r2–r5). Those misses are

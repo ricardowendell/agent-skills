@@ -17,7 +17,6 @@ files:
   - docs/evals/coverage.md
   - docs/evals/iterative-corpus.md
   - scripts/lib/evals/isolation.mjs
-  - docs/specs/SPEC-0067-each-draw-records-its-boundary.md
   - docs/specs/SPEC-0070-the-body-already-matches-what-the-skill-does.md
   - docs/specs/active/SPEC-0072-say-what-the-evidence-says.md
 tests:
@@ -55,11 +54,11 @@ fixes could land. This spec pays that debt in one pass.
 
 `docs/evals/coverage.md`'s `#12` control caveat puts the provenance parenthetical
 (`cf2e2e31…`, `8aab5bd`) next to "re-run under seatbelt", where it reads as
-evidence *for the mechanism*. It evidences only that the draw was re-run by that
-build. Attribute the seatbelt to the invocation (the host recorded `enforced:
-true` for the same build at 06:41 and 06:43 that morning) and repeat that the
-draw itself carries no mechanism record — all three documents already say that
-somewhere; put it in the same sentence.
+evidence *for the mechanism*. It evidences only that the draw was re-run at that
+build under that detector. Attribute the seatbelt to the invocation (the host
+recorded `enforced: true` for the same build at 06:41 and 06:43 that morning) and
+repeat that the draw itself carries no mechanism record — the other documents
+already say that somewhere; put it in the same sentence.
 
 ### F2 — quote the tool's own label
 
@@ -78,10 +77,11 @@ reader gets misled.
 
 ### F4 — the two `SPEC-0070` wording nits
 
-- `docs/evals/iterative-corpus.md:205` — "all five asked" overstates `#12 r2`: it
-  asked through the `question` tool, which the non-interactive harness cancelled,
-  so the final text carries no `?` and the draw is the one stored red. Say that,
-  and keep the derailment verdict (r2 edited nothing and asked).
+- `docs/evals/iterative-corpus.md:205` — the five-reply aggregation must say that
+  **all five** asked through the `question` tool, which the non-interactive
+  harness cancelled, and that four restated the question in the final text, while
+  `#12 r2`'s carries no `?` and it is the one stored red. Keep the derailment
+  verdict (r2 edited nothing).
 - `docs/evals/iterative-corpus.md:213` — the reopening condition "a future loaded
   draw that stops or redirects on a bare request" is broader than the finding: a
   `#12`-shaped draw legitimately stops. Narrow it to a draw that stops or
@@ -152,10 +152,11 @@ None.
 Seven prose edits, zero draws spent:
 
 - **F1** — `docs/evals/coverage.md`: the `#12` control caveat now names the
-  re-run's build (`cf2e2e319d975a5b`, `8aab5bd`) and attributes the seatbelt to
-  the invocation that recorded `enforced: true` in the `2026-11-11T06-41-39` and
-  `06-43-38` runs, while stating in the same sentence that the re-run's own draw
-  carries no mechanism record. The stored `r3` has no `isolation` field.
+  re-run's build at `8aab5bd` under detector `cf2e2e319d975a5b` and attributes
+  the seatbelt to the invocation — the same pair recorded `enforced: true` in the
+  `2026-11-11T06-41-39` and `06-43-38` runs — while stating in the same sentence
+  that the re-run's own draw carries no mechanism record. The stored `r3` has no
+  `isolation` field.
 - **F2** — `docs/evals/iterative-corpus.md`: the quoted `check-eval-run` warning
   now reads `warn isolation-unproven implement-from-prompt#12 …`, matching the
   command's output.
@@ -164,11 +165,12 @@ Seven prose edits, zero draws spent:
   produce. Comment-only diff; behaviour unchanged.
 - **F4** — `docs/evals/iterative-corpus.md`: the `#10 r4` quote is restored to
   end "so there was no spec to move to `in_progress`/`implemented`"; the `#12`
-  aggregation says `r2` asked through the `question` tool the non-interactive
-  harness cancelled, so its final text has no `?` and it is the one stored red;
-  the reopening condition now adds "where the case measures that the work be
-  done". `docs/specs/SPEC-0070-the-body-already-matches-what-the-skill-does.md`
-  carries the same corrected aggregation.
+  aggregation says all five asked through the `question` tool the non-interactive
+  harness cancelled and four restated the question in the final text, while
+  `#12 r2`'s text has no `?` and it is the one stored red; the reopening
+  condition now adds "where the case measures that the work be done".
+  `docs/specs/SPEC-0070-the-body-already-matches-what-the-skill-does.md` carries
+  the same corrected aggregation.
 
 Gates: every command in `tests:` exits 0; `check-evidence` reports `0 errors, 0
 warnings`. No measured number, class, run directory or hash changed.

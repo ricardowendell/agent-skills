@@ -201,12 +201,12 @@ directories contain with the skill loaded:
 
 **7 mention, 0 derailed, 4 clean.** The two `#10` replies name the absent
 artifacts only to say no prompt sync applied, then fix the bug and run the suite;
-the five `#12` replies frame the stop around the missing prompt, and four of them
-put one clarifying question in the final text with no file changed, while `#12
-r2` asked through the `question` tool — which the non-interactive harness
-cancelled — so its final text carries no `?` and it is the one stored red; none
-of them substitutes "go write a prompt" for the question. No loaded draw stopped
-or redirected because of the rule, so the body is advisory in practice and
+the five `#12` replies frame the stop around the missing prompt: all five asked
+through the `question` tool, which the non-interactive harness cancelled; four
+restated the question in the final text with no file changed, while `#12 r2`'s
+final text carries no `?` and it is the one stored red; none of them substitutes
+"go write a prompt" for the question. No loaded draw stopped or redirected
+because of the rule, so the body is advisory in practice and
 `SKILL.md` is **unchanged** (byte-identical, `git diff` empty). Case 2, the draw
 that *should* redirect, still does in its stored directory
 (`2026-11-06T10-38-39--implement-from-prompt`, 11/12 assistant replies name
