@@ -656,6 +656,25 @@ the tree hashes `724bb8ad…` and the cell is stale. `implement-from-prompt` #11
 uncited citations are the second run's unchanged history. The draws keep their
 stored verdicts; this paragraph is dated too.
 
+Fourth run (2026-11-11, after the `SPEC-0080` description edit): **66 cited
+cells, 51 stale, 3 uncited**. The pre-edit baseline in this checkout is 51, not
+the third run's 55, because the `SPEC-0078` wave re-measured `review-code` #3–#6
+at `9a28572…` after that reading; those four cells are fresh here and the
+difference is not this spec's. The `implement-from-prompt` description moves the
+tree from `9147487f…` to `52379e16…` (`SKILL.md a015c8fa…`). All twelve
+`implement-from-prompt` cells cite an older tree — `#1`–`#10` at
+`0389466e…`/`a58c5074…`, `#11` at the `SPEC-0069` smoke's `218f51bb…`, and `#12`
+whose with-skill row cites `0389466e…` and whose control records no governed
+hashes — and every one of them was **already stale** before the edit. The edit
+therefore unstages no fresh cell: **zero** cells move and the count stays 51. The
+`#12` routing smoke is
+published in [`implement-from-prompt-matrix.md`](implement-from-prompt-matrix.md)
+as routing evidence, not in this inventory as the cell, and its run directory is
+deliberately not cited here: a citation would make the three-draw smoke the
+newest hash-bearing run for `#12` and read as a fresh cell it did not measure.
+The three uncited citations are the earlier runs' unchanged history.
+The draws keep their stored verdicts; this paragraph is dated too.
+
 A tree hash covers a skill's files and its non-empty directories: an untracked
 **file** still changes it by design, which is what makes a dirty checkout visible
 as staleness, while an empty, untracked **directory** does not (SPEC-0071).

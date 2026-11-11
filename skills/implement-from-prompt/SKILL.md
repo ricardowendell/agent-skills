@@ -1,6 +1,6 @@
 ---
 name: implement-from-prompt
-description: Implement code from a structured implementation prompt and verify it. Use when the user asks to implement a prompt, build from a SPEC prompt, or continue the prompt-driven workflow to verified code. Preserves the prompt's scope and safeguards.
+description: Implement code from a structured implementation prompt or SPEC prompt, and verify it. Use when a prompt file or SPEC prompt is handed over to build. If the contract is missing or the request is ambiguous, ask before editing — do not guess. A small, fully specified edit is out of target. Preserves the prompt's scope and safeguards.
 stack-agnostic: true
 ---
 
