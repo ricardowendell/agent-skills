@@ -17,7 +17,7 @@ files:
   - docs/evals/iterative-corpus.md
   - docs/evals/coverage.md
   - skills/implement-from-prompt/SKILL.md
-  - docs/specs/active/SPEC-0070-the-body-already-matches-what-the-skill-does.md
+  - docs/specs/SPEC-0070-the-body-already-matches-what-the-skill-does.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/eval.mjs check --root skills
@@ -27,7 +27,7 @@ tests:
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
   - node scripts/check-staleness.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0070-the-body-already-matches-what-the-skill-does.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0070-the-body-already-matches-what-the-skill-does.md --base main
 ---
 
 ## Purpose

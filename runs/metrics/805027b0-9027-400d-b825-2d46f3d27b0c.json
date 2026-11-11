@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "external_run_id": "805027b0-9027-400d-b825-2d46f3d27b0c",
+  "slug": "SPEC-0070-the-body-already-matches-what-the-skill-does",
+  "events": [
+    {
+      "stage": "dispatch",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T14:38:30.379Z",
+      "ended_at": "2026-11-11T14:38:31.528Z",
+      "duration_ms": 1149,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "3681cf89479d73b014151f8b69b4ffd1ff0108606598a43c362304935d5d79bb",
+        "head_sha": "73d11d544994ba1d551e59f45cc9da3550c0f452",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "review",
+      "attempt_id": 1,
+      "status": "approved",
+      "started_at": "2026-11-11T14:46:05.776Z",
+      "ended_at": "2026-11-11T14:46:05.848Z",
+      "duration_ms": 72,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "3681cf89479d73b014151f8b69b4ffd1ff0108606598a43c362304935d5d79bb",
+        "head_sha": "83c6c33ee852df0b75a6a8a8a52fed0d16dda2bc",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "lint",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T14:46:06.021Z",
+      "ended_at": "2026-11-11T14:46:06.139Z",
+      "duration_ms": 118,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "3681cf89479d73b014151f8b69b4ffd1ff0108606598a43c362304935d5d79bb",
+        "head_sha": "83c6c33ee852df0b75a6a8a8a52fed0d16dda2bc",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "selftest",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T14:46:06.139Z",
+      "ended_at": "2026-11-11T14:46:14.203Z",
+      "duration_ms": 8064,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "3681cf89479d73b014151f8b69b4ffd1ff0108606598a43c362304935d5d79bb",
+        "head_sha": "83c6c33ee852df0b75a6a8a8a52fed0d16dda2bc",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T14:46:05.929Z",
+      "ended_at": "2026-11-11T14:46:14.331Z",
+      "duration_ms": 8402,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "3681cf89479d73b014151f8b69b4ffd1ff0108606598a43c362304935d5d79bb",
+        "head_sha": "83c6c33ee852df0b75a6a8a8a52fed0d16dda2bc",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "merge",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T14:46:14.871Z",
+      "ended_at": "2026-11-11T14:46:23.802Z",
+      "duration_ms": 8931,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "3681cf89479d73b014151f8b69b4ffd1ff0108606598a43c362304935d5d79bb",
+        "head_sha": "83c6c33ee852df0b75a6a8a8a52fed0d16dda2bc",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    }
+  ]
+}
