@@ -104,4 +104,49 @@ None.
 
 ## Results
 
-_Filled during implementation._
+**F1 — the comment.** `scripts/lib/evals/kinds.mjs:90-107` now states what the
+matcher does, in the order F1 asks: (1) `.` `;` `:` `—` `–` end a clause, and so
+does a comma; (2) a negator before the boundary does not reach the next clause,
+while one inside the same clause still blocks the form; (3) `if`, `unless` and
+`whether` are the exception, read against the wider sentence, so a conditional
+before the comma still blocks a stance after it; (4) the stance is the last clause
+that names one, with `REJECT` winning inside a clause. The true example
+`not approved — request changes` and the new `approved, but do not merge` /
+`If the tests were fixed, approve` examples each pin one of those points.
+
+The adjacent sentence at 90-91 was also stale: it said a form is a stance only
+when "the clause it sits in carries no negator or conditional", but the conditional
+guard reaches across commas. It now reads "no negator sits in its clause and no
+conditional sits earlier in its sentence". No other comment was edited.
+`VERDICT_FORMS` / `VERDICT_BLOCKERS` are untouched; `git diff` for `kinds.mjs`
+adds and removes only `//` lines.
+
+**F2 — checked against the code, not the spec.** Every sentence maps to
+`assertions.mjs`: comma in `CLAUSE_BOUNDARIES` (:54) and absent from
+`CONDITION_BOUNDARIES` (:55); negators tested with the comma boundary and
+conditionals without it in `blockedBefore` (:82-87); `stance()` (:104-128) taking
+the last `boundaryCut` with `STANCE_PRECEDENCE` (`REJECT` > `WITHHELD` >
+`APPROVE`) on ties. The three examples are already pinned by
+`assertions.test.mjs` (`not approved — request changes` → REJECT, :308-312;
+`If the tests were fixed, approve` → no stance, :399;
+`approved, but do not merge` → REJECT, :342-346). No disagreement between code
+and spec was found.
+
+**Gates.** All exit 0, run in this worktree:
+
+- `node scripts/validate-skills.mjs --root skills` — 14 `SKILL.md`, all clear;
+- `node scripts/eval.mjs check --root skills` — 101 cases (98 runnable, 3 manual),
+  98 fixtures staged, no findings;
+- `node --test scripts/lib/evals/*.test.mjs` — **565 pass, 0 fail**;
+- `node --test scripts/lib/*.test.mjs` — 13 pass, 0 fail;
+- `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` — 42 pass,
+  0 fail;
+- `node scripts/check-sensor-parity.mjs` — 2/2 fixtures in parity;
+- `node scripts/check-evidence.mjs` — 6 documents, 0 errors, 0 warnings;
+- `node scripts/check-staleness.mjs` — 66 cited cells, 55 stale, 3 uncited, same
+  as `main`;
+- `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0074-… --base main`
+  — no errors.
+
+**Cost.** Zero paid draws. No eval was run, no store written, no fixture or skill
+edited.

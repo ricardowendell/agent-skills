@@ -87,18 +87,24 @@ export const VERDICT_FORMS = [
   ["retenho", "WITHHELD"],
 ]
 
-// A form is a stance only when the clause it sits in carries no negator or
-// conditional (SPEC-0062). The list is closed and written the way a reviewer
-// writes English and Portuguese, not as single tokens: `unable to approve` and
-// `not able to approve` are one negation, not a dead entry. `if`, `unless`,
-// `whether` and the conditionals are here because a conditional clause ending in
-// the form is not an assertion of it.
+// A form is a stance only when no negator sits in its clause and no conditional
+// sits earlier in its sentence (SPEC-0062). The list is closed and written the
+// way a reviewer writes English and Portuguese, not as single tokens: `unable to
+// approve` and `not able to approve` are one negation, not a dead entry. `if`,
+// `unless`, `whether` and the conditionals are here because a conditional clause
+// ending in the form is not an assertion of it.
 //
 // The guard is the whole clause, not the word before the form, so post-modifiers
 // need no separate list: `not at all blocking`, `nothing whatsoever blocking` and
-// `no longer blocking` are blocked by `not`/`nothing`/`no longer`. Clause
-// boundaries (`.`, `;`, `:`, dashes — not the comma, which a conditional needs)
-// reset the guard, so `not approved — request changes` still reads the rejection.
+// `no longer blocking` are blocked by `not`/`nothing`/`no longer`. `.` `;` `:`
+// `—` `–` end a clause, and so does a comma: a negator before the boundary does
+// not reach the next clause, so `not approved — request changes` still reads the
+// rejection, while a negator inside the same clause still blocks the form.
+// `if`, `unless` and `whether` are the exception: they are read against the wider
+// sentence, so a conditional before the comma still blocks the stance after it
+// (`If the tests were fixed, approve` names no stance). The stance is the last
+// clause that names one, with `REJECT` winning inside a clause, so `approved, but
+// do not merge` reads as a rejection (SPEC-0073).
 export const VERDICT_BLOCKERS = [
   "not able to",
   "no way to",
