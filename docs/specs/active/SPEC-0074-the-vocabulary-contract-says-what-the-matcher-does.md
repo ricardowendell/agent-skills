@@ -1,7 +1,7 @@
 ---
 id: SPEC-0074
 title: The vocabulary contract says what the matcher does
-status: ready
+status: implemented
 priority: P3
 task: TASK-108
 created_at: 2026-11-11
