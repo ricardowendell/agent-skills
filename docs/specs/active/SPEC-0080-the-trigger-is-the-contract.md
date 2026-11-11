@@ -91,7 +91,7 @@ same shape as `SPEC-0069`:
 
 ```text
 node scripts/eval.mjs run implement-from-prompt 12 --arm with --repeat 3 \
-  --model agentworks/deepseek-v4-1-flash
+  --root skills --model agentworks/deepseek-v4-1-flash
 ```
 
 Stop rule:
