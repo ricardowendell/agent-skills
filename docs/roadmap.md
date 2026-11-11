@@ -132,7 +132,7 @@ it.
 | **unscheduled** | review and audit read architecture, with deterministic slots | `TASK-88` + `TASK-89` + `TASK-79` + `TASK-80` | ~50 draws |
 | **unscheduled** | data products are measured before any skill is built | `TASK-78`–`TASK-86` (#13–#21) | measurement |
 | **unscheduled** | the branch can be synced safely | `TASK-62` (`sync-branch`), after the corpus | ~10–20 draws, mostly deterministic |
-| **unscheduled** | a screen can be reviewed | `TASK-61` (oracle) and then `TASK-58`/`TASK-60` — no consumer today | measurement |
+| **unscheduled** | a screen can be reviewed by a person; the harness does not separate a visual change | `TASK-58`/`TASK-60` on declared human review; the visual oracle (`TASK-61`) is a future item with its own budget — no consumer today | 0 draws |
 | **unscheduled** | — | `TASK-59` framing, conditional on a gap the corpus shows | measurement |
 | unscheduled | — | `TASK-63`: a stakeholder recap as a mode of the status report | 0–20 |
 | unscheduled | — | `diagnose-failure`: needs a captured problem statement first | 0 until then |
@@ -164,12 +164,26 @@ itself. The steps below resume only on an explicit decision.
 
 ## Why the visual work has no release
 
-`TASK-58` and `TASK-60` depend on `TASK-56` for the corpus and on `TASK-61` for
-the oracle, and `TASK-61` now depends on them having a consumer. With both paused,
-the oracle loses its justification too — a browser path is the most expensive item
-in this backlog and the measured demand for it is a single-project, one-off
-refactor that two installed skills already cover. The chain reopens at the top: a
-consumer first, then the oracle, then the skills. Not the other way around.
+The 0.8.0 wave does **not** start with a browser/visual oracle. `TASK-58`
+(visual change planning) and `TASK-60` (experience review) are accepted on
+**declared human review**: a person reads the diff or the preview and says
+whether it holds, and that review is the evidence. No release claim of measured
+separation covers a visual case — the harness has no browser, no screenshot and
+no DOM, so it cannot quote a visual pass rate.
+
+A visual oracle is a **future item with its own budget**, not a prerequisite of
+this wave. It is a runner subsystem, not a case: a browser to launch and keep
+alive, screenshot diffing with a tolerance model, DOM/axe queries with their own
+answer keys, and process isolation for the browser — the same class of work as
+the deny layer, measured against fixtures nobody has written yet. `TASK-61`
+records the decision and owns none of that work.
+
+Both skills are paused and also depend on `TASK-56` for the corpus, so the oracle
+has no consumer today and no owner in this release. The measured demand for it is
+a single-project, one-off refactor that two installed skills already cover. The
+oracle reopens on one of two events: a **third visual case**, or a release claim
+that needs **machine-checked pixels**. Until then the chain runs from the corpus,
+not from the browser: consumer first, then the oracle, then the skills.
 
 ## Out of scope until a consumer asks
 

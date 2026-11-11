@@ -148,4 +148,49 @@ reopen it: a third visual case, or a claim that needs machine-checked pixels.
 
 ## Results
 
-_Filled during implementation._
+**Decision: (b) — no visual oracle is built, and the claim says so.** `TASK-58`
+(visual change planning) and `TASK-60` (experience review) are accepted on
+**declared human review**: a person reads the diff or the preview and says
+whether it holds, and that review is the evidence. No release claim of measured
+separation covers a visual case.
+
+**Cost comparison.** An oracle is a runner subsystem, not a case: a browser to
+launch and keep alive, a screenshot pipeline with a tolerance model (what counts
+as "the same" across a font-hinting or antialiasing change), a DOM/axe query
+language with its own answer keys, and a process-isolation story for the browser
+— the same class of work as the deny layer (`SPEC-0046`–`SPEC-0052`), measured
+against fixtures nobody has written yet. Declared human review is one review per
+change: the reader already exists, the artefact is the diff or preview, and the
+cost is bounded by the change rather than by a subsystem. Two paused cases do not
+pay for the subsystem.
+
+What landed:
+
+- **F1 (roadmap).** The forward-looking claim is rewritten in two places: the
+  `unscheduled` releases row that read "`TASK-61` (oracle) and then
+  `TASK-58`/`TASK-60`", and *Why the visual work has no release*, which now says
+  the 0.8.0 wave does not start with a visual oracle, that the two cases rest on
+  declared human review, that the oracle is a future item with a runner-sized
+  cost and its own budget (browser, screenshot tolerance, DOM/axe queries,
+  process isolation), and that no release claim of measured separation covers a
+  visual case. The release history and the 0.7.x status line are untouched.
+- **F2 (coverage).** The `report-project-status` row now names the evidence as a
+  declared human review, not merely "declared, not measured", and the
+  `status: manual` evidence rule says a manual case's evidence is a declared
+  human review, never a measured separation. No visual skill has a row, so the
+  two pending skills are named in one line under the totals with their review
+  status: `TASK-58`/`TASK-60` have no case, fixture or run dir and are not
+  counted in the 101.
+- **F3 (this section).** The decision, its cost and the reopening condition.
+
+**Reopening condition.** A **third visual case**, or a release claim that needs
+**machine-checked pixels**. Either one is a decision to scope the oracle as its
+own runner spec with its own budget; it is not reopened by a documentation edit.
+
+**Note on the premise.** At implementation time `docs/roadmap.md` did not carry
+the literal sentence "a browser/visual oracle, then `TASK-58` and `TASK-60`"; that
+wording lives in `TASK-61`'s task note. The forward-looking claim the roadmap did
+carry was the releases-table row and *Why the visual work has no release*, so F1
+landed there. The release history needed no correction.
+
+**Gates.** Every command in `tests:` exited 0; no paid draw was spent (0).
