@@ -136,6 +136,32 @@ Current detector `cf2e2e319d975a5b`. The v2–v6 evolution, the four waves, the
 earlier staleness readings, the provenance notes and the discrimination audit
 are in [`coverage-history.md`](coverage-history.md).
 
+### Archived citations
+
+The wave tables and the discrimination audit moved to
+[`coverage-history.md`](coverage-history.md); their run directories stay here so
+`check-staleness` still judges the cells they publish. Each row is the pair the
+archived table records for that cell.
+
+| cell | with skill | control |
+| --- | --- | --- |
+| `audit-code-quality` #5 | `2026-11-10T13-28-15--audit-code-quality--agentworks-deepseek-v4-1-flash` | `2026-11-10T13-31-04--audit-code-quality--agentworks-deepseek-v4-1-flash--without-skill` |
+| `audit-code-quality` #6 | `2026-11-10T13-33-15--audit-code-quality--agentworks-deepseek-v4-1-flash` | `2026-11-10T13-36-02--audit-code-quality--agentworks-deepseek-v4-1-flash--without-skill` |
+| `audit-code-quality` #7 | `2026-11-10T13-40-49--audit-code-quality--agentworks-deepseek-v4-1-flash` | `2026-11-10T13-43-14--audit-code-quality--agentworks-deepseek-v4-1-flash--without-skill` |
+| `audit-code-quality` #8 | `2026-11-10T13-45-48--audit-code-quality--agentworks-deepseek-v4-1-flash` | `2026-11-10T13-49-08--audit-code-quality--agentworks-deepseek-v4-1-flash--without-skill` |
+| `audit-code-quality` #9 | `2026-11-10T13-59-02--audit-code-quality--agentworks-deepseek-v4-1-flash` | `2026-11-10T14-02-40--audit-code-quality--agentworks-deepseek-v4-1-flash--without-skill` |
+| `review-code` #8 | `2026-11-10T15-02-35--review-code--agentworks-deepseek-v4-1-flash` | `2026-11-10T15-05-54--review-code--agentworks-deepseek-v4-1-flash--without-skill` |
+| `review-code` #9 | `2026-11-10T15-08-51--review-code--agentworks-deepseek-v4-1-flash` | `2026-11-10T15-12-14--review-code--agentworks-deepseek-v4-1-flash--without-skill` |
+| `review-code` #10 | `2026-11-10T15-39-17--review-code--agentworks-deepseek-v4-1-flash` | `2026-11-10T15-54-47--review-code--agentworks-deepseek-v4-1-flash--without-skill` |
+| `review-code` #1 | `2026-11-10T15-20-12--review-code--agentworks-deepseek-v4-1-flash` | `2026-11-10T15-23-10--review-code--agentworks-deepseek-v4-1-flash--without-skill` |
+| `review-code` #2 | `2026-11-10T15-26-12--review-code--agentworks-deepseek-v4-1-flash` | `2026-11-10T15-28-46--review-code--agentworks-deepseek-v4-1-flash--without-skill` |
+| `review-code` #7 | `2026-11-10T15-31-48--review-code--agentworks-deepseek-v4-1-flash` | `2026-11-10T15-35-51--review-code--agentworks-deepseek-v4-1-flash--without-skill` |
+
+The discrimination audit's two ambiguous time-only tokens — `21-45-26` and
+`21-57-53` — stay here for the same reason: each resolves to more than one run
+directory, so `check-staleness` reports them as `uncited` exactly as it did when
+the audit lived in this file.
+
 ## Staleness
 
 `node scripts/check-staleness.mjs` is a query, not an anecdote: it reads the run
