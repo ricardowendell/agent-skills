@@ -1,7 +1,7 @@
 ---
 id: SPEC-0071
 title: An empty directory is not part of the skill
-status: ready
+status: implemented
 priority: P2
 task: TASK-107
 created_at: 2026-11-11
