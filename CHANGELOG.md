@@ -9,6 +9,21 @@ skills, which cases, and which published measurements.
 
 ## [Unreleased]
 
+## [0.7.0] — 2026-11-11
+
+The corpus that can see a small change. The release carries two things that only
+work together: a harness that measures one draw cheaply and one command deep, and
+four frozen cases that answer whether `implement-from-prompt` handles a small
+iterative change. Eleven paid draws finished a wave that had been parked since
+2026-11-08.
+
+The verdict is uncomfortable and published: the skill separates on exactly one of
+the four cases, and it separates in its own favour. It also **fails to load in 8 of 15
+skill-arm draws**, which is a routing defect, not a behavioural one — `TASK-101`.
+Two harness defects surfaced while measuring and are tracked, not hidden:
+`ranpass` scores the command string instead of the effect (`TASK-102`), and
+`--resume` downgrades a legacy cell's isolation record (`TASK-103`).
+
 ### Changed
 
 - **The quick-refine spike closes without a skill (SPEC-0035, TASK-57).** F0

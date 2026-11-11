@@ -5,11 +5,11 @@ pipeline (`docs/pipeline.md`) governs how work runs; this page says what the wor
 is and in which order. A change of direction is a human decision, and the
 releases themselves are the record of what shipped.
 
-Status: **0.6.2 released** on 2026-11-07. **0.6.3** is the next cut: the stack
-review (#12) and the detector/deny-layer work (`SPEC-0046`–`SPEC-0052`) are
-merged but unreleased. **0.7.0** remains the corpus, paused: the wave stopped at
-30/40 draws on a post-load stall and the holdout was not drawn. The data-product
-program (#13–#21) is parked behind #6 and has no release assigned.
+Status: **0.7.0 released** on 2026-11-11 — the corpus, the single eval CLI and
+the harness work that made them measurable. The iterative corpus is measured:
+`#12` is the only separator and it separates in the incumbent's favour, and the
+real finding is routing (`TASK-101`). The data-product program (#13–#21) is a
+deliberately deferred delivery, not a queue item; it has no release assigned.
 
 ## Inputs
 
