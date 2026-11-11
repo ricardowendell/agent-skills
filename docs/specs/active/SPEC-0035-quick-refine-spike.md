@@ -204,10 +204,10 @@ it would also force a re-run. The correct next step is the harness work, not a
 skill edit.
 
 **Limits.** This verdict is about these four cases, fixtures, prompts, detector
-and model — not about iterative work in general. If `TASK-101` or `TASK-102` is
-fixed and a *loaded* draw then loses a behavioural assertion the control passes,
-that cell is the input to reopen this spec as `extend`; until then, the count of
-justified changes is zero.
+and model — not about iterative work in general. A future cell where a *loaded*
+draw loses a behavioural assertion the control passes — whether or not
+`TASK-101`/`TASK-102` are fixed first — is the input to reopen this spec as
+`extend`; until then, the count of justified changes is zero.
 
 ## Open Questions
 
