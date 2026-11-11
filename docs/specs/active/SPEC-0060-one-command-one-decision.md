@@ -1,7 +1,7 @@
 ---
 id: SPEC-0060
 title: One command, one decision
-status: ready
+status: implemented
 priority: P1
 task: TASK-99
 created_at: 2026-11-10
