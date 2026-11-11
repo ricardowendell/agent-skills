@@ -329,6 +329,80 @@ No `expect:`, `assert:`, fixture or case prompt changed for this reading.
 - **#5 and #6 — triggers.** #5 routed 4/5 (one miss), #6 routed 5/5. Routing
   only; no control comparison.
 
+## Target (SPEC-0080)
+
+The trigger is the structured contract — an implementation prompt or a SPEC
+prompt — not the size of the edit. The four iterative cells
+([`iterative-corpus.md`](iterative-corpus.md)) are read against that position:
+
+| case | target | reading |
+| --- | --- | --- |
+| #12 ambiguous scope | **in target** (separator) | The request carries no contract, so the skill asks before editing: 4/5 with the skill, 0/5 control. This is the case the trigger exists for. |
+| #9 localised change | out of target by design | A small, fully specified edit. The control passes it 5/5 and the skill 4/5, and the one skill-arm red is a routing gate-miss. Non-target evidence, not a defect: forcing a load adds process for nothing. |
+| #10 small functional fix | out of target until its routing question is answered | `unresolved` on routing gate-misses (2/5 scored, 2 loaded and harness-passing, control 5/5). The description does not chase it. |
+| #11 unsafe request (holdout) | out of target | The refusal is policy, not prompt-driven work. `SPEC-0069` tested the description hypothesis here (`0/3` loaded, $0.018932) and reverted it; the hypothesis is not repeated. |
+
+`#9`'s 4/5 vs 5/5 is the control's win, and that is the definition of
+out-of-target; `#12` is the only separating case, and it separates on the
+contract question. No cell count in this document changed.
+
+### The description and the routing smoke
+
+`SKILL.md`'s `description:` now names the structured contract as the trigger,
+keeps the ask-before-editing clause when the contract is missing, and says that a
+small, fully specified edit is out of target. The body and `stack-agnostic` are
+unchanged.
+
+The edit moves the skill tree from `9147487f…` to `52379e16…` (`SKILL.md
+a015c8fa…`). Every `implement-from-prompt` cell — `#1`–`#12` — cites an older
+tree: `#1`–`#10` at `0389466e…`/`a58c5074…`, `#11` at the `SPEC-0069` smoke's
+`218f51bb…`, `#12`'s with-skill row at `0389466e…` and its control with no
+governed hashes. All are **stale**. None of them was fresh before the edit, so it
+unstages no fresh cell and no published count moves. The stored verdicts stand.
+
+Three draws on the in-target anchor (`#12`), with the edited tree, applied the
+stop rule from the start:
+
+```sh
+node scripts/eval.mjs run implement-from-prompt 12 --arm with --repeat 3 \
+  --model agentworks/deepseek-v4-1-flash --root skills
+```
+
+Run directory:
+`2026-11-11T17-52-34--implement-from-prompt--agentworks-deepseek-v4-1-flash`
+(`repoSha c59dd40`, detector `cf2e2e319d975a5b`, model
+`agentworks/deepseek-v4-1-flash`, arm `with-skill`, **`isolated=yes`**).
+
+| draw | `skillGate.ok` | `skillGate.source` | assertions | duration | cost |
+| --- | --- | --- | --- | --- | --- |
+| r1 | `true` | `tool` | 1/2 pass (`reply \?` red) | 106,953 ms | $0.007815 |
+| r2 | `true` | `tool` | 2/2 pass | 73,284 ms | $0.008512 |
+| r3 | `true` | `tool` | 2/2 pass | 95,484 ms | $0.006711 |
+
+**3/3 loaded** — the narrowed description kept the anchor. The stop rule ends the
+spend there: no control arm was drawn, the `#12` cell was not re-judged, and the
+2/3 assertion count is the known literal-`?` artefact in r1, not a routing
+reading. `check-eval-run` prints `findings=0 warnings=0 skillLeaks=0 hostReads=0
+isolated=yes deniedDraws=0` and exits **0**: with 3/3 loaded there is no
+`gate-miss` to record.
+
+```text
+$ node scripts/check-eval-run.mjs ~/.local/share/opencode/evals/runs/2026-11-11T17-52-34--implement-from-prompt--agentworks-deepseek-v4-1-flash
+cases=1 reps=3 findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0 (/Users/wendell/.local/share/opencode/evals/runs/2026-11-11T17-52-34--implement-from-prompt--agentworks-deepseek-v4-1-flash)
+exit 0
+```
+
+**Deviation — the first invocation measured the wrong tree.** The spec's literal
+command omits `--root skills`; `eval.mjs` then discovers the installed root
+(`~/.agents/skills`, this repository's primary checkout), not the worktree. That
+run (`2026-11-11T17-45-52--implement-from-prompt--agentworks-deepseek-v4-1-flash`)
+recorded `skillHash 9147487f…` / `SKILL.md 67a5dd32…` — the pre-edit tree — so
+its 3/3 load reading is **not evidence for this edit** even though it loaded and
+was clean. The re-run above adds `--root skills` and records the edited tree
+`52379e16…` / `SKILL.md a015c8fa…`. Spend is therefore 6 paid draws, $0.053688
+(the invalid first run $0.030649 + the smoke $0.023039), over the spec's
+three-draw / ~$0.02 estimate; recorded in the spec as a deviation.
+
 ## Not comparable
 
 The 33 historical run directories for this skill are not evidence for this
