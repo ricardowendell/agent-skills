@@ -10,8 +10,7 @@ source_docs:
   - backlog/tasks/task-97 - evals-fixar-o-trade-do-reject-vins-e-a-fronteira-de-virgula-no-verdict-SPEC-0062.md
   - docs/specs/SPEC-0062-the-verdict-vocabulary-is-closed.md
 related_decisions: []
-depends_on:
-  - SPEC-0072-say-what-the-evidence-says
+depends_on: []
 blocks: []
 files:
   - scripts/lib/evals/assertions.mjs
