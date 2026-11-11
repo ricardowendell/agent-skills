@@ -171,6 +171,48 @@ description did not route `#11`, so it was reverted to the 0.7.0 wording
 moves: `#11` keeps its class and its 1/5 loaded count, the smoke is routing
 evidence and not part of a cell, and no second hypothesis was drawn.
 
+### The prompt-artifacts rule (SPEC-0070)
+
+`skills/implement-from-prompt/SKILL.md:13` says the skill starts from prompt
+artifacts and sends a caller with no prompt file to `write-implementation-prompt`,
+and step 2 asks for "the requested implementation prompt", while `#9`, `#10` and
+`#12` arrive as bare requests. The loaded draws they name were read from their
+**assistant text parts only** — not from the `SKILL.md` text a read tool echoes
+back — and classified as mention (the reply names a prompt file,
+`write-implementation-prompt`, or the prompt-artifacts rule), derailed (the draw
+stopped or redirected because of that framing instead of doing what the case
+measures), or clean (neither). The spec says twelve; its own list totals eleven
+(`#9` r1–r4, `#10` r1 and r4, `#12` r1–r5), and eleven is what the three run
+directories contain with the skill loaded:
+
+| draw | run | assistant-text evidence | class |
+| --- | --- | --- | --- |
+| #9 r1 | `06-30-24` | "I'll start by looking at the component and its styles"; ends with the label and module padding changed | clean |
+| #9 r2 | `06-30-24` | edits the component and its module; "Why not `src/styles/global.css`" | clean |
+| #9 r3 | `06-30-24` | "I'll make the scoped change"; no prompt reference | clean |
+| #9 r4 | `06-30-24` | label and padding plus component tests; no prompt reference | clean |
+| #10 r1 | `06-35-22` | fixes the edge case and adds the regression test; "No spec/prompt files exist in this repo, so no prompt sync was needed" | mention |
+| #10 r4 | `06-35-22` | "There are no `docs/specs/` or `docs/prompts/` artifacts in this repo, so there was no spec to move" | mention |
+| #12 r1 | `06-39-39` | "there's no spec or implementation prompt"; stops and asks "what is the intended badge change?" | mention |
+| #12 r2 | `06-39-39` | "No implementation prompt or spec exists"; stopping without editing; offers three updates | mention |
+| #12 r3 | `06-39-39` | "starts from a reviewed prompt artifact, and this repo has none"; asks what "update" means | mention |
+| #12 r4 | `06-39-39` | "there's no spec or implementation prompt"; stops and asks what "update" means | mention |
+| #12 r5 | `06-39-39` | "There's no prompt or spec for this change yet"; "Which update do you want?" | mention |
+
+**7 mention, 0 derailed, 4 clean.** The two `#10` replies name the absent
+artifacts only to say no prompt sync applied, then fix the bug and run the suite;
+the five `#12` replies frame the stop around the missing prompt but still deliver
+what case 12 measures — one clarifying question and no file changed — and none of
+them substitutes "go write a prompt" for the question. No loaded draw stopped or
+redirected because of the rule, so the body is advisory in practice and
+`SKILL.md` is **unchanged** (byte-identical, `git diff` empty). Case 2, the draw
+that *should* redirect, still does in its stored directory
+(`2026-11-06T10-38-39--implement-from-prompt`, 11/12 assistant replies name
+`write-implementation-prompt`; r12 stopped for the missing artifacts without
+naming the skill — the one recorded red — and no draw invented the `slugify`
+contract). Reopening condition: **a future loaded draw that stops or redirects on
+a bare request reopens this.**
+
 ## Runs and hashes
 
 Clean draws are the non-contaminated, non-infrastructure count reported by the

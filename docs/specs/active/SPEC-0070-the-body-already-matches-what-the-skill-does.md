@@ -160,4 +160,46 @@ None.
 
 ## Results
 
-_Filled during implementation._
+**F1 — the loaded bare-request draws.** Eleven draws, not twelve: the list in
+F1 (`#9` r1–r4, `#10` r1 and r4, `#12` r1–r5) totals 11, and the three run
+directories contain exactly those 11 with `skillGate.ok: true` (`#9 r5` and
+`#10 r2/r3/r5` are gate-misses, as the spec says). Each was read from its
+`type: "text"` parts only, never from the `SKILL.md` text a read tool echoed:
+
+| draw | assistant text | class |
+| --- | --- | --- |
+| #9 r1–r4 | no prompt reference; label in the component, spacing in its module, global sheet untouched | clean |
+| #10 r1 | "No spec/prompt files exist in this repo, so no prompt sync was needed"; fixes the edge case, adds the regression test, runs the suite | mention |
+| #10 r4 | "no `docs/specs/` or `docs/prompts/` artifacts in this repo, so there was no spec to move"; same fix + test + run | mention |
+| #12 r1–r5 | all five name the absent prompt/spec, and all five stop with one clarifying question and no edit | mention |
+
+**7 mention, 0 derailed, 4 clean.** No loaded draw stopped or redirected
+*because* of the prompt framing: `#10`'s two mentions are a note that prompt sync
+did not apply, and `#12`'s five are the case's expected outcome (one question, no
+edit), not a substitute for it.
+
+**F2 — decision: no edit.** `SKILL.md` is byte-identical; `git diff --
+skills/implement-from-prompt/SKILL.md` is empty. The staged tree hash stays
+`9147487f27cb27be0b915500599896d90db0be01a49dd605a402f57268fbff9e`, so the
+`#9`/`#10` staleness noted in the corpus is unchanged and nothing new goes stale.
+
+**F3 — published.** `docs/evals/iterative-corpus.md` gains "The prompt-artifacts
+rule (SPEC-0070)" (per-draw table, 7/0/4, decision, reopening condition) and the
+`implement-from-prompt` row of `docs/evals/coverage.md` points at it.
+
+**Case 2 check.** Stored draws
+`2026-11-06T10-38-39--implement-from-prompt` (case 2): 11 of 12 assistant replies
+name `write-implementation-prompt`; r12 stopped for the missing prompt/spec
+without naming the skill, which is the one stored red on `reply
+write-implementation-prompt`. No draw invented the `slugify` contract, so the
+prompt rule still redirects where it should.
+
+**Draws spent: 0.** No eval run, no `--resume`, no judge.
+
+**Gates.** `validate-skills`, `eval check`, the three `node --test` suites,
+`check-sensor-parity`, `check-evidence`, `check-staleness` and `spec-check` all
+exited 0. `spec-check` prints one warning —
+`files-declared-untouched … skills/implement-from-prompt/SKILL.md` — which is the
+no-edit decision showing up in the contract: the file is declared because the
+spec allowed an edit, and the evidence says none was needed.
+
