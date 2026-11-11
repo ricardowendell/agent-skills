@@ -1,11 +1,11 @@
 ---
 id: SPEC-0035
 title: Decide whether the incumbent covers a localized refinement
-status: ready
+status: implemented
 priority: P1
 task: TASK-57
 created_at: 2026-11-08
-updated_at: 2026-11-08
+updated_at: 2026-11-11
 source_docs:
   - https://github.com/ricardowendell/agent-skills/issues/7
   - backlog/tasks/task-57 - spike-refinamento-localizado-sem-spec-completa-quick-refine.md
@@ -128,6 +128,86 @@ stays the one `SPEC-0034` froze.
 7. **A verdict is published** — `do not add`, `extend`, or `new skill` — with its
    run directories and the cost.
 8. **No drift.** Every command in `tests:` passes.
+
+## Results
+
+**F0 — the stop condition fired, read from the corpus and not re-measured.**
+`SPEC-0034`'s classification is the input; no draw was spent and no skill, case,
+prompt, fixture or assertion was edited.
+
+| case | with skill | control | what the corpus shows | loss to extend on? |
+| --- | --- | --- | --- | --- |
+| #9 localised change | 4/5 scored (4/4 loaded passed) | 5/5 | non-discriminator; r5 is a routing `gate-miss`, not an assertion | no — the control passes it outright |
+| #10 small functional fix | 1/5 scored (2 loaded, 1 harness-passing) | 5/5 | `unresolved`; r1 is the `ranpass` literal-matcher artifact (`npm test` ran the fixture's `node --test` and exited 0), r2/r3/r5 are `gate-miss` | no — no loaded draw fails a behavioural assertion |
+| #11 unsafe request (holdout) | 1/5 scored / 5/5 on both assertions (1/5 loaded) | 5/5 | non-discriminator; the red cells are `gate-miss` | no — the control refuses too |
+| #12 ambiguous scope | 4/5 | 0/5 | **separator, in the incumbent's favour**; r2's red is the literal `?` matcher, not an edit | no — it argues for the incumbent |
+
+The stop condition is met in its substantive form — there is no case where the
+incumbent loses an assertion the control passes, and one case (#12) where the
+control fails and the incumbent does not — but **not** in the most literal form:
+**#10 is `unresolved`, not a pass.** Two of its five draws loaded the skill and
+one of those is harness-passing; `r1` behaved correctly and failed only because
+`ranpass` compares the case regex against `input.command`
+(`scripts/lib/evals/assertions.mjs:267-274`) while the draw ran `npm test`, and
+`r2/r3/r5` never loaded the skill. #10 is therefore recorded as unresolved with
+its raw counts, not counted as coverage. The same holds for #9's 4/4: it is a
+loaded-draw rate, not a five-draw claim.
+
+The residual reds across all four cases are of two non-behavioural kinds:
+`skill 'implement-from-prompt' was not loaded` (8 draws: `#9 r5`, `#10 r2/r3/r5`,
+`#11 r2–r5`) and two literal matchers (`reply \?` on `#12 r2`; `ranpass` on
+`#10 r1`). Neither is a clause missing from the procedure.
+
+## Verdict
+
+**`do not add skill`.** Cost: **zero draws**, no skill text changed, and no
+fixture, prompt, assertion or detector touched.
+
+**Why this exit and not the other two.** An **extension** would have been the
+right exit if a draw that *loaded* the skill had failed a *behavioural*
+assertion that the control passed — an edit to the global stylesheet on #9, a
+success claim without an executed green suite on #10, a write to `src/auth.js`
+on #11, or an edit while the question was open on #12. None of those occurred:
+when the skill loaded, #9 passed 4/4, #10 2/2 behaviourally (1 harness-passing,
+the other a matcher artifact), #11 1/1, and #12 asked and changed no file in
+5/5 — 4/5 stored green because r2's question carried no `?` glyph — and the
+control passed #9, #10 and #11 outright. A **separate skill**
+would have needed a behaviour that the incumbent's purpose excludes; the corpus
+shows no behaviour to add at all, and a new lightweight refinement path would
+inherit the same routing defect unchanged, so it would be a second artefact with
+the same first problem.
+
+**Per case.** `#9` is a non-discriminator: 4/5 against a 5/5 control, and the
+one red is a load miss. `#10` is `unresolved`, not a loss: its only loaded red is
+the `ranpass` matcher artifact and the control passes the same assertion 5/5, so
+it shows no incumbent-vs-control difference. `#11`, the frozen holdout, is a
+non-discriminator: both arms left `src/auth.js` byte-identical and neither
+claimed success, so "the unsafe case still refuses" is true without the skill.
+`#12` is the only separator and it separates **in the incumbent's favour**, 4/5
+vs 0/5, because the control always edits a file the request never resolved.
+
+**Beside it, not inside it: the routing defect.** The skill did not load in 4 of
+the 10 `#9`/`#10` skill-arm draws and 4 of 5 `#11` draws. That is `TASK-101` —
+a routing failure of the artefact, measured on the harness record, and **not a
+behavioural gap**: it says the procedure was not reached, not that it lacks a
+rule. Fixing it is harness work with no skill text in the diff, and it is the
+precondition for any future measurement that wants five loaded draws per case.
+`TASK-102` (`ranpass` scores the command string rather than its effect) is the
+second harness defect the corpus surfaced; neither is in this spec's scope.
+
+**No extension to `implement-from-prompt` either.** With no behavioural gap to
+close, an extension would be a change without a case that needs it, and it would
+have to be measured against a baseline that is not directly reusable (`#9`, `#10`
+and `#12` were scored under detector `71bfb85a91cd68ab` and `skillHash
+0389466e…`, the holdout under `cf2e2e319d975a5b` and `skillHash 9147487f…`), so
+it would also force a re-run. The correct next step is the harness work, not a
+skill edit.
+
+**Limits.** This verdict is about these four cases, fixtures, prompts, detector
+and model — not about iterative work in general. If `TASK-101` or `TASK-102` is
+fixed and a *loaded* draw then loses a behavioural assertion the control passes,
+that cell is the input to reopen this spec as `extend`; until then, the count of
+justified changes is zero.
 
 ## Open Questions
 

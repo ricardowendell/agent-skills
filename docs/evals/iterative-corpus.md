@@ -224,3 +224,15 @@ node scripts/eval.mjs run implement-from-prompt 12 --arm without --repeat 5 \
   rate is not a five-draw claim.
 - The two dates carry different detectors and skill tree hashes. The cells are
   not pooled and no number is averaged across them.
+
+## Verdict on `SPEC-0035`
+
+`SPEC-0035` read this classification at F0 and closed as **`do not add skill`**,
+with zero draws and no skill text changed. The corpus leaves nothing to extend:
+#12 separates in the incumbent's favour, #9 and #11 are non-discriminators, and
+#10 is `unresolved` on the routing defect (`TASK-101`) plus the `ranpass` matcher
+artifact (`TASK-102`), not on behaviour. The routing finding is harness work, not
+a missing capability — a new lightweight skill would inherit it unchanged — and
+`implement-from-prompt` gets no extension either, because there is no case that
+needs one. A future cell where a *loaded* draw loses a behavioural assertion the
+control passes is the input that would reopen the question.

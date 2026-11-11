@@ -11,6 +11,15 @@ skills, which cases, and which published measurements.
 
 ### Changed
 
+- **The quick-refine spike closes without a skill (SPEC-0035, TASK-57).** F0
+  stopped at the corpus: there is no behavioural loss to extend on. #12 separates
+  in the incumbent's favour (4/5 vs 0/5), #9 and #11 are non-discriminators, and
+  #10 is `unresolved` on the routing defect (`TASK-101`) plus the `ranpass`
+  matcher artifact (`TASK-102`), not on behaviour. Verdict **`do not add skill`**
+  — and no `implement-from-prompt` extension either, since there is no clause to
+  add. The real defect is that the skill does not load (4 of 10 `#9`/`#10`
+  skill-arm draws, 4 of 5 `#11`), which a new lightweight skill would inherit
+  unchanged. Zero draws, no skill edit.
 - **The iterative corpus is measured (SPEC-0034, TASK-56).** The wave resumed
   after three days parked: 11 paid draws finished it (one re-run of the stalled
   `#12` control draw, then the frozen holdout `#11` on both arms). Four cases, two
