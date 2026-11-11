@@ -9,6 +9,35 @@ skills, which cases, and which published measurements.
 
 ## [Unreleased]
 
+## [0.7.6] — 2026-11-11
+
+The review-code corpus is measured again at the tree it actually runs, and the
+four cells that were history are now evidence.
+
+`SPEC-0056` changed `review-code`'s `SKILL.md` and re-measured cases 8–10 and the
+regressions, leaving **3, 4, 5 and 6** at pre-edit evidence. This wave drew them
+again on the instrument that came out of 0.7.1–0.7.4 — `ranpass` by effect,
+isolation per draw, deterministic tree hash, stance by last clause:
+
+- **#3 (no spec in the repo) — separator, 5/5 vs 0/5.** The control reviews the
+  diff anyway, invents an acceptance criterion and issues a stance in all five;
+  the skill withholds and asks for the intent in all five.
+- **#4 (spec moved after the prompt) — non-discriminator, 5/5 vs 2/5.** Both arms
+  reject the moved spec; the control's three reds wrote "Verdict: not ready /
+  not implemented", which the closed stance table does not read (`got NOT`). The
+  judgement agrees, so the case does not separate — the artifact is named, and
+  the vocabulary gap is filed as `TASK-109`.
+- **#5/#6 (triggers) — 5/5 each**, one arm by design: a control stages no skill,
+  so `skill review-code` and `notskill review-code` would be tautologies.
+
+**30 scored draws, 32 paid attempts, 2 discarded** (two infrastructure retries the
+harness re-ran once), **real spend ≥ $0.349374**. All six runs at
+`skillHash 9a28572…`, `isolated=yes`, `findings=0`. Staleness drops from 55 to 51
+with **zero** `review-code` cells stale.
+
+Historical rows are kept and marked; nothing is deleted. No case, prompt, fixture,
+assertion or gate changed.
+
 ## [0.7.5] — 2026-11-11
 
 Four backlog decisions closed, none of them by spending a draw.

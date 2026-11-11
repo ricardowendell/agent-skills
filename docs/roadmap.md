@@ -5,7 +5,11 @@ pipeline (`docs/pipeline.md`) governs how work runs; this page says what the wor
 is and in which order. A change of direction is a human decision, and the
 releases themselves are the record of what shipped.
 
-Status: **0.7.5 released** on 2026-11-11 — four backlog decisions closed
+Status: **0.7.6 released** on 2026-11-11 — the review-code corpus
+re-measured at the current tree: #3 separates 5/5 vs 0/5, #4 is a
+non-discriminator whose control never approved, the triggers load/refuse 5/5, and
+the four cells that were history are now evidence (30 scored draws, 32 paid
+attempts, ≥ $0.349). 0.7.5 released on 2026-11-11 — four backlog decisions closed
 without a draw: the vocabulary contract matches the matcher, the pipeline's
 slug-vs-task link is documented with its workaround, the post-load stall is
 diagnosed as a byte-based watchdog killing a working child, and the visual cases
