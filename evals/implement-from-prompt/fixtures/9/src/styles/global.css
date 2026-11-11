@@ -1,0 +1,7 @@
+/* Shared page-level base. Used by every button and form control. */
+.button {
+  padding: 4px 8px;
+  border: 1px solid #c8c8c8;
+  border-radius: 6px;
+  font: inherit;
+}

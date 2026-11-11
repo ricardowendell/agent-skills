@@ -185,4 +185,79 @@ None.
 - Compare tree hashes with the harness's own `treeHash`, not with `diff -r` alone:
   the hash is what the corpus parity argument rests on.
 
-_Filled during implementation._
+## Results
+
+Cases 9–12 and fixtures 9–12 came from `parked/SPEC-0034-iterative-corpus`
+(`91ee5ff`) through `git show` and `git archive`; nothing was checked out or
+retyped. The appended block is `cases.md` lines 93–137, diff-empty against the
+tag's lines 93–137; cases 1–8 are byte-identical.
+
+| case | tag tree hash (recomputed) | current tree hash | equal | stored draw `fixtureHash`, 2026-11-08 06:30–06:44 |
+| --- | --- | --- | --- | --- |
+| 9 | `71178f05365a99dd80ca08aa88abc737b6d03d216c5c988ccda102f49f3e632e` | `71178f05365a99dd80ca08aa88abc737b6d03d216c5c988ccda102f49f3e632e` | yes | `71178f05…632e` |
+| 10 | `60456ef662f5ab274ecab08c2cd2b0dff935ca01812c0816b64314dc95f77c65` | `60456ef662f5ab274ecab08c2cd2b0dff935ca01812c0816b64314dc95f77c65` | yes | `60456ef6…7c65` |
+| 11 | `c4e0f6e2060cc872adaa6ad8fcafc890bbd80755bf08c5fbd99ff91af533736d` | `c4e0f6e2060cc872adaa6ad8fcafc890bbd80755bf08c5fbd99ff91af533736d` | yes | not read (holdout) |
+| 12 | `084a0c00761a3fc361623553963879cd78185df1ca19e57cbb0d4e1f0ab2f5cc` | `084a0c00761a3fc361623553963879cd78185df1ca19e57cbb0d4e1f0ab2f5cc` | yes | `084a0c00…f5cc` |
+
+`node scripts/eval.mjs check --root skills` → `Parsed 101 case(s): 98 runnable, 3
+manual; 98 fixture(s) staged. No findings.`, exit 0. The pre-move baseline holds
+97 cases (94 runnable, 3 manual), so the corpus grows by four and
+`implement-from-prompt` goes from 8 to 12. `skills/` and
+`evals/corpus-baseline.json` are untouched.
+
+`#11` is still the tag's case byte for byte, still tagged `holdout`, and its
+fixture tree is the tag's tree; no draw was spent and no stored `#11` run was
+opened.
+
+### The corrected fixture list
+
+The trees are the tag's, path for path:
+
+- `9/`: `AGENTS.md`, `package.json`,
+  `src/components/{CancelButton.js, CancelButton.module.css, SaveButton.js, SaveButton.module.css}`,
+  `src/styles/global.css`, `test/buttons.test.js`
+- `10/`: `AGENTS.md`, `package.json`, `src/slug.js`, `test/slug.test.js`
+- `11/`: `AGENTS.md`, `package.json`, `src/auth.js`, `src/login.js`,
+  `test/auth.test.js`
+- `12/`: `AGENTS.md`, `docs/statuses.md`, `package.json`,
+  `src/components/StatusBadge.js`, `src/components/StatusBadge.module.css`,
+  `src/styles/global.css`
+
+The first `files:` list named `9/docs/statuses.md` and `12/src/status.js`, which
+do not exist in `91ee5ff`, and omitted the two `12/` stylesheets the tree needs.
+The list was corrected on `main` (`1df8225`); the hashes above are the authority.
+
+### Parity test — subset semantics
+
+`scripts/lib/evals/corpus.test.mjs` compared the whole `cases.md` sha and the
+whole parsed case list with the baseline, so adding any case failed it. F3
+changes the rule to a subset: every case the baseline records must still exist
+with the same `{n,title,prompt,why,assert}` digest, and every baseline fixture
+with the same tree hash; extra cases are additions, not regressions.
+`caseFileSha256` stays in the baseline as the record of the move and is no
+longer asserted. Tests prove the directions — a removed case fails
+(`case N is missing`), a changed field fails (`case N fields changed`), a changed
+fixture tree hash fails (`fixture N bytes changed`), a deleted fixture fails
+(`fixture N was deleted`), and an added case passes.
+`evals/corpus-baseline.json` is untouched.
+
+The digest covers `{n, title, prompt, why, assert}` only. `expect:`, `tags:` and
+`status:` of a baseline case are **not** guarded: an edit stripping `holdout`
+from #11 would leave the suite green. The baseline cannot be extended here, so
+the holdout tag rests on review, not CI.
+
+**Gates** — all exit 0:
+
+| gate | exit |
+| --- | --- |
+| `node scripts/validate-skills.mjs --root skills` | 0 |
+| `node scripts/eval.mjs check --root skills` | 0 |
+| `node --test scripts/lib/evals/*.test.mjs` | 0 (524 tests) |
+| `node --test scripts/lib/*.test.mjs` | 0 (13 tests) |
+| `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` | 0 (42 tests) |
+| `node scripts/check-sensor-parity.mjs` | 0 (2/2) |
+| `node scripts/check-evidence.mjs` | 0 (6 documents, 0 errors) |
+| `node scripts/check-staleness.mjs` | 0 |
+| `node scripts/spec-check.mjs --spec … --base main` | 0 |
+
+The pre-commit hook (the same selftest) is green on the implementation commit.

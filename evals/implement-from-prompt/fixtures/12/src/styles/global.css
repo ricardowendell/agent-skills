@@ -1,0 +1,5 @@
+/* Shared page-level base. */
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+}
