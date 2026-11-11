@@ -26,7 +26,7 @@ import { authProbe, scrubEnv } from "./lib/evals/agent.mjs"
 import { corpusRoots, isolateHome, isolationRecord, probeIsolation, resumeIsolation, wrapCommand } from "./lib/evals/isolation.mjs"
 import { denySkillTool, fixtureEntries, governedFiles, makeScratch, skillFileHashes, stageFixture, stageSkill, stagedTreeHash, textHash } from "./lib/evals/fixture.mjs"
 import { oracleFindings, oracleWarnings } from "./lib/evals/assertions.mjs"
-import { summarize, aggregateReps, caseResult, contaminate, resumeSkip, PASSED } from "./lib/evals/result.mjs"
+import { summarize, aggregateReps, caseResult, contaminate, isInfrastructure, resumeSkip, PASSED } from "./lib/evals/result.mjs"
 import { executeCase } from "./lib/evals/execute.mjs"
 import { leaksIn, DETECTOR_VERSION } from "./lib/evals/leak.mjs"
 import { parseStop, runScheduled } from "./lib/evals/schedule.mjs"
@@ -793,22 +793,31 @@ function finalizeCase(state, { run, minPass }) {
 }
 
 // Why a stored draw was discarded. The field was added after the first stalled
-// runs, so an older artifact only carries it in the reason.
+// runs, so an older artifact only carries it in the reason; an unknown status is
+// named by itself rather than guessed as infrastructure.
 function discardedReason(draw) {
   if (draw?.infrastructureReason) return draw.infrastructureReason
   const match = /^infrastructure:\s*(.+)$/.exec(draw?.reason ?? "")
-  return match ? match[1] : "infrastructure"
+  if (match) return match[1]
+  return draw?.status ?? "unknown"
 }
 
-// `--resume` says which slots it refused to reuse, so a resumed wave is never
-// silently a different wave. stderr keeps `--json` stdout one document; the
-// label already names the skill, so a slot is `#<case> r<index>`.
-function reportReran(reran) {
-  if (!reran.length) return
+// `--resume` says what it reused and which slots it refused to reuse, so a
+// resumed wave is never silently a different wave. It prints either way, or an
+// all-reused resume is indistinguishable from an older build that had no line.
+// stderr keeps `--json` stdout one document; the label already names the skill,
+// so a slot is `#<case> r<index>`. The noun comes from the draws, not the
+// message: a future re-runnable status is "discarded", not "infrastructure".
+function reportResume({ reran, reused }) {
+  if (!reran.length) {
+    console.error(`resume: reusing ${reused} draw(s), 0 re-run`)
+    return
+  }
   const slots = [...reran]
     .sort((a, b) => a.case - b.case || a.index - b.index)
     .map((r) => `#${r.case} r${r.index}, ${discardedReason(r.draw)}`)
-  console.error(`resume: re-running ${slots.length} infrastructure ${slots.length === 1 ? "draw" : "draws"} (${slots.join("; ")})`)
+  const noun = reran.every((r) => isInfrastructure(r.draw)) ? "infrastructure" : "discarded"
+  console.error(`resume: re-running ${slots.length} ${noun} ${slots.length === 1 ? "draw" : "draws"} (${slots.join("; ")})`)
 }
 
 // Every draw of a selection through one lane pool, then one run artifact.
@@ -855,6 +864,7 @@ async function executeSelection({ items, arm, level, repeat, label, known, basel
   const scheduledItems = items.map(({ skill: itemSkill, c }) => ({ skill: itemSkill, c, times: level === "smoke" ? 1 : repeat }))
   // Slots the harness discarded in the original run: `--resume` re-runs them.
   const reran = []
+  let reused = 0
   const scheduled = await runScheduled({
     cases: scheduledItems,
     concurrency,
@@ -865,7 +875,10 @@ async function executeSelection({ items, arm, level, repeat, label, known, basel
       if (resumeDir) {
         const cached = run.readDraw(drawSkill.id, c.n, rep?.index ?? 1)
         if (cached) {
-          if (resumeSkip(cached)) return cached
+          if (resumeSkip(cached)) {
+            reused++
+            return cached
+          }
           reran.push({ case: c.n, index: rep?.index ?? 1, draw: cached })
         }
       }
@@ -885,7 +898,7 @@ async function executeSelection({ items, arm, level, repeat, label, known, basel
       )
     },
   })
-  if (resumeDir) reportReran(reran)
+  if (resumeDir) reportResume({ reran, reused })
   const results = scheduled.map((state) => finalizeCase(state, { run, minPass: opt.minPass }))
   const totals = summarize(results)
 

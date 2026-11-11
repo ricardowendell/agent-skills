@@ -262,6 +262,8 @@ test("--resume reads the persisted draw and closes the case without a model", ()
   )
   assert.equal(r.code, 0, r.err)
   assert.match(r.out, /demo #1: passed \[1\/1\]/)
+  // An all-reused resume says so, so it is not mistaken for a build with no line.
+  assert.match(r.err, /resume: reusing 1 draw\(s\), 0 re-run/)
   assert.equal(existsSync(join(caseDir, "result.json")), true)
   const manifest = JSON.parse(readFileSync(join(runDir, "manifest.json"), "utf8"))
   assert.equal(manifest.status, "completed")

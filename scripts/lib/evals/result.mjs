@@ -114,7 +114,9 @@ export function infrastructureReps(result) {
 // so it is re-run. An `unscored` draw without infrastructure ("no assertions")
 // is an authoring defect and repeating the draw buys the same nothing. A
 // contaminated draw was paid and produced a behaviour; excluding it is a
-// judgement about the wave, not a resume default, so it is reused too.
+// judgement about the wave, not a resume default, so it is reused too. A
+// `staged` draw (smoke) is reused as well: it carries no behaviour and a re-stage
+// buys the same staged line at the same cost.
 // Precedence matches `contaminatedReps`: a draw that both stalled and leaked is
 // infrastructure — the kill happened before the leak could be attributed.
 // A status this build does not know is re-run rather than trusted.

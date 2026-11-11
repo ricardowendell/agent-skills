@@ -18,7 +18,8 @@ skills, which cases, and which published measurements.
   by the harness and is not evidence, so resuming the SPEC-0034 control wave now
   repeats `#12 r3` instead of replaying the stall, and the case can reach a
   complete cell. The resumed run prints
-  `resume: re-running N infrastructure draw(s) (#<case> r<i>, <reason>)`. No status
+  `resume: re-running N infrastructure draw(s) (#<case> r<i>, <reason>)`, or
+  `resume: reusing N draw(s), 0 re-run` when it reused every slot. No status
   value, contamination rule or watchdog changed; no paid draw was spent.
 
 - **One eval CLI, one decision (SPEC-0060, TASK-99).** `scripts/run-evals.mjs`

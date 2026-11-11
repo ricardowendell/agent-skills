@@ -15,8 +15,6 @@ depends_on: []
 blocks: []
 files:
   - scripts/eval.mjs
-  - scripts/lib/evals/runs.mjs
-  - scripts/lib/evals/runs.test.mjs
   - scripts/lib/evals/result.mjs
   - scripts/lib/evals/result.test.mjs
   - scripts/lib/evals/cli.test.mjs
@@ -178,17 +176,21 @@ status this build does not know is re-run rather than trusted.
 | `failed` | `true` (reuse) | already scored, already paid |
 | `unscored` + `infrastructure: true` | `false` (**re-run**) | the harness discarded it; replaying reproduces the empty cell |
 | `unscored` without infrastructure | `true` (reuse) | authoring defect ("no assertions"); repeating buys the same nothing |
+| `staged` (smoke) | `true` (reuse) | carries no behaviour; a re-stage buys the same staged line |
 | `contaminated` (`unscored` + `contaminated: true`) | `true` (reuse) | paid and produced a behaviour; re-running is a named decision |
 | infrastructure **and** contaminated | `false` (**re-run**) | infrastructure wins, as in the aggregate |
 
 One test per case in `result.test.mjs`, plus the precedence case.
 
 **F2 — wired.** `scripts/eval.mjs` reads `if (resumeSkip(cached)) return cached`
-inside the resume branch of `runDraw`, and reports every re-run slot to stderr so
-`--json` stdout stays one document:
-`resume: re-running 1 infrastructure draw (#1 r2, stalled)`. Slot entries are
-sorted by case and index. The existing arm/level/repeat/label guards are
-untouched.
+inside the resume branch of `runDraw`, and reports the decision to stderr so
+`--json` stdout stays one document. It prints either way: every re-run slot as
+`resume: re-running 1 infrastructure draw (#1 r2, stalled)`, or
+`resume: reusing 1 draw(s), 0 re-run` when it reused every slot, so an all-reused
+resume is not mistaken for an older build. Slot entries are sorted by case and
+index. The noun is derived from the draws (`isInfrastructure`); a re-runnable
+status this build does not know is reported as `discarded`, never mislabelled
+`infrastructure`. The existing arm/level/repeat/label guards are untouched.
 
 **F3 — end to end.** `cli.test.mjs`, test `--resume re-runs a discarded
 infrastructure draw and reuses the scored one`: a run directory seeded with a
@@ -199,7 +201,9 @@ r2, stalled)`, `draws/r1.json` is byte-identical to the seed, `draws/r2.json` is
 replaced by a scored draw, and the case completes as `failed [1/2]` (1/2
 repetitions passed: skill not loaded) with `reps: 2`, `infrastructure: 0` and
 `manifest.status: completed`. It is `failed`, not `unscored`, because the no-op
-shim never loads the skill — TASK-101's question, deliberately untouched.
+shim never loads the skill — TASK-101's question, deliberately untouched. The
+existing passed-draw resume test additionally asserts the all-reused line,
+`resume: reusing 1 draw(s), 0 re-run`.
 
 **Reference run (AC5).** The SPEC-0034 control run
 `2026-11-08T06-44-22--implement-from-prompt--agentworks-deepseek-v4-1-flash--without-skill`
