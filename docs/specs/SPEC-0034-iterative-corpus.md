@@ -241,7 +241,12 @@ no retry. Ten paid draws.
 Four of the ten `#9`/`#10` skill-arm draws stored on 2026-11-08 — `#9 r5`,
 `#10 r2/r3/r5` — were scored `failed` because `skill 'implement-from-prompt' was
 not loaded`, and the holdout added `#11 r2–r5`. That is a routing failure of the
-artefact, not a behavioural verdict. The remaining `#10` red is an oracle
+artefact, not a behavioural verdict. `SPEC-0068` diagnosed all eight from the
+stored transcripts with no draw: every miss is **offered, not chosen** — the
+skill was staged in the draw and the child neither called `skill` nor read
+`SKILL.md` — so the cause is the router-facing description, not an unlisted
+skill or a rejected load ([cause table](active/SPEC-0068-the-skill-that-never-loaded.md#results)).
+The remaining `#10` red is an oracle
 artifact: r1 ran `npm test` twice — the first call red on the unfixed code, the
 second printing `pass 3 / fail 0` and `exit: 0` (the fixture's `package.json` maps
 `test` to `node --test`) — and `ranpass` compares the case regex against

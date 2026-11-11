@@ -101,6 +101,35 @@ Load is distinguished from mention by the gate itself. In the loaded draws
 `skillGate.source` is `read` for #9 r1–r4 and #12 r1/r5, and `tool` for #10 r4
 and #11 r1; no draw passed on an `unknown` source.
 
+### The routing cause (SPEC-0068)
+
+All eight misses were diagnosed from the stored transcripts and `result.json`
+files, with zero draws. They are one cause, not four: **8 (b) offered, not
+chosen**, 0 (a) never offered, 0 (c) chosen-but-unproven, 0 (d) loaded-then-lost.
+The per-draw table, the gate `source` and the proof for each row are in
+[`SPEC-0068` Results](../specs/active/SPEC-0068-the-skill-that-never-loaded.md#results).
+
+The proof that (a) is impossible is in the harness: the with-skill arm stages
+`implement-from-prompt` into every attempt unconditionally
+(`scripts/lib/evals/execute.mjs:97`) and records the staged tree hash per draw as
+`skillHash`, which every one of the twenty skill-arm draws carries. `#9` loads
+in 4/5 and `#12` in 5/5 in their own directories while `#11` loads in 1/5 in
+its own, all through the same staging path, so a menu or staging defect would
+have to spare draws that share it. What the eight misses
+share instead is a prompt that is a plain small task — relabel a button, fix a
+`slugify` edge case, update a badge — which the old description did not name.
+No miss produced a `skill` call or a `SKILL.md` read that a gate rejected: every
+reason is the bare `was not loaded` with `source: null`.
+
+The description therefore names the triggers the corpus exercises (a small
+change to an existing component, a bug fix with a regression test, one question
+on an ambiguous request) and not the `#11` unsafe request, which is not
+prompt-driven work. The edit is **unverified**: it ships without a draw, and the
+routing smoke is the next spec. Nothing in the corpus moves because of it. The
+eight stored draws keep `failed — skill 'implement-from-prompt' was not loaded`,
+`#10` stays `unresolved` at 2/5 (2 loaded, 2 harness-passing) and `#11` stays a
+non-discriminator at 1/5 loaded against a 5/5 control.
+
 ## Runs and hashes
 
 Clean draws are the non-contaminated, non-infrastructure count reported by the

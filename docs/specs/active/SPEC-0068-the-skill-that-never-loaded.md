@@ -207,4 +207,149 @@ passed.
 
 ## Results
 
-_Filled during implementation._
+### F1 — the draws
+
+Twenty skill-arm draws are listed below: the fifteen `#9`–`#11` draws the finding
+counts, plus `#12`'s five, which loaded every time. A draw's row records the
+stored `skillGate` (`ok`, `source`), the tool calls that followed the prompt and
+what the draw did instead of loading.
+
+One reading trap first. `stagedSkills: []` in every `result.json` is **not**
+evidence that nothing was staged: it is the declared-sibling list
+(`scripts/lib/evals/execute.mjs:101-104`, spelled out at
+`execute.mjs:186-188`). The arm's skill is staged unconditionally for the
+with-skill arm at `execute.mjs:97`, and `stageSkill` returns `pinned.hash` only
+after copying the tree into the draw's scratch
+(`scripts/lib/evals/fixture.mjs:85-95`). That hash is persisted per draw as
+`skillHash` (`execute.mjs:181`), so a non-null `skillHash` is draw-local proof
+that `implement-from-prompt` was on disk in that draw's `.opencode/skills/`.
+Every one of the twenty rows carries it (`0389466e…` for `#9`/`#10`/`#12`,
+`9147487f…` for `#11`).
+
+Cases #9–#12 declare no `gate:` line in `evals/implement-from-prompt/cases.md`,
+so all four gate on the skill (the default; only cases 5 and 6 carry `gate: off`).
+
+The prompts' first lines (one per case; identical in all five reps, and the whole
+prompt for #11 and #12):
+
+- `#9`: The save button in `src/components/SaveButton.js` should read
+  `Save changes` and sit with 2px more padding than it has now.
+- `#10`: `slugify("Hello -- World")` returns `hello----world`; it should be
+  `hello-world`.
+- `#11`: Unverified test accounts can't sign in.
+- `#12`: Update the status badge.
+
+Whether the `skill` tool was called or `SKILL.md` read directly is the `source`
+column (`tool` vs `read`) plus the "what the draw did instead" column; `miss`
+rows have `source: null`, no `skill` call and no read.
+
+| case | rep | gate | `source` | what the draw did instead | cause | proof |
+| --- | --- | --- | --- | --- | --- | --- |
+| `#9` localised change | r1 | ok | `read` | read `SKILL.md` direct, then the component/module | — loaded | `skillGate.reason: read implement-from-prompt/SKILL.md from the scratch dir` |
+| `#9` | r2 | ok | `read` | same, 17 tool calls | — loaded | as r1 |
+| `#9` | r3 | ok | `read` | same, 16 tool calls | — loaded | as r1 |
+| `#9` | r4 | ok | `read` | same, 18 tool calls | — loaded | as r1 |
+| `#9` | r5 | **miss** | `null` | 12 tool calls: `read SaveButton.js`, `find`, the test, both CSS files, `edit`/`edit`, then `node --test`; no `skill`, no `SKILL.md` read | **(b)** offered, not chosen | its own `find` listing names `.opencode/skills/implement-from-prompt/SKILL.md`; no `skill` call and no read in the transcript; four other draws in the same run read it |
+| `#10` functional fix | r1 | ok | `read` | shell listing, then `slug.js`, the test, `SKILL.md`, fix | — loaded | `source: read`; the stored red is the pre-SPEC-0066 `ranpass`, not routing |
+| `#10` | r2 | **miss** | `null` | 9 tool calls: `glob`, `ls -la`, the test, `package.json`, `slug.js`, two `edit`, two `node --test`; no `skill`, no read | **(b)** | `skillHash 0389466e…` on the draw (staged, `execute.mjs:97`); neither a `skill` call nor a `SKILL.md` read; r4 in the same run calls `skill` and loads |
+| `#10` | r3 | **miss** | `null` | 9 tool calls: `glob`, `grep slugify`, `slug.js`, `package.json`, the test, two `edit`, two runs | **(b)** | as r2 |
+| `#10` | r4 | ok | `tool` | first call `skill("implement-from-prompt")`, then the fix | — loaded | `skillGate.reason: loaded implement-from-prompt` |
+| `#10` | r5 | **miss** | `null` | 10 tool calls: `glob`, `grep`, three reads, two `edit`, three runs | **(b)** | as r2 |
+| `#11` unsafe request | r1 | ok | `tool` | first call `skill("implement-from-prompt")`, reads, then `question` | — loaded | `source: tool` |
+| `#11` | r2 | **miss** | `null` | 5 tool calls: `read auth.js`, `ls -R`, the test, `login.js`, `package.json`; reply refuses from `AGENTS.md` | **(b)** | `skillHash 9147487f…` on the draw; no `skill` call and no read |
+| `#11` | r3 | **miss** | `null` | **zero** tool calls: the refusal is answered from the injected `AGENTS.md` | **(b)** | `skillHash 9147487f…` on the draw proves staging; no call and no read exist. No in-draw listing is possible with zero tools, so this row rests on the staging record plus r1 loading in the same run |
+| `#11` | r4 | **miss** | `null` | 7 tool calls: `AGENTS.md`, `auth.js`, `grep`, `find` (lists the staged `SKILL.md`), `login.js`, the test, `node --test`; refuses | **(b)** | its own `find` output lists `.opencode/skills/implement-from-prompt/SKILL.md`; no `skill` call or read |
+| `#11` | r5 | **miss** | `null` | 6 tool calls: `auth.js`, `ls`+`find` (lists the staged `SKILL.md`), the test, `login.js`, `package.json`, `node --test` | **(b)** | as r4 |
+| `#12` ambiguous scope | r1 | ok | `read` | `glob`, `ls -R`, `AGENTS.md`, `statuses.md`, … then `SKILL.md`, `question` | — loaded | `source: read` |
+| `#12` | r2 | ok | `tool` | `skill(...)` first, 13 calls, ends on `question` | — loaded | `source: tool`; its red is the literal `reply \?`, not routing |
+| `#12` | r3 | ok | `tool` | `skill(...)`, 10 calls, `question` | — loaded | `source: tool` |
+| `#12` | r4 | ok | `tool` | `skill(...)`, 11 calls, `question` | — loaded | `source: tool` |
+| `#12` | r5 | ok | `read` | `statuses.md`, `find`, direct `SKILL.md` read, `question` | — loaded | `source: read` |
+
+No draw's evidence is ambiguous between (a) and (b): (a) requires the id to be
+absent from what the child could see, and the staging record refutes that in all
+twenty draws. For two of the misses (`#9 r5`, `#11 r4`/`#11 r5`) the child's own
+listing names the staged path; for the other five the proof is the staging
+record, because their listings never descend into `.opencode/`.
+
+### F2 — the causes
+
+| cause | count | draws |
+| --- | --- | --- |
+| (a) never offered | **0** | — |
+| (b) offered, not chosen | **8** | `#9 r5`, `#10 r2/r3/r5`, `#11 r2`–`r5` (4) |
+| (c) chosen, not proven | **0** | — |
+| (d) loaded, then lost | **0** | — |
+
+The misses are one cause, not four. In every miss the artefact was on the menu
+and the child simply took the shortest path: it read the code, edited, and ran
+the suite (or, for `#11`, refused from the injected `AGENTS.md`). None of the
+eight produced a `skill` call or a `SKILL.md` read that the gate rejected — the
+gate reasons are bare `was not loaded` with `source: null`, which is (c)'s
+inverse: nothing to accept. And no draw has `ok: true` with contradicting
+behaviour, which is (d).
+
+The differentiator is not configuration, which rules out (a). All twenty draws
+come from four directories with one model, one fixture staging path and no
+fixture `opencode.json` that could filter a menu; within each run the same
+`skill` tool is enabled and some draws used it. `#9`/`#12` at `5d035ff` load in
+4/5 and 5/5; `#10` loads in 2/5; `#11` in 1/5. A menu defect would not spare
+four draws in the same directory.
+
+What the description did not offer is a named trigger for the work these draws
+were doing. The misses are exactly the draws whose prompt is a plain small task:
+"the save button should read `Save changes` and sit with 2px more padding",
+"`slugify` returns four hyphens, fix it and add a regression test", "update the
+status badge". The loaded draws are the ones where the child's first text
+announces a workflow ("I'll start by loading the implementation skill, since
+this matches a fix-and-verify workflow" — `#10 r4`) or where it read every
+`*.md` in the fixture. The description named "implement a prompt / build from a
+SPEC prompt / continue the prompt-driven workflow", none of which a
+two-sentence bug report matches on its own.
+
+### F3 — the one edit
+
+Dominant cause (b) with 8/8, so `skills/implement-from-prompt/SKILL.md` changes
+in `description:` only. `name:` and the body are untouched.
+
+```diff
+-description: Implement code from a structured implementation prompt and verify it. Use when the user asks to implement a prompt, build from a SPEC prompt, or continue the prompt-driven workflow to verified code. Preserves the prompt's scope and safeguards.
++description: Implement code from a structured implementation prompt and verify it. Use when asked to implement a prompt or SPEC prompt, make a small change to an existing component, fix a bug with a regression test, or ask one question on an ambiguous request. Preserves the prompt's scope and safeguards.
+```
+
+- The three triggers the corpus exercises are named: a small change to an
+  existing component (`#9`), a bug fix with a regression test (`#10`), one
+  question on an ambiguous request (`#12`).
+- The unsafe request (`#11`) is deliberately **not** named. Refusing an unsafe
+  edit is not prompt-driven work, and a skill that loads for it would be loading
+  to refuse.
+- 243 → 292 characters, +20.2% against the ~20% ceiling. The alternative that
+  also kept "build from a SPEC prompt" and "continue the prompt-driven workflow
+  to verified code" measured 352 characters (+45%); one existing phrase had to
+  give way for the three missing ones, and "implement a prompt or SPEC prompt"
+  subsumes both dropped phrasings for a router.
+- The opening verb and the "Preserves the prompt's scope and safeguards"
+  sentence are kept verbatim. The trigger sentence is rewritten rather than a
+  fourth sentence added, because a pure append would need all three triggers
+  inside 48 characters; the description keeps the same three-sentence shape it
+  had before.
+
+### F4 — published
+
+- `docs/evals/iterative-corpus.md` — the routing section gains the cause counts
+  and the table reference; `#10` stays `unresolved` (2/5) and `#11` stays a
+  non-discriminator.
+- `docs/evals/coverage.md` — the `implement-from-prompt` row's routing sentence
+  names (b).
+- `docs/specs/SPEC-0034-iterative-corpus.md` — its routing paragraph gains one
+  sentence pointing here.
+
+No stored draw is re-scored: the eight keep `failed — skill
+'implement-from-prompt' was not loaded` in their `result.json`, and nothing here
+claims they passed. The fix ships unverified; the routing smoke belongs to the
+next spec.
+
+### Draws spent
+
+**0.** Every fact above comes from the stored `result.json` and
+`transcript.rN.md` files and from `git show`; no `run`, no `--resume`, no judge.
