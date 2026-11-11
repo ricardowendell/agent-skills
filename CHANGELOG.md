@@ -9,6 +9,31 @@ skills, which cases, and which published measurements.
 
 ## [Unreleased]
 
+## [0.7.2] — 2026-11-11
+
+The description hypothesis was tested and failed; it ships reverted.
+
+`SPEC-0068` changed the `implement-from-prompt` description to name three corpus
+triggers and published that as a hypothesis. `SPEC-0069` measured it on the worst
+position — `#11`, where 1 of 5 skill-arm draws had loaded the skill — with a
+three-draw smoke and a hard stop.
+
+**0 of 3 draws loaded the skill** (`skillGate.source: null` in every draw), both
+assertions still passed, and the stop rule fired at the first point: no five-plus-
+five cell, no control arm, no redraw. Three paid draws, **$0.0189**.
+
+The description is reverted byte-for-byte to the 0.7.0 wording, so the tree is
+`9147487f…` again and the stored `#11` cell is cited against the tree it ran on.
+No class moves, no count moves, no draw is re-scored. What the smoke shows is
+narrow and is published that way: the edited description did not route `#11`. It
+does not show that routing got worse — the baseline was already 1 of 5.
+
+The next lever is the body and the menu, not the description: the skill's body
+still opens from prompt artifacts while the corpus exercises bare requests
+(`TASK-105`). One harness defect surfaced while publishing the reading — an
+empty untracked directory changes a skill's tree hash and flips a staleness
+count between checkouts — and is filed as `TASK-107`, not fixed here.
+
 ## [0.7.1] — 2026-11-11
 
 The patch that fixes the measuring instrument, with zero paid draws.

@@ -5,11 +5,11 @@ pipeline (`docs/pipeline.md`) governs how work runs; this page says what the wor
 is and in which order. A change of direction is a human decision, and the
 releases themselves are the record of what shipped.
 
-Status: **0.7.1 released** on 2026-11-11 — the instrument fixed without a paid
-draw: `ranpass` scores the effect, isolation is recorded per draw, and the
-routing misses are diagnosed (8 of 15, all offered-not-chosen). The corpus
-numbers are re-derived by replay; `implement-from-prompt` #10 moves 1/5 → 2/5 and
-nothing else changes. The iterative corpus is measured:
+Status: **0.7.2 released** on 2026-11-11 — the description hypothesis was tested
+and failed. Three paid draws on `#11` (0/3 loaded, $0.0189), the fix reverted to
+the 0.7.0 wording, and no class or count moved. 0.7.1 fixed the instrument without
+a paid draw: `ranpass` scores the effect, isolation is recorded per draw, and the
+routing misses are diagnosed (8 of 15, all offered-not-chosen). The iterative corpus is measured:
 `#12` is the only separator and it separates in the incumbent's favour, and the
 real finding is routing (`TASK-101`). The data-product program (#13–#21) is a
 deliberately deferred delivery, not a queue item; it has no release assigned.
