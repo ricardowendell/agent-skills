@@ -1,9 +1,10 @@
 ---
 id: TASK-110
 title: 'skills: implement-from-prompt e um contrato estruturado, nao o tamanho do edit'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-11T20:43:00Z'
+updated_date: '2026-11-11T21:58:00Z'
 labels: []
 dependencies: []
 documentation:
