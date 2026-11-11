@@ -101,8 +101,17 @@ function blockedBefore(text, start) {
 // reading.
 const STANCE_PRECEDENCE = ["APPROVE", "WITHHELD", "REJECT"]
 
+// A verdict line that **opens** with the negation of a stance names a rejection
+// (SPEC-0079). The phrase is ambiguous mid-line (`AC-2 is not implemented` is a
+// finding, not the verdict), but it is unambiguous as the first thing after the
+// label, so this rule is anchored and runs before the form scan: the stance slot
+// answers the question the closed vocabulary cannot. `not applicable` is not in
+// the set and still names no stance; `no blockers` is untouched.
+const NEGATED_STANCES = /^not\s+(?:ready|implemented|done|mergeable|complete|approved|approvable)\b/i
+
 function stance(line) {
   const text = normaliseVerdict(line)
+  if (NEGATED_STANCES.test(text)) return "REJECT"
   let lastCut = -1
   let lastStance = ""
   for (const { phrase, name, re } of FORM_MATCHERS) {

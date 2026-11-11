@@ -10,7 +10,7 @@ directory it cites: this file reorganises the evidence, it does not measure.
 | detector | v6 `9149d6ab1ca57343` for the SPEC-0056 draws; `cf2e2e319d975a5b` for the SPEC-0078 draws (cases 3–6). `check-evidence` today reports the current detector `cf2e2e319d975a5b` |
 | isolation | macOS seatbelt; every wave manifest records `params.isolation.enforced: true` with `mechanism: "seatbelt"`, and `check-eval-run` on each of the twelve SPEC-0056 wave directories prints `findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0`; the six SPEC-0078 directories print the same summary |
 | repository state | `repoSha 2aec756`, `skillHash 9a28572…` for the SPEC-0056 wave; `repoSha aabb206`, the same `skillHash 9a28572…` for the SPEC-0078 wave; the case-10 control ran later, at `beca23e`, on the strengthened fixture and the same `fixtureHash` as its skill arm |
-| waves | **SPEC-0056 measured 2026-11-10** (five draws per arm); **SPEC-0062 re-judged the same transcripts 2026-11-10** (no model, no new draw); **SPEC-0078 measured cases 3–6 on 2026-11-11** (five draws per measured cell) |
+| waves | **SPEC-0056 measured 2026-11-10** (five draws per arm); **SPEC-0062 re-judged the same transcripts 2026-11-10** (no model, no new draw); **SPEC-0078 measured cases 3–6 on 2026-11-11** (five draws per measured cell); **SPEC-0079 re-judged every stored verdict line 2026-11-11** (no model, no new draw) |
 | cost | 65 paid draws in the SPEC-0056 wave: 60 evidence draws (55 planned plus the 5 case-10 control draws the human approved above the original ceiling) and 5 spent on an invalid case-10 setup attempt; **30 scored draws / 32 paid attempts** in the SPEC-0078 wave — `#5 r4` and `#6 r4` each record `execution.attempts: 2, retries: 1`, an infrastructure attempt discarded and re-run once by the harness's own retry, not by `--resume`; the recorded cost `0.349374` is the final attempt's usage only, so real spend is `≥ $0.349374` |
 
 Two cells predate the wave and are history, not measurement: case 3 was drawn
@@ -35,7 +35,10 @@ history, marked.
   vocabulary that preceded SPEC-0062. **replayed** is the same stored
   transcripts read under SPEC-0062's closed stance table
   (`node scripts/eval.mjs inspect <dir> --replay`; no model, no write into the run
-  directory), attributed to SPEC-0062 on every row. The replayed column carries
+  directory), attributed to SPEC-0062 on every row, and — for a cell that opens a
+  verdict line with a negation — again under SPEC-0079's stance-slot rule
+  (2026-11-11, same tool, no new draw). The row says which re-judgement its
+  number comes from. The replayed column carries
   the **cell** (`passed/5`), not the stance token: where only the token moved,
   the cell does not change, which is why cases 1 and 10 read
   `measured == replayed` while their prose records the token moving.
@@ -62,7 +65,7 @@ history, marked.
 | 1 | clean diff, every AC satisfied | 5/5 / 0/5 | 5/5 / 0/5 | token/contract separator |
 | 2 | rounding before tax, noisy test | 4/5 / 4/5 | 4/5 / 5/5 | non-discriminator |
 | 3 | no spec in the repo | 5/5 / 0/5 | — | separator |
-| 4 | spec moved after the stamp | 5/5 / 2/5 | — | non-discriminator |
+| 4 | spec moved after the stamp | 5/5 / 2/5 | 5/5 / 5/5 | non-discriminator |
 | 5 | trigger: a branch handed over | 5/5 loaded (with-skill only) | — | trigger |
 | 6 | near-miss: debugging a build | 5/5 not loaded (with-skill only) | — | trigger |
 | 7 | gate already red on `main` | 5/5 / 0/5 | 5/5 / 0/5 | separator (holdout) |
@@ -75,11 +78,14 @@ detector `cf2e2e319d975a5b`); rows 1, 2 and 7–10 are the **SPEC-0056** wave
 (2026-11-10, the same `skillHash`). Cases 5 and 6 are trigger cases measured
 with the skill arm only, by design.
 
-`—` in the replayed column means SPEC-0062 did not re-judge that cell. It
-re-read the eight directories behind the four SPEC-0056 citations (cases 1, 8, 9
+`—` in the replayed column means neither SPEC-0062 nor SPEC-0079 re-judged that
+cell. SPEC-0062 re-read
+the eight directories behind the four SPEC-0056 citations (cases 1, 8, 9
 and 10) and the two regression rows that cite the same wave (cases 2 and 7); cases
 3 and 4 were outside that set, and the cases 5 and 6 routing draws assert a skill
-load, which the replay does not re-judge.
+load, which the replay does not re-judge. SPEC-0079 re-judged the cases 3–6
+directory set for the verdict-line rule and moved case 4's control to `5/5`; the
+cases 3, 5 and 6 cells did not change.
 
 ## Case 1 — review against SPEC-0007
 
@@ -172,18 +178,24 @@ while the prompt still pins `feb763b1…`. The stale spec is the only defect.
 Measured 2026-11-11 (SPEC-0078) at `skillHash 9a28572…`, detector
 `cf2e2e319d975a5b`, `agentworks/deepseek-v4-1-flash`:
 
-| arm | run directory | clean draws | passed | red assertion(s) | class |
-| --- | --- | --- | --- | --- | --- |
-| with skill | `2026-11-11T14-43-55--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | — | non-discriminator |
-| without skill | `2026-11-11T14-46-54--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 2/5 | `verdict REJECT` (r3, r4, r5) | non-discriminator |
+| arm | run directory | clean draws | passed | replayed (SPEC-0079) | red assertion(s) | class |
+| --- | --- | --- | --- | --- | --- | --- |
+| with skill | `2026-11-11T14-43-55--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 5/5 | — | non-discriminator |
+| without skill | `2026-11-11T14-46-54--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5/5 | 2/5 | 5/5 | `verdict REJECT` (r3, r4, r5) | non-discriminator |
 
 **Class: non-discriminator.** Both arms reject the change; they agree on the
 judgement. The control's r3–r5 write `Verdict: not ready — the spec is not
 implemented at all`, `Verdict: not implemented` and `Verdict: not implemented`;
-the closed stance table does not read a negated form, so the reader records
-`got NOT` and only `verdict REJECT` fails. r5 ends "Reject / return for
-implementation". The vocabulary gap is follow-up `TASK-109` (the closed stance
-table has no entry for "not ready"/"not implemented"). The two hash assertions
+at measurement time the closed stance table did not read a negated form, so the
+reader recorded `got NOT` and only `verdict REJECT` failed. r5 ends "Reject /
+return for implementation". SPEC-0079 added the anchored stance-slot rule (a
+verdict line that *opens* with `not ready`/`not implemented`/`not done` and the
+other set members is a rejection), and the replay reads all three as `REJECT`:
+the control's token moves 2/5 → 5/5 and the cell with it. The class does not
+change — the arms already agreed on the judgement; the cell's evidence is now
+the rate it should always have shown. Historical counts stay as measured: the
+`passed` column is what the assertion said when the draws ran (2026-11-11,
+SPEC-0078 wave). The two hash assertions
 (`reply feb763b1`, `reply 36c915b0`)
 pass in all five control draws. Under SPEC-0078's definitions a cell whose arms
 agree on the judgement is a non-discriminator, not a separator; the matrix's

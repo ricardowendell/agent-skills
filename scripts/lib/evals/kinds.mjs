@@ -24,6 +24,15 @@
 // purpose: a verdict line uses them for the part that is fine ("the cart change
 // satisfies SPEC-0007; the branch should not merge"), so reading them as the
 // branch stance would answer the wrong question.
+//
+// A stance can also be named without being in this list. A verdict line that
+// **opens** with a negated stance — `not ready`, `not implemented`, `not done`,
+// `not mergeable`, `not complete`, `not approved`, `not approvable` — is a
+// rejection by the stance-slot rule in `assertions.mjs` (SPEC-0079). That rule is
+// anchored: it reads only what follows the `VERDICT:` label, so
+// `APPROVE — AC-2 is not implemented but planned` keeps its approval. The phrases
+// stay out of this table on purpose; a form is matched anywhere in a clause, and
+// `not implemented` mid-line is a finding, not the verdict.
 export const VERDICT_FORMS = [
   // Approve.
   ["approve with should-fix", "APPROVE"],

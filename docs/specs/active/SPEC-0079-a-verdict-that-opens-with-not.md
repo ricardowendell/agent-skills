@@ -181,3 +181,76 @@ None.
 ## Results
 
 _Filled during implementation._
+
+### F1 — the rule
+
+`stance()` in `scripts/lib/evals/assertions.mjs` now checks the anchored
+`NEGATED_STANCES = /^not\s+(?:ready|implemented|done|mergeable|complete|approved|approvable)\b/i`
+against the text after the `VERDICT:` label, before the form scan, and returns
+`REJECT` on a match. `text` is already the label-sliced, normalised line, so the
+rule reads only what the verdict line opens with. `VERDICT_FORMS` and
+`VERDICT_BLOCKERS` are unchanged.
+
+| line | reading | why |
+| --- | --- | --- |
+| `Verdict: not ready to merge` | REJECT | opens in the stance slot |
+| `VERDICT: APPROVE — the spec is not ready but ship it` | APPROVE | the negation is a later clause; `^` does not match |
+| `Verdict: not applicable` | no stance (`got NOT`) | not in the set |
+| `Verdict: no blockers` | no stance | unchanged; `not` is still not a blocker |
+
+### F2 — tests
+
+Three tests through `evaluateAssertions` in
+`scripts/lib/evals/assertions.test.mjs`:
+
+- `a verdict line that opens with a negated stance reads REJECT` — all seven set
+  members plus the six stored openings (`not done — AC-3 is only half
+  implemented`, `not ready to open as-is`, `not implemented.` (the store has it
+  twice), `not ready — the spec is not implemented at all`, `not ready to
+  merge.`); each also asserts it scores neither APPROVE nor WITHHELD.
+- `a negation after the stance slot does not flip the verdict` — the counter-case
+  `APPROVE — the spec is not ready but ship it` and `APPROVE — AC-2 is not
+  implemented but planned` stay APPROVE.
+- `a negated non-stance still names no stance` — `not applicable` and
+  `no blockers` score no stance; `not applicable` reports `got NOT`.
+
+### F3 — replay and republish
+
+`node scripts/eval.mjs inspect --replay` over the whole store (2033 stored
+transcripts across 362 run directories and the flat legacy layout; 353 carry a
+`verdict` assertion), before and after the rule. Exactly **6 verdict lines in 5
+transcripts** move red → green, and no other verdict line changes:
+
+| transcript | line opens with | verdict assertion | cell |
+| --- | --- | --- | --- |
+| `2026-11-02T12-38-42--audit-docs` / `audit-docs#3` r2 | `not ready to open as-is.` | not judged — the case has no `verdict` assertion | 3/3 → 3/3 |
+| `2026-11-02T20-34-11--matrix--without-skill` / `review-code#4` r5 | `not done — AC-3 is only half implemented` | fail → pass | 0/5 → 0/5 (`reply 36c915b0` still red) |
+| `2026-11-07T15-46-26--review-code…--without-skill` / `review-code#2` r2 | `not ready to merge.` | fail → pass | 2/3 → 3/3 |
+| `2026-11-11T14-46-54--review-code…--without-skill` / `review-code#4` r3 | `not ready — the spec is not implemented at all` | fail → pass | 2/5 → 5/5 |
+| … r4 | `not implemented — the branch contains no code change` | fail → pass | ↑ |
+| … r5 | `not implemented.` | fail → pass | ↑ |
+
+The `audit-docs#3` line is a corpus fact the reader never judges: that case's
+assertions are `reply`/`noreply`/filesystem, so neither the measurement nor the
+replay scores its verdict line. The 2026-11-02 legacy `review-code#4` cell keeps
+its red on `reply 36c915b0`, so only the token moves. The 2026-11-07
+`review-code#2` cell moves 2/3 → 3/3; it is not a published cell (the published
+`#2` cells are the SPEC-0056 wave), so no count is republished for it.
+
+Republished cells (`docs/evals/coverage.md`, `docs/evals/review-code-matrix.md`):
+
+- `review-code` #4 control (`2026-11-11T14-46-54…--without-skill`):
+  token **2/5 → 5/5**, cell **2/5 → 5/5**; class **non-discriminator
+  unchanged**. The measured column keeps `2/5` as history, marked with the
+  replayed value.
+- No other published cell moves; their numbers are byte-identical.
+- `kinds.mjs`'s contract comment states the stance-slot rule; no
+  `VERDICT_FORMS` entry was added.
+
+Zero paid draws: no `run`, no `--resume`, no judge. The replay wrote nothing into
+the store.
+
+### Gates
+
+All commands in `tests:` exit 0 (see the commit report).
+

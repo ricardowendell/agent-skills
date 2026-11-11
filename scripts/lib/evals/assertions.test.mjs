@@ -373,6 +373,65 @@ test("a negator does not reach across a comma", () => {
   assert.match(one({ kind: "verdict", arg: "APPROVE" }, "/tmp", none).detail, /got AC/)
 })
 
+// SPEC-0079: the stance slot is what follows the label, so a verdict line that
+// *opens* with the negation of a stance names a rejection. These are the six
+// stored openings (the `not implemented.` shape appears twice in the store) plus
+// every member of the closed set, which stays closed.
+test("a verdict line that opens with a negated stance reads REJECT", () => {
+  const lines = [
+    "not ready",
+    "not implemented",
+    "not done",
+    "not mergeable",
+    "not complete",
+    "not approved",
+    "not approvable",
+    "not ready to merge",
+    // The stored openings (TASK-109).
+    "not done — AC-3 is only half implemented",
+    "not ready to open as-is",
+    "not implemented.",
+    "not ready — the spec is not implemented at all",
+    "not ready to merge.",
+  ]
+  for (const line of lines) {
+    const out = transcript({ text: `Verdict: ${line}` })
+    const r = one({ kind: "verdict", arg: "REJECT" }, "/tmp", out)
+    assert.equal(r.pass, true, `'${line}' did not read as a rejection (${r.detail})`)
+    for (const other of ["APPROVE", "WITHHELD"]) {
+      assert.equal(one({ kind: "verdict", arg: other }, "/tmp", out).pass, false, `'${line}' also scored ${other}`)
+    }
+  }
+})
+
+// The rule is anchored. A negation in a later clause is a finding, never the
+// verdict, so an approval that mentions something unimplemented stays an
+// approval; this is the false rejection the spec exists to avoid.
+test("a negation after the stance slot does not flip the verdict", () => {
+  const lines = [
+    "APPROVE — the spec is not ready but ship it",
+    "APPROVE — AC-2 is not implemented but planned",
+  ]
+  for (const line of lines) {
+    const out = transcript({ text: `VERDICT: ${line}` })
+    const r = one({ kind: "verdict", arg: "APPROVE" }, "/tmp", out)
+    assert.equal(r.pass, true, `'${line}' did not read as an approval (${r.detail})`)
+    assert.equal(one({ kind: "verdict", arg: "REJECT" }, "/tmp", out).pass, false, `'${line}' also read as a rejection`)
+  }
+})
+
+// A negated non-stance is not a negation of a stance: `not applicable` and
+// `no blockers` name nothing, as before, and the blocker list is untouched.
+test("a negated non-stance still names no stance", () => {
+  for (const line of ["not applicable", "no blockers"]) {
+    const out = transcript({ text: `Verdict: ${line}` })
+    for (const name of ["APPROVE", "REJECT", "WITHHELD"]) {
+      assert.equal(one({ kind: "verdict", arg: name }, "/tmp", out).pass, false, `'${line}' scored as ${name}`)
+    }
+  }
+  assert.match(one({ kind: "verdict", arg: "APPROVE" }, "/tmp", transcript({ text: "Verdict: not applicable" })).detail, /got NOT/)
+})
+
 // Every blocker in the published list must fire in a sentence a reviewer would
 // actually write. A blocker with no grammatical case here is a dead entry — the
 // defect the first version shipped with `unable` and `if`.
