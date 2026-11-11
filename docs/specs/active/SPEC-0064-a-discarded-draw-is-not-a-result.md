@@ -1,7 +1,7 @@
 ---
 id: SPEC-0064
 title: A discarded draw is not a result
-status: ready
+status: implemented
 priority: P1
 task: TASK-100
 created_at: 2026-11-10
