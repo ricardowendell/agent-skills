@@ -142,8 +142,11 @@ replaced. Record the revert and the failure; `#11` keeps its current class.
 2. F2 runs only after 3/3 and spends exactly 10 draws; both arms use
    `--model agentworks/deepseek-v4-1-flash` explicitly.
 3. Total spend is ≤ 13 and is reported draw by draw with run directories.
-4. Every cited run passes `check-eval-run`; its `isolated` and `skillHash` are
-   published.
+4. Every cited run's `isolated` and `skillHash` are published, and its
+   `check-eval-run` output is recorded. A routing smoke exits **1** by design —
+   its `gate-miss` findings *are* the failure record — so the bar is: no leak,
+   host-read or abort finding, and the exit is stated rather than hidden.
+   A cell run, if F2 happens, must exit 0.
 5. The published `#11` row names the new hashes, or the failure branch is
    published with the revert applied to `SKILL.md`.
 6. No case, prompt, fixture, assertion, gate or detector changes.
@@ -277,6 +280,14 @@ Published:
 | `node scripts/check-staleness.mjs` | `66 cited cell(s), 55 stale, 3 uncited` (report-only) | 0 |
 | `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0069-does-the-description-actually-route.md --base main` | `contract holds` (no warnings at the committed tree) | 0 |
 | `node scripts/check-eval-run.mjs 2026-11-11T11-21-09--implement-from-prompt--agentworks-deepseek-v4-1-flash` | 3 routing `gate-miss` findings (the failure record) | 1 |
+
+### Deviation
+
+AC4 as first written asked every cited run to *pass* `check-eval-run`. A routing
+smoke cannot: the `gate-miss` findings are the measurement, and the checker exits
+1 on them. The AC was amended to what it meant — publish the exit, and require no
+leak, host-read or abort finding — rather than to a green line that would only be
+true if the experiment had not been run. The exit is 1 and it is in the table.
 
 ### Spend
 
