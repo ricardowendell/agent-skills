@@ -60,11 +60,15 @@ Where the pipeline's task marking is described, state:
   `task:` frontmatter, so a spec whose task does not match its slug prints
   `não foi possível marcar SPEC-00NN … — seguindo.`;
 - the run is not blocked, but the task stays where it was;
-- the workaround is one command per stage:
-  `backlog task edit <TASK-ID> --status "In Progress"` (then `In Review`, `Done`);
+- the workaround is one command, at the one stage that needs it:
+  `backlog task edit <TASK-ID> --status "In Progress"` at dispatch. Merge needs
+  none — it resolves the declared `task:` itself and keeps the task open while
+  sister specs on it are unmerged; `verify`'s `In Review` cannot be fixed by hand
+  in a repo whose `backlog/config.yml` does not declare it;
 - the upstream fix is to prefer the spec's `task:` field over the slug id in
-  `dispatch.mjs:239`, `verify.mjs:839` and `merge.mjs:689` before falling back to
-  `taskIdFromSlug`.
+  `dispatch.mjs:224-227`, `verify.mjs:826-828` and `merge.mjs:681` before falling
+  back to `taskIdFromSlug` (line numbers as of pdlc `v1.6.0`; merge already
+  resolves the declared task).
 
 ### F2 — prove the diagnosis in the spec's Results
 
@@ -127,9 +131,11 @@ None.
 **F1.** One paragraph added to `CONTRIBUTING.md` under `## Editing the backlog`,
 after the `--comment`/TASK-55 note, since that is where the pipeline's task
 marking (`--status`) is described. It names the slug-derived id as the cause,
-gives `dispatch.mjs:238-240`, `verify.mjs:837-839` and `merge.mjs:681` (the last
-already preferring the declared task), states that the run continues, gives the
-per-stage command, and states the upstream fix.
+gives `dispatch.mjs:224-227`, `verify.mjs:826-828` and `merge.mjs:681` (anchored
+to pdlc `v1.6.0`, the line numbers move at HEAD and this repo pins no version),
+states that the run continues, gives the one command dispatch needs, says merge
+needs none because it already resolves the declared task and skips a manual
+`Done` past `pendingSisters` (`merge.mjs:683`), and gives the upstream fix.
 
 **F2.** Probes re-run on 2026-11-11 from this worktree; each write reverted with
 `git checkout -- backlog/tasks/task-108…`, so `git status --short` is empty for
@@ -143,9 +149,9 @@ per-stage command, and states the upstream fix.
    ```
 
    This spec declares `task: TASK-36`, so the message names `SPEC-0075`, not
-   `TASK-36`. The three message sites in the installed pdlc are
-   `dispatch.mjs:240`, `verify.mjs:839` and `merge.mjs:689` (the spec's
-   `239/839/689` point at the same blocks; `dispatch`'s id line is 238).
+   `TASK-36`. The message sites are `dispatch.mjs:227` and `verify.mjs:828` at
+   pdlc `v1.6.0` (`dispatch.mjs:240`, `verify.mjs:839` at HEAD `c5c2fcd`); the
+   Purpose's `239/839/689` are HEAD-relative.
 
 2. The CLI is not missing — a declared id with a valid status succeeds:
 
@@ -186,8 +192,18 @@ per-stage command, and states the upstream fix.
    exit=1
    ```
 
-   F1 therefore gives `In Progress` at dispatch and `Done` at merge, and says
-   why `In Review` is rejected instead of prescribing a command that exits 1.
+   F1 therefore gives `In Progress` only at dispatch, says merge needs no hand
+   (`resolveTaskId` + `pendingSisters`), and says why `In Review` is rejected
+   instead of prescribing a command that exits 1 — verify's marking cannot be
+   fixed by hand in this repo.
+
+**Review corrections (same branch).** Fixes after review: merge's manual
+`Done` removed (it would skip `pendingSisters`, `merge.mjs:683`) and verify's
+`In Review` stated as not hand-fixable; `merge` named as the one *marking* site
+that resolves the declared task, with the resolver's other uses at
+`dispatch.mjs:133` and `merge.mjs:188`/`858` noted; all citations anchored to
+pdlc `v1.6.0` instead of HEAD. The Scope bullet that still said "`In Review`,
+`Done`" was amended to match.
 
 **Scope.** No pdlc file edited (its source was read from the installed module),
 no `docs/pipeline.md` or task edit committed, no wrapper script. Zero paid

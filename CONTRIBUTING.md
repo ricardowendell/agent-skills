@@ -62,20 +62,25 @@ way. One caveat: `backlog task view` applies the same separator rule when it
 *reads*, so a body with a `---` shows up in pieces there — the file is intact,
 the display is not. TASK-55 tracks the upstream issue.
 
-`pdlc dispatch`, `verify` and `merge` also mark the task from the spec's **slug**
-(`taskIdFromSlug`), not from the `task:` frontmatter: `dispatch.mjs:238-240` and
-`verify.mjs:837-839` derive the id that way, and `merge.mjs:681` is the one site
-that already prefers the declared task (`resolveTaskId`, falling back to the
-slug). A spec whose declared task does not match its slug therefore prints
-`backlog: não foi possível marcar SPEC-00NN como "…" — seguindo.` The run is not
-blocked — it is a note and the exit stays 0 — but the task keeps its previous
-status. The workaround is one command per stage: `backlog task edit <TASK-ID>
---status "In Progress"` at dispatch, `backlog task edit <TASK-ID> --status
-"Done"` at merge. `verify`'s `In Review` is rejected here (`Invalid status: In
-Review. Valid statuses are: To Do, In Progress, Done`, exit 1) because
-`backlog/config.yml` declares only those three. The upstream fix, in the pdlc
-repo, is to resolve the declared `task:` before the slug in every stage, the way
-`merge` already does.
+`pdlc` marks a task from an id it may take from the spec's **slug**
+(`taskIdFromSlug`) rather than from the `task:` frontmatter, so a spec whose
+declared task does not match its slug prints
+`backlog: não foi possível marcar SPEC-00NN como "…" — seguindo.` from
+dispatch and verify. At pdlc `v1.6.0` that slug-derived path is
+`dispatch.mjs:224-227` (dispatch) and `verify.mjs:826-828` (verify); `merge` is
+the one **marking** site that resolves the declared `task:` first and falls back
+to the slug (`merge.mjs:681`, `resolveTaskId` — the same resolver also feeds the
+task/sister graph at `dispatch.mjs:133` and `merge.mjs:188`/`858`). The run is
+not blocked — it is a note and the exit stays 0 — but the task keeps its
+previous status. Only dispatch needs a hand: `backlog task edit <TASK-ID>
+--status "In Progress"`. Merge needs none — it marks the declared task itself,
+and deliberately keeps it open while sister specs on the same task are unmerged
+(`pendingSisters`, `merge.mjs:683`), so marking it by hand would skip that rule.
+`verify`'s `In Review` is rejected here (`Invalid status: In Review. Valid
+statuses are: To Do, In Progress, Done`, exit 1) because `backlog/config.yml`
+declares only those three, so verify's marking cannot be fixed by hand in this
+repo — it needs the status added to the config, or the upstream fix: resolve the
+declared `task:` before the slug in every stage, the way `merge` already does.
 
 ## Adding a skill
 
