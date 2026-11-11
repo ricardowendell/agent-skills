@@ -12,8 +12,7 @@ source_docs:
   - docs/specs/SPEC-0034-iterative-corpus.md
   - docs/roadmap.md
 related_decisions: []
-depends_on:
-  - SPEC-0034-iterative-corpus
+depends_on: []
 blocks: []
 files:
   - docs/evals/iterative-corpus.md
