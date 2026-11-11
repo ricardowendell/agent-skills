@@ -82,6 +82,8 @@ to get a greener number.
 
 - **separator** — the arms differ on the judgement.
 - **non-discriminator** — they agree, including both pass.
+- **trigger** — a routing case drawn one arm by design; the class is about the
+  load, not the judgement.
 - **unresolved** — a cell cannot reach five clean draws, or the arm never
   exercised the thing under test.
 
@@ -178,21 +180,35 @@ run records the governed files it shares with that checkout
 (`SKILL.md c43fb3e2…`, `references/deterministic-checks.md 9c92a4e7…`) — the
 control arms stage no skill, so their `skillHash` is `null` by construction.
 
-### Spend — 30 paid draws, 30 consumed, 0 discarded
+### Spend — 30 scored draws, 32 paid attempts, 2 discarded
 
-Six runs in the order F1 fixes, five draws each. No draw stalled, no draw
-aborted at the provider, no `--resume`, no re-run. The ceiling (40) was not
-reached; the ten reserve draws were not used. No `#1`, `#2` or `#7`–`#10` draw
-was taken.
+Six runs in the order F1 fixes, five scored draws each. The store records **32
+paid attempts**: `#5 r4` (`2026-11-11T14-49-32…`) and `#6 r4`
+(`2026-11-11T14-54-36…`) each carry `execution.attempts: 2, retries: 1`. Both
+were discarded on an infrastructure exit and re-run **once by the harness's own
+infra retry** — `scripts/lib/evals/execute.mjs:30` retries only `stalled` and
+`timeout`, and `:137` caps it at one. This is not `--resume`: no resumed run, no
+new invocation, and no redraw for a greener number. The harness stores the count,
+not which of the two exits fired, so the ledger records them as infrastructure
+without naming one.
 
-| # | cell | run directory | draws | r1 | r2 | r3 | r4 | r5 | clean | passed | cumulative |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | #3 with skill | `2026-11-11T14-32-10--review-code--agentworks-deepseek-v4-1-flash` | 5 | pass | pass | pass | pass | pass | 5/5 | 5/5 | 5 |
-| 2 | #3 without skill | `2026-11-11T14-37-56--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5 | fail | fail | fail | fail | fail | 5/5 | 0/5 | 10 |
-| 3 | #4 with skill | `2026-11-11T14-43-55--review-code--agentworks-deepseek-v4-1-flash` | 5 | pass | pass | pass | pass | pass | 5/5 | 5/5 | 15 |
-| 4 | #4 without skill | `2026-11-11T14-46-54--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5 | pass | pass | fail | fail | fail | 5/5 | 2/5 | 20 |
-| 5 | #5 trigger | `2026-11-11T14-49-32--review-code--agentworks-deepseek-v4-1-flash` | 5 | pass | pass | pass | pass | pass | 5/5 | 5/5 | 25 |
-| 6 | #6 trigger | `2026-11-11T14-54-36--review-code--agentworks-deepseek-v4-1-flash` | 5 | pass | pass | pass | pass | pass | 5/5 | 5/5 | 30 |
+The two discarded attempts come **out of the 30's slots**, not on top of a 31st
+or 32nd draw: the 10-draw reserve was not drawn on as a reserve. Total paid
+attempts 32, against the ceiling of 40. The recorded cost is **$0.349374**, and
+it is the final attempt's usage per draw (`execute.mjs:198-205` keeps
+`tokens`/`cost` for the attempt that produced the reply), so the two discarded
+attempts are not in it: real spend is **≥ $0.349374**.
+
+No `#1`, `#2` or `#7`–`#10` draw was taken.
+
+| # | cell | run directory | scored | attempts | r1 | r2 | r3 | r4 | r5 | clean | passed | cumulative (scored / paid) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | #3 with skill | `2026-11-11T14-32-10--review-code--agentworks-deepseek-v4-1-flash` | 5 | 5 | pass | pass | pass | pass | pass | 5/5 | 5/5 | 5 / 5 |
+| 2 | #3 without skill | `2026-11-11T14-37-56--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5 | 5 | fail | fail | fail | fail | fail | 5/5 | 0/5 | 10 / 10 |
+| 3 | #4 with skill | `2026-11-11T14-43-55--review-code--agentworks-deepseek-v4-1-flash` | 5 | 5 | pass | pass | pass | pass | pass | 5/5 | 5/5 | 15 / 15 |
+| 4 | #4 without skill | `2026-11-11T14-46-54--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5 | 5 | pass | pass | fail | fail | fail | 5/5 | 2/5 | 20 / 20 |
+| 5 | #5 trigger | `2026-11-11T14-49-32--review-code--agentworks-deepseek-v4-1-flash` | 5 | **6** | pass | pass | pass | pass | pass | 5/5 | 5/5 | 25 / 26 |
+| 6 | #6 trigger | `2026-11-11T14-54-36--review-code--agentworks-deepseek-v4-1-flash` | 5 | **6** | pass | pass | pass | pass | pass | 5/5 | 5/5 | 30 / 32 |
 
 The trigger controls were not drawn: a control stages no skill, so case 5's
 `skill review-code` fails and case 6's `notskill review-code` passes by
@@ -217,8 +233,8 @@ comparison is at one `skillHash` for the first time.
 | --- | --- | --- | --- | --- |
 | #3 no spec in the repo | 2026-11-03, `5/5 vs 1/5`, pre-detector (`warnings=5`), no recorded hash | separator (derived — no class published) | `5/5 vs 0/5` | **separator** |
 | #4 spec moved after the stamp | 2026-11-05, `5/5 vs 3/5`, pre-detector (`warnings=5`), no recorded hash | token/contract separator (derived) | `5/5 vs 2/5` | **non-discriminator** on the judgement |
-| #5 trigger: branch handed over | no run, no cell | none | `5/5` loaded | non-discriminator (trigger, one arm by design) |
-| #6 near-miss: debugging a build | no run, no cell | none | `5/5` not loaded | non-discriminator (trigger, one arm by design) |
+| #5 trigger: branch handed over | no run, no cell | none | `5/5` loaded | **trigger** |
+| #6 near-miss: debugging a build | no run, no cell | none | `5/5` not loaded | **trigger** |
 
 ### Class per case, and the red assertion per red cell
 
@@ -234,16 +250,19 @@ small fix", "Bottom line: …"). Red in every control draw, and only there:
 
 This is not the `5/5 vs 4/5` shape the spec warns about: the control reached
 `0/5` because it answered the question the case says must not be answered, not
-because a token moved. The historical `1/5` pass answered in Portuguese
-("Veredicto: Request changes"); the current guard reads the stance in both
-languages, and nothing in these five draws matched the refusal vocabulary.
+because a token moved. The historical `1/5` pass is English — a `### Verdict`
+heading followed by `**Hold the merge**` — the stance the guard did not name at
+the time, and `review-code-matrix.md` records it as such; the current guard reads
+the stance in both languages, and nothing in these five draws matched the refusal
+vocabulary.
 
 **#4 — non-discriminator.** Both arms reject the branch against the moved spec;
 the arms agree on the judgement. Red in control r3, r4 and r5, and only there:
 
 - `verdict REJECT` — r3, r4, r5. They write `**Verdict: not ready — the spec is
   not implemented at all.**`, `## Verdict: not implemented`, and `**Verdict:
-  not implemented.**`; the closed stance table does not read a negated form, and
+  not implemented.**`; the closed stance table does not read a negated form
+  (follow-up `TASK-109`), and
   the stored reader records `got NOT`. r5 ends "Reject / return for
   implementation"; r4 says "Nothing here is mergeable as SPEC-0007". The four
   other assertions pass in all five control draws, including `reply feb763b1`

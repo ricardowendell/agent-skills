@@ -11,7 +11,7 @@ directory it cites: this file reorganises the evidence, it does not measure.
 | isolation | macOS seatbelt; every wave manifest records `params.isolation.enforced: true` with `mechanism: "seatbelt"`, and `check-eval-run` on each of the twelve SPEC-0056 wave directories prints `findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0`; the six SPEC-0078 directories print the same summary |
 | repository state | `repoSha 2aec756`, `skillHash 9a28572…` for the SPEC-0056 wave; `repoSha aabb206`, the same `skillHash 9a28572…` for the SPEC-0078 wave; the case-10 control ran later, at `beca23e`, on the strengthened fixture and the same `fixtureHash` as its skill arm |
 | waves | **SPEC-0056 measured 2026-11-10** (five draws per arm); **SPEC-0062 re-judged the same transcripts 2026-11-10** (no model, no new draw); **SPEC-0078 measured cases 3–6 on 2026-11-11** (five draws per measured cell) |
-| cost | 65 paid draws in the SPEC-0056 wave: 60 evidence draws (55 planned plus the 5 case-10 control draws the human approved above the original ceiling) and 5 spent on an invalid case-10 setup attempt; **30 paid draws** in the SPEC-0078 wave, all consumed, none discarded |
+| cost | 65 paid draws in the SPEC-0056 wave: 60 evidence draws (55 planned plus the 5 case-10 control draws the human approved above the original ceiling) and 5 spent on an invalid case-10 setup attempt; **30 scored draws / 32 paid attempts** in the SPEC-0078 wave — `#5 r4` and `#6 r4` each record `execution.attempts: 2, retries: 1`, an infrastructure attempt discarded and re-run once by the harness's own retry, not by `--resume`; the recorded cost `0.349374` is the final attempt's usage only, so real spend is `≥ $0.349374` |
 
 Two cells predate the wave and are history, not measurement: case 3 was drawn
 2026-11-03 at `repoSha 8b74222` and case 4 on 2026-11-05 at `7a44564`, both
@@ -43,12 +43,14 @@ history, marked.
   columns are not averaged, not merged, and not interchangeable: `measured` is
   the historical record of the token, `replayed` is the judgement-corrected
   reading of the same draws.
-- The classes, and only these three:
+- The classes, and only these four:
   - **separator** — the arms differ on the judgement.
   - **token/contract separator** — the arms agree on the judgement and differ on
     the required output contract (the stance token, the `Not verified` section,
     the hash evidence, a `file:line`).
   - **non-discriminator** — the arms agree on both.
+  - **trigger** — a routing case drawn one arm by design; the class is about the
+    load, not the judgement (SPEC-0078 F2).
 - Every path is post-SPEC-0058: the corpus is `evals/review-code/cases.md` with
   its fixtures under `evals/review-code/fixtures/`. Paths from the older layout
   appear only in *History*, labelled as such.
@@ -61,8 +63,8 @@ history, marked.
 | 2 | rounding before tax, noisy test | 4/5 / 4/5 | 4/5 / 5/5 | non-discriminator |
 | 3 | no spec in the repo | 5/5 / 0/5 | — | separator |
 | 4 | spec moved after the stamp | 5/5 / 2/5 | — | non-discriminator |
-| 5 | trigger: a branch handed over | 5/5 loaded (with-skill only) | — | non-discriminator (trigger, one arm) |
-| 6 | near-miss: debugging a build | 5/5 not loaded (with-skill only) | — | non-discriminator (trigger, one arm) |
+| 5 | trigger: a branch handed over | 5/5 loaded (with-skill only) | — | trigger |
+| 6 | near-miss: debugging a build | 5/5 not loaded (with-skill only) | — | trigger |
 | 7 | gate already red on `main` | 5/5 / 0/5 | 5/5 / 0/5 | separator (holdout) |
 | 8 | interface break, green suite | 5/5 / 0/5 | 5/5 / 5/5 | token/contract separator |
 | 9 | introduced injection, green suite | 5/5 / 3/5 | 5/5 / 4/5 | token/contract separator |
@@ -180,7 +182,9 @@ judgement. The control's r3–r5 write `Verdict: not ready — the spec is not
 implemented at all`, `Verdict: not implemented` and `Verdict: not implemented`;
 the closed stance table does not read a negated form, so the reader records
 `got NOT` and only `verdict REJECT` fails. r5 ends "Reject / return for
-implementation". The two hash assertions (`reply feb763b1`, `reply 36c915b0`)
+implementation". The vocabulary gap is follow-up `TASK-109` (the closed stance
+table has no entry for "not ready"/"not implemented"). The two hash assertions
+(`reply feb763b1`, `reply 36c915b0`)
 pass in all five control draws. Under SPEC-0078's definitions a cell whose arms
 agree on the judgement is a non-discriminator, not a separator; the matrix's
 older phrase for this shape was "token/contract separator".
@@ -207,13 +211,13 @@ detector `cf2e2e319d975a5b`:
 
 | arm | run directory | clean draws | passed | loaded | class |
 | --- | --- | --- | --- | --- | --- |
-| with skill, trigger | `2026-11-11T14-49-32--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 5/5 | non-discriminator (trigger, one arm by design) |
+| with skill, trigger | `2026-11-11T14-49-32--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 5/5 | trigger |
 
 No control is drawn: a control stages no skill, so `skill review-code` fails by
 construction, and ten draws for that tautology would buy no information. With one
-arm there is no separation to claim, so the class is the neutral one; the
-measured fact is the route. Before this wave the case had no run directory and no
-published number, which is why it carried no class.
+arm there is no separation to claim, so the class is **trigger**: the measured
+fact is the route, not the judgement. Before this wave the case had no run
+directory and no published number, which is why it carried no class.
 
 ## Case 6 — near-miss: a failure being debugged
 
@@ -225,11 +229,11 @@ detector `cf2e2e319d975a5b`:
 
 | arm | run directory | clean draws | passed | loaded | class |
 | --- | --- | --- | --- | --- | --- |
-| with skill, near-miss | `2026-11-11T14-54-36--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 0/5 | non-discriminator (trigger, one arm by design) |
+| with skill, near-miss | `2026-11-11T14-54-36--review-code--agentworks-deepseek-v4-1-flash` | 5/5 | 5/5 | 0/5 | trigger |
 
 `notskill review-code` passes 5/5: no draw pulled the skill in for a diagnosis.
 The control is skipped for the same reason as case 5 (it passes by construction),
-so the case carries the neutral class and the measured routing fact.
+so the case carries the **trigger** class and the measured routing fact.
 
 ## Case 7 — a gate that is already red
 
@@ -336,7 +340,7 @@ the older version of this file, not in the per-cell table:
 - **Cases 5 and 6 had no published measurement until SPEC-0078.** They are
   trigger cases with `gate: off`; their rows said `no arm cell` rather than
   inventing a rate. SPEC-0078 measured both with the skill arm only (`5/5` each)
-  and publishes the neutral class, because a case with one arm has no separation
+  and publishes **trigger**, because a case with one arm has no separation
   to claim.
 
 ## History
