@@ -1,9 +1,10 @@
 ---
 id: TASK-99
 title: 'evals: um comando so, escada de draws e scorecard (SPEC-0060)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-10T23:18:00Z'
+updated_date: '2026-11-11T00:15:00Z'
 labels: []
 dependencies: []
 references:

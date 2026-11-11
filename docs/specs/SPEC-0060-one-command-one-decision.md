@@ -46,7 +46,7 @@ files:
   - docs/README.md
   - README.md
   - docs/evals/coverage.md
-  - docs/specs/active/SPEC-0060-one-command-one-decision.md
+  - docs/specs/SPEC-0060-one-command-one-decision.md
   - CHANGELOG.md
 tests:
   - node scripts/validate-skills.mjs --root skills
@@ -57,7 +57,7 @@ tests:
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
   - node scripts/check-staleness.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0060-one-command-one-decision.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0060-one-command-one-decision.md --base main
 ---
 
 ## Purpose
@@ -365,7 +365,7 @@ parsed prompts, titles, assertions and fixtures stay byte-identical.
 - `node scripts/check-sensor-parity.mjs` — 0
 - `node scripts/check-evidence.mjs` — 0
 - `node scripts/check-staleness.mjs` — 0 (report-only; 51 stale, 3 uncited)
-- `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0060-one-command-one-decision.md --base main` — 0, with `files-declared-untouched` warnings only for the declared library files this move did not need.
+- `node scripts/spec-check.mjs --spec docs/specs/SPEC-0060-one-command-one-decision.md --base main` — 0, with `files-declared-untouched` warnings only for the declared library files this move did not need.
 
 The staging proof is a real, cited store directory:
 `~/.local/share/opencode/evals/runs/2026-11-10T20-47-24--review-code` holds
