@@ -79,8 +79,9 @@ and deliberately keeps it open while sister specs on the same task are unmerged
 `verify`'s `In Review` is rejected here (`Invalid status: In Review. Valid
 statuses are: To Do, In Progress, Done`, exit 1) because `backlog/config.yml`
 declares only those three, so verify's marking cannot be fixed by hand in this
-repo — it needs the status added to the config, or the upstream fix: resolve the
-declared `task:` before the slug in every stage, the way `merge` already does.
+repo — it needs both an id that exists (the upstream fix: resolve the declared
+`task:` before the slug in every stage, the way `merge` already does) and the
+status declared in `backlog/config.yml`.
 
 ## Adding a skill
 
