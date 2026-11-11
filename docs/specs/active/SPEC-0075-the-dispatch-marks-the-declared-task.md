@@ -1,7 +1,7 @@
 ---
 id: SPEC-0075
 title: The dispatch says it cannot mark a task that it never looked for
-status: ready
+status: implemented
 priority: P2
 task: TASK-36
 created_at: 2026-11-11
