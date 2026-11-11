@@ -19,24 +19,20 @@ blocks:
   - SPEC-0037-solution-framing
   - SPEC-0038-experience-review
 files:
-  - skills/implement-from-prompt/references/evals.md
-  - skills/implement-from-prompt/references/evals/9/AGENTS.md
-  - skills/implement-from-prompt/references/evals/10/AGENTS.md
-  - skills/implement-from-prompt/references/evals/11/AGENTS.md
-  - skills/implement-from-prompt/references/evals/12/AGENTS.md
   - docs/evals/iterative-corpus.md
   - docs/evals/coverage.md
-  - docs/README.md
   - docs/specs/active/SPEC-0034-iterative-corpus.md
 tests:
   - node scripts/validate-skills.mjs --root skills
-  - node scripts/run-evals.mjs --root skills --list --check
+  - node scripts/eval.mjs check --root skills
   - node --test scripts/lib/evals/*.test.mjs
   - node --test scripts/lib/*.test.mjs
   - node --test skills/bootstrap-project-harness/scripts/*.test.mjs
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
+  - node scripts/check-staleness.mjs
   - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0034-iterative-corpus.md --base main
+
 ---
 
 # SPEC-0034: A corpus that can see a small change
@@ -54,6 +50,13 @@ about a **small change**, three arms reduced to the two the runner already
 supports, and one case held out. The visual and experience cases stay in
 `SPEC-0036` and `SPEC-0038`, blocked on that oracle, rather than being declared
 `manual` and counted as coverage.
+
+**Refreshed 2026-11-10.** The four cases and their fixtures are on `main` again
+(`SPEC-0065`, recovered byte-identically from the parked tag), so `files:` no
+longer declares them and the measurement writes only the evidence doc, the
+coverage row and this spec. `--resume` now re-runs a draw the harness discarded
+(`SPEC-0064`), which is the gap that made the old resume plan impossible. The
+wave still needs its budget and an explicit decision before it is dispatched.
 
 **Why paused (2026-11-08).** The first wave spent 30 of 40 draws. The #12
 control draw stalled post-load (`stallMs=120000`, 223 s, one retry), so the
@@ -166,9 +169,10 @@ dispatchable.
 9. **Nothing published is rewritten.** Coverage gains a row; no earlier number
    changes.
 10. **No drift.** Every command in `tests:` passes.
-11. **`files:` follows the real diff.** The four fixture `AGENTS.md` paths are
-    declared here; any other file the fixtures create is added to `files:` before
-    the spec is marked `implemented`, so `spec-check` reports no
+11. **`files:` follows the real diff.** The corpus and its fixtures are on
+    `main` (`SPEC-0065`); this spec writes only the evidence doc, the coverage
+    row and itself, and any other file it touches is added to `files:` before it
+    is marked `implemented`, so `spec-check` reports no
     `files-touched-undeclared`.
 
 ## Open Questions
@@ -189,14 +193,14 @@ dispatchable.
 - **Entities**: case, arm, run directory, detector, model, holdout, fixture.
 - **Approach**: freeze, build fixtures, measure, then classify; publish once.
 - **Structure**: case metadata and fixture trees; no runner code.
-- **Operations**: `--repeat 5`, `--no-skill` for the control, `--root skills`,
-  `--tag iterative` — the four new cases only; a bare
-  `--skill implement-from-prompt --repeat 5` would also run the skill's eight
-  existing cases, 120 draws against this contract's 40 — and
+- **Operations**: `run implement-from-prompt <n> --repeat 5 --arm without` for the control,
+  `--root skills`, `--tag iterative` — the four new cases only; a bare
+  `--skill implement-from-prompt --repeat 5` would also run the skill's twelve
+  cases, 120 draws against this contract's 40 — and
   `--model agentworks/deepseek-v4-1-flash` for all eight runs, the model the
   existing matrix rows cite. Reconcile `files:` with
-  `git diff --name-only main...HEAD` before finishing: the fixture trees are the
-  part a reviewer cannot guess from this spec.
+  `git diff --name-only main...HEAD` before finishing; the fixtures are already
+  on `main`, so this spec's diff should be documents only.
 - **Norms**: never pool clean draws across runs; a dirty control is unresolved;
   never lower the five-draw rule.
 - **Safeguards**: the holdout's result is read after the other three are
