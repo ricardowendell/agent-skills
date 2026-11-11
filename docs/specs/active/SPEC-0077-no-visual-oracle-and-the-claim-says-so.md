@@ -11,8 +11,7 @@ source_docs:
   - docs/roadmap.md
   - docs/evals/coverage.md
 related_decisions: []
-depends_on:
-  - SPEC-0076-the-stall-is-after-the-load
+depends_on: []
 blocks: []
 files:
   - docs/roadmap.md
