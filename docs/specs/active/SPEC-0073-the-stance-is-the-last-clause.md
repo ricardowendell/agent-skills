@@ -170,4 +170,130 @@ None.
 
 ## Results
 
-_Filled during implementation._
+**F1/F2 — the rule.** `stance()` now walks the line's clauses and takes the
+stance from the **last clause that contains at least one unblocked form**; within
+that clause the precedence is `REJECT` > `WITHHELD` > `APPROVE`. A clause with no
+unblocked form does not erase the one before it, so
+`The verdict is APPROVE. Notes: AC-2 is not implemented.` stays **APPROVE**; no
+unblocked form anywhere still falls back to the line's first word, so
+`unable to approve` names no stance. `","` was added to `CLAUSE_BOUNDARIES`:
+a negator cannot reach across a comma, while one inside the stance's own clause
+still blocks it. `reject the alternative; approve the change` now reads
+**APPROVE**; `AC-2 is not implemented, changes requested` reads **REJECT**;
+`AC-2 is not implemented, and not approved` names no stance.
+
+A comma does not reset `if`, `unless` and `whether`. Those introduce a clause
+whose consequent follows the comma, so `If the tests were fixed, approve` and
+`Unless the export change is removed, approve` stay promises, not stances: they
+are read against the wider sentence clause (`CONDITION_BOUNDARIES`), while every
+other blocker resets at the comma. No form, blocker or locution was added;
+`kinds.mjs` is untouched and `VERDICT_FORMS` / `VERDICT_BLOCKERS` keep their
+SPEC-0062 contents. Its comment at `kinds.mjs:99-101` still calls the comma "not"
+a clause boundary; that is now true only for the three conditionals, and it is
+left for a spec that owns that file.
+
+The four SPEC-0062 shapes are preserved byte for byte:
+`Approve the tests; reject the change` → **REJECT**;
+`approved, but do not merge` → **REJECT**;
+`The verdict is APPROVE. Notes: AC-2 is not implemented.` → **APPROVE**;
+`unable to approve` → no stance.
+
+**F3 — tests, through `evaluateAssertions`.** Six new cases in
+`scripts/lib/evals/assertions.test.mjs`, each reading the assertion's verdict (not
+`stance()` directly):
+
+- "the last clause that names a stance wins, not the first" —
+  `reject the alternative; approve the change` → **APPROVE**;
+- "`Approve the tests; reject the change` still reads REJECT";
+- "`approved, but do not merge` still reads REJECT";
+- "`The verdict is APPROVE. Notes: AC-2 is not implemented.` still reads APPROVE";
+- "`unable to approve` still names no stance";
+- "a negator does not reach across a comma" —
+  `AC-2 is not implemented, changes requested` → **REJECT**;
+  `AC-2 is not implemented, and not approved` → no stance.
+
+No existing test was edited. The two conditional shapes above remain in the
+SPEC-0062 lists ("a negated form is not its surface reading" and "every published
+blocker fires in a grammatical sentence"), and they still pass.
+
+**F4 — replay, no draw.** Two comparisons over every stored transcript that
+carries a `verdict` assertion, using the case definitions in `evals/`:
+
+| reader | verdict-bearing transcripts | `verdict` passing |
+| --- | --- | --- |
+| pre-SPEC-0062 (`827b843`, the commit before the vocabulary landed) | 316 | 229 |
+| `HEAD` (this branch before the change) | 316 | 246 |
+| this branch | 316 | 246 |
+
+Pre-SPEC-0062 → this branch moves **17 draws, all `false → true`**, the same 17
+SPEC-0062 published; `HEAD` → this branch moves **0**. So the corpus did not
+move: neither shape has a store instance, and no stored draw is re-scored. The
+store now yields 316 verdict-bearing transcripts; SPEC-0062 measured 315 at its
+writing. The pass counts (229 and 246) and the moved set reproduce exactly.
+
+| cell | run directory | draw | verdict | before | after | moved? |
+| --- | --- | --- | --- | --- | --- | --- |
+| `review-code`#4 | `2026-11-01T22-02-37--matrix--without-skill` | r3 | REJECT | fail | pass | yes |
+| `review-code`#4 | `2026-11-02T20-34-11--matrix--without-skill` | r2 | REJECT | fail | pass | yes |
+| `review-code`#1 | `2026-11-07T15-42-21--review-code--agentworks-deepseek-v4-1-flash--without-skill` | r1 | APPROVE | fail | pass | yes |
+| `review-code`#1 | `2026-11-07T15-42-21--review-code--agentworks-deepseek-v4-1-flash--without-skill` | r2 | APPROVE | fail | pass | yes |
+| `review-code`#2 | `2026-11-07T15-46-26--review-code--agentworks-deepseek-v4-1-flash--without-skill` | r3 | REJECT | fail | pass | yes |
+| `review-code`#8 | `2026-11-10T15-05-54--review-code--agentworks-deepseek-v4-1-flash--without-skill` | r1 | REJECT | fail | pass | yes |
+| `review-code`#8 | `2026-11-10T15-05-54--review-code--agentworks-deepseek-v4-1-flash--without-skill` | r2 | REJECT | fail | pass | yes |
+| `review-code`#8 | `2026-11-10T15-05-54--review-code--agentworks-deepseek-v4-1-flash--without-skill` | r3 | REJECT | fail | pass | yes |
+| `review-code`#8 | `2026-11-10T15-05-54--review-code--agentworks-deepseek-v4-1-flash--without-skill` | r4 | REJECT | fail | pass | yes |
+| `review-code`#8 | `2026-11-10T15-05-54--review-code--agentworks-deepseek-v4-1-flash--without-skill` | r5 | REJECT | fail | pass | yes |
+| `review-code`#9 | `2026-11-10T15-12-14--review-code--agentworks-deepseek-v4-1-flash--without-skill` | r4 | REJECT | fail | pass | yes |
+| `review-code`#1 | `2026-11-10T15-23-10--review-code--agentworks-deepseek-v4-1-flash--without-skill` | r1 | APPROVE | fail | pass | yes |
+| `review-code`#1 | `2026-11-10T15-23-10--review-code--agentworks-deepseek-v4-1-flash--without-skill` | r4 | APPROVE | fail | pass | yes |
+| `review-code`#2 | `2026-11-10T15-28-46--review-code--agentworks-deepseek-v4-1-flash--without-skill` | r5 | REJECT | fail | pass | yes |
+| `review-code`#10 | `2026-11-10T15-54-47--review-code--agentworks-deepseek-v4-1-flash--without-skill` | r2 | APPROVE | fail | pass | yes |
+| `review-code`#10 | `2026-11-10T15-54-47--review-code--agentworks-deepseek-v4-1-flash--without-skill` | r3 | APPROVE | fail | pass | yes |
+| `review-code`#10 | `2026-11-10T15-54-47--review-code--agentworks-deepseek-v4-1-flash--without-skill` | r5 | APPROVE | fail | pass | yes |
+
+The nine run directories cited in the table also replay through the CLI:
+`node scripts/eval.mjs inspect <the nine dirs> --replay` → **66 transcripts,
+13 differing statuses: 11 `failed -> passed`, 2 `passed -> failed`**. The eleven
+are the five #8 control draws, #9 control r4, and five #2 draws — three in
+`2026-11-01T22-02-37` (r1/r3/r5, not among the 17 verdict moves) plus
+`2026-11-07T15-46-26` r3 and `2026-11-10T15-28-46` r5. The two `passed -> failed`
+rows are `review-code`#3 r1 in `2026-11-01T22-02-37` and `2026-11-02T20-34-11`,
+failing the same `reply`/`noreply` assertions. Replaying the same nine
+directories with `main`'s `scripts/` prints a byte-identical output (diff empty),
+so all thirteen are pre-existing recorded-status drift this branch inherits, not
+a change it makes; the branch-vs-`HEAD` verdict comparison above is 0. Scoping
+the command to `2026-11-10T15-05-54` and `2026-11-10T15-12-14` replays 10
+transcripts and prints exactly those six `failed -> passed` moves (the five #8
+draws and #9 r4).
+
+Of the 17 moved verdict draws, eight now replay the whole case as `passed`: the
+five #8 draws, #9 r4, `#2` in `2026-11-07T15-46-26` r3 and `#2` in
+`2026-11-10T15-28-46` r5. The other nine were recorded red and still replay red:
+the four `#1` draws and the three `#10` draws on `reply Not verified`, and the two
+legacy `#4` draws, which do not cite the branch spec hash (`reply 36c915b0`).
+
+**Coverage line.** `docs/evals/coverage.md`, in the Known hole for the verdict
+vocabulary: "Two latent residues in the reader are closed by SPEC-0073 — the
+stance is the last clause that names one … and a comma ends a clause … — and both
+shapes are covered by test; neither has a store instance, so no stored draw
+moves."
+
+**Gates.** All exit 0:
+
+- `validate-skills --root skills` — 14 SKILL.md, all clear;
+- `eval.mjs check --root skills` — 101 cases (98 runnable, 3 manual), 98 fixtures
+  staged, no findings;
+- `node --test scripts/lib/evals/*.test.mjs` — 565 pass, 0 fail;
+- `node --test scripts/lib/*.test.mjs` — 13 pass, 0 fail;
+- `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` — 42 pass,
+  0 fail;
+- `check-sensor-parity` — 2/2 fixtures in parity;
+- `check-evidence` — 6 documents, 0 errors, 0 warnings;
+- `check-staleness` — 66 cited cells, 55 stale, 3 uncited, same as `main`;
+- `spec-check --spec docs/specs/active/SPEC-0073-the-stance-is-the-last-clause.md
+  --base main` — no errors.
+
+**Cost.** Zero paid draws, no resume, no judge: every number above comes from
+stored transcripts. Nothing was written into the store, and no skill, case prompt
+or fixture was edited.
+

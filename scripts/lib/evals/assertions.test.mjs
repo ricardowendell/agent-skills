@@ -321,6 +321,58 @@ test("'not merge' takes a right boundary, so 'not merge blockers' is not a stanc
   }
 })
 
+// SPEC-0073: a verdict line ends with its conclusion, so the stance is the last
+// clause that names one. `reject the alternative; approve the change` approves
+// the change; the rejected alternative is not the verdict. The SPEC-0062 shapes
+// keep their reading because in each the decisive form is the final stance-bearing
+// clause.
+test("the last clause that names a stance wins, not the first", () => {
+  const out = transcript({ text: "VERDICT: reject the alternative; approve the change" })
+  const approve = one({ kind: "verdict", arg: "APPROVE" }, "/tmp", out)
+  assert.equal(approve.pass, true, `did not read as an approval (${approve.detail})`)
+  assert.equal(one({ kind: "verdict", arg: "REJECT" }, "/tmp", out).pass, false, "also read as a rejection")
+})
+
+test("`Approve the tests; reject the change` still reads REJECT", () => {
+  const out = transcript({ text: "VERDICT: Approve the tests; reject the change" })
+  assert.equal(one({ kind: "verdict", arg: "REJECT" }, "/tmp", out).pass, true)
+  assert.equal(one({ kind: "verdict", arg: "APPROVE" }, "/tmp", out).pass, false)
+})
+
+test("`approved, but do not merge` still reads REJECT", () => {
+  const out = transcript({ text: "VERDICT: approved, but do not merge" })
+  assert.equal(one({ kind: "verdict", arg: "REJECT" }, "/tmp", out).pass, true)
+  assert.equal(one({ kind: "verdict", arg: "APPROVE" }, "/tmp", out).pass, false)
+})
+
+test("`The verdict is APPROVE. Notes: AC-2 is not implemented.` still reads APPROVE", () => {
+  const out = transcript({ text: "VERDICT: The verdict is APPROVE. Notes: AC-2 is not implemented." })
+  assert.equal(one({ kind: "verdict", arg: "APPROVE" }, "/tmp", out).pass, true)
+  assert.equal(one({ kind: "verdict", arg: "REJECT" }, "/tmp", out).pass, false)
+})
+
+test("`unable to approve` still names no stance", () => {
+  const out = transcript({ text: "VERDICT: unable to approve" })
+  for (const name of ["APPROVE", "REJECT", "WITHHELD"]) {
+    assert.equal(one({ kind: "verdict", arg: name }, "/tmp", out).pass, false, `scored as ${name}`)
+  }
+  assert.match(one({ kind: "verdict", arg: "APPROVE" }, "/tmp", out).detail, /got UNABLE/)
+})
+
+// A comma ends a clause (SPEC-0073), so a negator before it does not reach the
+// stance after it. A negator in the stance's own clause still blocks.
+test("a negator does not reach across a comma", () => {
+  const rejected = transcript({ text: "VERDICT: AC-2 is not implemented, changes requested" })
+  assert.equal(one({ kind: "verdict", arg: "REJECT" }, "/tmp", rejected).pass, true)
+  assert.equal(one({ kind: "verdict", arg: "APPROVE" }, "/tmp", rejected).pass, false)
+
+  const none = transcript({ text: "VERDICT: AC-2 is not implemented, and not approved" })
+  for (const name of ["APPROVE", "REJECT", "WITHHELD"]) {
+    assert.equal(one({ kind: "verdict", arg: name }, "/tmp", none).pass, false, `scored as ${name}`)
+  }
+  assert.match(one({ kind: "verdict", arg: "APPROVE" }, "/tmp", none).detail, /got AC/)
+})
+
 // Every blocker in the published list must fire in a sentence a reviewer would
 // actually write. A blocker with no grammatical case here is a dead entry — the
 // defect the first version shipped with `unable` and `if`.
