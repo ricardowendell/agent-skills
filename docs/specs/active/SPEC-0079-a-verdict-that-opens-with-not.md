@@ -1,7 +1,7 @@
 ---
 id: SPEC-0079
 title: A verdict that opens with "not" is a rejection
-status: ready
+status: implemented
 priority: P2
 task: TASK-109
 created_at: 2026-11-11
