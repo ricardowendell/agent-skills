@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "7c8103e3-9afe-4861-9fb8-6c8404ddf8f1",
+  "started_at": "2026-11-11T00:27:19.318Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.6.0"
+  },
+  "base_commit": "c1020bab04acd4374f8e00face9b26d9ae2724ab",
+  "head_commit": "3dea00e56e5a0005ba5ca18959492bf1997ebfc0",
+  "task": "SPEC-0064",
+  "spec_sha": "17814ebb545ffd883d41eb7931508d506c1ffce0970201d104192f6f3eac3a41",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0064-a-discarded-draw-is-not-a-result.json",
+      "sha256": "64096d4af724085358aef451a713fbb3be9611d33acf92f985e5a694455ad2f1"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0064-a-discarded-draw-is-not-a-result.json",
+      "sha256": "a4514f1f5a9aba0d10660587490a31c9c3f69222292391dc204f196a20061bb1"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "4b7e5c122d976005bf68f7922b2d7706275e093ccb4207a769648beb10da54d3"
+    }
+  ],
+  "attempts": 1,
+  "duration": 1052,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "bcb80a1ccc71e86c47a675b9efac0ad200c3e4ce"
+}

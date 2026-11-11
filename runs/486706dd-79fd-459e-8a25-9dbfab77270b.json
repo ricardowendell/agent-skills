@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "486706dd-79fd-459e-8a25-9dbfab77270b",
+  "started_at": "2026-11-11T18:20:28.748Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.6.0"
+  },
+  "base_commit": "7d8162890b24bf48e7600d0867939dfe6986ec6b",
+  "head_commit": "793b301f6464f2db1243e106926a1c7ff17a74ed",
+  "task": "SPEC-0079",
+  "spec_sha": "d1c0cd2607cf3ce1c54442f9217e5ef731eb3bafa6f997d80579029bf70d4263",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0079-a-verdict-that-opens-with-not.json",
+      "sha256": "5e56ff60a64f1c7b8fca1d489d0862ebbd238a6cdfd585ad826dbc4aae117a0f"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0079-a-verdict-that-opens-with-not.json",
+      "sha256": "1445c25c769f8d4c840decebe90715dad9b1e8fe42189b10a24db9cf07274fde"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "88950b661ea05bfe41872c23afa4caa293c59284b41354c52b1a3b26d1d5b586"
+    }
+  ],
+  "attempts": 1,
+  "duration": 956,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "793b301f6464f2db1243e106926a1c7ff17a74ed"
+}

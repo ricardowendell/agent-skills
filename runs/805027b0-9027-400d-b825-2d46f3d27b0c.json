@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "805027b0-9027-400d-b825-2d46f3d27b0c",
+  "started_at": "2026-11-11T14:38:31.113Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.6.0"
+  },
+  "base_commit": "73d11d544994ba1d551e59f45cc9da3550c0f452",
+  "head_commit": "83c6c33ee852df0b75a6a8a8a52fed0d16dda2bc",
+  "task": "SPEC-0070",
+  "spec_sha": "3681cf89479d73b014151f8b69b4ffd1ff0108606598a43c362304935d5d79bb",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0070-the-body-already-matches-what-the-skill-does.json",
+      "sha256": "1e9555bde3d0f63d057eea487b7c15fa874da28b222039c6f61594723142c052"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0070-the-body-already-matches-what-the-skill-does.json",
+      "sha256": "94a5ea84160943a2d11609488101b90b0140eaaf9c3370d6be000a751615d0f8"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "456b4a462912d3b438468706845e2ef110490654eb5d8c8f9a2741fc74d374e4"
+    }
+  ],
+  "attempts": 1,
+  "duration": 472,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "83c6c33ee852df0b75a6a8a8a52fed0d16dda2bc"
+}

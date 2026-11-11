@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "c362d6dd-2b4d-4013-a0f0-a72e6b6bbd4e",
+  "started_at": "2026-11-11T12:02:33.256Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.6.0"
+  },
+  "base_commit": "caa467ffad17a110f6bef7d807b48667015cecef",
+  "head_commit": "df647d2586f68534caa5747d360c0cd03a24db31",
+  "task": "SPEC-0067",
+  "spec_sha": "b8e389213e0d2ee2718c5eee4d34ca715107423ea2ca42d1bad00c5f3a11c1cb",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0067-each-draw-records-its-boundary.json",
+      "sha256": "b3edfeb9f0e93a6937b001edf5a02488babce0f299adf580751e60a93f9b93a4"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0067-each-draw-records-its-boundary.json",
+      "sha256": "e98bb202e59877f830356e77bcc0f03e5b670d9bf449f6cb38c828d82d8f4599"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "0aeaa415043d37a031329c4ac4da0877877b8e63e11ac6c08d4dd7535f4bc389"
+    }
+  ],
+  "attempts": 1,
+  "duration": 2237,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "b1dc77e14d82cba15b32543d9f7591180aed0ac6"
+}

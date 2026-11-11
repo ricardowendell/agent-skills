@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "d8b1e4b0-5631-4bcf-8ad8-47f3b1b18e6d",
+  "started_at": "2026-11-11T00:27:19.927Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.6.0"
+  },
+  "base_commit": "c1020bab04acd4374f8e00face9b26d9ae2724ab",
+  "head_commit": "f3e5178f0f9610a3f2aa99250a3003759fab6ba3",
+  "task": "SPEC-0065",
+  "spec_sha": "eb5a5ba05372e37cc883cabb7a0195923a834ffc8a1c22d1c76545f3f72a46cf",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0065-recover-the-parked-corpus.json",
+      "sha256": "4a0c3be1b43398b5985283375393f2a9cbeee1e4ed14fcfed35442e93b19ebab"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0065-recover-the-parked-corpus.json",
+      "sha256": "f6ace2b910dcb857d491f2455dbd91109be2cef25d156b0a893e1ea1b4a357e2"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "e0c8a14dd217f95a9b6b2c6f6ff258500981a7f7353c8c1e742dddd23d745410"
+    }
+  ],
+  "attempts": 1,
+  "duration": 1063,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "8290081f673465249372dae2fe0f626e1880de8e"
+}

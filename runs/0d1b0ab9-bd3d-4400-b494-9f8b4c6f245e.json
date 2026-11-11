@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "0d1b0ab9-bd3d-4400-b494-9f8b4c6f245e",
+  "started_at": "2026-11-11T17:13:52.969Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.6.0"
+  },
+  "base_commit": "209f53e70e5e7e250cda23414a8efcdc2b2a7d6d",
+  "head_commit": "03c3037fb87431adf9795dd463063f5f0969419a",
+  "task": "SPEC-0077",
+  "spec_sha": "676998ddf3eb5222331f233a8d377afe7bdfdff588099247d73919b0692acac0",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0077-no-visual-oracle-and-the-claim-says-so.json",
+      "sha256": "f86c5babe24abf7201869a034269236e31fe03efa6d09791f0dd11987e67b93f"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0077-no-visual-oracle-and-the-claim-says-so.json",
+      "sha256": "dadc2456465c2879d9f7e36c6d910257b2ede12e34633675da35afbcd3b959b0"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "37f4e46b1c55f93c25c6d1d27d39cae55cda337baa33c26268779c9c2cced3d3"
+    }
+  ],
+  "attempts": 1,
+  "duration": 266,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "03c3037fb87431adf9795dd463063f5f0969419a"
+}

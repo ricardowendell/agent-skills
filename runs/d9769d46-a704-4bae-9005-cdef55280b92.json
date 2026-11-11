@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "d9769d46-a704-4bae-9005-cdef55280b92",
+  "started_at": "2026-11-11T20:44:39.376Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.6.0"
+  },
+  "base_commit": "c59dd405779d00ebc0ed234e4019707ecdbf8c11",
+  "head_commit": "ba8e678c4d4d60f997c266dd2d78f38a30fd5170",
+  "task": "SPEC-0080",
+  "spec_sha": "cb375e6b0533e86b4018744f85700b6ab7e17db20f0a61ac4a463d7e58b40abf",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0080-the-trigger-is-the-contract.json",
+      "sha256": "cc342e8ef105711d7c13210d0aedf4f151ac1afe95c3b898ea503e1923744908"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0080-the-trigger-is-the-contract.json",
+      "sha256": "781e8fb76c4bfc994e196bbb26a695b2ec85bfd7aa77846d634e27a701686131"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "46b9e5f6b9a37c0fcf569495418206fb2413dcbed339f896eae3bf7d3dc64cbb"
+    }
+  ],
+  "attempts": 1,
+  "duration": 4416,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "cd94f852842ddf80c8f9966817b6999d28fbe528"
+}

@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "39f7f53c-a0f4-489e-bf88-8635bbb5326f",
+  "started_at": "2026-11-11T12:41:18.384Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.6.0"
+  },
+  "base_commit": "908b77ceb4b03bb5346e15506d516fbbe98be107",
+  "head_commit": "1449fcc91d0535d6de67352fdaa12b6c39cc765b",
+  "task": "SPEC-0068",
+  "spec_sha": "8195c78a372466397bd56742030dacb067a3fb7892bbef00e404669c0f4a4568",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0068-the-skill-that-never-loaded.json",
+      "sha256": "0603c7ec261789604b49912f406b335d00ae4a2a3387ba671b38b9af6d4892c3"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0068-the-skill-that-never-loaded.json",
+      "sha256": "4b2c69e69ed8aeb6c5953a234f0810b54809a0ebd537984d1c8eaa012f26dc2e"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "7c7f2c9c8eef96010d163710dd7a49e9467e16c6bc6e192111434ca577359a38"
+    }
+  ],
+  "attempts": 1,
+  "duration": 1408,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "1449fcc91d0535d6de67352fdaa12b6c39cc765b"
+}

@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "a6d808b8-b436-45be-ae67-e194566c0ac4",
+  "started_at": "2026-11-11T15:38:13.990Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.6.0"
+  },
+  "base_commit": "27849bc2d2556a08d0fb286cea95f314fa287615",
+  "head_commit": "5d8a05324604d81f2f1774aeb8a542374d326242",
+  "task": "SPEC-0071",
+  "spec_sha": "50d742efd713bbbacfa7c85468977ffd17b972edad021d886d4883e15a1e9536",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0071-an-empty-directory-is-not-part-of-the-skill.json",
+      "sha256": "25be33ae4b9e05402ea2bf33ce03710492c32511d0bdceae4d07c6c4bed319c4"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0071-an-empty-directory-is-not-part-of-the-skill.json",
+      "sha256": "a80cd0af8bf1833c33620ac21a39a4d4af5826beb7cffe328435f41573d8c936"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "c475da95a7fd8dc96f926610fc8275beae1bc28d3695807a11930fa08bbb276d"
+    }
+  ],
+  "attempts": 1,
+  "duration": 295,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "5d8a05324604d81f2f1774aeb8a542374d326242"
+}

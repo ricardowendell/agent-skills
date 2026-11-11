@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "205c838d-bcc1-450d-beaf-2a8e6962ab6e",
+  "started_at": "2026-11-11T16:19:45.148Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.6.0"
+  },
+  "base_commit": "7e38845be5a0233e2334cf8ab410dc57f1d5e310",
+  "head_commit": "da0f7fbf9aa1517af22231735e66128be184e60d",
+  "task": "SPEC-0073",
+  "spec_sha": "13375dc3f64cf5d7ce65e0bdc7e5909d0f3add17310722cabe79a593f7e0729a",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0073-the-stance-is-the-last-clause.json",
+      "sha256": "ff9388f64f3fc999580dfc6c8ca3edd2069f1b301787c5bc48a5656527831832"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0073-the-stance-is-the-last-clause.json",
+      "sha256": "3ac84c8caa2e13dcba19efe8ff49004e1e8648f430936644a10153d8f2521a35"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "f5a2bc3dccc2776bfe5e72f85c3cba8d5be44805727309a0a829f13971b00100"
+    }
+  ],
+  "attempts": 1,
+  "duration": 995,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "c9aae255e9bca01448413d8a2e236f0f9c085ffc"
+}

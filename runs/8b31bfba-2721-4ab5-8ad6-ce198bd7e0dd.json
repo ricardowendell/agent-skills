@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "8b31bfba-2721-4ab5-8ad6-ce198bd7e0dd",
+  "started_at": "2026-11-11T21:58:49.677Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.6.0"
+  },
+  "base_commit": "346e1c7d82e55cf35a6f1ff8d12bab68ab85eab9",
+  "head_commit": "c67770350fffdcca9fb9fd6b97c04669a517acc2",
+  "task": "SPEC-0081",
+  "spec_sha": "13d8322780edd969c71a56740d56329c2783892003322570714ea95672697284",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0081-before-the-freeze-the-giant-files-come-down.json",
+      "sha256": "abfeef4cd40b11b60bef2094861643caec7f19a50eaa029c7cb6ffca33a56727"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0081-before-the-freeze-the-giant-files-come-down.json",
+      "sha256": "467da9b414b56bcd92ddbb2f16907b573d49cb5c6002b6055f821125d3466f24"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "4efd55acf1910d93f5c1aecd76689fc788294d007ec0e7723409c73b8355a177"
+    }
+  ],
+  "attempts": 1,
+  "duration": 1615,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "c67770350fffdcca9fb9fd6b97c04669a517acc2"
+}

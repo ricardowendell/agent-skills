@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "0a2bbfbe-5acc-45e1-b6d0-4ca528d71acb",
+  "started_at": "2026-11-11T16:45:25.151Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.6.0"
+  },
+  "base_commit": "45dbc81a2b64c64b1c31c2ad22f58ebc49129d5f",
+  "head_commit": "2b230a27775ea301b094337a8dbb2cc61321f0d9",
+  "task": "SPEC-0074",
+  "spec_sha": "1b447bd5633c9af5247942d3f632fc9421cab7b593f1d6b92518b3907d2bac4f",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0074-the-vocabulary-contract-says-what-the-matcher-does.json",
+      "sha256": "3945a82640be79a591a9a1fda72fa03d4677953fae53f79fc44ba73cc6798224"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0074-the-vocabulary-contract-says-what-the-matcher-does.json",
+      "sha256": "b703db3ab51651a22b9688f0948c400da325b93705a81349aac9f4f44dcd37ba"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "b7d207cc57e95c682dab059f77856287a563200a19aac316550097dd432db062"
+    }
+  ],
+  "attempts": 1,
+  "duration": 1648,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "2b230a27775ea301b094337a8dbb2cc61321f0d9"
+}

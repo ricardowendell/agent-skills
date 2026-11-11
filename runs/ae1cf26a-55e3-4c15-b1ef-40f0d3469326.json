@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "ae1cf26a-55e3-4c15-b1ef-40f0d3469326",
+  "started_at": "2026-11-11T16:56:19.861Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.6.0"
+  },
+  "base_commit": "45dbc81a2b64c64b1c31c2ad22f58ebc49129d5f",
+  "head_commit": "748c5a1934df618606d09883eaa0bbdd05e424cd",
+  "task": "SPEC-0076",
+  "spec_sha": "cfefe03953e3b826cd35aa1edd2cc1e8cbdcbaea90da723a59a9f74e8e163323",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0076-the-stall-is-after-the-load.json",
+      "sha256": "b1c7b8dcece772cbe95edf1ef5b759491ca8d0677673b0a48c807b01787278a3"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0076-the-stall-is-after-the-load.json",
+      "sha256": "a0cbc4b353a75f85db271069f7f9d3e56a606ed475a0a75ad4ac6ff2e7549274"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "8307a04fe40aef63e38bdb35ca5d79e772fd0a6d23c20573e9aba30116897cdd"
+    }
+  ],
+  "attempts": 1,
+  "duration": 1011,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "4ccd9e56d9560e1f57b8b599000b747c9aeb64c9"
+}

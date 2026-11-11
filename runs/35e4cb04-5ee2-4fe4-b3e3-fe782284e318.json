@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "35e4cb04-5ee2-4fe4-b3e3-fe782284e318",
+  "started_at": "2026-11-11T10:05:56.460Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.6.0"
+  },
+  "base_commit": "eae9d54ab013fb6b2033e97f3ead5715ce5f318c",
+  "head_commit": "27e71430b119ea66a817bfddbc6bd65e07b0a889",
+  "task": "SPEC-0035",
+  "spec_sha": "c00a1227d3288210cd17732eb78832cf37392bd3c05b5bd434b7e059e4243bcb",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0035-quick-refine-spike.json",
+      "sha256": "d8541d202a45dfa5cb3fa99e7fc2d7b83fdc2c0431c6c07b1b647c6ee099b06b"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0035-quick-refine-spike.json",
+      "sha256": "364f473e08dbcd6cd04bd1233c2fe5547b0b7a6beb95b639dcc61c6e155e8ec4"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "e5e53164c8705b33f8c0794017f089e5df672e50862d0eb86ebf70c00370a25d"
+    }
+  ],
+  "attempts": 1,
+  "duration": 541,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "27e71430b119ea66a817bfddbc6bd65e07b0a889"
+}

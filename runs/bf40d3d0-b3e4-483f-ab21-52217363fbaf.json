@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "bf40d3d0-b3e4-483f-ab21-52217363fbaf",
+  "started_at": "2026-11-11T11:30:04.499Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.6.0"
+  },
+  "base_commit": "46d050abd9a0331ddc081efb06fe44cbf31e7daf",
+  "head_commit": "d2527a867892a360a0316e82f87cbfc88c9ac623",
+  "task": "SPEC-0066",
+  "spec_sha": "043860168574d8e0ca3c59e98730a72624125477518544f9e09891b5c330351f",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0066-a-passing-run-is-an-effect.json",
+      "sha256": "e950f11ad7a700cc966dd1295982d674e847fb3758690bfcb505dcc9cb7ca4d6"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0066-a-passing-run-is-an-effect.json",
+      "sha256": "fb7da68f56a182ab1b512118e3f889f66315628d467c56cf216e38c7a8a25243"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "87938f10eeebbaafe8e596c8d02c7a1107d65897f1c2dc7ad80f8cdf1088a8a3"
+    }
+  ],
+  "attempts": 1,
+  "duration": 1835,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "d2527a867892a360a0316e82f87cbfc88c9ac623"
+}
