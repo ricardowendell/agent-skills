@@ -19,7 +19,7 @@ files:
   - scripts/check-staleness.mjs
   - scripts/check-staleness.test.mjs
   - docs/evals/coverage.md
-  - docs/specs/active/SPEC-0071-an-empty-directory-is-not-part-of-the-skill.md
+  - docs/specs/SPEC-0071-an-empty-directory-is-not-part-of-the-skill.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/eval.mjs check --root skills
@@ -29,7 +29,7 @@ tests:
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
   - node scripts/check-staleness.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0071-an-empty-directory-is-not-part-of-the-skill.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0071-an-empty-directory-is-not-part-of-the-skill.md --base main
 ---
 
 ## Purpose
