@@ -9,6 +9,41 @@ skills, which cases, and which published measurements.
 
 ## [Unreleased]
 
+## [0.7.1] — 2026-11-11
+
+The patch that fixes the measuring instrument, with zero paid draws.
+
+Three defects that the 0.7.0 corpus surfaced are closed, and the corpus is
+re-derived by replay rather than re-measured:
+
+- **`ranpass` and `ran` score the effect, not the command string.** A package
+  manager invocation is resolved through the fixture's `package.json` scripts
+  before the assertion regex is compared, so `npm test` satisfies the gate that
+  the project maps to `node --test`. A masked exit (`; echo "exit: $?"`,
+  `| tail`, `|| true`) is read from the status the command printed or from the
+  runner's own counters, and a printed `$?` that belongs to a pipe is not
+  attributed to the gate. Nothing readable is a red, not a pass. Replaying the
+  published cells moves exactly one number: `implement-from-prompt` #10
+  with-skill **1/5 → 2/5**; the other 17 cells replay to their published counts,
+  and the control stays 5/5.
+- **Isolation is recorded per draw.** A resumed cell no longer collapses every
+  draw into one claim, and a draw with no record reads as *unrecorded* — not as
+  "not enforced" and not as "older than the probe". Across all 355 stored runs
+  exactly one cell changes, and only its reason line: `#12` control now reports
+  `5 of 5 draws carry no enforcement record` instead of asserting they were
+  unenforced. Every `isolated` value and exit code is unchanged.
+- **The routing misses are diagnosed.** In 8 of 15 skill-arm draws the skill
+  never loaded: 4 of 10 on `#9`/`#10`, 4 of 5 on `#11`. All eight are *offered,
+  not chosen* — staged, no `skill` call, no read — and none was a gate rejection
+  or a lost context. The `implement-from-prompt` description now names the three
+  triggers the corpus exercises (a small change to an existing component; a bug
+  fixed with a regression test; one question on an ambiguous request) and still
+  does not name the unsafe-request case. **The fix is unverified**: it changes
+  `skillHash` to `218f51bb…`, `#11` flips fresh → stale, and proving the routing
+  costs draws that this patch does not spend.
+
+Nothing here re-scores a stored draw, lowers a bar, or raises a timeout.
+
 ## [0.7.0] — 2026-11-11
 
 The corpus that can see a small change. The release carries two things that only
