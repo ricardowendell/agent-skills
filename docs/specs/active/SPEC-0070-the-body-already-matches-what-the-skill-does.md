@@ -1,7 +1,7 @@
 ---
 id: SPEC-0070
 title: The body already matches what the skill does
-status: ready
+status: implemented
 priority: P2
 task: TASK-105
 created_at: 2026-11-11
