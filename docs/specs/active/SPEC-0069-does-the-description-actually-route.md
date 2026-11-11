@@ -1,7 +1,7 @@
 ---
 id: SPEC-0069
 title: Does the description actually route
-status: ready
+status: implemented
 priority: P1
 task: TASK-106
 created_at: 2026-11-11
