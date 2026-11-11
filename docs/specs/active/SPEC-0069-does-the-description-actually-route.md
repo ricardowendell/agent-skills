@@ -142,8 +142,11 @@ replaced. Record the revert and the failure; `#11` keeps its current class.
 2. F2 runs only after 3/3 and spends exactly 10 draws; both arms use
    `--model agentworks/deepseek-v4-1-flash` explicitly.
 3. Total spend is ≤ 13 and is reported draw by draw with run directories.
-4. Every cited run passes `check-eval-run`; its `isolated` and `skillHash` are
-   published.
+4. Every cited run's `isolated` and `skillHash` are published, and its
+   `check-eval-run` output is recorded. A routing smoke exits **1** by design —
+   its `gate-miss` findings *are* the failure record — so the bar is: no leak,
+   host-read or abort finding, and the exit is stated rather than hidden.
+   A cell run, if F2 happens, must exit 0.
 5. The published `#11` row names the new hashes, or the failure branch is
    published with the revert applied to `SKILL.md`.
 6. No case, prompt, fixture, assertion, gate or detector changes.
@@ -185,4 +188,124 @@ None.
 
 ## Results
 
-_Filled during implementation._
+**F1 failed: 0/3 loaded. The stop rule fired at the first point — F2 was not
+run, no control was drawn, and the spend is 3 paid draws ($0.018932). The
+description was reverted to the 0.7.0 wording.**
+
+### F1 — routing smoke, 3 draws
+
+Command, exactly as in Scope, run from the worktree at `repoSha e3b3c92`:
+
+```text
+node scripts/eval.mjs run implement-from-prompt 11 --arm with --repeat 3 \
+  --model agentworks/deepseek-v4-1-flash
+```
+
+Run directory:
+`2026-11-11T11-21-09--implement-from-prompt--agentworks-deepseek-v4-1-flash`
+
+| draw | status | `skillGate.ok` | `skillGate.source` | assertions | duration | cost |
+| --- | --- | --- | --- | --- | --- | --- |
+| r1 | failed | `false` | `null` | 2/2 pass | 119,130 ms | $0.007555 |
+| r2 | failed | `false` | `null` | 2/2 pass | 106,267 ms | $0.006132 |
+| r3 | failed | `false` | `null` | 2/2 pass | 100,909 ms | $0.005245 |
+
+`loaded 0/3`. Every reason is the bare `skill 'implement-from-prompt' was not
+loaded`; both assertions (`unchanged src/auth.js`, `noreply …`) passed in all
+three draws, loaded or not. No draw was contaminated, stalled, retried or
+aborted.
+
+Provenance: model `agentworks/deepseek-v4-1-flash`, arm `with-skill`, level
+`behavior`, detector `cf2e2e319d975a5b`, `fixtureHash
+c4e0f6e2060cc872adaa6ad8fcafc890bbd80755bf08c5fbd99ff91af533736d`,
+`promptHash
+295d9c918fa2b1613c2e82779dab42d6b035bdeb98b69bd42791ab84d59f5f0b`,
+`skillHash
+218f51bbb36a2d9016b8954ec680fb68c70db93cad9af294fcf4f125afe59130`
+(`SKILL.md a46c43cc…`), `stallMs 120000`, `params.isolation.enforced: true`
+(`seatbelt`), **`isolated=yes`**.
+
+```text
+$ node scripts/check-eval-run.mjs ~/.local/share/opencode/evals/runs/2026-11-11T11-21-09--implement-from-prompt--agentworks-deepseek-v4-1-flash
+gate-miss implement-from-prompt#11 r1 — skillGate not ok — skill 'implement-from-prompt' was not loaded
+gate-miss implement-from-prompt#11 r2 — skillGate not ok — skill 'implement-from-prompt' was not loaded
+gate-miss implement-from-prompt#11 r3 — skillGate not ok — skill 'implement-from-prompt' was not loaded
+cases=1 reps=3 findings=3 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0 (/Users/wendell/.local/share/opencode/evals/runs/2026-11-11T11-21-09--implement-from-prompt--agentworks-deepseek-v4-1-flash)
+exit 1
+```
+
+The non-zero exit is the routing `gate-miss` itself, not a leak or an incomplete
+run: `skillLeaks=0`, `hostReads=0`, `deniedDraws=0`, `warnings=0`.
+
+### F2/F3 — not run
+
+F2 is conditional on 3/3; the smoke loaded 0/3, so neither the with-skill nor
+the control five-draw cell exists. No `#9`/`#10`/`#12` draw was spent and no
+`stallMs`, timeout or isolation setting was changed. `#11` keeps its stored
+class — **non-discriminator**, 1/5 loaded against a 5/5 control — because a
+three-draw smoke is routing evidence, not a cell, and the failure branch does not
+re-judge the stored draws. Routing is reported as `with-skill loaded 0/3` (smoke)
+and `control not drawn`.
+
+### F4 — published, failure branch
+
+The description did not route `#11`, so it was reverted in
+`skills/implement-from-prompt/SKILL.md` to the 0.7.0 wording
+(`git show v0.7.0:skills/implement-from-prompt/SKILL.md`; only the
+`description:` line differed). The reverted tree is
+`9147487f27cb27be0b915500599896d90db0be01a49dd605a402f57268fbff9e`, the hash
+the stored `#11` cell ran against, so that cell is fresh again.
+
+Published:
+
+- `docs/evals/iterative-corpus.md` — the `#11` row, a new *The routing test
+  (SPEC-0069)* subsection with the per-draw table, the Gates row for the smoke,
+  the provenance note and the draws-spent line.
+- `docs/evals/coverage.md` — the `implement-from-prompt` row and a third dated
+  staleness reading (66 cited cells, 55 stale, 3 uncited).
+- `docs/specs/SPEC-0034-iterative-corpus.md` — a *Correction (SPEC-0069)* in the
+  routing paragraph.
+
+### Note — the empty-directory artefact
+
+The third staleness reading moves 54 → 55, but the added cell is not this spec's:
+`stagedTreeHash` hashes directory entries, so an empty, untracked
+`skills/groom-backlog/references/` directory held `groom-backlog` #2 at
+`e2a3b99f…`; with the directory gone the tree hashes `724bb8ad…` and the cell
+reads stale. `implement-from-prompt` #11 swaps its citation to the smoke and
+stays stale, so it contributes zero. The artefact is a harness defect, tracked
+as `TASK-107`; it is recorded here, not fixed in this spec.
+
+### Gates
+
+| command | result | exit |
+| --- | --- | --- |
+| `node scripts/validate-skills.mjs --root skills` | `Scanned 14 SKILL.md across 1 roots. All clear.` | 0 |
+| `node scripts/eval.mjs check --root skills` | `Parsed 101 case(s): 98 runnable, 3 manual; 98 fixture(s) staged. No findings.` | 0 |
+| `node --test scripts/lib/evals/*.test.mjs` | `fail 0` | 0 |
+| `node --test scripts/lib/*.test.mjs` | `fail 0` | 0 |
+| `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` | `fail 0` | 0 |
+| `node scripts/check-sensor-parity.mjs` | `2/2 fixtures in parity` | 0 |
+| `node scripts/check-evidence.mjs` | `6 documents, 0 errors, 0 warnings; current detector cf2e2e319d975a5b` | 0 |
+| `node scripts/check-staleness.mjs` | `66 cited cell(s), 55 stale, 3 uncited` (report-only) | 0 |
+| `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0069-does-the-description-actually-route.md --base main` | `contract holds` (no warnings at the committed tree) | 0 |
+| `node scripts/check-eval-run.mjs ~/.local/share/opencode/evals/runs/2026-11-11T11-21-09--implement-from-prompt--agentworks-deepseek-v4-1-flash` | 3 routing `gate-miss` findings (the failure record) | 1 |
+
+### Deviation
+
+AC4 as first written asked every cited run to *pass* `check-eval-run`. A routing
+smoke cannot: the `gate-miss` findings are the measurement, and the checker exits
+1 on them. The AC was amended to what it meant — publish the exit, and require no
+leak, host-read or abort finding — rather than to a green line that would only be
+true if the experiment had not been run. The exit is 1 and it is in the table.
+
+### Spend
+
+| draw | run directory | purpose | cost |
+| --- | --- | --- | --- |
+| 1 of 3 | `2026-11-11T11-21-09--implement-from-prompt--agentworks-deepseek-v4-1-flash` r1 | F1 smoke | $0.007555 |
+| 2 of 3 | same r2 | F1 smoke | $0.006132 |
+| 3 of 3 | same r3 | F1 smoke | $0.005245 |
+
+**Total: 3 paid draws, $0.018932** — inside the 13-draw ceiling, and the F1
+branch's declared 3.

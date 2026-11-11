@@ -261,6 +261,17 @@ failed only the literal matcher, and the control passed the same assertion 5/5,
 so #10 shows no incumbent-vs-control difference. No assertion, fixture, prompt or
 oracle was edited to make a cell separate.
 
+**Correction (SPEC-0069).** The description hypothesis was tested on `#11` with
+a three-draw smoke and a hard stop: **0/3 loaded** (`skillGate.ok: false`,
+`source: null` in r1–r3; both assertions passed in all three) in
+`2026-11-11T11-21-09--implement-from-prompt--agentworks-deepseek-v4-1-flash`
+(`skillHash 218f51bb…`, `isolated=yes`, three paid draws, $0.018932). The stop
+rule ended the spend at F1, so no five-plus-five cell was drawn. The description
+was reverted to the 0.7.0 wording — the reverted tree is `9147487f…`, the hash
+the stored `#11` cell ran against — and `#11` keeps its class and its 1/5
+loaded count. The failure is recorded in
+[`SPEC-0069` Results](active/SPEC-0069-does-the-description-actually-route.md#results).
+
 **Correction (SPEC-0066).** The `ranpass` defect named above was fixed and the
 stored transcripts replayed with no new draw (`node scripts/eval.mjs inspect
 <run-dir> --replay`). The effect-aware matcher resolves `npm test` through the
