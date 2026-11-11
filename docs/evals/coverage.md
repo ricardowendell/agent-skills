@@ -606,7 +606,12 @@ as staleness, while an empty, untracked **directory** does not (SPEC-0071).
   5/5, 5/5, 4/5 and 3/5 on the token (their cells: 0/5, 5/5, 4/5 and 0/5), and
   the measured column is unchanged. What the assertion still cannot read is a
   stance stated only as prose: #9's r3 and #10's r1/r4 name no listed stance, so
-  the red there is the absence of the token, not a different judgement.
+  the red there is the absence of the token, not a different judgement. Two latent
+  residues in the reader are closed by SPEC-0073 — the stance is the last clause
+  that names one (`reject the alternative; approve the change` is an approval) and
+  a comma ends a clause (`AC-2 is not implemented, changes requested` is a
+  rejection) — and both shapes are covered by test; neither has a store instance,
+  so no stored draw moves.
 - **`review-code` #3–#6 are historical at older hashes (SPEC-0056).** The wave
   re-ran #1, #2 and #7 at `skillHash 9a28572…`; #3–#6 were not re-measured, so
   their published cells are not evidence of green at this hash.
