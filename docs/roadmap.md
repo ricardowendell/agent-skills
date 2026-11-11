@@ -5,7 +5,11 @@ pipeline (`docs/pipeline.md`) governs how work runs; this page says what the wor
 is and in which order. A change of direction is a human decision, and the
 releases themselves are the record of what shipped.
 
-Status: **0.7.4 released** on 2026-11-11 — the verdict matcher reads the last
+Status: **0.7.5 released** on 2026-11-11 — four backlog decisions closed
+without a draw: the vocabulary contract matches the matcher, the pipeline's
+slug-vs-task link is documented with its workaround, the post-load stall is
+diagnosed as a byte-based watchdog killing a working child, and the visual cases
+are declared human review rather than a promised oracle. 0.7.4 released on 2026-11-11 — the verdict matcher reads the last
 clause and a comma is a clause (zero stored verdicts move), and seven sentences in
 the evidence docs were corrected to state only what their artefacts support.
 0.7.3 released on 2026-11-11 — the tree hash ignores an empty

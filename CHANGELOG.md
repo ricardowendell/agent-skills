@@ -9,6 +9,32 @@ skills, which cases, and which published measurements.
 
 ## [Unreleased]
 
+## [0.7.5] — 2026-11-11
+
+Four backlog decisions closed, none of them by spending a draw.
+
+- **The vocabulary contract matches the matcher (`SPEC-0074`).** `kinds.mjs` said a
+  comma was not a clause boundary; after 0.7.4 it is, for every blocker except
+  `if`/`unless`/`whether`. The comment now states the rule, and the file that *is*
+  the contract no longer contradicts its own tests. Comment-only.
+- **The pipeline's task link is documented (`SPEC-0075`).** `pdlc` derives the task
+  id from the spec's **slug**, so `SPEC-00NN` is sent to a task that does not
+  exist and every dispatch prints "não foi possível marcar". `CONTRIBUTING.md` now
+  says why, that the run is not blocked, that only dispatch needs a hand, that
+  merge already resolves the declared task (and a manual `Done` would skip
+  `pendingSisters`), and that verify needs both an existing id *and* the status
+  declared in `backlog/config.yml`.
+- **The stall is diagnosed (`SPEC-0076`).** `write-implementation-prompt` #5's four
+  stalls all happen after the load and are killed by the 120 s **byte-based**
+  watchdog. The decisive witness is a live shell tool silent for **118.5 s**: the
+  watchdog kills a child that is working. Prompt excluded, provider undecided with
+  its falsifier named, and `#5` stays a trigger case at `loaded 5/5` with no
+  behavioural cell. The follow-up is a child heartbeat, never a longer timeout.
+- **No visual oracle, and the claim says so (`SPEC-0077`).** The roadmap no longer
+  opens the 0.8.0 wave with a browser oracle; the two visual cases rest on a
+  **declared human review**, and no release claims measured separation for a
+  visual change. The oracle stays a future item with a runner-sized cost.
+
 ## [0.7.4] — 2026-11-11
 
 The matcher stops reading a verdict line backwards, and seven sentences stop
