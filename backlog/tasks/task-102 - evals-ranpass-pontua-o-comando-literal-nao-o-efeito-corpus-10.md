@@ -32,4 +32,12 @@ created: 2026-11-11T11:29:40.955Z
 Groomed as SPEC-0066. Segundo defeito da mesma classe, medido no store: 33 chamadas com '; echo "exit: $?"' ou pipe que tomam o status, e 5 onde o exit gravado (0) contradiz o que o comando imprimiu (1-3). ranpass pode ficar verde num suite vermelho. Entra no escopo: resolver a cadeia de script pelo package.json do fixture e ler o status impresso, falhando fechado quando nao houver. Republica por replay, zero draw.
 
 ---
+
+created: 2026-11-11T12:40:05.620Z
+
+---
+
+Done via SPEC-0066 (merge em main). ranpass/ran resolvem a cadeia de script pelo package.json do fixture e leem o efeito: exit proprio quando atribuivel, senao o status impresso, senao os contadores do runner; sem evidencia, vermelho. Republicado por replay: implement-from-prompt #10 com skill 1/5 -> 2/5 (r1). Nenhum outro numero mudou nos 355 runs. Zero draws. 544 testes.
+
+---
 <!-- COMMENTS:END -->
