@@ -1,7 +1,7 @@
 ---
 id: SPEC-0076
 title: The stall is after the load, and the answer is not a longer wait
-status: ready
+status: implemented
 priority: P2
 task: TASK-50
 created_at: 2026-11-11
