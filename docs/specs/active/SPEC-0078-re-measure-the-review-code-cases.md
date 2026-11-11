@@ -168,4 +168,119 @@ None.
 
 ## Results
 
-_Filled during implementation._
+Measured 2026-11-11 in this worktree at `repoSha aabb206`, model
+`agentworks/deepseek-v4-1-flash`, detector `cf2e2e319d975a5b`, level `behavior`,
+concurrency 4, `stallMs` 120000 (unchanged). Every run records
+`params.isolation.enforced: true` (seatbelt); the with-skill runs record the
+tree hash `9a28572…`
+(`9a28572110c6ed3f09d1aad20406a9a3a15c1d12b8eaf27291f9ec111b351595`), and every
+run records the governed files it shares with that checkout
+(`SKILL.md c43fb3e2…`, `references/deterministic-checks.md 9c92a4e7…`) — the
+control arms stage no skill, so their `skillHash` is `null` by construction.
+
+### Spend — 30 paid draws, 30 consumed, 0 discarded
+
+Six runs in the order F1 fixes, five draws each. No draw stalled, no draw
+aborted at the provider, no `--resume`, no re-run. The ceiling (40) was not
+reached; the ten reserve draws were not used. No `#1`, `#2` or `#7`–`#10` draw
+was taken.
+
+| # | cell | run directory | draws | r1 | r2 | r3 | r4 | r5 | clean | passed | cumulative |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | #3 with skill | `2026-11-11T14-32-10--review-code--agentworks-deepseek-v4-1-flash` | 5 | pass | pass | pass | pass | pass | 5/5 | 5/5 | 5 |
+| 2 | #3 without skill | `2026-11-11T14-37-56--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5 | fail | fail | fail | fail | fail | 5/5 | 0/5 | 10 |
+| 3 | #4 with skill | `2026-11-11T14-43-55--review-code--agentworks-deepseek-v4-1-flash` | 5 | pass | pass | pass | pass | pass | 5/5 | 5/5 | 15 |
+| 4 | #4 without skill | `2026-11-11T14-46-54--review-code--agentworks-deepseek-v4-1-flash--without-skill` | 5 | pass | pass | fail | fail | fail | 5/5 | 2/5 | 20 |
+| 5 | #5 trigger | `2026-11-11T14-49-32--review-code--agentworks-deepseek-v4-1-flash` | 5 | pass | pass | pass | pass | pass | 5/5 | 5/5 | 25 |
+| 6 | #6 trigger | `2026-11-11T14-54-36--review-code--agentworks-deepseek-v4-1-flash` | 5 | pass | pass | pass | pass | pass | 5/5 | 5/5 | 30 |
+
+The trigger controls were not drawn: a control stages no skill, so case 5's
+`skill review-code` fails and case 6's `notskill review-code` passes by
+construction (F1, Decisions). Ten draws for a tautology would have bought no
+information, and it is the only place the task's `4 × 2 × 5` arithmetic is
+reduced.
+
+`check-eval-run` on each of the six directories exits 0 and prints
+`findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0`. No
+directory exits 1: no routing `gate-miss` occurred, because the with-skill draws
+loaded `review-code` through the skill tool in all of them
+(`skillGate.source: "tool"` for #3 and #4; `loaded: ["review-code"]` for #5 and
+`loaded: []` for #6).
+
+### Before / after
+
+The before column is the published cell this spec replaces; the after column is
+this wave. The hash is the same `9a28572…` the SPEC-0056 wave published, so the
+comparison is at one `skillHash` for the first time.
+
+| case | before (historical) | before class | after, 5 draws per measured cell | class now |
+| --- | --- | --- | --- | --- |
+| #3 no spec in the repo | 2026-11-03, `5/5 vs 1/5`, pre-detector (`warnings=5`), no recorded hash | separator (derived — no class published) | `5/5 vs 0/5` | **separator** |
+| #4 spec moved after the stamp | 2026-11-05, `5/5 vs 3/5`, pre-detector (`warnings=5`), no recorded hash | token/contract separator (derived) | `5/5 vs 2/5` | **non-discriminator** on the judgement |
+| #5 trigger: branch handed over | no run, no cell | none | `5/5` loaded | non-discriminator (trigger, one arm by design) |
+| #6 near-miss: debugging a build | no run, no cell | none | `5/5` not loaded | non-discriminator (trigger, one arm by design) |
+
+### Class per case, and the red assertion per red cell
+
+**#3 — separator.** The arms differ on the judgement. With the skill, r1–r5
+withhold the verdict and ask for the intent ("no spec, no prompt, no spec hash",
+"Basis needed — one of: the spec id… or your explicit declaration"). The control
+reviews the diff anyway, invents a rounding policy as an acceptance criterion,
+and issues a verdict in all five draws ("request changes", "Approve with one
+small fix", "Bottom line: …"). Red in every control draw, and only there:
+
+- `reply (?:(?:provide|share|send)[ \t]+(?:the[ \t]+|me[ \t]+the[ \t]+)?(?:source[ \t]+)?spec|(?:confirm|authori[sz]e)[^.\n]{0,40}(?:review|basis)|withh(?:eld|old)|hold(?:ing)?[ \t]+(?:the[ \t]+)?verdict|(?:can'?t|cannot|could not|won'?t)[ \t]+(?:(?:issue|produce|give|make)[ \t]+(?:a |the )?verdict|review[ \t]+(?:against|without|this|it)))` — r1–r5
+- `noreply (?:^|\n)…(?:verdict|veredicto|parecer)…(?:approve[ds]?|reject(?:ed)?|request changes|changes requested|…)` — r1–r5
+
+This is not the `5/5 vs 4/5` shape the spec warns about: the control reached
+`0/5` because it answered the question the case says must not be answered, not
+because a token moved. The historical `1/5` pass answered in Portuguese
+("Veredicto: Request changes"); the current guard reads the stance in both
+languages, and nothing in these five draws matched the refusal vocabulary.
+
+**#4 — non-discriminator.** Both arms reject the branch against the moved spec;
+the arms agree on the judgement. Red in control r3, r4 and r5, and only there:
+
+- `verdict REJECT` — r3, r4, r5. They write `**Verdict: not ready — the spec is
+  not implemented at all.**`, `## Verdict: not implemented`, and `**Verdict:
+  not implemented.**`; the closed stance table does not read a negated form, and
+  the stored reader records `got NOT`. r5 ends "Reject / return for
+  implementation"; r4 says "Nothing here is mergeable as SPEC-0007". The four
+  other assertions pass in all five control draws, including `reply feb763b1`
+  and `reply 36c915b0`.
+
+Under F2 this is **non-discriminator**: the arms agree on the judgement and the
+gap is the stance token, so publishing it as a separator would be a claim the
+draws do not support. In the matrix's older vocabulary the same cell reads
+"token/contract separator"; that phrase is kept in the per-case history, but the
+class published for this wave is the spec's.
+
+**#5 — trigger, one arm by design.** `skill review-code` passes 5/5: the skill
+is loaded in all five draws from the prompt "Review this branch before I merge
+it." Red assertions: none. No control is drawn, so there is no separation to
+claim; the measured fact is reachability.
+
+**#6 — trigger, one arm by design.** `notskill review-code` passes 5/5: the
+skill is not loaded for "Why did my build fail on Node 20?" in any draw. Red
+assertions: none. No control is drawn; the measured fact is the absence of a
+false trigger.
+
+### Cells that remain historical
+
+- `review-code` #1, #2 and #7–#10 were **not** drawn in this wave. They keep the
+  SPEC-0056 cells (measured 2026-11-10 at the same `skillHash 9a28572…`), which
+  are current by hash but are another wave's measurement.
+- The pre-detector #3 (`2026-11-03T10-06-33--review-code` /
+  `2026-11-03T09-56-47--review-code--without-skill`, `5/5 vs 1/5`) and #4
+  (`2026-11-05T07-34-32--review-code` /
+  `2026-11-05T07-47-21--review-code--without-skill`, `5/5 vs 3/5`) cells stay in
+  `review-code-matrix.md` **as history, marked**, not deleted.
+- No `review-code` cell remains historical at an older `skillHash`: all ten cases
+  are now published at `9a28572…`, six of them by this wave and four by
+  SPEC-0056.
+
+### What did not change
+
+No case, prompt, fixture, assertion, `why:` line or gate was edited. `stallMs`
+stays 120000. No transcript was read to tune anything; the replies above were
+read to publish the routing and the red assertions.
