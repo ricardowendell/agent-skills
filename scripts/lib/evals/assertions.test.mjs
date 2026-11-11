@@ -558,6 +558,47 @@ test("the effective exit is the gate's own status", () => {
   assert.equal(masked("test-exit: 4").code, 4)
 })
 
+test("a masked exit is read from the runner's counters", () => {
+  const masked = (output) =>
+    effectiveExit({ input: { command: "npm test 2>&1 | tail -40" }, exit: 0, output }, { gateLast: false })
+  assert.deepEqual(masked("ℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\n"), { code: 0, why: "runner summary" })
+  assert.deepEqual(masked("ℹ tests 2\nℹ suites 0\nℹ pass 1\nℹ fail 1\n"), { code: 1, why: "runner summary" })
+  assert.deepEqual(masked("# tests 2\n# pass 2\n# fail 0\n"), { code: 0, why: "runner summary" })
+  assert.deepEqual(masked("# tests 2\n# pass 1\n# fail 1\n"), { code: 1, why: "runner summary" })
+  assert.deepEqual(masked("Tests:       1 failed, 2 passed, 3 total\n"), { code: 1, why: "runner summary" })
+  assert.deepEqual(masked("Tests:       3 passed, 3 total\n"), { code: 0, why: "runner summary" })
+  assert.deepEqual(masked("npm ERR! Test failed.\n"), { code: 1, why: "runner summary" })
+  // `✖` is node's marker for skipped and todo tests too; only the counters decide.
+  assert.equal(masked("✖ skipped test\n✖ todo test\n").code, null)
+  assert.equal(masked("✖ failing tests:\n\nassertion failed\n").code, null)
+  // The last verdict block wins: a pre-fix red then a post-fix green reads green.
+  assert.equal(masked("ℹ pass 2\nℹ fail 1\n\n---\n\nℹ pass 3\nℹ fail 0\n").code, 0)
+  assert.equal(masked("ℹ pass 3\nℹ fail 0\n\n---\n\nℹ pass 2\nℹ fail 1\n").code, 1)
+  // An explicit printed status comes before the counters.
+  assert.equal(masked("ℹ pass 3\nℹ fail 0\nGATE_EXIT=1\n").code, 1)
+  assert.equal(masked("ℹ pass 2\nℹ fail 1\nGATE_EXIT=0\n").code, 0)
+})
+
+test("a red pre-fix run and a green post-fix run in one cell pass", () => {
+  const out = transcript({
+    tools: [
+      {
+        tool: "shell",
+        input: { command: "npm test 2>&1 | tail -30" },
+        output: "✖ failing tests:\n\nassertion failed\n",
+        meta: { exit: 0 },
+      },
+      {
+        tool: "shell",
+        input: { command: "npm test 2>&1 | tail -20" },
+        output: "ℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0\n",
+        meta: { exit: 0 },
+      },
+    ],
+  })
+  assert.equal(one({ kind: "ranpass", arg: "npm test" }, "/tmp", out).pass, true)
+})
+
 test("ranpass resolves npm test to node --test", () => {
   const scratch = tree({ "package.json": JSON.stringify({ scripts: { test: "node --test" } }) })
   const out = transcript({

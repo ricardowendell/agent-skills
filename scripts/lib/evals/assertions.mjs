@@ -399,10 +399,11 @@ export function resolveCommands(command, scratch) {
   return forms
 }
 
-// `exit: N`, `EXIT: N`, `exit code N`, `NAME-exit: N` — the status a command
+// `exit: N`, `EXIT: N`, `exit code N`, `NAME-exit: N`, `GATE_EXIT=0` and the
+// values a `$?`/`${pipestatus[…]}`, `$?` echo writes — the status a command
 // printed for itself. Last match wins: a command that reports more than once
 // ends with its final status.
-const PRINTED_EXIT = /\b(?:[A-Za-z0-9_.-]+-)?exit(?:\s+code)?\s*[:=]?\s*(-?\d+)\b/gi
+const PRINTED_EXIT = /\b(?:[A-Za-z0-9_.-]*[-_])?exit(?:\s+code)?\s*(?:[:=]\s*)?(-?\d+)\b/gi
 
 function printedExit(output) {
   const text = String(output ?? "")
@@ -416,19 +417,55 @@ function printedExit(output) {
   return last
 }
 
+// A test runner's own counters. `✖` is deliberately absent: node's TAP output
+// uses it for skipped and todo tests too, so only the counts decide.
+const SUMMARY_LINE =
+  /^(?:\s*(?:ℹ|#)\s*(?:tests|suites|pass|fail|cancelled|skipped|todo|duration_ms)\b|\s*Tests:|\s*npm ERR!)/
+
+function lastSummaryBlock(output) {
+  const lines = String(output ?? "").split("\n")
+  let current = []
+  let last = []
+  for (const line of lines) {
+    if (SUMMARY_LINE.test(line)) {
+      current.push(line)
+      last = current
+    } else {
+      current = []
+    }
+  }
+  return last.join("\n")
+}
+
+// The runner's verdict from the last counter block in the output. A later run
+// replaces an earlier one, so a pre-fix red and a post-fix green read green.
+function summaryExit(output) {
+  const block = lastSummaryBlock(output)
+  if (!block) return null
+  if (/\bnpm ERR!/.test(block)) return 1
+  if (/(?:^|\n)\s*(?:ℹ|#)\s*fail\s+[1-9]\d*/.test(block)) return 1
+  if (/Tests:.*\b[1-9]\d*\s+failed/.test(block)) return 1
+  if (/(?:^|\n)\s*(?:ℹ|#)\s*pass\s+[1-9]\d*/.test(block)) return 0
+  if (/Tests:.*\b\d+\s+passed/.test(block)) return 0
+  return null
+}
+
 // The gate's status, not the wrapper's. When the matched command is the last
 // command of the call, the recorded exit is the gate's. Otherwise the recorded
 // exit belongs to whatever came after — `; echo "exit: $?"`, `| tail`, `|| true`
-// — and the status is read from what the command printed. A zero recorded exit
-// with nothing printed is unknown, and unknown is not a pass. A non-zero
-// recorded exit is already a red gate, so it is kept as the conservative
-// reading rather than rewritten to unknown.
+// — and the status is read from the output: an explicit printed code first, then
+// the runner's own counters. Nothing readable is unknown, and unknown is not a
+// pass. A non-zero recorded exit is already a red gate, so it is kept as the
+// conservative reading rather than rewritten to unknown (this is what preserves
+// the existing `events.test.mjs` stream).
 export function effectiveExit(call, { gateLast = true } = {}) {
   const recorded = Number.isInteger(call?.exit) ? call.exit : null
   if (gateLast) return { code: recorded, why: recorded === null ? "no recorded exit" : "recorded exit" }
   if (recorded !== null && recorded !== 0) return { code: recorded, why: "wrapper failed" }
   const printed = printedExit(call?.output)
   if (printed !== null) return { code: printed, why: "printed status" }
+  const summary = summaryExit(call?.output)
+  if (summary !== null) return { code: summary, why: "runner summary" }
   return { code: null, why: "exit masked, no recorded status" }
 }
 
