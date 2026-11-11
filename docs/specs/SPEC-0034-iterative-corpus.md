@@ -218,7 +218,7 @@ no retry. Ten paid draws.
 | case | with skill | control | class | red cell |
 | --- | --- | --- | --- | --- |
 | #9 | 4/5 (4/4 loaded passed) | 5/5 | non-discriminator | r5 is a routing `gate-miss`, not an assertion |
-| #10 | 1/5 (2 loaded, 1 harness-passing) | 5/5 | **unresolved** (routing) | `ranpass node --test` on r1 is an oracle artifact (`npm test` vs `node --test`); r2/r3/r5 `gate-miss` |
+| #10 | 2/5 (2 loaded, 2 harness-passing) | 5/5 | **unresolved** (routing) | r2/r3/r5 `gate-miss`; the old `ranpass` note on r1 is superseded by the SPEC-0066 correction block below |
 | #11 (holdout) | 1/5 scored, 5/5 on both assertions (1/5 loaded) | 5/5 | non-discriminator | no behavioural red; r2–r5 `gate-miss` |
 | #12 | 4/5 | 0/5 | **separator** | with r2 the literal `?` matcher; control `unchanged **` (5/5), `reply \?` on r1/r3/r4 |
 

@@ -574,9 +574,52 @@ test("a masked exit is read from the runner's counters", () => {
   // The last verdict block wins: a pre-fix red then a post-fix green reads green.
   assert.equal(masked("ℹ pass 2\nℹ fail 1\n\n---\n\nℹ pass 3\nℹ fail 0\n").code, 0)
   assert.equal(masked("ℹ pass 3\nℹ fail 0\n\n---\n\nℹ pass 2\nℹ fail 1\n").code, 1)
-  // An explicit printed status comes before the counters.
+  // An explicit printed status comes before the counters, except that a red
+  // last verdict block beats a green printed status.
   assert.equal(masked("ℹ pass 3\nℹ fail 0\nGATE_EXIT=1\n").code, 1)
-  assert.equal(masked("ℹ pass 2\nℹ fail 1\nGATE_EXIT=0\n").code, 0)
+  assert.equal(masked("ℹ pass 2\nℹ fail 1\nGATE_EXIT=0\n").code, 1)
+})
+
+// The stored shape that proves why a piped gate's `$?` is not the gate's:
+// `npm test | tail; echo "EXIT: $?"` prints tail's status, while the counters
+// still name the gate's verdict. The printed 0 must not make a red suite green.
+test("a piped gate's printed $? is not its status", () => {
+  const scratch = tree({ "package.json": JSON.stringify({ scripts: { test: "node --test" } }) })
+  const piped = (fail) =>
+    transcript({
+      tools: [
+        {
+          tool: "shell",
+          input: { command: 'npm test 2>&1 | tail -40; echo "EXIT: $?"' },
+          output:
+            `✖ failing test\nℹ tests 6\nℹ suites 0\nℹ pass ${fail ? 5 : 6}\nℹ fail ${fail ? 1 : 0}\nEXIT: 0\n`,
+          meta: { exit: 0 },
+        },
+      ],
+    })
+  const red = one({ kind: "ranpass", arg: "npm test" }, scratch, piped(true))
+  assert.equal(red.pass, false, "tail's exit 0 made a red suite green")
+  assert.match(red.detail, /exit 1/)
+  assert.equal(one({ kind: "ranpass", arg: "npm test" }, scratch, piped(false)).pass, true)
+})
+
+test("a ; echo of $? after the gate is the gate's status", () => {
+  const scratch = tree({ "package.json": JSON.stringify({ scripts: { test: "node --test" } }) })
+  const shape = (status) =>
+    transcript({
+      tools: [
+        {
+          tool: "shell",
+          input: { command: 'npm test 2>&1; echo "exit: $?"' },
+          output: `ℹ tests 6\nℹ suites 0\nℹ pass 6\nℹ fail 0\nexit: ${status}\n`,
+          meta: { exit: 0 },
+        },
+      ],
+    })
+  assert.equal(one({ kind: "ranpass", arg: "npm test" }, scratch, shape(0)).pass, true)
+  const red = one({ kind: "ranpass", arg: "npm test" }, scratch, shape(1))
+  assert.equal(red.pass, false)
+  assert.match(red.detail, /exit 1/)
 })
 
 test("a red pre-fix run and a green post-fix run in one cell pass", () => {

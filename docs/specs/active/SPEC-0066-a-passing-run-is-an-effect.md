@@ -214,17 +214,21 @@ None.
   per-chain visited set. The literal command is always returned first. A missing,
   unreadable or non-JSON `package.json` returns the literal alone; nothing throws.
   `ran` and `ranpass` both match the literal **and** every resolved form.
-- **F2 — `effectiveExit(call, { gateLast })`**, in this order:
+- **F2 — `effectiveExit(call, { gateLast, attributable })`**, in this order:
   1. the recorded `exit` when the gate invocation is the last command of the
      shell call;
   2. an explicit status the command printed — `exit: N`, `EXIT: N`,
      `exit code N`, `NAME-exit: N`, `GATE_EXIT=0` / `$?` / `${pipestatus[…]}` —
-     last match wins;
+     **only when the printed value is attributable to the gate**: the gate is
+     either last, or a `;`/newline separates it from an `echo`/`printf` of `$?`.
+     A pipe (`|`, `|&`) or an `&&`/`||` chain took the status, so its `$?` is the
+     stage's and the printed value is skipped. Last match wins;
   3. the test runner's own counters from the last verdict block in that call's
      output: red on `ℹ fail [1-9]`, `# fail [1-9]`, `npm ERR!`, or
      `Tests: … [1-9]… failed`; green on `ℹ pass [1-9]`, `# pass [1-9]`, or
      `Tests: … passed` with no failed count. `✖` alone is **not** a failure
-     marker: node prints it for skipped and todo tests too;
+     marker: node prints it for skipped and todo tests too. A **red** last block
+     beats any green printed status in the same call;
   4. otherwise **unknown**, and unknown is not green —
      `exit masked, no recorded status`.
   A non-zero recorded exit on a masked call is kept as the conservative reading
@@ -233,13 +237,15 @@ None.
 - **F4 —** `kinds.mjs`'s `ranpass` summary states both the resolution and the
   fail-closed rule.
 
-**Review correction.** The first F2 draft read only an explicit printed status.
+**Review corrections.** The first F2 draft read only an explicit printed status.
 A `| tail` pipeline that printed no `exit: N` therefore became unknown, and the
 replay turned green suites red in `review-code` #1, #8, #9, #10 and
 `implement-from-prompt` #10's control. That was the original defect inverted.
-The rule above reads the runner's counters when the wrapper hides the exit, and
-the audit was re-run from scratch. Every one of those cells returns to its
-published count.
+The second draft preferred any printed status, so `npm test | tail; echo
+"EXIT: $?"` read `tail`'s 0 as the gate's and could turn a red suite green — the
+original defect itself. The rule above attributes a printed `$?` only when the
+gate owns it, reads the runner's counters otherwise, and lets a red last block
+beat a green printed value. Every affected cell keeps its published count.
 
 ### F3 — replay (no draw, no resume)
 
@@ -282,8 +288,12 @@ stated effect — `npm test` now resolves to `node --test`, so r1 passes — not
 masked-exit red. Every review-code cell, the `#10` control and both
 audit-code-quality cells replay to exactly the count already in `main`; the
 stored artefacts are unchanged. The review-code `ranpass` calls that pipe through
-`tail` print `ℹ pass N` / `ℹ fail 0` in the same output, so the corrected rule
-reads them green.
+`tail` print `ℹ pass N` / `ℹ fail 0` in the same output, so the counters read
+them green. The three stored `npm test | tail; echo "EXIT: $?"` shapes that print
+a red counter block and `EXIT: 0` (`review-code` #7 r2/r3 in
+`2026-11-05T09-05-36`, `2026-11-07T09-07-52` and `2026-11-07T22-11-22`) are not
+runpass cells — #7 asserts `ran` — but the guard now reads them red instead of
+taking `tail`'s 0.
 
 ### `#10`
 
@@ -300,7 +310,7 @@ and a `ranpass` pass does not make `#10` a separator. The routing finding
 ### Gates
 
 All commands from `tests:` exit 0: `validate-skills`, `eval.mjs check`,
-`--test scripts/lib/evals/*.test.mjs` (540 pass), `--test
+`--test scripts/lib/evals/*.test.mjs` (544 pass — observed at the final run), `--test
 scripts/lib/*.test.mjs` (13), `--test
 skills/bootstrap-project-harness/scripts/*.test.mjs` (42),
 `check-sensor-parity`, `check-evidence`, `check-staleness`, and `spec-check`

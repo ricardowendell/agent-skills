@@ -245,11 +245,22 @@ export function oracleWarnings(c, entries) {
 // such as `2>&1` whole) so the matcher can tell which command the gate is.
 // This is not a shell parser: pipes, `;`, `&&`, `||`, newlines and background
 // `&` are the separators the corpus uses.
-function splitCommands(command) {
+// Each part carries the operator that precedes it (`;`, `\n`, `&&`, `||`, `|`,
+// `|&`, `&`, or null for the first). The operator is what decides whether a
+// `$?` printed after the gate belongs to the gate or to the stage that took its
+// status — `;` can hand `$?` to the gate, a pipe and an `&&`/`||` chain cannot.
+function parseCommands(command) {
   const text = String(command ?? "")
   const parts = []
   let cur = ""
   let quote = null
+  let nextSep = null
+  const flush = (sep) => {
+    const trimmed = cur.trim()
+    if (trimmed) parts.push({ text: trimmed, sep: nextSep })
+    cur = ""
+    nextSep = sep
+  }
   for (let i = 0; i < text.length; i++) {
     const ch = text[i]
     if (quote) {
@@ -269,13 +280,11 @@ function splitCommands(command) {
       continue
     }
     if (ch === ";") {
-      parts.push(cur)
-      cur = ""
+      flush(";")
       continue
     }
     if (ch === "\n") {
-      parts.push(cur)
-      cur = ""
+      flush("\n")
       continue
     }
     if (ch === "&") {
@@ -284,21 +293,35 @@ function splitCommands(command) {
         cur += ch
         continue
       }
-      if (text[i + 1] === "&") i++
-      parts.push(cur)
-      cur = ""
+      const op = text[i + 1] === "&" ? "&&" : "&"
+      if (op === "&&") i++
+      flush(op)
       continue
     }
     if (ch === "|") {
-      if (text[i + 1] === "|") i++
-      parts.push(cur)
-      cur = ""
+      const op = text[i + 1] === "|" ? "||" : text[i + 1] === "&" ? "|&" : "|"
+      i += op.length - 1
+      flush(op)
       continue
     }
     cur += ch
   }
-  parts.push(cur)
-  return parts.map((p) => p.trim()).filter(Boolean)
+  flush(null)
+  return parts
+}
+
+function splitCommands(command) {
+  return parseCommands(command).map((p) => p.text)
+}
+
+// An `echo`/`printf` that reports the previous command's status. `$?`,
+// `${?}`, `$status` (zsh) and the `pipestatus` arrays are the forms the corpus
+// prints. The operator before it decides whose status it is.
+function isStatusEcho(segment) {
+  const list = words(segment)
+  const exe = (list[0] ?? "").split("/").pop()
+  if (exe !== "echo" && exe !== "printf") return false
+  return /\$(?:\?|\{\?\}|\{PIPESTATUS\[|pipestatus\[|status\b)|\bPIPESTATUS\b|\bpipestatus\b/i.test(segment)
 }
 
 // The command word and its arguments, with leading `FOO=bar` assignments removed.
@@ -353,40 +376,50 @@ const SCRIPT_DEPTH = 3
 // cycle ends the expansion instead of the process.
 function commandEntries(command, scratch) {
   const literal = String(command ?? "")
-  const parts = splitCommands(literal)
+  const parts = parseCommands(literal)
   const scripts = readScripts(scratch)
   const entries = []
   const seen = new Set()
-  const add = (form, segment, gateLast) => {
+  const add = (form, segment, gateLast, attributable) => {
     if (typeof form !== "string") return
-    const key = `${segment}\u0000${form}\u0000${gateLast}`
+    const key = `${segment}\u0000${form}\u0000${gateLast}\u0000${attributable}`
     if (seen.has(key)) return
     seen.add(key)
-    entries.push({ form, segment, gateLast })
+    entries.push({ form, segment, gateLast, attributable })
   }
+  const lastHere = (parsed, i) => i === parsed.length - 1
+  // The gate's status reaches a printed `$?` only when nothing took it after
+  // the invocation: it is either the last command, or a `;`/newline separates it
+  // from an echo/printf of `$?`. A pipe or `&&`/`||` chain owns the status.
+  const statusHere = (parsed, i) =>
+    lastHere(parsed, i) ||
+    ((parsed[i + 1].sep === ";" || parsed[i + 1].sep === "\n") && isStatusEcho(parsed[i + 1].text))
 
   // A single-command call is the gate entire. A compound call is matched one
   // command at a time, so a wrapper cannot lend the gate its status.
-  if (parts.length <= 1) add(literal, parts[0] ?? literal, true)
-  parts.forEach((part, i) => add(part, part, i === parts.length - 1))
+  if (parts.length <= 1) add(literal, parts[0]?.text ?? literal, true, true)
+  parts.forEach((p, i) => add(p.text, p.text, lastHere(parts, i), statusHere(parts, i)))
 
-  const walk = (text, segment, containerLast, depth, ancestors) => {
+  const walk = (text, segment, containerLast, containerAttrib, depth, ancestors) => {
     if (depth > SCRIPT_DEPTH) return
-    const local = splitCommands(text)
-    local.forEach((part, i) => {
-      const name = scriptName(part)
+    const local = parseCommands(text)
+    local.forEach((p, i) => {
+      const name = scriptName(p.text)
       if (!name || !Object.prototype.hasOwnProperty.call(scripts, name) || ancestors.has(name)) return
       const next = new Set(ancestors)
       next.add(name)
-      const last = containerLast && i === local.length - 1
+      const last = containerLast && lastHere(local, i)
+      const attrib = containerAttrib && statusHere(local, i)
       const body = scripts[name]
-      const bodyParts = splitCommands(body)
-      if (!bodyParts.length) add(body, segment, last)
-      bodyParts.forEach((bp, j) => add(bp, segment, last && j === bodyParts.length - 1))
-      walk(body, segment, last, depth + 1, next)
+      const bodyParts = parseCommands(body)
+      if (!bodyParts.length) add(body, segment, last, attrib)
+      bodyParts.forEach((bp, j) =>
+        add(bp.text, segment, last && lastHere(bodyParts, j), attrib && statusHere(bodyParts, j)),
+      )
+      walk(body, segment, last, attrib, depth + 1, next)
     })
   }
-  parts.forEach((part, i) => walk(part, part, i === parts.length - 1, 1, new Set()))
+  parts.forEach((p, i) => walk(p.text, p.text, lastHere(parts, i), statusHere(parts, i), 1, new Set()))
   return entries
 }
 
@@ -451,21 +484,26 @@ function summaryExit(output) {
 }
 
 // The gate's status, not the wrapper's. When the matched command is the last
-// command of the call, the recorded exit is the gate's. Otherwise the recorded
-// exit belongs to whatever came after — `; echo "exit: $?"`, `| tail`, `|| true`
-// — and the status is read from the output: an explicit printed code first, then
-// the runner's own counters. Nothing readable is unknown, and unknown is not a
-// pass. A non-zero recorded exit is already a red gate, so it is kept as the
+// command of the call, the recorded exit is the gate's. Otherwise a printed
+// status is used only when the gate's own status reaches it (`gateLast` false
+// but `attributable` true, the `; echo "…$?"` shape); a pipe or an `&&`/`||`
+// chain owns `$?`, so that shape skips the printed value and reads the runner's
+// counters. A red last verdict block beats any green printed status, as a guard
+// against a mis-attributed `$?`. Nothing readable is unknown, and unknown is not
+// a pass. A non-zero recorded exit is already a red gate, so it is kept as the
 // conservative reading rather than rewritten to unknown (this is what preserves
 // the existing `events.test.mjs` stream).
-export function effectiveExit(call, { gateLast = true } = {}) {
+export function effectiveExit(call, { gateLast = true, attributable = true } = {}) {
   const recorded = Number.isInteger(call?.exit) ? call.exit : null
   if (gateLast) return { code: recorded, why: recorded === null ? "no recorded exit" : "recorded exit" }
   if (recorded !== null && recorded !== 0) return { code: recorded, why: "wrapper failed" }
-  const printed = printedExit(call?.output)
-  if (printed !== null) return { code: printed, why: "printed status" }
   const summary = summaryExit(call?.output)
-  if (summary !== null) return { code: summary, why: "runner summary" }
+  if (summary === 1) return { code: 1, why: "runner summary" }
+  if (attributable) {
+    const printed = printedExit(call?.output)
+    if (printed !== null) return { code: printed, why: "printed status" }
+  }
+  if (summary === 0) return { code: 0, why: "runner summary" }
   return { code: null, why: "exit masked, no recorded status" }
 }
 
@@ -510,7 +548,7 @@ function check(kind, arg, { scratch, out, text, snapshot }) {
     // the last command and exited 0. Otherwise report the most specific status,
     // and the fail-closed phrase when the mask printed nothing.
     const codes = hits.map(({ call, entries }) => {
-      const exits = entries.map((e) => effectiveExit(call, { gateLast: e.gateLast }))
+      const exits = entries.map((e) => effectiveExit(call, { gateLast: e.gateLast, attributable: e.attributable }))
       if (exits.some((e) => e.code === 0)) return 0
       return exits.find((e) => e.code !== null)?.code ?? null
     })
