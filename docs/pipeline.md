@@ -56,6 +56,27 @@ declara `task:` e `files:`.
   ficam locais; a evidência é o run dir em
   `~/.local/share/opencode/evals/runs/` e a linha publicada em `docs/evals/`.
 
+## Freeze do harness
+
+Desde 2026-11-11 (0.7.7 + SPEC-0081), features novas do harness estão
+congeladas. A reavaliação dessa data mostrou o padrão: o investimento estava
+concentrado no mecanismo de avaliação, não nas capacidades das skills. O freeze
+fixa a superfície que a SPEC-0081 acabou de reduzir.
+
+- **Congelado**: assertion kind ou matcher novo, comando ou flag novo no
+  `eval.mjs`, estágio novo no pdlc, camada nova de isolamento, mudança de
+  esquema do store.
+- **A única exceção**: correção de medição que classificou errado um run pago
+  real. A spec cita o run dir e o finding; sem essa evidência, é feature e fica
+  fora.
+- **Fora do freeze**: conteúdo das skills, corpus de evals (casos, fixtures,
+  medições), documentação operacional e compactação, e as correções cobertas
+  pela exceção.
+- **Reabrir o freeze**: exige human gate explícito com a evidência de que o
+  mecanismo atual impede uma medição válida. O critério de saída é o da revisão:
+  demonstrar que uma skill mudou a decisão ou o artefato com custo operacional
+  justificável, de forma consistente — não por calendário.
+
 ## Separação de specs
 
 - `docs/specs/active/` — fila do pdlc. O `plan`, `prompt`, `verify` e `merge`
