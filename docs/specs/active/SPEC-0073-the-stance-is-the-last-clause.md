@@ -251,11 +251,26 @@ writing. The pass counts (229 and 246) and the moved set reproduce exactly.
 | `review-code`#10 | `2026-11-10T15-54-47--review-code--agentworks-deepseek-v4-1-flash--without-skill` | r3 | APPROVE | fail | pass | yes |
 | `review-code`#10 | `2026-11-10T15-54-47--review-code--agentworks-deepseek-v4-1-flash--without-skill` | r5 | APPROVE | fail | pass | yes |
 
-The eight cited run directories also replay through the CLI:
-`node scripts/eval.mjs inspect <the eight dirs> --replay` → 40 transcripts, 6
-whole-case statuses differ (`failed → passed`): the five #8 control draws and #9
-control r4, exactly the SPEC-0062 cell moves. The other eleven moved draws still
-fail the case on `reply Not verified`, as SPEC-0062 published.
+The nine run directories cited in the table also replay through the CLI:
+`node scripts/eval.mjs inspect <the nine dirs> --replay` → **66 transcripts,
+13 differing statuses: 11 `failed -> passed`, 2 `passed -> failed`**. The eleven
+are the five #8 control draws, #9 control r4, and five #2 draws — three in
+`2026-11-01T22-02-37` (r1/r3/r5, not among the 17 verdict moves) plus
+`2026-11-07T15-46-26` r3 and `2026-11-10T15-28-46` r5. The two `passed -> failed`
+rows are `review-code`#3 r1 in `2026-11-01T22-02-37` and `2026-11-02T20-34-11`,
+failing the same `reply`/`noreply` assertions. Replaying the same nine
+directories with `main`'s `scripts/` prints a byte-identical output (diff empty),
+so all thirteen are pre-existing recorded-status drift this branch inherits, not
+a change it makes; the branch-vs-`HEAD` verdict comparison above is 0. Scoping
+the command to `2026-11-10T15-05-54` and `2026-11-10T15-12-14` replays 10
+transcripts and prints exactly those six `failed -> passed` moves (the five #8
+draws and #9 r4).
+
+Of the 17 moved verdict draws, eight now replay the whole case as `passed`: the
+five #8 draws, #9 r4, `#2` in `2026-11-07T15-46-26` r3 and `#2` in
+`2026-11-10T15-28-46` r5. The other nine were recorded red and still replay red:
+the four `#1` draws and the three `#10` draws on `reply Not verified`, and the two
+legacy `#4` draws, which do not cite the branch spec hash (`reply 36c915b0`).
 
 **Coverage line.** `docs/evals/coverage.md`, in the Known hole for the verdict
 vocabulary: "Two latent residues in the reader are closed by SPEC-0073 — the
