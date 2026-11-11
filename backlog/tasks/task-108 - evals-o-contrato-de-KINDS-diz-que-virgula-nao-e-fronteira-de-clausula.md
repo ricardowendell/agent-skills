@@ -4,6 +4,7 @@ title: 'evals: o contrato de KINDS diz que virgula nao e fronteira de clausula'
 status: To Do
 assignee: []
 created_date: '2026-11-11T16:31:00Z'
+updated_date: '2026-11-11T16:43:00Z'
 labels: []
 dependencies: []
 references:
