@@ -9,7 +9,7 @@ updated_at: 2026-11-08
 source_docs:
   - https://github.com/ricardowendell/agent-skills/issues/9
   - backlog/tasks/task-59 - skill-framing-leve-de-solucao-antes-de-escolher-template.md
-  - docs/specs/active/SPEC-0034-iterative-corpus.md
+  - docs/specs/SPEC-0034-iterative-corpus.md
   - docs/roadmap.md
 related_decisions: []
 depends_on:

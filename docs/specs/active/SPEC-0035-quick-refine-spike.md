@@ -9,7 +9,7 @@ updated_at: 2026-11-08
 source_docs:
   - https://github.com/ricardowendell/agent-skills/issues/7
   - backlog/tasks/task-57 - spike-refinamento-localizado-sem-spec-completa-quick-refine.md
-  - docs/specs/active/SPEC-0034-iterative-corpus.md
+  - docs/specs/SPEC-0034-iterative-corpus.md
   - docs/roadmap.md
 related_decisions: []
 depends_on:

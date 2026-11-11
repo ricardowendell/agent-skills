@@ -1,10 +1,10 @@
 ---
 id: TASK-56
 title: 'evals: corpus discriminativo para desenvolvimento iterativo (fatia 0.7.0)'
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-11-08T00:48:00Z'
-updated_date: '2026-11-11T00:27:00Z'
+updated_date: '2026-11-11T10:03:00Z'
 labels: []
 dependencies: []
 references:
@@ -38,7 +38,7 @@ created: 2026-11-08T01:40:00Z
 
 ---
 
-Groomed em 2026-11-08 para docs/specs/active/SPEC-0034-iterative-corpus.md (status: ready). Fatia da 0.7.0: 4 casos (#9-#12) no implement-from-prompt, dois bracos, 5 draws cada, 40 draws no total. Holdout: caso #11 (pedido inseguro), nomeado na spec antes do primeiro draw. Escopo visual/UX fica fora (SPEC-0036/0038).
+Groomed em 2026-11-08 para docs/specs/SPEC-0034-iterative-corpus.md (status: ready). Fatia da 0.7.0: 4 casos (#9-#12) no implement-from-prompt, dois bracos, 5 draws cada, 40 draws no total. Holdout: caso #11 (pedido inseguro), nomeado na spec antes do primeiro draw. Escopo visual/UX fica fora (SPEC-0036/0038).
 
 ---
 

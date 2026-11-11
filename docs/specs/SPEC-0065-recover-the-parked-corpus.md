@@ -8,7 +8,7 @@ created_at: 2026-11-10
 updated_at: 2026-11-10
 source_docs:
   - backlog/tasks/task-56 - evals-corpus-discriminativo-para-desenvolvimento-iterativo-fatia-0.7.0.md
-  - docs/specs/active/SPEC-0034-iterative-corpus.md
+  - docs/specs/SPEC-0034-iterative-corpus.md
   - https://github.com/ricardowendell/agent-skills/issues/6
 related_decisions: []
 depends_on: []

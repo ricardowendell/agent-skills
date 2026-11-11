@@ -11,6 +11,19 @@ skills, which cases, and which published measurements.
 
 ### Changed
 
+- **The iterative corpus is measured (SPEC-0034, TASK-56).** The wave resumed
+  after three days parked: 11 paid draws finished it (one re-run of the stalled
+  `#12` control draw, then the frozen holdout `#11` on both arms). Four cases, two
+  arms, five draws each. **#12 (ambiguous scope) is the only separator and it
+  separates in the incumbent's favour — 4/5 vs 0/5, the control always edits a
+  file the request never resolved.** #9 (localized change) and #11 (unsafe
+  request, the holdout) are non-discriminators; #10 (functional fix) is
+  `unresolved` on a routing defect plus a literal matcher artifact, not a
+  behavioural gap. The real finding is routing: the skill never loaded in 4 of the
+  10 `#9`/`#10` skill-arm draws and in 4 of 5 `#11` draws. Two harness defects
+  surfaced and are tracked separately — `ranpass` scores the command string
+  rather than the effect (`TASK-102`) and `--resume` downgrades a legacy cell's
+  isolation record (`TASK-103`).
 - **The parked corpus comes back (SPEC-0065, TASK-56).** The four iterative cases
   and their 23 fixture files were recovered byte-identically from
   `parked/SPEC-0034-iterative-corpus`: cases 9–12 land in

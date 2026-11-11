@@ -9,7 +9,7 @@ updated_at: 2026-11-08
 source_docs:
   - https://github.com/ricardowendell/agent-skills/issues/10
   - backlog/tasks/task-60 - skill-revisao-de-experiencia-read-only-com-evidencia-e-limites.md
-  - docs/specs/active/SPEC-0034-iterative-corpus.md
+  - docs/specs/SPEC-0034-iterative-corpus.md
   - docs/roadmap.md
 related_decisions: []
 depends_on:
