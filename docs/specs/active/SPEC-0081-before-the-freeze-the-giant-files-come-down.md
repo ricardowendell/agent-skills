@@ -12,8 +12,7 @@ source_docs:
   - docs/pipeline.md
   - docs/specs/SPEC-0058-the-corpus-leaves-the-skill.md
 related_decisions: []
-depends_on:
-  - SPEC-0080-the-trigger-is-the-contract
+depends_on: []
 blocks: []
 files:
   - scripts/lib/evals/
