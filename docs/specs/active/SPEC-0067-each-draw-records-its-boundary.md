@@ -1,7 +1,7 @@
 ---
 id: SPEC-0067
 title: Each draw records the boundary it ran under
-status: ready
+status: implemented
 priority: P1
 task: TASK-103
 created_at: 2026-11-11
