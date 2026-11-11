@@ -14,7 +14,7 @@ depends_on: []
 blocks: []
 files:
   - CONTRIBUTING.md
-  - docs/specs/active/SPEC-0075-the-dispatch-marks-the-declared-task.md
+  - docs/specs/SPEC-0075-the-dispatch-marks-the-declared-task.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/eval.mjs check --root skills
@@ -24,7 +24,7 @@ tests:
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
   - node scripts/check-staleness.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0075-the-dispatch-marks-the-declared-task.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0075-the-dispatch-marks-the-declared-task.md --base main
 ---
 
 ## Purpose

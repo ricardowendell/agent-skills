@@ -1,10 +1,10 @@
 ---
 id: TASK-36
 title: 'harness: pdlc não marca a task vinculada no dispatch/verify'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-05T20:55:00Z'
-updated_date: '2026-11-07T23:05:00Z'
+updated_date: '2026-11-11T17:13:00Z'
 labels: []
 dependencies: []
 references:
@@ -55,6 +55,14 @@ created: 2026-11-09T00:33:26.331Z
 ---
 
 Verificado na pdlc 1.4.0 (2026-11-08): markTaskInProgress ainda usa taskIdFromSlug (dispatch.mjs:214) e verify.mjs:323 usa taskIdFromSlug; resolveTaskId aparece so em completedSlugs (dispatch.mjs:122). AC-2 (marcar sem edicao manual) segue pendente; o workaround documentado no AGENTS.md continua.
+
+---
+
+created: 2026-11-11T17:13:23.839Z
+
+---
+
+Done via SPEC-0075. Causa: pdlc deriva o id do slug (taskIdFromSlug) e nao do task: do frontmatter; 'SPEC-0075' nao existe como task. Segundo defeito: o backlog deste repo so declara To Do/In Progress/Done, entao o In Review do verify falha mesmo com id certo. Documentado no CONTRIBUTING com o workaround (uma linha no dispatch; merge resolve sozinho; verify precisa do id e do status). Nenhum arquivo do pdlc editado.
 
 ---
 <!-- COMMENTS:END -->

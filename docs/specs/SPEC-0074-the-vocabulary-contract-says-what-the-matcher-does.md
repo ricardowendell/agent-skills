@@ -14,7 +14,7 @@ depends_on: []
 blocks: []
 files:
   - scripts/lib/evals/kinds.mjs
-  - docs/specs/active/SPEC-0074-the-vocabulary-contract-says-what-the-matcher-does.md
+  - docs/specs/SPEC-0074-the-vocabulary-contract-says-what-the-matcher-does.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/eval.mjs check --root skills
@@ -24,7 +24,7 @@ tests:
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
   - node scripts/check-staleness.mjs
-  - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0074-the-vocabulary-contract-says-what-the-matcher-does.md --base main
+  - node scripts/spec-check.mjs --spec docs/specs/SPEC-0074-the-vocabulary-contract-says-what-the-matcher-does.md --base main
 ---
 
 ## Purpose
@@ -145,7 +145,7 @@ and spec was found.
 - `node scripts/check-evidence.mjs` — 6 documents, 0 errors, 0 warnings;
 - `node scripts/check-staleness.mjs` — 66 cited cells, 55 stale, 3 uncited, same
   as `main`;
-- `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0074-… --base main`
+- `node scripts/spec-check.mjs --spec docs/specs/SPEC-0074-… --base main`
   — no errors.
 
 **Cost.** Zero paid draws. No eval was run, no store written, no fixture or skill

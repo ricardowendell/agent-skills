@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "external_run_id": "0a2bbfbe-5acc-45e1-b6d0-4ca528d71acb",
+  "slug": "SPEC-0074-the-vocabulary-contract-says-what-the-matcher-does",
+  "events": [
+    {
+      "stage": "dispatch",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T16:45:24.344Z",
+      "ended_at": "2026-11-11T16:45:25.454Z",
+      "duration_ms": 1110,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "1b447bd5633c9af5247942d3f632fc9421cab7b593f1d6b92518b3907d2bac4f",
+        "head_sha": "45dbc81a2b64c64b1c31c2ad22f58ebc49129d5f",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "review",
+      "attempt_id": 1,
+      "status": "approved",
+      "started_at": "2026-11-11T17:12:13.007Z",
+      "ended_at": "2026-11-11T17:12:13.112Z",
+      "duration_ms": 105,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "1b447bd5633c9af5247942d3f632fc9421cab7b593f1d6b92518b3907d2bac4f",
+        "head_sha": "2b230a27775ea301b094337a8dbb2cc61321f0d9",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "lint",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T17:12:13.632Z",
+      "ended_at": "2026-11-11T17:12:13.704Z",
+      "duration_ms": 72,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "1b447bd5633c9af5247942d3f632fc9421cab7b593f1d6b92518b3907d2bac4f",
+        "head_sha": "2b230a27775ea301b094337a8dbb2cc61321f0d9",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "selftest",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T17:12:13.705Z",
+      "ended_at": "2026-11-11T17:12:21.913Z",
+      "duration_ms": 8208,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "1b447bd5633c9af5247942d3f632fc9421cab7b593f1d6b92518b3907d2bac4f",
+        "head_sha": "2b230a27775ea301b094337a8dbb2cc61321f0d9",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T17:12:13.542Z",
+      "ended_at": "2026-11-11T17:12:22.054Z",
+      "duration_ms": 8512,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "1b447bd5633c9af5247942d3f632fc9421cab7b593f1d6b92518b3907d2bac4f",
+        "head_sha": "2b230a27775ea301b094337a8dbb2cc61321f0d9",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "merge",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-11T17:12:45.147Z",
+      "ended_at": "2026-11-11T17:12:54.297Z",
+      "duration_ms": 9150,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "1b447bd5633c9af5247942d3f632fc9421cab7b593f1d6b92518b3907d2bac4f",
+        "head_sha": "2b230a27775ea301b094337a8dbb2cc61321f0d9",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    }
+  ]
+}

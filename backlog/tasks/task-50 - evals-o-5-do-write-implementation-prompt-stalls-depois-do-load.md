@@ -1,10 +1,10 @@
 ---
 id: TASK-50
 title: 'evals: o #5 do write-implementation-prompt stalls depois do load'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-07T00:15:00Z'
-updated_date: '2026-11-08T09:53:00Z'
+updated_date: '2026-11-11T17:13:00Z'
 labels: []
 dependencies: []
 references:
@@ -59,6 +59,14 @@ created: 2026-11-11T00:25:20.799Z
 ---
 
 Revisita 2026-11-10, com o CLI novo. Cinco stalls registrados no store, todos pos-load e todos com cadeia longa de steps: corpus #12 controle r3 (2 tentativas, 223 s, steps=10), stack review #16 r1 (318,6 s, steps=30, toolCalls=30) e #17 r1 (395,4 s, steps=22, toolCalls=38), mais os dois da SPEC-0030. A janela e de 120 s e e medida ENTRE chunks: um modelo lento porem vivo emite eventos de step e reseta o watchdog, entao um silencio de 120 s com o processo ativo e silencio, nao lentidao. Isso nao fecha a causa (provider x watchdog), mas fecha a politica operacional: 120 s fica, stall e infraestrutura, e o draw descartado e retomado, nao 'aumenta o timeout ate passar'. Achado colateral, medido: `--resume` NAO reexecuta um draw de infraestrutura — `readDraw` devolve o r3 stallado e a onda nunca chega a 5 draws limpos, que e exatamente o resume que a SPEC-0034 assumia. Corrigir isso (SPEC-0064) e o desbloqueio real do corpus; nao o limite.
+
+---
+
+created: 2026-11-11T17:13:23.886Z
+
+---
+
+Done via SPEC-0076. Quatro stalls, todos depois do load, mortos pelo watchdog de bytes em 120 s. Testemunha decisiva: um shell tool vivo e silencioso por 118,5 s (o watchdog mata trabalho legitimo). Prompt excluido; provider undecided com falsificador; #5 fica trigger-only com loaded 5/5 e sem cell comportamental. Follow-up: heartbeat do filho, nao timeout maior. A premissa da task (durations 161,6/27,2/355,0/145,0) era tempo ate o ultimo evento do retry, nao duracao do draw.
 
 ---
 <!-- COMMENTS:END -->
