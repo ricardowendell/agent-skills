@@ -161,8 +161,9 @@ passed.
 2. A cause with no supporting evidence is not used; if the evidence does not
    separate (a) from (b) for a draw, the spec says so instead of guessing.
 3. If the dominant cause is (b), the `description:` names the three triggers the
-   corpus exercises, stays one sentence, and does not exceed the ~20% length
-   budget. If it is not (b), `SKILL.md` is unchanged and the spec says why.
+   corpus exercises, the trigger sentence stays one sentence, and the
+   description does not exceed the ~20% length budget. If it is not (b),
+   `SKILL.md` is unchanged and the spec says why.
 4. `validate-skills` still passes with the edited description (the frontmatter
    contract is unchanged).
 5. The published corpus states the cause counts; no stored draw is re-scored and
@@ -191,6 +192,17 @@ passed.
 - Should `#11` — a case whose correct behaviour is a refusal — gate on the skill
   loading at all? Recorded, not answered: changing the gate now would look like
   re-scoring the stored misses, and the corpus already refused that.
+- **Does the skill own iterative work from a bare request?** The new trigger
+  "fix a bug with a regression test" advertises exactly that, while the body
+  opens "This skill starts from prompt artifacts, not from vague backlog ideas"
+  and step 2 asks for "the requested implementation prompt". The corpus passes
+  bare requests anyway — `#10 r1`/`r4` loaded and fixed the bug with no prompt
+  file in the fixture — so the description now states behaviour the skill
+  already had, but the body never says what plays the prompt's role on that
+  path. Either the body names it (the request itself, with the write-target vs
+  read-dependency rule still applying) or the description stops advertising it.
+  Not decided here: that is a body edit, and this spec's budget is one
+  description change.
 
 ## Prompt Notes
 
@@ -268,8 +280,8 @@ rows have `source: null`, no `skill` call and no read.
 
 No draw's evidence is ambiguous between (a) and (b): (a) requires the id to be
 absent from what the child could see, and the staging record refutes that in all
-twenty draws. For two of the misses (`#9 r5`, `#11 r4`/`#11 r5`) the child's own
-listing names the staged path; for the other five the proof is the staging
+twenty draws. For three of the misses (`#9 r5`, `#11 r4`, `#11 r5`) the child's
+own listing names the staged path; for the other five the proof is the staging
 record, because their listings never descend into `.opencode/`.
 
 ### F2 — the causes
@@ -282,12 +294,12 @@ record, because their listings never descend into `.opencode/`.
 | (d) loaded, then lost | **0** | — |
 
 The misses are one cause, not four. In every miss the artefact was on the menu
-and the child simply took the shortest path: it read the code, edited, and ran
-the suite (or, for `#11`, refused from the injected `AGENTS.md`). None of the
-eight produced a `skill` call or a `SKILL.md` read that the gate rejected — the
-gate reasons are bare `was not loaded` with `source: null`, which is (c)'s
-inverse: nothing to accept. And no draw has `ok: true` with contradicting
-behaviour, which is (d).
+and the child went straight to the work: it read the code, edited, and ran the
+suite (or, for `#11`, read the injected policy and refused) without consulting
+the skill. None of the eight produced a `skill` call or a `SKILL.md` read that
+the gate rejected — the gate reasons are bare `was not loaded` with
+`source: null`, which is (c)'s inverse: nothing to accept. And no draw has
+`ok: true` with contradicting behaviour, which is (d).
 
 The differentiator is not configuration, which rules out (a). All twenty draws
 come from four directories with one model, one fixture staging path and no
@@ -296,21 +308,30 @@ fixture `opencode.json` that could filter a menu; within each run the same
 4/5 and 5/5; `#10` loads in 2/5; `#11` in 1/5. A menu defect would not spare
 four draws in the same directory.
 
-What the description did not offer is a named trigger for the work these draws
-were doing. The misses are exactly the draws whose prompt is a plain small task:
-"the save button should read `Save changes` and sit with 2px more padding",
-"`slugify` returns four hyphens, fix it and add a regression test", "update the
-status badge". The loaded draws are the ones where the child's first text
-announces a workflow ("I'll start by loading the implementation skill, since
-this matches a fix-and-verify workflow" — `#10 r4`) or where it read every
-`*.md` in the fixture. The description named "implement a prompt / build from a
-SPEC prompt / continue the prompt-driven workflow", none of which a
-two-sentence bug report matches on its own.
+The eight misses fall into two groups, and only one of them is a plain task.
+Five — `#9 r5`, `#10 r2/r3/r5` — are a small task: "the save button should read
+`Save changes` and sit with 2px more padding", "`slugify` returns four hyphens,
+fix it and add a regression test". The other four — `#11 r2`–`r5` — are the
+unsafe request: the fixture's `AGENTS.md` policy is injected, the child read it
+and refused, and it never routed to the skill, so the staged id was never
+consulted. `#12` is **not** in either group: all five of its skill-arm draws
+loaded (`pass, fail, pass, pass, pass`, `skillGate.ok: true` in all five; the
+`fail` is r2's literal `reply \?` matcher), so it has no routing miss at all.
+
+What the diagnosis proves is the cause class, not the motive. In one directory
+with one model, one fixture and one unchanged description the load rate is 4/5,
+2/5, 1/5 and 5/5: routing is a stochastic decision, and no within-case evidence
+separates the description from variance. The description is the one lever this
+spec can pull — it is the artefact under review and the only product surface in
+reach — so the edit is a hypothesis about routing, not a demonstrated cause.
+F2's rule ("'probably the description' is not a finding") is why this paragraph
+exists: (b) is proven, the description is the lever, and the claim stops there.
 
 ### F3 — the one edit
 
-Dominant cause (b) with 8/8, so `skills/implement-from-prompt/SKILL.md` changes
-in `description:` only. `name:` and the body are untouched.
+The proven cause is (b) in 8/8, and (b) is the branch that permits a description
+edit, so `skills/implement-from-prompt/SKILL.md` changes in `description:` only.
+`name:` and the body are untouched.
 
 ```diff
 -description: Implement code from a structured implementation prompt and verify it. Use when the user asks to implement a prompt, build from a SPEC prompt, or continue the prompt-driven workflow to verified code. Preserves the prompt's scope and safeguards.
@@ -319,7 +340,8 @@ in `description:` only. `name:` and the body are untouched.
 
 - The three triggers the corpus exercises are named: a small change to an
   existing component (`#9`), a bug fix with a regression test (`#10`), one
-  question on an ambiguous request (`#12`).
+  question on an ambiguous request (`#12` — a loaded case: this trigger widens
+  the menu, it does not explain a miss).
 - The unsafe request (`#11`) is deliberately **not** named. Refusing an unsafe
   edit is not prompt-driven work, and a skill that loads for it would be loading
   to refuse.

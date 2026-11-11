@@ -115,19 +115,32 @@ The proof that (a) is impossible is in the harness: the with-skill arm stages
 `skillHash`, which every one of the twenty skill-arm draws carries. `#9` loads
 in 4/5 and `#12` in 5/5 in their own directories while `#11` loads in 1/5 in
 its own, all through the same staging path, so a menu or staging defect would
-have to spare draws that share it. What the eight misses
-share instead is a prompt that is a plain small task — relabel a button, fix a
-`slugify` edge case, update a badge — which the old description did not name.
-No miss produced a `skill` call or a `SKILL.md` read that a gate rejected: every
-reason is the bare `was not loaded` with `source: null`.
+have to spare draws that share it.
 
-The description therefore names the triggers the corpus exercises (a small
-change to an existing component, a bug fix with a regression test, one question
-on an ambiguous request) and not the `#11` unsafe request, which is not
-prompt-driven work. The edit is **unverified**: it ships without a draw, and the
-routing smoke is the next spec. Nothing in the corpus moves because of it. The
-eight stored draws keep `failed — skill 'implement-from-prompt' was not loaded`,
-`#10` stays `unresolved` at 2/5 (2 loaded, 2 harness-passing) and `#11` stays a
+The eight misses fall into two groups, and only one of them is a plain task.
+Five — `#9 r5`, `#10 r2/r3/r5` — are a small task: relabel a button, fix a
+`slugify` edge case. The other four — `#11 r2`–`r5` — are the unsafe request:
+the fixture's `AGENTS.md` policy is injected, the child read it and refused, and
+it never routed to the skill, so the staged id was never consulted. No miss
+produced a `skill` call or a `SKILL.md` read that a gate rejected: every reason
+is the bare `was not loaded` with `source: null`.
+
+What the diagnosis proves is the cause class, not the motive. In one directory
+with one model, one fixture and one unchanged description the load rate is 4/5,
+2/5, 1/5 and 5/5: routing is a stochastic decision, and no within-case evidence
+separates the description from variance. The description is the one lever this
+spec can pull — it is the artefact under review and the only product surface in
+reach — so the edit is a hypothesis about routing, not a demonstrated cause. It
+is **unverified**: it ships without a draw, and the routing smoke is the next
+spec.
+
+The description now names the triggers the corpus exercises (a small change to an
+existing component, a bug fix with a regression test, one question on an
+ambiguous request — `#12`'s trigger, a loaded case, so it widens the menu rather
+than explaining a miss) and not the `#11` unsafe request, which is not
+prompt-driven work. Nothing in the corpus moves because of it. The eight stored
+draws keep `failed — skill 'implement-from-prompt' was not loaded`, `#10` stays
+`unresolved` at 2/5 (2 loaded, 2 harness-passing) and `#11` stays a
 non-discriminator at 1/5 loaded against a 5/5 control.
 
 ## Runs and hashes
@@ -204,6 +217,15 @@ Full values:
     prompt  423838272eb503427c9d879ab70885bbca9a3e36143d40db639bd7e0cbe5a91c
     skill   0389466e65d1e09327c54d7f392a6293897840c9503296b940b356ad30321076
 ```
+
+Every hash above is the tree the draws ran against, and the draws predate the
+`SPEC-0068` description edit. `#9`–`#10` and `#12` ran at `0389466e…` and `#11`
+at `9147487f…`, while this checkout now produces `218f51bb…`. `#11` is the cell
+that flipped fresh → stale; `#9`–`#10` were already stale (the `SPEC-0058`
+layout move took `0389466e…` to `9147487f…`), and the `#12` rows cite control
+runs with no governed hashes and were stale before the edit too. That is a
+provenance statement, not a re-judgement: the stored draws keep their verdicts
+and no hash in this section is rewritten.
 
 ## The gap for `SPEC-0035`
 

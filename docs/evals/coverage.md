@@ -565,6 +565,17 @@ on lines 683–684 each match more than one directory. The cited cells that SPEC
 `write-implementation-prompt` #5 is fresh through its later
 `2026-11-06T19-53-34` citation.
 
+Second run (2026-11-11, after the `SPEC-0068` description edit): **66 cited
+cells, 55 stale, 3 uncited**. Staleness is not a behavioural signal — it records
+that a published cell ran against a skill tree the checkout no longer produces.
+Exactly one cell moved because of this spec: `implement-from-prompt` #11 was
+fresh against `9147487f…` and is stale against `218f51bb…`, the tree the new
+description produces. The other 54 stale cells and the four extra citations
+since the first run are the store's own history (the `SPEC-0058` layout move
+already left `implement-from-prompt` #1–#10 stale) and are not attributable to
+this spec. The draws keep their stored verdicts; this paragraph is dated so the
+first run stays history.
+
 ## Known holes
 
 - **The `verdict` stance vocabulary is closed (SPEC-0056), and was widened in

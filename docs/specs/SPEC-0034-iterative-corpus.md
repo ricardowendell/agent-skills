@@ -244,8 +244,12 @@ not loaded`, and the holdout added `#11 r2–r5`. That is a routing failure of t
 artefact, not a behavioural verdict. `SPEC-0068` diagnosed all eight from the
 stored transcripts with no draw: every miss is **offered, not chosen** — the
 skill was staged in the draw and the child neither called `skill` nor read
-`SKILL.md` — so the cause is the router-facing description, not an unlisted
-skill or a rejected load ([cause table](active/SPEC-0068-the-skill-that-never-loaded.md#results)).
+`SKILL.md` — and the fixture's `AGENTS.md` policy, not a missing menu entry, is
+what the four `#11` misses acted on. The description is therefore the only lever
+that spec could pull, on a decision the corpus shows to be stochastic (one
+directory, one model, one unchanged description: 4/5, 2/5, 1/5, 5/5 loads); the
+edit is a hypothesis, not a proven cause
+([cause table](active/SPEC-0068-the-skill-that-never-loaded.md#results)).
 The remaining `#10` red is an oracle
 artifact: r1 ran `npm test` twice — the first call red on the unfixed code, the
 second printing `pass 3 / fail 0` and `exit: 0` (the fixture's `package.json` maps
