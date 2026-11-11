@@ -2,6 +2,7 @@ import test from "node:test"
 import assert from "node:assert/strict"
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, readdirSync } from "node:fs"
 import { spawnSync } from "node:child_process"
+import { createHash } from "node:crypto"
 import { tmpdir } from "node:os"
 import { join, dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -272,6 +273,36 @@ test("the staged tree hash matches the copy stageSkill hashes", () => {
   const scratch = makeScratch("demo", 1)
   const pinned = stageSkill({ id: "demo", dir: skillDir }, scratch)
   assert.equal(stagedTreeHash(skillDir), pinned.hash)
+})
+
+// SPEC-0071: an empty, untracked directory is not part of the skill. In the
+// primary checkout one such directory made `groom-backlog` read fresh where a
+// clean worktree read stale, so the tree hash must ignore it.
+test("an empty directory does not change the staged tree hash", () => {
+  const skillDir = repo({ "SKILL.md": "---\nname: demo\n---\nbody\n" })
+  const before = stagedTreeHash(skillDir)
+  mkdirSync(join(skillDir, "references"))
+  assert.equal(stagedTreeHash(skillDir), before, "an empty directory moved the tree hash")
+})
+
+test("a file added to that directory changes the staged tree hash", () => {
+  const skillDir = repo({ "SKILL.md": "---\nname: demo\n---\nbody\n" })
+  mkdirSync(join(skillDir, "references"))
+  const empty = stagedTreeHash(skillDir)
+  writeFileSync(join(skillDir, "references/notes.md"), "notes\n")
+  assert.notEqual(stagedTreeHash(skillDir), empty, "a file a draw can read must move the hash")
+})
+
+// The old behaviour, kept: a directory holding a file is still hashed. The tree
+// is one directory and one file, so the entry order is unambiguous and the
+// digest can be computed by hand.
+test("a directory with a file still participates in the staged tree hash", () => {
+  const root = files(makeScratch("demo", 7), { "references/notes.md": "notes\n" })
+  const expected = createHash("sha256")
+    .update("references\u0000d\u0000\n")
+    .update(`references/notes.md\u0000f\u0000${createHash("sha256").update("notes\n").digest("hex")}\n`)
+    .digest("hex")
+  assert.equal(stagedTreeHash(root), expected)
 })
 
 test("governs narrows the hashed set; absent means the whole skill tree", () => {

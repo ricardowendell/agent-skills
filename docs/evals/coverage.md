@@ -589,6 +589,10 @@ the tree hashes `724bb8ad…` and the cell is stale. `implement-from-prompt` #11
 uncited citations are the second run's unchanged history. The draws keep their
 stored verdicts; this paragraph is dated too.
 
+A tree hash covers a skill's files and its non-empty directories: an untracked
+**file** still changes it by design, which is what makes a dirty checkout visible
+as staleness, while an empty, untracked **directory** does not (SPEC-0071).
+
 ## Known holes
 
 - **The `verdict` stance vocabulary is closed (SPEC-0056), and was widened in

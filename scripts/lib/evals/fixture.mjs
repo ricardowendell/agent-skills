@@ -209,10 +209,23 @@ function inCorpus(rel) {
   return parts.some((p) => p === "node_modules" || p === ".git" || p === "evals") || parts[parts.length - 1] === "evals.md"
 }
 
+// An empty directory carries no content, so it is not part of the identity: a
+// directory that vanishes between the walk and this read counts as empty.
+function isEmptyDir(abs) {
+  try {
+    return readdirSync(abs).length === 0
+  } catch {
+    return true
+  }
+}
+
+// The hash covers the files and the non-empty directories of the tree; an
+// untracked file still changes it by design (a dirty checkout must look stale).
 export function stagedTreeHash(root) {
   const h = createHash("sha256")
   for (const { rel, isDir } of expand(root, "**")) {
     if (inCorpus(rel)) continue
+    if (isDir && isEmptyDir(join(root, rel))) continue
     h.update(`${rel}\u0000${isDir ? "d" : "f"}\u0000`)
     if (!isDir) {
       try {

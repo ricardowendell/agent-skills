@@ -170,4 +170,64 @@ None.
 
 ## Results
 
-_Filled during implementation._
+### F1 — the rule
+
+`stagedTreeHash` skips a directory entry whose absolute path is physically empty
+(`readdirSync(abs).length === 0`); a directory that disappears between the walk
+and the read counts as empty (`isEmptyDir` in `scripts/lib/evals/fixture.mjs`).
+Non-empty directories are hashed exactly as before, `inCorpus` is untouched, and
+an untracked **file** still moves the hash by design.
+
+### F2 — no hash moved (same checkout, before → after)
+
+Snapshot taken with the pre-edit code in a separate process, then re-taken after
+the edit (`spec-0071-snapshot.mjs`, both runs on this worktree).
+
+| skill | before | after | |
+| --- | --- | --- | --- |
+| audit-code-quality | `ff5a30be` | `ff5a30be` | same |
+| audit-docs | `1effd16c` | `1effd16c` | same |
+| bootstrap-project-harness | `fee0292c` | `fee0292c` | same |
+| capture-idea | `db95ba12` | `db95ba12` | same |
+| find-blind-spots | `1eb315ae` | `1eb315ae` | same |
+| groom-backlog | `724bb8ad` | `724bb8ad` | same |
+| implement-from-prompt | `9147487f` | `9147487f` | same |
+| process-inbox | `421c113b` | `421c113b` | same |
+| record-decision | `d7343909` | `d7343909` | same |
+| report-project-status | `b16fa771` | `b16fa771` | same |
+| review-code | `9a285721` | `9a285721` | same |
+| survey-inflight-work | `05215a34` | `05215a34` | same |
+| tighten-harness | `fd042dd3` | `fd042dd3` | same |
+| write-implementation-prompt | `aa5167a3` | `aa5167a3` | same |
+
+14 rows, 0 moved. `groom-backlog` reads `724bb8ad…`, the clean-worktree hash
+from SPEC-0069 — the hash the defect used to break.
+
+### F3 — tests
+
+`scripts/lib/evals/fixture.test.mjs` (temp-dir helper `repo`/`files`):
+
+- `an empty directory does not change the staged tree hash` — hash, `mkdir`,
+  hash again: identical.
+- `a file added to that directory changes the staged tree hash` — a readable
+  file still moves it.
+- `a directory with a file still participates in the staged tree hash` — one
+  directory and one file, digest computed by hand, so the non-empty directory
+  entry is proven present.
+
+### F4 — coverage stated
+
+One comment line beside `stagedTreeHash` and one sentence in
+`docs/evals/coverage.md` after the dated readings: files and non-empty
+directories are hashed; an untracked file still changes the hash by design.
+
+### check-staleness, both checkouts
+
+- worktree: `66 cited cell(s), 55 stale, 3 uncited citation(s); coverage …/SPEC-0071-an-empty-directory-is-not-part-of-the-skill/docs/evals/coverage.md`
+- primary `/Users/wendell/.agents` (read-only): `66 cited cell(s), 55 stale, 3 uncited citation(s); coverage /Users/wendell/.agents/docs/evals/coverage.md`
+
+Same counts in both; no stored `skillHash` was rewritten and no cell moved.
+
+### Gates
+
+All commands in `tests:` exit 0 (details in the worker report). Zero paid draws.
