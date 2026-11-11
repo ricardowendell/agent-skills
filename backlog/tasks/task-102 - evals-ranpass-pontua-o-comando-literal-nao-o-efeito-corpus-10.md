@@ -20,3 +20,15 @@ ordinal: 102000
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Origem: SPEC-0034, caso #10 r1 (2026-11-11). A assertion ranpass compara a regex contra input.command; o modelo rodou 'npm test', que o package.json do fixture mapeia para 'node --test', e o teste passou (pass 3, exit 0). A assertion exigia o literal 'node --test' e marcou vermelho: o corpus publicou por um tempo que o incumbent 'nunca rodou a suite'. Mesma classe do vocabulario do verdict (SPEC-0062): o oraculo pontua o token, nao o comportamento. Decidir: aceitar a cadeia npm->script, ou exigir o comando literal e documentar; re-julgar #10 r1 por replay (zero draw).
 <!-- SECTION:DESCRIPTION:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-11-11T11:29:40.955Z
+
+---
+
+Groomed as SPEC-0066. Segundo defeito da mesma classe, medido no store: 33 chamadas com '; echo "exit: $?"' ou pipe que tomam o status, e 5 onde o exit gravado (0) contradiz o que o comando imprimiu (1-3). ranpass pode ficar verde num suite vermelho. Entra no escopo: resolver a cadeia de script pelo package.json do fixture e ler o status impresso, falhando fechado quando nao houver. Republica por replay, zero draw.
+
+---
+<!-- COMMENTS:END -->
