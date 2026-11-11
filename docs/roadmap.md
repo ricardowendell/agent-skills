@@ -5,7 +5,10 @@ pipeline (`docs/pipeline.md`) governs how work runs; this page says what the wor
 is and in which order. A change of direction is a human decision, and the
 releases themselves are the record of what shipped.
 
-Status: **0.7.3 released** on 2026-11-11 — the tree hash ignores an empty
+Status: **0.7.4 released** on 2026-11-11 — the verdict matcher reads the last
+clause and a comma is a clause (zero stored verdicts move), and seven sentences in
+the evidence docs were corrected to state only what their artefacts support.
+0.7.3 released on 2026-11-11 — the tree hash ignores an empty
 directory (staleness no longer depends on the checkout) and the prompt-artifacts
 rule was checked against the loaded draws and left in place (0 derailed of 11).
 0.7.2 tested and reverted the description hypothesis. Three paid draws on `#11` (0/3 loaded, $0.0189), the fix reverted to

@@ -9,6 +9,33 @@ skills, which cases, and which published measurements.
 
 ## [Unreleased]
 
+## [0.7.4] — 2026-11-11
+
+The matcher stops reading a verdict line backwards, and seven sentences stop
+claiming more than their artefact. Zero paid draws.
+
+- **The stance is the last clause (`SPEC-0073`).** `stance()` collected every form
+  in the line and let REJECT beat APPROVE whatever the order, so
+  `reject the alternative; approve the change` read REJECT. It now takes the
+  stance from the last clause that names one, with rejection still winning inside
+  a clause, and a comma ends a clause — so `AC-2 is not implemented, changes
+  requested` scores REJECT instead of nothing. The three conditionals
+  (`if`/`unless`/`whether`) are read across the comma, which is what keeps the
+  two `SPEC-0062` conditional misses unscored. Across **343 stored transcript
+  rows, zero verdicts move** against 0.7.3; against the pre-`SPEC-0062` reader the
+  same 17 draws move, and nothing else.
+- **Seven sentences corrected (`SPEC-0072`).** The seatbelt is attributed to the
+  2026-11-11 invocation that recorded it, not to a re-run draw that carries no
+  mechanism record; a quoted `check-eval-run` line matches the tool's own label; a
+  comment that described a parenthetical no caller can produce is gone; the `#12`
+  aggregation says all five asked through the cancelled `question` tool and four
+  restated it in text; the reopening condition is narrowed to where the case
+  measures that the work be done; the `#10 r4` quote is complete.
+
+One known residue is filed, not fixed: `kinds.mjs`'s contract comment still says a
+comma is not a clause boundary, true now only for the three conditionals
+(`TASK-108`, comment-only).
+
 ## [0.7.3] — 2026-11-11
 
 Two closes, no behaviour change to a skill and no paid draw.

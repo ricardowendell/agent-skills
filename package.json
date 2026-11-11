@@ -1,6 +1,6 @@
 {
   "name": "agent-skills",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "private": true,
   "description": "Agent skills for a product-thinking workflow, plus the harness that measures them.",
   "license": "MIT",
