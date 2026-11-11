@@ -1,7 +1,7 @@
 ---
 id: SPEC-0078
 title: Re-measure the review-code cases the hash moved under
-status: ready
+status: implemented
 priority: P1
 task: TASK-92
 created_at: 2026-11-11
