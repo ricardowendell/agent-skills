@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSyn
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
-import { checkRun, isPreDetector } from "./runcheck.mjs"
+import { checkRun, isPreDetector, manifestIsolation } from "./runcheck.mjs"
 import { DETECTOR_VERSION } from "./leak.mjs"
 import { checkCitation, scanCitations } from "./evidence.mjs"
 
@@ -406,6 +406,88 @@ test("an unenforced isolation record is unknown, never isolated", () => {
   })
   assert.deepEqual(findings, [])
   assert.equal(counts.isolated, "unknown", "no boundary means no clean bill")
+})
+
+// SPEC-0067: the draw carries its own boundary record. A cell is `yes` only when
+// every behavioural draw proves enforcement; a draw with no record is unproven,
+// and the reader names the count instead of asserting what the absence means.
+const ENFORCED = { enforced: true, mechanism: "seatbelt", reason: "available" }
+const REFUSED = { enforced: false, mechanism: null, reason: "not applied: --no-isolate" }
+
+test("four unrecorded draws and one enforced draw are unknown, and the reason counts them", () => {
+  const reps = [
+    rep({ rep: 1 }),
+    rep({ rep: 2 }),
+    rep({ rep: 3, isolation: ENFORCED }),
+    rep({ rep: 4 }),
+    rep({ rep: 5 }),
+  ]
+  const { findings, warnings, counts } = checkRun({
+    arm: "with-skill",
+    cases: [aggregate(reps)],
+    isolation: { enforced: false, mechanism: null, reason: "resumed legacy run — earlier draws were not enforced" },
+  })
+  assert.deepEqual(findings, [], "the verdict was already unknown; this change may not make it a failure")
+  assert.equal(counts.isolated, "unknown")
+  assert.equal(warnings.length, 1)
+  assert.equal(warnings[0].kind, "isolation-unproven")
+  assert.match(warnings[0].detail, /4 of 5 draws predate the enforcement probe/)
+  assert.match(warnings[0].detail, /r3 ran under seatbelt/)
+  assert.match(warnings[0].detail, /unproven: r1, r2, r4, r5/)
+  assert.doesNotMatch(warnings[0].detail, /were not enforced/)
+})
+
+test("every behavioural draw recording enforcement is still isolated=yes", () => {
+  const reps = Array.from({ length: 5 }, (_, i) => rep({ rep: i + 1, isolation: ENFORCED }))
+  const { findings, warnings, counts } = checkRun({
+    arm: "with-skill",
+    cases: [aggregate(reps)],
+    isolation: ENFORCED,
+  })
+  assert.deepEqual(findings, [])
+  assert.deepEqual(warnings, [])
+  assert.equal(counts.isolated, "yes")
+})
+
+test("one draw known-unenforced keeps the cell out of isolated=yes", () => {
+  const reps = Array.from({ length: 5 }, (_, i) => rep({ rep: i + 1, isolation: ENFORCED }))
+  reps[4] = rep({ rep: 5, isolation: REFUSED })
+  const { warnings, counts } = checkRun({ arm: "with-skill", cases: [aggregate(reps)], isolation: ENFORCED })
+  assert.equal(counts.isolated, "unknown")
+  assert.equal(warnings[0].kind, "isolation-unproven")
+  assert.match(warnings[0].detail, /1 of 5 draws recorded no mechanism/)
+})
+
+test("draws without records keep the manifest verdict they had before", () => {
+  const reps = Array.from({ length: 5 }, (_, i) => rep({ rep: i + 1 }))
+  const { findings, warnings, counts } = checkRun({
+    arm: "with-skill",
+    cases: [aggregate(reps)],
+    isolation: ENFORCED,
+  })
+  assert.deepEqual(findings, [])
+  assert.deepEqual(warnings, [])
+  assert.equal(counts.isolated, "yes", "the manifest record is the fallback for a pre-per-draw run")
+})
+
+test("manifestIsolation prefers the draws over the manifest summary", () => {
+  const manifest = {
+    params: { isolate: true, isolation: { enforced: true, mechanism: "seatbelt", reason: "available" } },
+  }
+  const draws = [{ rep: 1 }, { rep: 2, isolation: ENFORCED }]
+  assert.equal(manifestIsolation(manifest, draws).enforced, false)
+  assert.equal(manifestIsolation(manifest).enforced, true, "without draws the recorded summary stands")
+})
+
+test("a stored 'were not enforced' is restated as 'no record', never repeated", () => {
+  const asserted = "resumed legacy run — earlier draws were not enforced"
+  const manifest = { params: { isolate: true, isolation: { enforced: false, mechanism: null, reason: asserted } } }
+  const draws = Array.from({ length: 5 }, (_, i) => ({ rep: i + 1 }))
+  const read = manifestIsolation(manifest, draws)
+  assert.equal(read.enforced, false)
+  assert.doesNotMatch(read.reason, /were not enforced/)
+  assert.match(read.reason, /5 of 5 draws predate the enforcement probe/)
+  assert.match(manifestIsolation(manifest).reason, /carry no enforcement record/)
 })
 
 test("a single-draw result is the repetition at the root", () => {
@@ -819,6 +901,34 @@ test("CLI never prints isolated=yes for an unenforced manifest", (t) => {
   assert.equal(r.status, 0)
   assert.match(r.stdout, /skillLeaks=0 hostReads=0 isolated=unknown/)
   assert.doesNotMatch(r.stdout, /isolated=yes/)
+})
+
+// SPEC-0067: the reference cell. Five draws, none with a per-draw record, and a
+// manifest that asserted "earlier draws were not enforced". The reader keeps the
+// verdict (unknown) and states the fact it can support, without a new finding.
+test("CLI says why a legacy resumed cell is unknown instead of asserting a boundary", (t) => {
+  const asserted = "resumed legacy run — earlier draws were not enforced"
+  const dir = makeRun(t, {
+    manifest: modern({
+      params: { isolate: true, isolation: { enforced: false, mechanism: null, reason: asserted } },
+    }),
+    cases: [
+      {
+        name: "x--12",
+        result: aggregate(
+          Array.from({ length: 5 }, (_, i) => rep({ rep: i + 1, arm: "without-skill", status: "failed", skillGate: controlGate() })),
+          { arm: "without-skill", case: 12, status: "failed" },
+        ),
+      },
+    ],
+  })
+  const r = runCli(dir)
+  assert.equal(r.status, 0, "the verdict was already unknown; the reason must not become a failure")
+  assert.match(r.stdout, /warn isolation-unproven implement-from-prompt#12 — 5 of 5 draws predate the enforcement probe/)
+  assert.match(r.stdout, /unproven: r1, r2, r3, r4, r5/)
+  assert.match(r.stdout, /findings=0 warnings=1/)
+  assert.match(r.stdout, /skillLeaks=0 hostReads=0 isolated=unknown/)
+  assert.doesNotMatch(r.stdout, /were not enforced/)
 })
 
 test("CLI credits an enforced manifest as isolated", (t) => {

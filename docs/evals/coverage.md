@@ -58,14 +58,18 @@ records the pre-fix `1/5`; the before/after table is in
 [`SPEC-0066`](../specs/active/SPEC-0066-a-passing-run-is-an-effect.md#results).
 
 The #12 control is the resumed directory: `r3` stalled post-load on 2026-11-08
-and `--resume` re-ran only that slot on 2026-11-11 (one paid draw). Because the
-resume rewrote a legacy manifest's isolation record, `check-eval-run` prints
-`isolated=unknown` for the control — not `isolated=yes` — with `findings=0`. That
-does not weaken the separator: the downgrade is the resume's legacy-manifest rule
-(`scripts/lib/evals/isolation.mjs:183-192`), and the control's red is an **edit**
-(`unchanged **`), so a leak would bias toward passing, not toward the 0/5. The
-other seven directories keep their stored verdicts, three of them exiting 1 for
-a recorded routing `gate-miss` (#9 r5, #10 r2/r3/r5, #11 r2–r5). Those misses are
+and `--resume` re-ran only that slot on 2026-11-11 (one paid draw). The control is
+`isolated=unknown`, not `isolated=yes`, because **four of the five draws predate
+the enforcement probe** and carry no enforcement record; `r3` was re-run under
+seatbelt (`cf2e2e319d975a5b`, `8aab5bd`), but that re-run predates per-draw
+isolation recording too, so `check-eval-run` reports five unproven draws and
+`findings=0`. The record is per draw now (`SPEC-0067`): a resumed cell is
+enforced only when every behavioural draw proves it, and a draw with no record is
+unproven, not "not enforced". That does not weaken the separator: the control's
+red is an **edit** (`unchanged **`), so a leak would bias toward passing, not
+toward the 0/5. The other seven directories keep their stored verdicts, three of
+them exiting 1 for a recorded routing `gate-miss` (#9 r5, #10 r2/r3/r5, #11
+r2–r5). Those misses are
 a routing failure of the artefact, not a behavioural verdict; no assertion,
 fixture or oracle was moved to make a cell separate. The 2026-11-08 draws were
 scored under detector `71bfb85a91cd68ab` and `skillHash 0389466e…`; the two

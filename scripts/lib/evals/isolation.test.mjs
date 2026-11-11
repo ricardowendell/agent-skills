@@ -7,12 +7,14 @@ import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import {
   corpusRoots,
+  drawIsolation,
   evalStoreRoot,
   installedSkillRoots,
   isolateHome,
   isolationRecord,
   probeIsolation,
   resumeIsolation,
+  summarizeDrawIsolation,
   wrapCommand,
 } from "./isolation.mjs"
 import { openRun } from "./runs.mjs"
@@ -305,7 +307,7 @@ test("resuming keeps only the weaker isolation truth", () => {
   assert.deepEqual(resumeIsolation(legacy, ENFORCED_NOW), {
     enforced: false,
     mechanism: null,
-    reason: "resumed legacy run — earlier draws were not enforced",
+    reason: "resumed legacy run — earlier draws carry no enforcement record",
   })
   assert.deepEqual(legacy.params.isolation, resumeIsolation(legacy, ENFORCED_NOW), "idempotent once recorded")
 
@@ -355,6 +357,75 @@ test("resuming keeps only the weaker isolation truth", () => {
     resumeIsolation(enforcedAgain, { enforced: true, mechanism: null, reason: "claimed" }).enforced,
     false,
   )
+})
+
+// SPEC-0067: the record belongs to the draw, and the summary is a fold over the
+// draws. A missing field is `null`, never "not enforced".
+test("a draw with no isolation field parses back as null", () => {
+  assert.equal(drawIsolation({ rep: 1 }), null)
+  assert.equal(drawIsolation({ rep: 1, isolation: null }), null)
+  assert.equal(drawIsolation({ rep: 1, isolation: "seatbelt" }), null)
+  assert.deepEqual(drawIsolation({ rep: 1, isolation: ENFORCED_NOW }), ENFORCED_NOW)
+})
+
+test("a smoke draw records why nothing was applied instead of claiming a boundary", () => {
+  const record = isolationRecord({ reason: "not applied: smoke stages only, no child draw" })
+  assert.deepEqual(record, {
+    enforced: false,
+    mechanism: null,
+    reason: "not applied: smoke stages only, no child draw",
+  })
+  assert.deepEqual(summarizeDrawIsolation([{ rep: 1, isolation: record }]), {
+    enforced: false,
+    mechanism: null,
+    reason: "1 of 1 draws recorded no mechanism",
+  })
+})
+
+test("a resumed cell with four unrecorded draws and one enforced draw summarises the count", () => {
+  const draws = [
+    { rep: 1 },
+    { rep: 2 },
+    { rep: 3, isolation: ENFORCED_NOW },
+    { rep: 4 },
+    { rep: 5 },
+  ]
+  const summary = summarizeDrawIsolation(draws)
+  assert.equal(summary.enforced, false)
+  assert.equal(summary.mechanism, null)
+  assert.equal(summary.reason, "4 of 5 draws predate the enforcement probe; r3 ran under seatbelt")
+
+  // The enforced draw keeps its own record beside the summary.
+  assert.deepEqual(draws[2].isolation, ENFORCED_NOW)
+
+  const manifest = { params: { isolate: true } }
+  assert.deepEqual(resumeIsolation(manifest, ENFORCED_NOW, draws), summary)
+  assert.doesNotMatch(manifest.params.isolation.reason, /were not enforced/)
+})
+
+test("the derived summary is enforced only when every draw proves it", () => {
+  const all = Array.from({ length: 5 }, (_, i) => ({ rep: i + 1, isolation: ENFORCED_NOW }))
+  assert.deepEqual(summarizeDrawIsolation(all), {
+    enforced: true,
+    mechanism: "seatbelt",
+    reason: "available",
+  })
+
+  const oneRefused = [...all.slice(0, 4), { rep: 5, isolation: UNENFORCED_NOW }]
+  const summary = summarizeDrawIsolation(oneRefused)
+  assert.equal(summary.enforced, false)
+  assert.match(summary.reason, /1 of 5 draws recorded no mechanism/)
+  assert.match(summary.reason, /4 of 5 draws ran under seatbelt/)
+})
+
+test("a resume that cannot enforce still lowers the summary, and says so", () => {
+  const draws = Array.from({ length: 2 }, (_, i) => ({ rep: i + 1, isolation: ENFORCED_NOW }))
+  const manifest = { params: { isolate: true } }
+  const summary = resumeIsolation(manifest, UNENFORCED_NOW, draws)
+  assert.equal(summary.enforced, false)
+  assert.equal(summary.mechanism, null)
+  assert.match(summary.reason, /mixes enforced and unenforced draws/)
+  assert.match(summary.reason, /--no-isolate/)
 })
 
 test("the resume downgrade reaches the manifest written by finish()", () => {

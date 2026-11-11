@@ -633,6 +633,9 @@ async function runCase(ctx, c, rep = null) {
         fixtureHash: fixture.hash,
         promptHash: textHash(c.prompt),
         detectorVersion: DETECTOR_VERSION,
+        // SPEC-0067: the draw says which boundary it ran under. A smoke draw
+        // never ran a child, so its record says that instead of claiming one.
+        isolation: ctx.isolation,
         assertions: [],
         execution: { durationMs: Date.now() - started },
         meta: { repoSha: meta.repoSha, agent: meta.agent, model: meta.model, level: meta.level },
@@ -690,6 +693,9 @@ async function runCase(ctx, c, rep = null) {
     // `leaks` keeps the `kind` per entry so the checker separates a leak, a host
     // read and a denied attempt (SPEC-0048).
     leak: leaks,
+    // SPEC-0067: the boundary this draw itself ran under, so a resumed cell can
+    // be read per draw instead of trusting one manifest verdict.
+    isolation: ctx.isolation,
     ...(rep ? { rep: rep.index } : {}),
     meta: { repoSha: meta.repoSha, agent: meta.agent, model: meta.model, level: meta.level },
     transcript: file,
@@ -901,6 +907,16 @@ async function executeSelection({ items, arm, level, repeat, label, known, basel
   if (resumeDir) reportResume({ reran, reused })
   const results = scheduled.map((state) => finalizeCase(state, { run, minPass: opt.minPass }))
   const totals = summarize(results)
+  // SPEC-0067: the summary is derived from the draws this invocation leaves
+  // behind, including the ones it reused, and persisted by `finish()`. Run it
+  // again here because the draws added after the first call now have records.
+  if (resumeDir) {
+    resumeIsolation(
+      run.manifest,
+      isolation,
+      scheduled.flatMap((state) => state.results).filter((draw) => !isInfrastructure(draw)),
+    )
+  }
 
   run.finish({
     counts: {

@@ -207,6 +207,22 @@ command also passed `--model agentworks/deepseek-v4-1-flash` explicitly, because
 the config default is `opencode-go/deepseek-v4.1-flash` and a resumed cell must
 stay on one model. One paid draw.
 
+**Correction (SPEC-0067): the control's `isolated` verdict.** The #12 control is
+`isolated=unknown`, not `isolated=yes`, because **four of the five draws predate
+the enforcement probe** and carry no enforcement record — at `5d035ff` the
+harness had `isolateHome` and no seatbelt layer. `r3` was re-run under seatbelt on
+2026-11-11 and the directory records that re-run (`cf2e2e319d975a5b`, `8aab5bd`),
+but it predates per-draw isolation recording, so its own draw carries no
+mechanism record either; `check-eval-run` reports five unproven draws with
+`findings=0`. The older `enforced: false` reason ("earlier draws were not
+enforced") asserted what a missing field cannot support; `SPEC-0067` made the
+record per draw and the manifest a derived summary, so the reader now says *which*
+draws are unproven instead of claiming a mechanism never recorded. **The
+separator still stands**: the control's red is an **edit** (`unchanged **`), and
+an answer-key leak would show the control the expected behaviour — ask, do not
+edit — so a leak biases toward passing, not toward the 0/5. `unknown` cannot
+manufacture the skill's 4/5 against a 0/5.
+
 **F3 — the holdout.** `#11`, both arms, five draws, same model: with-skill
 `2026-11-11T06-41-39--implement-from-prompt--agentworks-deepseek-v4-1-flash`,
 control `2026-11-11T06-43-38--implement-from-prompt--agentworks-deepseek-v4-1-flash--without-skill`.

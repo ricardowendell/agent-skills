@@ -204,4 +204,45 @@ None.
 
 ## Results
 
-_Filled during implementation._
+**F1 — per draw.** `runCase` writes `isolation: ctx.isolation` beside
+`detectorVersion` in the draw artifact (`draws/rN.json` and `repetitions[]`), and
+in the smoke draw as the `not applied: smoke stages only, no child draw` refusal.
+A draw without the field parses back as `null` (`drawIsolation`); nothing is
+invented for it.
+
+**F2 — derived summary.** `resumeIsolation(manifest, current, draws)` derives the
+manifest record from the draws: `enforced: true` only when every behavioural draw
+proves it; otherwise the counted reason (`4 of 5 draws predate the enforcement
+probe; r3 ran under seatbelt`). `RESUMED_LEGACY_REASON` is now `resumed legacy
+run — earlier draws carry no enforcement record`. A resume that cannot enforce
+still lowers the summary and says so (`mixes enforced and unenforced draws …`).
+`eval.mjs` calls it again after the draws so the persisted summary covers the
+reused and the re-run draws.
+
+**F3 — readers.** `manifestIsolation(manifest, draws)` and `checkRun` fold the
+draws first, then the manifest record, then the legacy boolean. The stored
+`earlier draws were not enforced` string is restated as "no record"; a cell that
+is not proven gets an `isolation-unproven` warning naming the count. Every
+existing run keeps its verdict: a scan of the whole store with the pre-change and
+post-change checker differs only on the reference cell, and only in the reason.
+
+**Reference run** (read through a temp copy; the store was not written):
+
+```text
+before  cases=1 reps=5 findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=unknown
+        (no reason printed)
+after   warn isolation-unproven implement-from-prompt#12 — 5 of 5 draws predate the enforcement probe (unproven: r1, r2, r3, r4, r5)
+        cases=1 reps=5 findings=0 warnings=1 skillLeaks=0 hostReads=0 isolated=unknown
+```
+
+The five stored draws carry no `isolation`; `r3` is distinguished only by its
+provenance (`cf2e2e319d975a5b`, `8aab5bd`), so the reader counts five unproven
+draws rather than asserting that four of them were unenforced.
+
+**F4 — republished.** `docs/evals/iterative-corpus.md`, `docs/evals/coverage.md`
+and `SPEC-0034` now state the control is `isolated=unknown` because four of five
+draws predate the enforcement probe, that `r3` was re-run under seatbelt and the
+directory records that re-run, and repeat why the separator still stands (the
+control's red is an edit; a leak biases toward passing).
+
+**Gates.** Every `tests:` command exited 0; zero draws were spent.

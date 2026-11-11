@@ -169,30 +169,117 @@ export function isolationRecord({ enforced = false, mechanism = null, reason = "
   return { enforced: false, mechanism: null, reason: reason || "not enforced" }
 }
 
-// A resumed run may mix draws made under different boundaries. Keep the weaker
-// truth for the whole manifest: the record is `enforced: true` only when both
-// the recorded run and the current invocation enforced. A legacy manifest has no
-// record at all, and a current invocation that cannot enforce (for example
-// `--resume --no-isolate`) must downgrade an earlier `true` — otherwise the
-// manifest would claim a boundary the new draws did not have. `finish()`
-// persists the mutation.
-export const RESUMED_LEGACY_REASON = "resumed legacy run — earlier draws were not enforced"
+// A resumed run may mix draws made under different boundaries. The record
+// belongs to the draw (SPEC-0067): a set of draws is only `enforced: true` when
+// every one of them proves it, and a draw with no record is *unproven*, never
+// "not enforced". The old wording asserted the second from the absence of the
+// first; that is the failure this record exists to prevent.
+export const RESUMED_LEGACY_REASON = "resumed legacy run — earlier draws carry no enforcement record"
+
+// The string the pre-SPEC-0067 writer stored. A reader may restate it as the
+// fact it can support ("no record"), but it must never repeat the assertion.
+export const ASSERTED_LEGACY_REASON = "resumed legacy run — earlier draws were not enforced"
 
 const isRecord = (value) => Boolean(value) && typeof value === "object" && !Array.isArray(value)
+const namedMechanism = (value) => typeof value === "string" && value.trim() !== ""
+const proven = (record) => record?.enforced === true && namedMechanism(record.mechanism)
 
-export function resumeIsolation(manifest, current = null) {
+// The draw's own record: `{ enforced, mechanism, reason }` or `null` for a draw
+// written before the probe existed. Absence stays absence.
+export function drawIsolation(draw) {
+  const record = draw?.isolation
+  return isRecord(record) ? record : null
+}
+
+// Fold a set of draws into one summary. `r3` is the label a draw has in the run
+// directory (`rep`), so the reason points at something a reader can open.
+export function summarizeDrawIsolation(draws = []) {
+  const entries = (Array.isArray(draws) ? draws : [])
+    .filter(Boolean)
+    .map((draw, i) => ({ record: drawIsolation(draw), label: `r${draw.rep ?? draw.index ?? i + 1}` }))
+  const recorded = entries.filter((e) => e.record)
+  // No draw carries a record: the caller falls back to the manifest. Returning
+  // an empty summary here would turn "no evidence" into a verdict.
+  if (!recorded.length) return null
+  const provenEntries = recorded.filter((e) => proven(e.record))
+  const unproven = recorded.filter((e) => !proven(e.record))
+  const unrecorded = entries.filter((e) => !e.record)
+  const mechanisms = (list) => [...new Set(list.map((e) => e.record.mechanism))].join(", ")
+  if (provenEntries.length === entries.length) {
+    const mechanism = mechanisms(provenEntries)
+    return {
+      enforced: true,
+      mechanism,
+      reason: provenEntries[0].record.reason || `every draw ran under ${mechanism}`,
+    }
+  }
+  const parts = []
+  if (unrecorded.length) parts.push(`${unrecorded.length} of ${entries.length} draws predate the enforcement probe`)
+  if (unproven.length) parts.push(`${unproven.length} of ${entries.length} draws recorded no mechanism`)
+  if (provenEntries.length === 1) parts.push(`${provenEntries[0].label} ran under ${mechanisms(provenEntries)}`)
+  else if (provenEntries.length) {
+    parts.push(`${provenEntries.length} of ${entries.length} draws ran under ${mechanisms(provenEntries)}`)
+  }
+  return { enforced: false, mechanism: null, reason: parts.join("; ") }
+}
+
+const currentReason = (current) =>
+  isRecord(current) ? (current.reason || "no reason recorded") : "the current invocation did not record a boundary"
+
+const currentEnforced = (current) => isRecord(current) && proven(current)
+
+// `resumeIsolation` summarises the draws; it never asserts what an absent field
+// means. The current invocation keeps its say about the draws it adds: a resume
+// that cannot enforce (`--resume --no-isolate`) lowers the summary, because the
+// new draws will be recorded unenforced. `finish()` persists the mutation.
+export function resumeIsolation(manifest, current = null, draws = null) {
   if (!manifest || typeof manifest !== "object") return null
   if (!manifest.params || typeof manifest.params !== "object") manifest.params = {}
   const params = manifest.params
   const existing = params.isolation
+  const list = Array.isArray(draws) ? draws.filter(Boolean) : null
+  const enforcedNow = currentEnforced(current)
+
+  if (list && list.length) {
+    const derived = summarizeDrawIsolation(list)
+    if (derived) {
+      if (derived.enforced === true && enforcedNow) {
+        params.isolation = derived
+        return params.isolation
+      }
+      const reason =
+        derived.enforced === true
+          ? `resumed run mixes enforced and unenforced draws: the current invocation could not enforce (${currentReason(current)})`
+          : derived.reason + (enforcedNow ? "" : `; the current invocation could not enforce (${currentReason(current)})`)
+      params.isolation = { enforced: false, mechanism: null, reason }
+      return params.isolation
+    }
+    // No draw has a record. The count is the only fact available, and the
+    // mechanism is not one of them.
+    const total = list.length
+    params.isolation = {
+      enforced: false,
+      mechanism: null,
+      reason:
+        `${total} of ${total} draws predate the enforcement probe` +
+        (enforcedNow ? "" : `; the current invocation could not enforce (${currentReason(current)})`),
+    }
+    return params.isolation
+  }
+
+  // No draws to read: keep the recorded verdict, but never restate an absence
+  // as "not enforced".
   if (!isRecord(existing)) {
     params.isolation = { enforced: false, mechanism: null, reason: RESUMED_LEGACY_REASON }
     return params.isolation
   }
   // `false` is already the weaker truth; it never rises on resume.
-  if (existing.enforced === false) return existing
-  const namedMechanism = (value) => typeof value === "string" && value.trim() !== ""
-  if (existing.enforced !== true || !namedMechanism(existing.mechanism)) {
+  if (existing.enforced === false) {
+    return existing.reason === ASSERTED_LEGACY_REASON
+      ? Object.assign(existing, { reason: RESUMED_LEGACY_REASON })
+      : existing
+  }
+  if (!proven(existing)) {
     params.isolation = {
       enforced: false,
       mechanism: null,
@@ -200,11 +287,11 @@ export function resumeIsolation(manifest, current = null) {
     }
     return params.isolation
   }
-  if (isRecord(current) && current.enforced === true && namedMechanism(current.mechanism)) return existing
+  if (enforcedNow) return existing
   params.isolation = {
     enforced: false,
     mechanism: null,
-    reason: `resumed run mixes enforced and unenforced draws: the current invocation could not enforce (${current?.reason ?? "no reason recorded"})`,
+    reason: `resumed run mixes enforced and unenforced draws: the current invocation could not enforce (${currentReason(current)})`,
   }
   return params.isolation
 }

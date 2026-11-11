@@ -42,6 +42,9 @@
 // calls those draws clean.
 
 import { hasCapability } from "./leak.mjs"
+import { ASSERTED_LEGACY_REASON, RESUMED_LEGACY_REASON, drawIsolation, summarizeDrawIsolation } from "./isolation.mjs"
+
+const isRecord = (value) => Boolean(value) && typeof value === "object" && !Array.isArray(value)
 
 const isContaminated = (result) =>
   result.contaminated === true || (typeof result.contaminated === "number" && result.contaminated > 0)
@@ -115,13 +118,33 @@ function leakPaths(result, kind) {
     .map((e) => e.path)
 }
 
-// The run's isolation evidence. SPEC-0046 added `params.isolation` as a
-// separate record; a manifest without it predates the enforcement probe and
-// keeps the old boolean rule. Do not derive enforcement from `params.isolate`:
-// `true` there meant "throwaway home", never "the corpus was denied".
-export function manifestIsolation(manifest) {
+// The run's isolation evidence, per draw first (SPEC-0067). A draw carries its
+// own record; the manifest summary is the fallback for runs whose draws predate
+// per-draw recording, and a manifest without `params.isolation` predates the
+// enforcement probe and keeps the old boolean rule. Do not derive enforcement
+// from `params.isolate`: `true` there meant "throwaway home", never "the corpus
+// was denied".
+//
+// A stored "earlier draws were not enforced" is restated as what it can support:
+// no record. The count comes from the draws the caller read.
+const unprovenReason = (draws) => `${draws.length} of ${draws.length} draws predate the enforcement probe`
+
+function restateLegacy(record, draws = []) {
+  if (!isRecord(record)) return record
+  if (record.enforced === true) return record
+  if (record.reason !== ASSERTED_LEGACY_REASON && record.reason !== RESUMED_LEGACY_REASON) return record
+  return {
+    enforced: false,
+    mechanism: null,
+    reason: draws.length ? unprovenReason(draws) : RESUMED_LEGACY_REASON,
+  }
+}
+
+export function manifestIsolation(manifest, draws = []) {
+  const derived = summarizeDrawIsolation(draws)
+  if (derived) return derived
   const record = manifest?.params?.isolation
-  if (record && typeof record === "object" && !Array.isArray(record)) return record
+  if (isRecord(record)) return restateLegacy(record, draws)
   const legacy = manifest?.params?.isolate
   return typeof legacy === "boolean" ? legacy : null
 }
@@ -244,12 +267,35 @@ export function checkRun({ arm = null, cases = [], isolation = null, requested =
   const read = skillLeaks > 0 || hostReads > 0
   // `denied` is deliberately absent from `read`: a refused attempt is not a
   // read, and counting it would make an enforced control unable to be clean.
-  // SPEC-0046: an isolation record is enforced only when it says so. A legacy
+  // SPEC-0067: the draws decide first. `yes` requires every behavioural draw to
+  // record enforcement; a draw with no record is unproven. The manifest record is
+  // the fallback for a run whose draws predate per-draw recording, and a legacy
   // boolean still certifies a throwaway home, because rewriting history would
-  // turn every earlier `isolated=yes` into an error. A record with
-  // `enforced: false` is the honest unenforced case: `unknown`, never `yes`.
-  const record = isolation && typeof isolation === "object" && !Array.isArray(isolation) ? isolation : null
+  // turn every earlier `isolated=yes` into an error.
+  const behaviouralDraws = cases.flatMap(repetitionsOf).filter((r) => !infrastructureOf(r))
+  const derived = summarizeDrawIsolation(behaviouralDraws)
+  const record = derived ?? (isRecord(isolation) ? restateLegacy(isolation, behaviouralDraws) : null)
   const enforced = record ? record.enforced === true : isolation === true
+  // The reason is the cell's, not a finding: a legacy draw already reported
+  // `unknown`, and this change may not turn that verdict into a failure. It names
+  // what the record cannot prove rather than asserting a mechanism. A smoke draw
+  // is staged, not behaviour, so it never earns this line.
+  const judged = behaviouralDraws.filter((r) => r.status !== "staged")
+  const legacyResume =
+    isRecord(isolation) && (isolation.reason === ASSERTED_LEGACY_REASON || isolation.reason === RESUMED_LEGACY_REASON)
+  if (record && record.enforced !== true && judged.length && (derived || legacyResume)) {
+    const unprovenLabels = behaviouralDraws
+      .map((r, i) => ({ record: drawIsolation(r), label: `r${r.rep ?? r.index ?? i + 1}` }))
+      .filter((e) => !e.record || e.record.enforced !== true || typeof e.record.mechanism !== "string" || !e.record.mechanism.trim())
+      .map((e) => e.label)
+    const cell = cases.length === 1 ? `${cases[0].skill ?? "unknown"}#${cases[0].case ?? "?"}` : "run"
+    warnings.push({
+      case: cell,
+      rep: 0,
+      kind: "isolation-unproven",
+      detail: unprovenLabels.length ? `${record.reason} (unproven: ${unprovenLabels.join(", ")})` : record.reason,
+    })
+  }
   // `yes` also needs at least one draw that actually ran. A run where every rep
   // aborted (timeout, stall, provider limit) has no behaviour to certify, even
   // when nothing was read: that is `unknown`, not a clean bill.
@@ -257,6 +303,7 @@ export function checkRun({ arm = null, cases = [], isolation = null, requested =
   return {
     findings,
     warnings,
+    isolation: record ?? isolation,
     counts: { cases: cases.length, reps, findings: findings.length, infrastructure, skillLeaks, hostReads, deniedDraws, isolated },
   }
 }

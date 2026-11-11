@@ -139,19 +139,24 @@ The resumed `r3` ran once (110,968 ms, no retry) and failed `unchanged **` and
 under the current detector `cf2e2e319d975a5b` at `repoSha 8aab5bd`; the other
 four are v2 `71bfb85a91cd68ab` at `5d035ff`, and the stored `result.json` reports
 v2 because the case takes its first repetition. The resume also rewrote the
-legacy manifest's isolation record to `enforced: false` with the reason `resumed
-legacy run — earlier draws were not enforced`; `check-eval-run` consequently
-prints `isolated=unknown` for this directory, not `isolated=yes`. Its five draws
-still report `findings=0`, `skillLeaks=0`, `hostReads=0`.
+legacy manifest's isolation record; `check-eval-run` consequently prints
+`isolated=unknown` for this directory, not `isolated=yes`. Its five draws still
+report `findings=0`, `skillLeaks=0`, `hostReads=0`.
 
-The `isolated=unknown` does not weaken the separator.
-`scripts/lib/evals/isolation.mjs:183-192` writes `{ enforced: false }` with
-`RESUMED_LEGACY_REASON` (`:179`) whenever a manifest has no `params.isolation` —
-the case here, even though the one re-run draw (`r3`) did run under seatbelt. The
-control's 0/5 still stands because its red is an **edit** (`unchanged **`): an
-answer-key leak would show the control the expected behaviour — ask, do not edit —
-so it would bias toward passing, not toward failing, and `unknown` cannot
-manufacture the skill's 4/5 against a 0/5.
+The `isolated=unknown` does not weaken the separator. The control is `unknown`
+because **four of the five draws predate the enforcement probe** and carry no
+enforcement record — at `5d035ff` the harness had `isolateHome` and no seatbelt
+layer at all. `r3` was re-run under seatbelt on 2026-11-11 and the directory
+records that re-run (`cf2e2e319d975a5b`, `8aab5bd`); the re-run predates per-draw
+isolation recording, so its own draw carries no mechanism record either.
+`check-eval-run` therefore says `5 of 5 draws predate the enforcement probe` and
+keeps the cell `unknown`. That is the honest reading: absence of a record is not
+evidence that a boundary was enforced, and inferring enforcement from a manifest
+written by a build that had no mechanism is the failure this harness exists to
+prevent (`SPEC-0067`). The control's 0/5 still stands because its red is an
+**edit** (`unchanged **`): an answer-key leak would show the control the expected
+behaviour — ask, do not edit — so it would bias toward passing, not toward
+failing, and `unknown` cannot manufacture the skill's 4/5 against a 0/5.
 
 Full values:
 
