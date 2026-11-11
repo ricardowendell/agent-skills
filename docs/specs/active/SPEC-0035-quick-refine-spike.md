@@ -1,7 +1,7 @@
 ---
 id: SPEC-0035
 title: Decide whether the incumbent covers a localized refinement
-status: paused
+status: ready
 priority: P1
 task: TASK-57
 created_at: 2026-11-08
@@ -16,20 +16,20 @@ depends_on:
   - SPEC-0034-iterative-corpus
 blocks: []
 files:
-  - skills/implement-from-prompt/SKILL.md
-  - skills/implement-from-prompt/references/evals.md
   - docs/evals/iterative-corpus.md
-  - docs/evals/coverage.md
   - docs/specs/active/SPEC-0035-quick-refine-spike.md
+  - CHANGELOG.md
 tests:
   - node scripts/validate-skills.mjs --root skills
-  - node scripts/run-evals.mjs --root skills --list --check
+  - node scripts/eval.mjs check --root skills
   - node --test scripts/lib/evals/*.test.mjs
   - node --test scripts/lib/*.test.mjs
   - node --test skills/bootstrap-project-harness/scripts/*.test.mjs
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
+  - node scripts/check-staleness.mjs
   - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0035-quick-refine-spike.md --base main
+
 ---
 
 # SPEC-0035: Decide whether the incumbent covers a localized refinement
@@ -45,11 +45,14 @@ with three possible exits, and two of them cost no draw: the incumbent already
 covers the cases, the incumbent needs one extension, or a separate skill is
 justified.
 
-**Paused on 2026-11-08.** The dependency on `SPEC-0034` is an ordering edge,
-and pdlc dispatches it as soon as that spec merges — but this spec's first step
-is to *read* `SPEC-0034`'s classification, not to run draws. A ready status made
-the zero-draw stop condition depend on the worker's discipline. It returns to
-`ready` in the same commit that records `SPEC-0034`'s Results.
+**Paused on 2026-11-08, returned to `ready` on 2026-11-11.** The dependency on
+`SPEC-0034` was an ordering edge, and this spec's first step is to *read* that
+classification, not to run draws. `SPEC-0034` is now published: `#12` is the only
+separator and it separates in the incumbent's favour, `#9` and `#11` are
+non-discriminators, `#10` is `unresolved` on a routing defect plus a literal
+matcher artifact. The files this spec may touch are therefore documents only —
+the corpus and its fixtures are on `main` (`SPEC-0065`) and a verdict of `do not
+add skill` changes no skill.
 
 ## User Outcome
 
