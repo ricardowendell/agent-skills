@@ -5,12 +5,14 @@ pipeline (`docs/pipeline.md`) governs how work runs; this page says what the wor
 is and in which order. A change of direction is a human decision, and the
 releases themselves are the record of what shipped.
 
-Status: **0.9.0 opened** on 2026-11-13 — the data program starts with the
-contract capability (#18), the keystone: ODCS quality rules live inside the
-contract, #19 judges against it and #21 builds on it. The wave is **A/B first**
-(control vs the official MIT `datacontract-skills`, pinned at `dc06664`), and the
-local candidate is authored only if the pin shows a gap. 0.8.0–0.8.3 released on
-2026-11-13 — `sync-branch`; the status report measured (separator 4/5 vs 0/5);
+Status: **0.9.1 opened** on 2026-11-13 — companions get a scope and the bootstrap
+gets an opt-in step. 0.9.0 shipped: the contract A/B against the pinned MIT
+`datacontract-skills` measured four cells and 40 clean draws, with **no
+behavioural separation**; no local contract skill is justified, and the official
+skills are the recommended process route (pinned `dc06664`). The scope model is
+`companion-skills.json` (scope + signal + pin + evidence) and `skills.index.json`
+(first-party by domain); the bootstrap suggests the intersection. 0.8.0–0.8.3
+released on 2026-11-13 — `sync-branch`; the status report measured (separator 4/5 vs 0/5);
 the two over-strict assertions corrected; the data corpus (six trees, ten
 deterministic proofs, a frozen holdout). 0.7.7 released on 2026-11-11 — a verdict that opens with a
 negation is a rejection, so "not ready" / "not implemented" score instead of
@@ -163,8 +165,9 @@ pinned MIT `datacontract-skills` before any local skill is authored.
 | **0.8.1** (released) | the status report's claim is measured | `SPEC-0083` (`TASK-70`, issue #11) | ~10 draws |
 | **0.8.2** (released) | the two over-strict cells are measured honestly | `SPEC-0084` (`TASK-87`) | ~20 draws |
 | **0.8.3** (released) | the data corpus can see a duplicated-key join | `SPEC-0082` (`TASK-78`, #13) | 0 paid draws |
-| **0.9.0** (next) | the contract capability is measured before it is built (#18) | A/B: control vs the pinned MIT `datacontract-skills`; C only if the pin shows a gap | ~30–40 draws |
-| **0.9.1** | migration is measured before it is built (#17) | `TASK-82`; local corpus, strongest separation | ~20 draws |
+| **0.9.0** (released) | the contract capability is measured before it is built (#18) | A/B: control vs the pinned MIT `datacontract-skills`; no local skill justified | ~40 draws |
+| **0.9.1** (next) | companions have a scope, and the bootstrap can use it | `SPEC-0086`; manifest + first-party index + the opt-in step | ~3–5 screening draws |
+| **0.9.2** | migration is measured before it is built (#17) | `TASK-82`; local corpus, strongest separation | ~20 draws |
 | **decision** | data quality is re-decided by the screen (#16) | `TASK-81`; screening by evidence | 0–20 draws |
 | **decision** | review/ops is decided with the #16–#18 control evidence (#19) | `TASK-84` | 0 |
 | **deferred** | operate/assess wait for a real post-migration consumer (#20/#21) | `TASK-85`/`TASK-86` | — |
