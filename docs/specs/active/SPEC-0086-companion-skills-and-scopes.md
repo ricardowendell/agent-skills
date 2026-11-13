@@ -1,7 +1,7 @@
 ---
 id: SPEC-0086
 title: Companions have a scope, and the bootstrap can use it
-status: ready
+status: implemented
 priority: P1
 task: TASK-117
 created_at: 2026-11-13
