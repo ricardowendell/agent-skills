@@ -24,11 +24,16 @@ writes nothing unless the person accepts a suggestion.
 
 1. **Locate the manifest.** From this skill's directory, read
    `../../companion-skills.json` — `<repo>/skills/bootstrap-project-harness/`
-   resolves to `<repo>/companion-skills.json`. If the file is absent, there is
-   nothing to suggest: say so and continue with the harness.
+   resolves to `<repo>/companion-skills.json`. That path assumes the skill is
+   installed from the agent-skills checkout (a symlink into `skills/`); in an
+   isolated copy under `.opencode/skills/` (an eval scratch or a vendored
+   install) `../../` points at `.opencode/`, no manifest exists there, and the
+   step is a no-op **by design** — say so and continue. If the file is absent,
+   there is nothing to suggest: say so and continue with the harness.
 2. **Intersect the signals.** Compare each entry's `signals` with what detection
    already found:
-   - `files` — glob against the repo's tracked files (`*.odcs.yaml`);
+   - `files` — glob against the repo's tracked files (`**/*.odcs.yaml`, so
+     `data/orders.odcs.yaml` matches too);
    - `directories` — the path exists (`contracts/`);
    - `dependencies` — the name is declared in `package.json`, `pyproject.toml`
      or a requirements file (`datacontract`).
@@ -83,7 +88,7 @@ writes nothing unless the person accepts a suggestion.
   "path": "skills/breaking-change-check",
   "license": "MIT",
   "signals": {
-    "files": ["*.odcs.yaml"],
+    "files": ["**/*.odcs.yaml"],
     "directories": ["contracts/"],
     "dependencies": ["datacontract"]
   },
@@ -104,8 +109,8 @@ writes nothing unless the person accepts a suggestion.
 - Do not copy upstream files into the consumer repo or this one.
 - Do not add an entry to the manifest for an unmeasured skill; list it as
   available-but-unmeasured in `docs/integrations/datacontract.md` instead.
-- Do not install a companion the repo has no signal for, even if the person asks
-  for "all of them" — report why it does not apply and let them override
-  explicitly.
+- A companion the repo has no signal for is not a match. If the person asks for
+  "all of them" anyway, confirm the override in writing and then install it (or
+  refuse and explain why) — do not leave the decision ambiguous.
 - Do not treat a companion install as a harness requirement: it is never part of
   the audit checklist.
