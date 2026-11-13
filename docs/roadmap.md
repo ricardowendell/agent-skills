@@ -5,7 +5,14 @@ pipeline (`docs/pipeline.md`) governs how work runs; this page says what the wor
 is and in which order. A change of direction is a human decision, and the
 releases themselves are the record of what shipped.
 
-Status: **0.7.7 released** on 2026-11-11 — a verdict that opens with a
+Status: **0.8.0 opened** on 2026-11-12 — the post-corpus re-decision is
+recorded. `sync-branch` (SPEC-0039) is the next `ready` spec and the 0.8.0
+claim: the only P1 the demand data supports (top uncovered cluster, 6 sessions,
+$7.74, 2 projects). `report-project-status` evidence (TASK-70, issue #11)
+follows in 0.8.1, then the oracle fix left by the closed issue #12 (TASK-87);
+the data-product corpus (TASK-78) is groomed in parallel and dispatched after
+them. The visual/UX and framing specs stay paused on the same demand evidence.
+0.7.7 released on 2026-11-11 — a verdict that opens with a
 negation is a rejection, so "not ready" / "not implemented" score instead of
 reading as silence; 6 stored verdict lines move, review-code #4's control goes
 2/5 → 5/5 replayed, and the class stays a non-discriminator. 0.7.6 released on 2026-11-11 — the review-code corpus
@@ -27,8 +34,9 @@ the 0.7.0 wording, and no class or count moved. 0.7.1 fixed the instrument witho
 a paid draw: `ranpass` scores the effect, isolation is recorded per draw, and the
 routing misses are diagnosed (8 of 15, all offered-not-chosen). The iterative corpus is measured:
 `#12` is the only separator and it separates in the incumbent's favour, and the
-real finding is routing (`TASK-101`). The data-product program (#13–#21) is a
-deliberately deferred delivery, not a queue item; it has no release assigned.
+real finding is routing (`TASK-101`). The data-product program (#13–#21) is
+groomed (`SPEC-0082`) and queued, but deliberately deferred: no release is
+assigned and dispatch follows the 0.8.x P1s.
 
 ## Inputs
 
@@ -39,17 +47,18 @@ scope and the external references. A spec is written at groom, from the task.
 
 | issue | task | spec | what it is |
 | --- | --- | --- | --- |
-| #6 | `TASK-56` | `SPEC-0034` (paused) | the discriminating corpus for iterative work (the gate) |
-| #7 | `TASK-57` | `SPEC-0035` (paused) | spike: a localized refinement path without a full spec |
+| #6 | `TASK-56` | `SPEC-0034` (implemented) | the discriminating corpus for iterative work (the gate) |
+| #7 | `TASK-57` | `SPEC-0035` (implemented) | spike: a localized refinement path without a full spec |
 | #8 | `TASK-58` | `SPEC-0036` (paused) | planning a visual change from element and design tokens |
 | #9 | `TASK-59` | `SPEC-0037` (paused) | light solution framing before a template is chosen |
 | #10 | `TASK-60` | `SPEC-0038` (paused) | read-only experience review with evidence and limits |
 
-All five are `paused` as of 2026-11-08, for two different reasons. `SPEC-0035`
-waits on `SPEC-0034`'s classification: a `ready` status would let pdlc dispatch it
-straight off the merge, before anyone read the result. `SPEC-0036`, `0037` and
-`0038` are demoted on measured demand, not on difficulty — see *Priority is
-measured, not asserted* below.
+All five were `paused` on 2026-11-08. The re-decision of 2026-11-12 records the
+outcome: **#6 and #7 close** (their verdicts shipped in 0.7.0 — the deterministic
+corpus slice and `do not add skill` for quick-refine); **`SPEC-0039` becomes
+`ready`** as the 0.8.0 claim; **`SPEC-0036`, `0037` and `0038` stay `paused`** on
+the measured demand below, not on difficulty; **`SPEC-0040`** (recap mode, P2)
+stays `paused` as an increment behind the P1s.
 
 ## Priority is measured, not asserted
 
@@ -68,10 +77,14 @@ it is the only demand data in the repo, and it does not support the queue we had
 - The top cluster overall, `report-project-status`, shipped on 2026-11-08; the
   stakeholder recap is a mode of it (`TASK-63`), not a second skill.
 
-So the only P0 is `TASK-56`. The rest keep their place in the queue only if the
-evidence above changes, and **priorities are re-decided in the commit that records
-`SPEC-0034`'s Results** — not before, because the corpus changes the answer to
-every other question.
+So the only P0 was `TASK-56`, which shipped in 0.7.0. The re-decision of
+2026-11-12 reads the same evidence again: `sync-branch` is the only P1 the data
+supports (top uncovered cluster, score 10, gap 2), so it goes first; the
+data-product program is unmeasured as a program and stays behind the P1s,
+starting with its corpus gate (`TASK-78`), not with a skill. The visual/UX and
+framing specs remain paused: the `ui-refactor` cluster is 3 sessions, $6.90 and
+one project, with gap 0 because `impeccable` and `simplify` cover it, and no
+cluster maps to framing.
 
 ## Stack review (#12) — the order
 
@@ -93,16 +106,18 @@ human decision.
 
 ## Data product engineering (#13–#21)
 
-Nine issues arrived on 2026-11-10 (seven P1, two P2). None is in 0.7.0: the gate
-is #13, the discrimination corpus for architecture and data, and #13 itself
-depends on #6. The gate is a spike, not a mandate to create skills; each issue
-may end as `reuse external`, `extend existing`, `build new` or `do not add`.
+Nine issues arrived on 2026-11-10 (seven P1, two P2). None was in 0.7.0: the gate
+is #13, the discrimination corpus for architecture and data, and #13's data half
+depended on #6 — which shipped in 0.7.0, so the dependency is satisfied. The gate
+is a spike, not a mandate to create skills; each issue may end as `reuse
+external`, `extend existing`, `build new` or `do not add`.
 
-`TASK-78`–`TASK-86` mirror the issues; no spec is written before the task is
-groomed. The architecture slice is pulled forward: `TASK-89` builds the three
-architecture fixtures so `TASK-79` (`audit-code-quality`) can start without
-waiting for the data half. `TASK-78` keeps the data fixtures and stays behind
-0.7.0. The order is otherwise the one the issues declare:
+`TASK-78`–`TASK-86` mirror the issues. The architecture slice shipped: `TASK-89`
+built the three architecture fixtures (`SPEC-0054`), and `TASK-79`/`TASK-80`
+(`SPEC-0055`/`SPEC-0056`) measured the skills in 0.7.6. The data half (`TASK-78`)
+is groomed as `SPEC-0082` but dispatched only after the 0.8.x P1s; its first
+decision is per capability, not a skill. The order below is otherwise the one the
+issues declare:
 
 ```
 13 ──► 14, 15, 16, 17
@@ -121,57 +136,56 @@ slice or authorises paid draws before the corpus is decided.
 dead run loses no paid draw, a direct `SKILL.md` read is a load, and the store can
 be audited for the aborts the old results dropped.
 
-The constraint that remains is the **shape of what the corpus can see**. It has
-89 cases, 3 of them `manual`, and its assertion kinds are file, reply, skill and
-shell shaped. That is enough to measure a spec-driven change to a file tree. It
-cannot yet measure a small iterative change, a visual change, or an experience
-review — and `manual` cases are excluded from a run, so they cannot separate two
-arms.
+0.7.0 answered the capability question for the deterministic half: the corpus can
+see a small change, and `implement-from-prompt` separates on exactly one of the
+four iterative cases — in its own favour (4/5 vs 0/5). The real finding was
+routing, not behaviour (`TASK-101`). The visual half stays unmeasurable by
+design: SPEC-0077 declares human review and no browser oracle.
 
-So the next capability question is not "should we write another skill". It is
-"can the harness tell a good small change from a bad one". Every AS-ITER skill
-depends on that answer, which is why `#6` is the gate and the rest are blocked on
-it.
+With the harness frozen (2026-11-11), the constraint is no longer the mechanism.
+It is the distance between the one measured uncovered cluster (`sync-branch`,
+6 sessions, $7.74) and the unmeasured data-product program (#13–#21, seven
+issues, four P1). So the order is: ship the measured P1 first, close the
+evidence debt of what already shipped (`TASK-70`, `TASK-87`), and let the data
+program start at its corpus gate (`TASK-78`), not at a skill.
 
 ## Releases
 
 | release | claim | work | cost |
 | --- | --- | --- | --- |
 | **0.6.2** (released) | an aborted run is never clean | `TASK-52`, `TASK-38`, `TASK-39`, `TASK-40`, `TASK-54`; `TASK-36` documented, `TASK-35` done | 0 draws |
-| **0.6.3** (next) | the stack is chosen with numbers; the control arm is enforced | `SPEC-0041`–`SPEC-0045` (#12) and `SPEC-0046`–`SPEC-0052` | measurement, no new draws |
-| **0.7.0** | the corpus can see a small change | `TASK-56` (deterministic slice) and the verdict on `TASK-57`, resuming `SPEC-0034` from the parked tag | ~10 draws to finish, plus the holdout |
-| **unscheduled** | review and audit read architecture, with deterministic slots | `TASK-88` + `TASK-89` + `TASK-79` + `TASK-80` | ~50 draws |
-| **unscheduled** | data products are measured before any skill is built | `TASK-78`–`TASK-86` (#13–#21) | measurement |
-| **unscheduled** | the branch can be synced safely | `TASK-62` (`sync-branch`), after the corpus | ~10–20 draws, mostly deterministic |
+| **0.6.3–0.7.7** (released) | the stack is chosen with numbers; the control arm is enforced; the corpus can see a small change; the instrument is fixed; review-code is measured again; the verdict vocabulary is closed; the harness is frozen | `SPEC-0041`–`SPEC-0081`; `TASK-56`/`TASK-57` and their verdicts; the 0.7.0 defects (`TASK-100`–`TASK-103`) and the re-measurement (`TASK-98`, `TASK-109`, `SPEC-0078`); the freeze (`SPEC-0081`) | see `CHANGELOG.md` |
+| **0.8.0** (next) | the branch can be synced safely | `SPEC-0039` (`TASK-62`) | ~10–20 draws, mostly deterministic |
+| **0.8.1** | the status report's claim is measured | `TASK-70` (issue #11) | ~10 draws |
+| **unscheduled** | the published cells are re-measured after the oracle fix | `TASK-87` (the closed issue #12 leftover) | ~20 draws |
+| **unscheduled** | data products are measured before any skill is built | `TASK-78`–`TASK-86` (#13–#21), `TASK-78` first | measurement |
 | **unscheduled** | a screen can be reviewed by a person; the harness does not separate a visual change | `TASK-58`/`TASK-60` on declared human review; the visual oracle (`TASK-61`) is a future item with its own budget — no consumer today | 0 draws |
 | **unscheduled** | — | `TASK-59` framing, conditional on a gap the corpus shows | measurement |
-| unscheduled | — | `TASK-63`: a stakeholder recap as a mode of the status report | 0–20 |
+| unscheduled | — | `TASK-63`: a stakeholder recap as a mode of the status report, behind the P1s | 0–20 |
 | unscheduled | — | `diagnose-failure`: needs a captured problem statement first | 0 until then |
 | unscheduled | — | `agent-skills doctor`: zero draws, rides any release | 0 |
 
-## 0.7.0 — the order
+## 0.8.0 — the order
 
-**Paused 2026-11-08.** The first wave spent 30 of 40 draws; the #12 control
-draw stalled post-load, so the frozen holdout #11 was never drawn. The branch is
-parked and `TASK-50` is reopened. The deny layer and the detector work were
-delivered in 0.6.3 (`SPEC-0046`–`SPEC-0052`); what remains is the corpus slice
-itself. The steps below resume only on an explicit decision.
+**Opened 2026-11-12** by the post-corpus re-decision. The 0.7.0 wave answered
+the question this section used to carry: the corpus can see a small change, the
+quick-refine spike closed as `do not add skill`, and the remainders shipped in
+0.7.1–0.7.7. The next wave is the only P1 the demand data supports.
 
 0. **The harness precondition is met.** The control arm is denied the corpus and
    the eval store, and the detector separates a denied attempt from a leak
    (`SPEC-0046`–`SPEC-0052`, detector v6). The control no longer reads the
    install.
-1. **Freeze the holdout before the first draw**, the way `review-code` #7 was
-   frozen for issue #5. A holdout chosen after seeing results is not a holdout.
-2. **`TASK-56` — three or four cases, deterministic oracles.** Text, file and
-   shell only: no browser, no screenshot. One case is adversarial — a request that
-   would touch auth, policy or an out-of-scope file must be refused or escalated
-   even when the visible result looks right.
-3. **The verdict on `TASK-57`.** `SPEC-0035` is `paused` until the Results are
-   in; reading them is the first step, and if the incumbent covers the four cases
-   the verdict is `do not add skill` with zero draws. Otherwise decide whether an
-   extension or a new skill is justified. "No gain" is a valid, recorded outcome.
-4. **Store audit and health pass before the cut**, as in 0.6.2.
+1. **Groom → ready (done).** `SPEC-0039` is `ready` with the fixture capability
+   as F0; the freeze ruling of 2026-11-12 records that extension as corpus
+   staging, not a frozen harness feature.
+2. **F0 — fixture capability.** `mainPatch` and `dirty` in `git.json`, with unit
+   tests in `fixture.test.mjs`; a manifest without them keeps the old behaviour.
+3. **F1–F4 — promote, cases, run, publish.** Six deterministic cases: behind and
+   clean, dirty tree, conflict, no remote/detached HEAD, trigger, near-miss. The
+   guardrails are the product; no paid draw unless a behavioural case is added.
+4. **F5 — the cut.** `lint` and `selftest` green on `main`, `coverage.md` updated,
+   and the release gate cuts 0.8.0.
 
 ## Why the visual work has no release
 

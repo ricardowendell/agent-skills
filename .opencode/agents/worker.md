@@ -1,6 +1,6 @@
 ---
 description: Executor. Implementa UMA spec dentro de um worktree isolado, roda os testes e entrega o diff. Não sabe das outras specs.
-mode: all
+mode: subagent
 permissions:
   - action: edit
     resource: "*"

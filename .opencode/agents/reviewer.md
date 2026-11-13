@@ -1,6 +1,6 @@
 ---
 description: Gate de qualidade read-only. Revisa o diff de um worktree contra a spec e devolve APPROVE ou REJECT com motivos.
-mode: all
+mode: subagent
 permissions:
   - action: edit
     resource: "*"

@@ -1,11 +1,11 @@
 ---
 id: SPEC-0039
 title: Sync a branch with its base without force-push
-status: paused
+status: ready
 priority: P1
 task: TASK-62
 created_at: 2026-11-08
-updated_at: 2026-11-08
+updated_at: 2026-11-12
 source_docs:
   - backlog/tasks/task-62 - skill-sync-branch-—-atualizar-a-branch-com-o-base-sem-force-push.md
   - docs/analysis/skills-from-sessions-2026-11-07.md
@@ -18,10 +18,10 @@ files:
   - scripts/lib/evals/fixture.mjs
   - scripts/lib/evals/fixture.test.mjs
   - skills/sync-branch/SKILL.md
-  - skills/sync-branch/references/evals.md
+  - evals/sync-branch/cases.md
   - commands/sync-branch.md
   - claude/commands/sync-branch.md
-  - skills/survey-inflight-work/references/evals.md
+  - evals/survey-inflight-work/cases.md
   - docs/analysis/skill-stubs/README.md
   - docs/evals/coverage.md
   - README.md
@@ -29,7 +29,7 @@ files:
   - docs/specs/active/SPEC-0039-sync-branch.md
 tests:
   - node scripts/validate-skills.mjs --root skills
-  - node scripts/run-evals.mjs --root skills --list --check
+  - node scripts/eval.mjs check --root skills
   - node --test scripts/lib/evals/*.test.mjs
   - node --test scripts/lib/*.test.mjs
   - node --test skills/bootstrap-project-harness/scripts/*.test.mjs
@@ -50,10 +50,18 @@ verification afterwards. `survey-inflight-work` is read-only by design and never
 checks out; this is its mutating counterpart, and its stub already exists at
 `docs/analysis/skill-stubs/sync-branch/SKILL.md`.
 
-This spec is `paused` until the re-decision that records `SPEC-0034`'s Results.
-The roadmap orders it after the corpus, and that is a priority gate, not a
-technical dependency, so it is not encoded as `depends_on` — which would also
-force an edit to the frozen `SPEC-0034` frontmatter after its dispatch pin.
+This spec was `paused` until the re-decision that records `SPEC-0034`'s
+Results. That re-decision landed on 2026-11-12: `sync-branch` is the next
+`ready` spec and the 0.8.0 claim, because it is the only P1 the demand data
+supports (top uncovered cluster, score 10, gap 2). The priority gate was never a
+technical dependency, so it is still not encoded as `depends_on`.
+
+**Freeze ruling (2026-11-12).** The harness freeze (`docs/pipeline.md`) lists new
+assertion kinds, new `eval.mjs` commands or flags, new pdlc stages, new isolation
+layers and store-schema changes. It carves out the eval corpus — cases, fixtures
+and measurements. The F0 extension of the `git.json` manifest (`mainPatch`,
+`dirty`) is fixture staging, not a frozen harness feature; the human gate records
+that ruling here so the worker does not have to re-litigate it.
 
 ## User Outcome
 
@@ -125,18 +133,19 @@ boundary note.
    unit tests; a manifest without them keeps the old behaviour.
 2. **F1 — promote.** Copy the stub to `skills/sync-branch/SKILL.md`, add the
    command stubs, remove the stub-index entry.
-3. **F2 — cases.** Write the fixtures and the six cases; `--list --check` clean.
+3. **F2 — cases.** Write the fixtures and the six cases in `evals/sync-branch/`;
+   `node scripts/eval.mjs check --root skills` clean.
 4. **F3 — run.** Exercise the deterministic cases; record which guardrails the
    existing assertion kinds can observe and which cannot.
 5. **F4 — publish.** Coverage row, README, CHANGELOG.
-6. **F5 — re-decision.** At the commit that records `SPEC-0034`'s Results, flip
-   `status: paused` → `ready`; only then is the spec dispatchable.
+6. **F5 — re-decision.** Done on 2026-11-12: `status` flipped to `ready` by the
+   post-corpus re-decision recorded in `docs/roadmap.md`.
 
 ## Data
 
 - `scripts/lib/evals/fixture.mjs` and `fixture.test.mjs` — the additive schema.
-- `skills/sync-branch/SKILL.md`, `skills/sync-branch/references/evals.md` and its
-  fixture trees.
+- `skills/sync-branch/SKILL.md`, `evals/sync-branch/cases.md` and its fixture
+  trees under `evals/sync-branch/fixtures/`.
 - `commands/sync-branch.md`, `claude/commands/sync-branch.md`.
 - `docs/evals/coverage.md`, `README.md`, `CHANGELOG.md`.
 
@@ -193,11 +202,12 @@ boundary note.
 - **Approach**: reuse `survey-inflight-work`'s `git.json` shape with a local bare
   `origin`; one untouched file per fixture for `unchanged`; `mainPatch` advances
   the base, `dirty` leaves the working tree modified.
-- **Structure**: `skills/sync-branch/SKILL.md` is the stub plus an eval section;
-  the command stubs mirror `commands/status.md`.
-- **Operations**: `node scripts/run-evals.mjs --skill sync-branch --list --check`
-  first; these cases are deterministic and need no paid draw. If a behavioural
-  draw is used, record the run dir and the model.
+- **Structure**: `skills/sync-branch/SKILL.md` is the stub, with no eval section
+  (the corpus lives in `evals/sync-branch/` since SPEC-0058); the command stubs
+  mirror `commands/status.md`.
+- **Operations**: `node scripts/eval.mjs check --root skills` first; these cases
+  are deterministic and need no paid draw. If a behavioural draw is used, record
+  the run dir and the model.
 - **Norms**: never push in a case; staging must be deterministic; a wildcard that
   matches nothing is not a pass.
 - **Safeguards**: the fixture must not contain a real remote or credentials; no

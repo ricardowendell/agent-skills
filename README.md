@@ -78,6 +78,7 @@ wording.
 | `record-decision` | Records a decision as an ADR, including what was traded away | `/record-decision` |
 | `tighten-harness` | Tightens one gate, with evidence and no source changes | `/tighten-harness` |
 | `survey-inflight-work` | Surveys branches, worktrees and PRs; reports overlap, blockers and landing order | `/inflight` |
+| `report-project-status` | One-page status from open issues, backlog, specs and CI; at most three next steps | `/status` |
 | `audit-code-quality` | Read-only audit of coupling, duplication, tests and debt; ranked register, no score | `/quality-check` |
 
 ## The loop
