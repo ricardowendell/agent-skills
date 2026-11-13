@@ -1,12 +1,14 @@
 # Data corpus
 
 Six small, realistic data-pipeline trees and the deterministic oracles that judge
-them. The corpus is an **instrument**: it exists so a later spec can measure
-whether a skill sees a data defect. It is not a skill, it is not staged under
-`evals/`, and no model runs here.
+them, plus the four contract A/B fixtures under `contract-ab/`. The corpus is an
+**instrument**: it exists so a later spec can measure whether a skill sees a data
+defect. The 0.8.3 trees are not skills and are not staged under `evals/`; the
+contract A/B cases are staged only in the gitignored mirror described below.
 
-The per-capability decision and the frozen holdout hash are in
-[`decision.md`](decision.md).
+The per-capability decision, the frozen holdout hash and the contract
+measurement are in [`decision.md`](decision.md); the contract case definitions
+are in [`ab-cases.md`](ab-cases.md).
 
 ## What is here
 
@@ -18,6 +20,20 @@ The per-capability decision and the frozen holdout hash are in
 | `schema-drift-documented` | documented drift (must pass) | `contract` | 0 |
 | `negative-healthy` | negative | `join/quality`, `migration` | 0 |
 | `negative-safe-retry` | negative | `migration` | 0 |
+
+The four contract A/B fixtures sit beside these, in
+[`contract-ab/`](contract-ab/README.md):
+
+| Tree | Cell | Oracle |
+| --- | --- | --- |
+| `contract-ab/incompatible-staged/` | breaking change (staged-only holdout) | `check.py` exit 1; `datacontract breaking` exit 1 |
+| `contract-ab/schema-drift-documented/` | documented drift | `check.py` exit 0; `datacontract breaking` exit 0, safe |
+| `contract-ab/semantic-change/` | semantic change | schema check exit 0; the CLI exits 0, so the break is not schema-detectable |
+| `contract-ab/composition/` | creation | no contract staged; a created one must pass `datacontract lint` |
+
+Each contract tree has `AGENTS.md`, the pipeline, the check and the two ODCS
+versions (`contract-v1.odcs.yaml` → `contract-v2.odcs.yaml`) where a contract
+applies. `composition/` ships `schema.sql` and `requirements.md` instead.
 
 Each tree has exactly three files:
 
@@ -79,23 +95,38 @@ sqlite3 :memory: -bail \
   ".read docs/analysis/data-corpus/negative-healthy/pipeline.sql" \
   ".read docs/analysis/data-corpus/negative-healthy/check.sql"             # exit 0
 python3 docs/analysis/data-corpus/negative-safe-retry/check.py             # exit 0
+
+# contract A/B fixtures: see contract-ab/README.md for the full proof set
+python3 docs/analysis/data-corpus/contract-ab/incompatible-staged/check.py   # exit 1
+python3 docs/analysis/data-corpus/contract-ab/schema-drift-documented/check.py  # exit 0
+python3 docs/analysis/data-corpus/contract-ab/semantic-change/check.py     # exit 0
+python3 docs/analysis/data-corpus/contract-ab/composition/check.py         # exit 0
+datacontract lint \
+  docs/analysis/data-corpus/contract-ab/incompatible-staged/contract-v2.odcs.yaml  # exit 0
+datacontract breaking \
+  docs/analysis/data-corpus/contract-ab/incompatible-staged/contract-v1.odcs.yaml \
+  docs/analysis/data-corpus/contract-ab/incompatible-staged/contract-v2.odcs.yaml  # exit 1
 ```
 
 The proof of every exit code, the holdout hash and the per-capability decision
-are recorded in [`decision.md`](decision.md).
+are recorded in [`decision.md`](decision.md). The contract A/B measurement (pin,
+model, detector, run dirs, counts and per-cell verdict) is section 7.
 
 ## Rules
 
 - The oracle is the check script, not the prose. A tree whose check exits 0 on
   its healthy state and non-zero on its defect is the evidence.
 - `incompatible-contract` is frozen as the holdout. Its hash is in
-  `decision.md`; do not edit its three files before the behavioural measurement.
+  `decision.md`; do not edit its three files. The behavioural measurement reads
+  the staged-only copy in `contract-ab/incompatible-staged/`, which has its own
+  recorded hash and no corrected branch.
 - Known limits of the instrument — no file input, conflict action not
-  distinguished, drift compared by type only, and the corrected state embedded in
-  the pipeline — are in
+  distinguished, drift compared by type only, the other capabilities still carry
+  the corrected state, and the A/B control also solves the contract cells — are in
   [`decision.md`](decision.md#6-known-limitations).
 - The fixtures are an instrument, not a product. No skill is created from them
   here: the program's rule is that a skill follows a corpus that shows a gap, not
   the other way round.
-- Staging a tree under `evals/<candidate>/` and running A/B/C is the follow-up
-  named in `decision.md`, owned by a later spec.
+- The contract cases are staged only in the gitignored mirror
+  `.lane/pinned/datacontract/`; nothing from the upstream skills is redistributed
+  in this repository.

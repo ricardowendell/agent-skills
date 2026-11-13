@@ -7,6 +7,61 @@ project uses [Semantic Versioning](https://semver.org/). The artifact is the set
 of skills plus the evidence that backs them, so a version is a claim: which
 skills, which cases, and which published measurements.
 
+## [0.9.0] — 2026-11-13
+
+The contract capability is measured before it is built.
+
+`SPEC-0085` closes issue #18's open question with an A/B measurement, not a new
+skill. The four contract fixtures live in
+`docs/analysis/data-corpus/contract-ab/`: a staged-only copy of the
+`incompatible-contract` holdout (no corrected branch, own `treeHash`
+`067a2e7f…`), the documented `channel` drift with two ODCS versions, a **new**
+semantic case (identical schema, `amount_cents` cents → dollars, so the
+deterministic check and `datacontract breaking` both pass and only the contract
+description carries the break), and a **new** composition case (`schema.sql` plus
+`requirements.md`, no contract; a created ODCS must pass `datacontract lint`).
+Every deterministic oracle and every valid contract is proved: `check.py` exits
+1/0 on the incompatible pair, 0/1 on documented/undocumented drift, 0 on the
+semantic schema, and 0 on the empty composition tree; `datacontract lint` passes
+on all six contracts and `datacontract breaking` exits 1 only on the incompatible
+pair. The frozen `incompatible-contract` tree is untouched at `b96b88d3…`.
+
+The B arm is `datacontract/datacontract-skills` at `dc06664` (MIT, Copyright 2026
+Entropy Data) plus `datacontract-cli` 1.2.9, copied verbatim into the gitignored
+mirror `.lane/pinned/datacontract/` so nothing upstream is redistributed. Forty
+paid draws (four cells × five per arm) ran on `opencode-go/deepseek-v4.1-flash`,
+detector `cf2e2e319d975a5b`; all eight run directories are clean
+(`findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0`),
+with no contamination and no infrastructure draw. The raw counts and the eight
+run dirs are in `docs/analysis/data-corpus/decision.md` section 7 and in
+`docs/evals/coverage.md`.
+
+The measured result is **no behavioural separation in any cell**: the control
+passed every non-load assertion in all four cells (5/5), so the scored `0/5`
+against the skill arms is the declared `skill` assertion, not a behavioural miss.
+Composition B r2 is preserved as a red (`ranpass datacontract lint`): the draw
+created a valid contract and linted it through the fixture's `check.py` instead
+of invoking the CLI directly.
+
+The per-cell verdict is **`reuse external`, read narrowly**. The result supports
+one part: **no local skill (C) is justified**, because there is no gap the
+control fails and the official skill closes. The other part is a recommendation,
+not a measurement: the official skills are the **process route** — MIT,
+maintained upstream, and `datacontract` is the domain CLI they wrap — **not a
+separator measured against the control**. Three instrument limits are declared:
+(a) the semantic prompt leaks the direction ("the schema check passes, yet I am
+not sure the change is safe"), so that cell measures reading the description,
+not discovering the break; (b) `datacontract` is on `PATH` in both arms, so A
+compares "skill card vs the same CLI used ad hoc", not "official family vs no
+tooling"; (c) n=5 does not exclude a small effect. A valid separation run would
+need a neutral prompt and an A arm without the CLI; that is a follow-up, not this
+wave. A thin routing reference remains a separate, optional decision.
+**Not measured:** no other
+capability was drawn, no Entropy Data lineage/consumer-impact service was used, no
+live data source or credential was touched, and the contract cells do not show a
+skill *improvement* — only coverage without regression. No skill, runner,
+detector or frozen hash changed.
+
 ## [0.8.3] — 2026-11-13
 
 The data corpus can see a duplicated-key join.

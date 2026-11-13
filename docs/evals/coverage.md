@@ -30,7 +30,10 @@ Not in the table and not in those totals: `TASK-58` (visual change planning,
 fixture and no run dir. They are accepted on **declared human review** — a person
 reads the diff or the preview — and no harness separated them
 ([`SPEC-0077`](../specs/active/SPEC-0077-no-visual-oracle-and-the-claim-says-so.md)).
-A visual oracle is a future item with its own budget, not a coverage cell.
+A visual oracle is a future item with its own budget, not a coverage cell. The
+four contract A/B cells (SPEC-0085) are also outside the table: they stage the
+official `datacontract-skills` from the gitignored mirror, not a checkout skill,
+and are recorded in the section below.
 
 ## The status report's cell (SPEC-0083)
 
@@ -509,6 +512,63 @@ rows below were decided on existing runs, not a new draw.
 
 No case is removed: each fails a control that breaks the contract or ignores an
 acceptance criterion, which is evidence a later wave can cite.
+
+## The contract A/B cells (SPEC-0085)
+
+Four contract cells are measured against the official
+[`datacontract-skills`](https://github.com/datacontract/datacontract-skills) at
+`dc06664` (MIT) with `datacontract-cli` 1.2.9, on 2026-11-13 in this spec's
+worktree. The cases live only in the gitignored mirror
+`.lane/pinned/datacontract/` (nothing upstream is redistributed), so they are
+**not** in the inventory table above and not in its totals. The durable case
+definitions are `docs/analysis/data-corpus/ab-cases.md`, the fixtures
+`docs/analysis/data-corpus/contract-ab/`, and the decision is section 7 of
+`docs/analysis/data-corpus/decision.md`.
+
+`node scripts/eval.mjs check --root .lane/pinned/datacontract` staged all four
+cells with no finding. Measured with
+`node scripts/eval.mjs compare <skill> <n> --repeat 5 --root .lane/pinned/datacontract`;
+model `opencode-go/deepseek-v4.1-flash` (config default), level `behavior`,
+concurrency 4, detector `cf2e2e319d975a5b`, five clean draws per arm, forty draws
+in the wave. All eight runs report `findings=0 warnings=0 skillLeaks=0
+hostReads=0 deniedDraws=0` from `node scripts/check-eval-run.mjs`, and every run
+records `params.isolation.enforced: true` (seatbelt).
+
+`scored` counts a draw that passed every assertion, including the declared
+`skill` load. `behavioural` counts a draw that passed every assertion except
+`skill`.
+
+| Cell | Arm | Run directory | clean | scored | behavioural | red assertion |
+| --- | --- | --- | --- | --- | --- | --- |
+| incompatible (breaking #1) | with skill | `2026-11-13T15-44-52--breaking-change-check` | 5/5 | 5/5 | 5/5 | — |
+| incompatible (breaking #1) | without skill | `2026-11-13T15-42-21--breaking-change-check--without-skill` | 5/5 | 0/5 | 5/5 | every draw: `skill breaking-change-check` |
+| documented drift (breaking #2) | with skill | `2026-11-13T15-50-18--breaking-change-check` | 5/5 | 5/5 | 5/5 | — |
+| documented drift (breaking #2) | without skill | `2026-11-13T15-47-08--breaking-change-check--without-skill` | 5/5 | 0/5 | 5/5 | every draw: `skill breaking-change-check` |
+| semantic (breaking #3) | with skill | `2026-11-13T15-56-23--breaking-change-check` | 5/5 | 5/5 | 5/5 | — |
+| semantic (breaking #3) | without skill | `2026-11-13T15-53-23--breaking-change-check--without-skill` | 5/5 | 0/5 | 5/5 | every draw: `skill breaking-change-check` |
+| composition (create #1) | with skill | `2026-11-13T16-10-51--create-data-contract` | 5/5 | 4/5 | 4/5 | r2: `ranpass datacontract lint` |
+| composition (create #1) | without skill | `2026-11-13T15-58-40--create-data-contract--without-skill` | 5/5 | 0/5 | 5/5 | every draw: `skill create-data-contract` |
+
+**Class: no behavioural separation in any cell.** The control passes every
+non-load assertion in all four cells; the scored `0/5` is the declared load
+assertion, not a behavioural miss. The official skill is loaded and used in seven
+of eight skill-arm runs (four of five composition draws), and its verdicts and
+artifacts match the control's. Composition B r2 is named: it created
+`contracts/orders_export.odcs.yaml`, matched every `filematch`, and linted through
+the fixture's `check.py` instead of invoking `datacontract lint` directly, so
+`ranpass` missed a valid contract. The oracle was not edited after the first
+draw.
+
+The per-cell verdict is `reuse external`, read narrowly. The measured result is
+that **no local skill (C) is justified**: there is no gap the control fails and
+the official skill closes. The official skills are the **recommended process
+route** (MIT, maintained upstream, and `datacontract` is the domain CLI they
+wrap), **not a separator measured against the control** — the control also passed
+every non-load assertion. Three instrument limits are declared in
+`docs/analysis/data-corpus/decision.md` §7 "The contract A/B measurement": the
+semantic prompt hands over the direction, `datacontract` is on `PATH` in both
+arms, and n=5 does not exclude a small effect. A thin routing reference is a
+separate, optional decision.
 
 ## How to update
 

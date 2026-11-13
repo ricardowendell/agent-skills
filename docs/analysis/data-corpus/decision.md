@@ -1,9 +1,11 @@
 # Data corpus decision memo
 
-- **Spec:** SPEC-0082 — A data corpus that can see a duplicated-key join
+- **Spec:** SPEC-0082 — A data corpus that can see a duplicated-key join;
+  SPEC-0085 — The contract capability is measured before it is built
 - **Date:** 2026-11-13
-- **Status:** the corpus and its deterministic oracles are proved. No candidate
-  skill has been measured, no paid draw ran, and no rate is claimed.
+- **Status:** the corpus and its deterministic oracles are proved. The contract
+  capability has a staged B arm and a paid A/B measurement (section 7); the
+  other capabilities remain `unknown` with no draw. No skill is created.
 
 This memo records what the instrument shows, freezes the holdout, and names the
 decision per capability. It does not create a skill.
@@ -26,6 +28,34 @@ The proof is the exit code plus the finding line; the commands are repeated in
 | `schema-drift-documented` | undocumented variant | **1** | `column channel is not declared by the contract` |
 | `negative-healthy` | tree | **0** | `PASS negative-healthy: 3 customer rows, 4 event rows after the retry` |
 | `negative-safe-retry` | tree | **0** | `PASS negative-safe-retry: 6 rows, hash 8310b465261bd950` |
+
+The four `contract-ab/` trees added by SPEC-0085 obey the same rule; the exact
+commands are in [`contract-ab/README.md`](contract-ab/README.md) §"The proofs"
+(lines 29–71):
+
+| `contract-ab/` tree | State | Exit | Observed line |
+| --- | --- | --- | --- |
+| `incompatible-staged` | consumer contract v1 | **1** | `required column customer_id is missing`; `column customer_ref is not declared by the contract` |
+| `incompatible-staged` | `--producer-contract contract-v2.odcs.yaml` | **0** | `PASS incompatible-staged: table orders_export matches 4 required column(s)` |
+| `schema-drift-documented` | documented (tree) | **0** | `PASS schema-drift-documented: table orders_export accepts 1 documented additive column(s)` |
+| `schema-drift-documented` | undocumented variant | **1** | `column channel is not declared by the contract` |
+| `semantic-change` | tree / both ODCS versions | **0** | `PASS semantic-change: … schema unchanged between contract versions` |
+| `composition` | empty (no contract) | **0** | `PASS composition: no contract staged` |
+
+**Two different `schema-drift-documented` trees.** The row in the first table is
+the 0.8.3 tree `docs/analysis/data-corpus/schema-drift-documented/` (its check
+reads the `allowed_additive` contract block in `AGENTS.md`). The row in the
+second table is the SPEC-0085 A/B copy
+`docs/analysis/data-corpus/contract-ab/schema-drift-documented/`, which adds the
+two `contract-vN.odcs.yaml` files and is the one staged in the mirror. They share
+the oracle logic but are distinct trees with distinct hashes; do not read the
+second as a re-proof of the first.
+
+Also from the CLI: `datacontract lint` exits 0 on all six valid ODCS files
+(`contract-v1`/`contract-v2` in the three contract trees), and
+`datacontract breaking` exits 1 on the incompatible pair, 0 on the drift pair
+(safe, INFO only) and 0 on the semantic pair — the semantic break is not
+schema-detectable.
 
 The undocumented variant is the same tree and the same `channel` column, with
 only the `allowed_additive` line removed from a temporary contract copy:
@@ -116,11 +146,12 @@ No check manufactured a defect on the healthy state of its own capability.
 
 ## 4. Decision per capability
 
-The B arm for every capability is the same: dbt Labs and Databricks publish
-agent skills for data work, but a pinned, licence-compatible copy has **not**
-been staged. Licence compatibility and the pinned revision are therefore
-unverified, so the comparison is `unknown` — not zero and not parity. No rate is
-claimed until that arm is staged.
+For `join/quality` and `migration` the B arm is `unknown`: dbt Labs and
+Databricks publish agent skills for data work, but a pinned, licence-compatible
+copy has **not** been staged. Licence compatibility and the pinned revision are
+therefore unverified, so the comparison is `unknown` — not zero and not parity.
+No rate is claimed until that arm is staged. `contract` is different: the official
+`datacontract-skills` are pinned at `dc06664` (MIT) and measured in section 7.
 
 ### `join/quality`
 
@@ -160,12 +191,20 @@ claimed until that arm is staged.
   `schema-drift-documented` accepts the documented additive `channel` column and
   rejects the same column with the documentation removed.
 - **Gap shown:** a schema-level oracle separates an incompatible change from
-  documented additive drift; no existing skill does that for data contracts.
-- **B arm:** `unknown` for the same reason.
-- **Decision:** **build new** — provisional: the B arm is not staged, and
-  `review-code`/`audit-code-quality` were not measured against these trees.
-- **Next step:** the holdout stays frozen; the behavioural measurement uses this
-  tree as its held-out case and must report against the `treeHash` in section 2.
+  documented additive drift; the semantic case shows a break the schema oracle
+  cannot see. Whether the official skill adds anything over the control is
+  measured in section 7.
+- **B arm:** staged and measured — `datacontract-skills` at `dc06664` (MIT) with
+  `datacontract-cli` 1.2.9; five clean draws per arm, eight clean runs, no
+  contamination.
+- **Decision:** **reuse external**. No capability gap was measured: the control
+  reproduced every behavioural assertion in all four cells (5/5 on the
+  non-load assertions), so the official skill adds procedural consistency, not a
+  measured behavioural delta. C is not justified.
+- **Next step:** no local contract skill is authored. If the thin routing
+  reference from issue #18 is still wanted, it is a separate decision and is not
+  underwritten by this measurement. The staged-only holdout and the
+  `contract-ab/` fixtures are the durable evidence; the mirror stays gitignored.
 
 ### `review/ops`
 
@@ -181,9 +220,12 @@ claimed until that arm is staged.
 ## 5. What this memo does not decide
 
 - No skill id is created, renamed or extended here.
-- No case is staged under `evals/<id>/`; that and the A/B/C run are the
-  follow-up named above, after the human gate picks the capability and the id.
-- No pass rate, no comparability claim: the B arm is `unknown`, not zero.
+- No case is staged in this checkout's `evals/`: the contract cases live in the
+  gitignored mirror `.lane/pinned/datacontract/`, and the other capabilities
+  still have no case and no draw.
+- No pass rate and no comparability claim for `join/quality` or `migration`: their
+  B arm is `unknown`, not zero. The contract counts in section 7 are per draw,
+  for the model and detector named there, and are not a product claim.
 - DuckDB remains an option, not a requirement; these checks use `sqlite3` and
   `python3` only.
 
@@ -202,7 +244,123 @@ claimed until that arm is staged.
   changed type or an undocumented column fails.
 - **The corrected state is embedded in the pipeline.** The defect trees carry the
   fix behind `@state`/`FIXTURE_STATE`, so a read-only measurement can see the
-  answer. Before measuring a candidate, freeze the holdout as a staged-only copy
-  (the frozen tree with the corrected branch removed from `pipeline.py`) and
-  report against that copy's `treeHash`; this memo's hash anchors the tree as it
-  stands today.
+  answer. The contract capability resolved this in SPEC-0085:
+  `contract-ab/incompatible-staged/` is a staged-only copy (no corrected branch)
+  with its own recorded `treeHash`; the frozen original keeps `b96b88d3…`. The
+  other capabilities still need the same staged-only copy before a draw.
+- **The A/B control also solves the contract cells.** The measured model
+  reproduced every non-load assertion in all four cells without a skill (section
+  7). That is a limit of the measurement's discriminating power, not evidence
+  that the official skill is useless: these fixtures test a competent workflow,
+  and the model already has it. A harder cell would have to fail the control for
+  a reason the skill fixes.
+
+## 7. The contract A/B measurement (SPEC-0085)
+
+The contract capability is measured against the official skills, not assumed.
+The B arm is [`datacontract/datacontract-skills`](https://github.com/datacontract/datacontract-skills)
+at `dc06664` (MIT, Copyright 2026 Entropy Data), copied verbatim into the
+gitignored mirror `.lane/pinned/datacontract/` with `datacontract-cli` 1.2.9
+pre-installed. The A arm is the same prompt and the same fixture with no skill
+staged. Nothing from the mirror is committed, and the third-party check stays
+green because no upstream file enters the repository.
+
+### Comparability
+
+- **Model:** `opencode-go/deepseek-v4.1-flash` — the effective model id recorded
+  in every manifest as `opencode-go/deepseek-v4.1-flash (config default)`, i.e.
+  no `--model` flag was passed and the host config selected it. **Level:**
+  `behavior`, concurrency 4. **Detector:** `cf2e2e319d975a5b`. **Draws:** five per
+  arm, forty in the wave.
+- **Same prompt, same fixture:** each arm's stored `promptHash` and
+  `fixtureHash` match for the cell. The `fixtureHash` is the harness `treeHash`
+  of the staged tree, so the mirror copy and the durable tree are the same bytes.
+- **Clean:** all eight runs report `findings=0 warnings=0 skillLeaks=0
+  hostReads=0 isolated=yes deniedDraws=0` from `node scripts/check-eval-run.mjs`;
+  no draw is contaminated and no draw is infrastructure.
+- **Two probes before the wave:** `node scripts/eval.mjs check --root
+  .lane/pinned/datacontract` staged all four cells with no finding, and one
+  screening draw of the semantic cell (repeat 1,
+  `2026-11-13T15-39-34--breaking-change-check`) proved the CLI runs inside the
+  sandbox before the paid wave. The screening draw is not part of the counts.
+
+Durable fixture hashes (path-independent, same algorithm as the run record):
+
+| Tree | `treeHash` |
+| --- | --- |
+| `incompatible-staged/` (staged-only holdout) | `067a2e7f605ab4059ba6e4968b5fa02379c3e4cf729344502339f08977c233fe` |
+| `schema-drift-documented/` | `d1ce610b5071af06843a2a0b1d6d18ba98e7b06d28e1b4202ba508323ae52527` |
+| `semantic-change/` | `d9953d88ccf59bdefbb86a4cdf473540a8b9e3847cf432e464544248494957f7` |
+| `composition/` | `7c51771435d36d72a67458e8b526ea7ed142acfd4001dc11dc60bd1749ed18f2` |
+
+The frozen original `incompatible-contract/` is untouched at
+`b96b88d3f95cf3b7ca69b6d3325fdb84e77d8df2df45443c0352a25faa3b384a`. The
+staged-only copy carries no `corrected` branch, so no draw can read the answer.
+
+### Per-cell counts
+
+`scored` counts a draw that passed every assertion, including the declared
+`skill` load. `behavioural` counts a draw that passed every assertion except
+`skill`, i.e. the output the capability promises. Both are raw counts out of five
+clean draws.
+
+| Cell (case) | A run | B run | A clean / scored / behavioural | B clean / scored / behavioural |
+| --- | --- | --- | --- | --- |
+| incompatible (1) | `2026-11-13T15-42-21--breaking-change-check--without-skill` | `2026-11-13T15-44-52--breaking-change-check` | 5/5 / 0/5 / 5/5 | 5/5 / 5/5 / 5/5 |
+| documented drift (2) | `2026-11-13T15-47-08--breaking-change-check--without-skill` | `2026-11-13T15-50-18--breaking-change-check` | 5/5 / 0/5 / 5/5 | 5/5 / 5/5 / 5/5 |
+| semantic (3) | `2026-11-13T15-53-23--breaking-change-check--without-skill` | `2026-11-13T15-56-23--breaking-change-check` | 5/5 / 0/5 / 5/5 | 5/5 / 5/5 / 5/5 |
+| composition (1) | `2026-11-13T15-58-40--create-data-contract--without-skill` | `2026-11-13T16-10-51--create-data-contract` | 5/5 / 0/5 / 5/5 | 5/5 / 4/5 / 4/5 |
+
+### The reds, named
+
+- **Every A draw** fails exactly one assertion: `skill breaking-change-check`
+  (or `skill create-data-contract`). The other 5–9 assertions pass in every
+  control draw. The scored `0/5` is the load assertion, not a behavioural miss.
+- **Composition B r2** fails `ranpass datacontract lint`: the draw created
+  `contracts/orders_export.odcs.yaml`, matched every `filematch` assertion, and
+  reached lint through the fixture's `check.py` (`python3 check.py
+  contracts/orders_export.odcs.yaml`, which runs `datacontract lint
+  --all-errors`) instead of invoking `datacontract lint` directly. The contract
+  passed lint; the process assertion is what missed. The red is preserved, not
+  softened: the oracle was not edited after the first draw, and the honest fix — if
+  any — belongs to a later case that asserts the artifact rather than the command
+  text.
+- No other draw has a red assertion.
+
+### Class and verdict
+
+**No behavioural separation in any cell — the instrument did not discriminate.**
+The control reproduced every non-load assertion in all four cells (5/5 each),
+including the semantic break (cell 3) and the ODCS composition (cell 4). The
+official skill was loaded and used in every B draw of the three
+`breaking-change-check` cells and in four of five composition draws, and it
+produced the same verdicts and artifacts. The scored `0/5` is the declared load
+assertion, not a behavioural miss.
+
+The per-cell decision is `reuse external`, with two separate parts:
+
+- **No local skill (C) is justified.** That is the result the measurement
+  supports: there is no gap the control fails and the official skill closes. C
+  stays un-authored.
+- **The official skills are the recommended process route** — MIT, maintained
+  upstream, and the `datacontract` CLI is the domain tool they wrap — **not a
+  separator measured against the control.** The evidence says the official skill
+  is a reasonable default, not that it beats a competent model+CLI baseline.
+
+Three limits of this instrument, declared:
+
+- **(a) The semantic prompt leaks the direction.** "the schema check passes, yet
+  I am not sure the change is safe" points the agent at the semantic read, so the
+  cell measures whether the property description is read, not whether the break
+  is discovered without a hint.
+- **(b) `datacontract` is on `PATH` in both arms.** The A arm still has the CLI,
+  so this compares "official skill card vs the same CLI used ad hoc", not
+  "official family vs no tooling".
+- **(c) n=5 does not exclude a small effect.** Five clean draws per arm can show
+  a large separation or its absence; it cannot bound a small delta.
+
+A valid separation measurement would need a neutral prompt and an A arm without
+the CLI (or with the CLI hidden). That is a follow-up in its own spec with its
+own budget; it is not run here, and no claim in this memo depends on it. A thin
+routing reference remains a separate, optional decision and is not underwritten
+by these counts.

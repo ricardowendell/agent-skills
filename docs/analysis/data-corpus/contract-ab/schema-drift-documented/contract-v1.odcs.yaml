@@ -1,0 +1,38 @@
+apiVersion: v3.2.0
+kind: DataContract
+id: orders-export
+name: Orders Export
+version: 1.5.0
+status: active
+domain: sales
+description:
+  purpose: The producer/consumer boundary for the orders export; one row per order.
+  usage: Consumers join on order_id and read customer_id for the customer.
+  limitations: Cancelled orders are included; there is no deletion feed.
+schema:
+  - name: orders_export
+    physicalName: orders_export
+    physicalType: table
+    description: One row per order.
+    properties:
+      - name: order_id
+        logicalType: integer
+        physicalType: INTEGER
+        required: true
+        primaryKey: true
+        description: Internal order identifier.
+      - name: customer_id
+        logicalType: string
+        physicalType: TEXT
+        required: true
+        description: Customer identifier the consumer joins on.
+      - name: amount_cents
+        logicalType: integer
+        physicalType: INTEGER
+        required: true
+        description: Order amount in cents.
+      - name: placed_on
+        logicalType: date
+        physicalType: TEXT
+        required: true
+        description: Order date in UTC.
