@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "external_run_id": "ea12fe77-028c-448e-a706-49115eeafa3b",
+  "slug": "SPEC-0086-companion-skills-and-scopes",
+  "events": [
+    {
+      "stage": "dispatch",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-13T20:56:36.841Z",
+      "ended_at": "2026-11-13T20:56:37.925Z",
+      "duration_ms": 1084,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "c1dc1cba48ff7e3503b18c85d3d22782fd524945311ad210aa48d2ddbd0a6628",
+        "head_sha": "716ad33456b603242510faae4f0ebccff5907cb4",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "review",
+      "attempt_id": 1,
+      "status": "approved",
+      "started_at": "2026-11-13T21:32:10.966Z",
+      "ended_at": "2026-11-13T21:32:11.050Z",
+      "duration_ms": 84,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "c1dc1cba48ff7e3503b18c85d3d22782fd524945311ad210aa48d2ddbd0a6628",
+        "head_sha": "ddf97e9f1a3ee1a3836cf3c731f911c8f127ee26",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "lint",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-13T21:32:11.228Z",
+      "ended_at": "2026-11-13T21:32:11.289Z",
+      "duration_ms": 61,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "c1dc1cba48ff7e3503b18c85d3d22782fd524945311ad210aa48d2ddbd0a6628",
+        "head_sha": "ddf97e9f1a3ee1a3836cf3c731f911c8f127ee26",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "selftest",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-13T21:32:11.290Z",
+      "ended_at": "2026-11-13T21:32:20.921Z",
+      "duration_ms": 9631,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "c1dc1cba48ff7e3503b18c85d3d22782fd524945311ad210aa48d2ddbd0a6628",
+        "head_sha": "ddf97e9f1a3ee1a3836cf3c731f911c8f127ee26",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-13T21:32:11.137Z",
+      "ended_at": "2026-11-13T21:32:21.060Z",
+      "duration_ms": 9923,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "c1dc1cba48ff7e3503b18c85d3d22782fd524945311ad210aa48d2ddbd0a6628",
+        "head_sha": "ddf97e9f1a3ee1a3836cf3c731f911c8f127ee26",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "merge",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-13T22:26:32.169Z",
+      "ended_at": "2026-11-13T22:26:44.448Z",
+      "duration_ms": 12279,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "c1dc1cba48ff7e3503b18c85d3d22782fd524945311ad210aa48d2ddbd0a6628",
+        "head_sha": "ddf97e9f1a3ee1a3836cf3c731f911c8f127ee26",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "audit",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-13T22:26:44.799Z",
+      "ended_at": "2026-11-13T22:26:44.882Z",
+      "duration_ms": 83,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "c1dc1cba48ff7e3503b18c85d3d22782fd524945311ad210aa48d2ddbd0a6628",
+        "head_sha": "ddf97e9f1a3ee1a3836cf3c731f911c8f127ee26",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      },
+      "metrics": {
+        "tokens_in": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_out": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_cache": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "calls": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "cost": {
+          "value": null,
+          "provenance": "unknown"
+        }
+      },
+      "adapter": {
+        "source": "unavailable"
+      }
+    }
+  ]
+}

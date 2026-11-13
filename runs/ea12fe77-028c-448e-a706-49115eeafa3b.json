@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "ea12fe77-028c-448e-a706-49115eeafa3b",
+  "started_at": "2026-11-13T20:56:37.619Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.6.0"
+  },
+  "base_commit": "716ad33456b603242510faae4f0ebccff5907cb4",
+  "head_commit": "ddf97e9f1a3ee1a3836cf3c731f911c8f127ee26",
+  "task": "SPEC-0086",
+  "spec_sha": "c1dc1cba48ff7e3503b18c85d3d22782fd524945311ad210aa48d2ddbd0a6628",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0086-companion-skills-and-scopes.json",
+      "sha256": "37de38f63362661bb0169c0ca3dd9efc16dfd4989badb4e0ea7ffbb32bf3f6ab"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0086-companion-skills-and-scopes.json",
+      "sha256": "76ae15b04fa5270f1d5b8a1d7e4828235ed523446cf35c8a99afa75b2acef58f"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "a7725f9714c0f716472c77ebae48bee2feccf2c67b25bb006d6d79142e790a71"
+    }
+  ],
+  "attempts": 1,
+  "duration": 5406,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "ddf97e9f1a3ee1a3836cf3c731f911c8f127ee26"
+}

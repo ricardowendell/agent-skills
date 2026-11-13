@@ -19,7 +19,7 @@ gitignored `.skill-lock.json`.
 
 The companion catalog now has scope and detection signals. `companion-skills.json`
 is a closed manifest of the three measured data-contract skills — `project`
-scope, signals (`*.odcs.yaml`, `contracts/`, `datacontract` in dependencies), pin
+scope, signals (`**/*.odcs.yaml`, `contracts/`, `datacontract` in dependencies), pin
 `dc06664`, MIT, `SPEC-0085` evidence — and `skills.index.json` groups the 15
 first-party skills into `pipeline`, `verify`, `observe`, `maintain` and `record`,
 with an empty `data` scope until a measured data skill exists. The index is data,
@@ -30,13 +30,15 @@ detection: it reads the manifest relative to the skill, intersects the signals
 with what it detected, asks (showing id, pin, license and evidence) before
 installing the pinned copy, and records the choice in the consumer's `AGENTS.md`;
 no manifest or no matching signal means no suggestion. It never auto-installs and
-nothing upstream is vendored. One screening draw of case 1 passed, re-screened
-after the reference edit at `2026-11-13T18-19-05--bootstrap-project-harness`
+nothing upstream is vendored. One screening draw of case 1 passed at `2026-11-13T18-19-05--bootstrap-project-harness`
 (`skillHash baa2f48a…`; the earlier `8af8e10e…` draw is history) — proof the
-default flow is not derailed, not a separation claim. `check-staleness` moves
-from 49 to 51 stale cells (73 → 74 cited) because the bootstrap body edit unstaged
-`#15` and `#20`; the reference edit briefly unstaged the first screening and the
-re-screen restored it, with no other cell moved. No frontmatter changed, no
+default flow is not derailed, not a separation claim. A land-time one-line fix to
+the reference example (`*.odcs.yaml` → `**/*.odcs.yaml`) moved the tree past that
+hash; the re-screens at the fixed tree were contaminated (`19-27-21`) and stalled
+(`19-37-19`), so they are not evidence and the screening stands at 18-19-05 with
+`SKILL.md` unchanged — the cell is stale by a doc-only change. `check-staleness`
+moves from 49 to 52 stale cells (73 → 74 cited): the body edit unstaged `#15` and
+`#20`, and the prose fix unstaged the screening cell. No frontmatter changed, no
 installer script exists, and no other skill, harness, detector or corpus changed.
 
 ## [0.9.0] — 2026-11-13

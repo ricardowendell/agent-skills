@@ -40,7 +40,7 @@ when available instead of copying files.
 
 The same three entries are **machine-readable** in
 [`companion-skills.json`](../../companion-skills.json): id, group, `project`
-scope, source, pin, path, MIT license, detection signals (`*.odcs.yaml`,
+scope, source, pin, path, MIT license, detection signals (`**/*.odcs.yaml`,
 `contracts/`, `datacontract` in dependencies) and the `SPEC-0085` evidence.
 `/bootstrap` reads that manifest, intersects the signals with what it detected,
 and asks before installing; nothing is installed on its own. The manifest is a

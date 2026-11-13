@@ -67,7 +67,7 @@ writes nothing unless the person accepts a suggestion.
 
    - `breaking-change-check` — `datacontract/datacontract-skills` @ `dc06664`,
      MIT, measured in 0.9.0 (`SPEC-0085`). Installed because this repo carries
-     `contracts/` and `*.odcs.yaml`. Re-install steps:
+     `contracts/` and `**/*.odcs.yaml`. Re-install steps:
      `docs/integrations/datacontract.md`.
    ```
 

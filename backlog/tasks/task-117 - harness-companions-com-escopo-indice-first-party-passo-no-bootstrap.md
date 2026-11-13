@@ -1,9 +1,10 @@
 ---
 id: TASK-117
 title: 'harness: companions com escopo + indice first-party + passo no bootstrap'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-13T20:55:00Z'
+updated_date: '2026-11-13T22:26:00Z'
 labels:
   - harness
 dependencies: []
