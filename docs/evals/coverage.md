@@ -22,8 +22,8 @@ the layout at the time of that run; SPEC-0058 moved the corpus out of the skill.
 | `audit-code-quality` | 9 | 2 | 0 | trees 1 and 4 via `git.json`; 5–8 via `git.json`; 9 stages tree 6 via `evals/9/git.json` | iteration 1: with-skill 4/4 (`2026-11-04T21-55-53`); control case 1 0/1, only coverage `unknown` separated (`…21-47-51`); case 4 on the final 8-assertion version 1/1 with skill (`2026-11-04T21-59-17`) against 0/1 without (`2026-11-04T21-59-17--audit-code-quality--without-skill`) on `SCOPE:`/`rule`/`CAPTURE OPTIONS` — one draw per arm, so it does not separate reliably (`…21-57-53` is the pre-contract 5-assertion version); **SPEC-0055 wave:** architecture cases 5–7 and deterministic cases 8–9, five draws per arm on `agentworks/deepseek-v4-1-flash`; skill arms 5/5, 4/5, 4/5, 3/5 and 4/5 passed against 0/5 in every control; all ten published cells are clean under the enforced boundary; see the SPEC-0055 wave below |
 | `tighten-harness` | 6 | 2 | 0 | trees 1, 2, 3, 5, 6 | case 5: 3/3 passed, skill loaded 0/3 (`why:`, no run dir) |
 | `write-implementation-prompt` | 6 | 2 | 1 | trees 1–4 | SPEC-0030 re-measure at `dcf5177` (`skillHash 046369c2…`, detector v2; the clean behavioural cells are `isolated=yes`, the trigger runs carry their findings): #1 5/5 clean (`2026-11-06T19-25-26--write-implementation-prompt`), control **unresolved** under v2: default 0/3 clean in two runs (`2026-11-07T01-46-26--write-implementation-prompt--without-skill`, `…02-58-14…`) and agentworks 0/2 (`08-17-29`); every clean draw failed `spec_sha:`. Four v1 attempts are history; #2 5/5 clean (`2026-11-06T19-28-47--write-implementation-prompt`), control **separator** under v2 on the default model (`2026-11-07T03-01-29--write-implementation-prompt--without-skill`: 5/5 clean, **0/5 passed**); the agentworks control (`08-20-10`) only reached 0/4 clean, a route difference. The v1 `15-30-39` 0/4 replay-clean is history; #4 5/5 clean (`2026-11-06T19-30-26--write-implementation-prompt`), control **non-discriminator** under v2: default **4/4 valid passed** (`2026-11-07T02-03-01--write-implementation-prompt--without-skill`; 1 rep aborted), agentworks 2/2 (`08-22-28`); the v1 `14-37-23` 4/4 passed is history; #3 `manual` (history `14-01-54` split 4/5; not re-run); triggers: #5 stays a **trigger case** — `loaded 5/5` in both `2026-11-06T19-32-45--write-implementation-prompt` and `2026-11-06T19-53-34--write-implementation-prompt`, **no behavioural cell** and no stall-free cell: r1 285.3 s, r4 150.9 s, r3 477.7 s and r5 268.4 s each killed by the 120 s watchdog after its last event (a `step_start` with nothing after it), retried once and the retry stalled too; best clean subsets 1/1 and 2/2, contamination 2/5 and 1/5. The store's support goes to the **runner** (SPEC-0076): `scripts/lib/evals/agent.mjs` arms the watchdog on stream bytes, and this stream is silent while a tool runs — #5 ran a host-hunt `shell` for 118.51 s with no bytes and `exit 0` (`19-53-34` r3, `state.time`), so 120 s of silence can be a live child at work, not a dead stream — while the provider stays **undecided**: no `provider.*` frame is stored in any stall (the `error` field is absent from every stalled `execution`), and the killed window cannot be separated from a live-but-quiet tool either; the two are separable by instrumentation, not by another draw. The empty #5 fixture (the draw hunts the host for `SPEC-0012`) is what makes its silent steps long, not a long prompt-file generation; #6 clean 5/5 in `2026-11-06T20-12-15--write-implementation-prompt` (`findings=0 warnings=0 isolated=yes`), 5/5 in `19-32-45`, 4/5 in `19-53-34` (r3 loaded) — improved but not deterministic; canary 12/12 `13-51-35`; `13-46-05` discarded (`r8` read `.lane/trees`); re-measured under the enforced boundary (SPEC-0050, five draws): #1 is 5/5 clean with the skill (`2026-11-09T13-07-02--write-implementation-prompt--agentworks-deepseek-v4-1-flash`, `findings=0 isolated=yes`) and the control `2026-11-09T13-11-33--write-implementation-prompt--…--without-skill` is 0/5 clean (`deniedDraws=1`, `isolated=yes`), every draw red on `filematch docs/prompts/SPEC-0007-*.prompt.md spec_sha:` — **separator** (5/5 vs 0/5). See `write-implementation-prompt-matrix.md` |
-| `report-project-status` | 4 | 3 | 1 | none | declared, not measured — the evidence is a **declared human review**: three trigger/near-miss cases and one manual behavioural case (#3) rest on a person reading the reply; no fixture, no run dir, and no harness separated them. Source: issue #11 (2026-11-08), skill merged in `fca9c78` |
-| **total** | **107** | **33** | **3** | | |
+| `report-project-status` | 4 | 3 | 0 | tree 3 (`base: "."`, no remote) | case 3 measured 2026-11-13, five draws per arm, `opencode-go/deepseek-v4.1-flash`, detector `cf2e2e319d975a5b`: **separator** — with the skill 5/5 clean and 4/5 passed, control 5/5 clean and 0/5 passed; both run dirs and the red draw in the section below. Triggers #1/#2/#4 stay declared (`why:`, no run dir). The "at most three next steps" cap is human-checked, not machine-checked. Source: issue #11, `SPEC-0083` |
+| **total** | **107** | **33** | **2** | | |
 
 Not in the table and not in those totals: `TASK-58` (visual change planning,
 `SPEC-0036`) and `TASK-60` (experience review, `SPEC-0038`) have no case, no
@@ -31,6 +31,69 @@ fixture and no run dir. They are accepted on **declared human review** — a per
 reads the diff or the preview — and no harness separated them
 ([`SPEC-0077`](../specs/active/SPEC-0077-no-visual-oracle-and-the-claim-says-so.md)).
 A visual oracle is a future item with its own budget, not a coverage cell.
+
+## The status report's cell (SPEC-0083)
+
+`report-project-status` #3 is no longer manual. The case stages
+`evals/report-project-status/fixtures/3/`: a plain repo (`git.json`
+`{ "base": "." }`, **no remote**) whose `AGENTS.md` names `backlog/tasks/`,
+`docs/specs/active/` and the gates (`node --check src/app.js`), with one `ready`
+spec, one backlog task, a two-entry `CHANGELOG.md` and `src/app.js` as the
+sentinel. It asserts the report surface — the skill loads, `STATUS:` is printed,
+`ISSUES … unknown` and `CI … unknown` appear, a `NEXT STEPS` block appears, no
+issue number is invented (`noreply #[0-9]+`) and `src/app.js` is unchanged. The
+"at most three next steps" cap stays a human `expect:`: no assertion kind counts
+lines, so that half is checked by a reader, not by the harness.
+
+Measured 2026-11-13 in the spec's worktree at `repoSha 7573ede`:
+`node scripts/eval.mjs compare report-project-status 3 --repeat 5 --root skills`
+(the spec's command omits `--root`; without it the CLI discovers the *installed*
+skills and would measure `~/.agents`, not the checkout). Model
+`opencode-go/deepseek-v4.1-flash` (config default), level `behavior`,
+concurrency 4, detector `cf2e2e319d975a5b`, five scored draws per arm. Both runs
+record `params.isolation.enforced: true` (seatbelt) and
+`node scripts/check-eval-run.mjs` reports `findings=0 warnings=0 skillLeaks=0
+hostReads=0 isolated=yes deniedDraws=0` for both. The with-skill arm records
+`skillHash b16fa771…`, the checkout's filtered tree hash; the control stages no
+skill, so its `skillHash` is `null` by construction.
+
+| arm | run directory | clean | passed | draws (r1–r5) | red assertion |
+| --- | --- | --- | --- | --- | --- |
+| with skill | `2026-11-13T09-53-13--report-project-status` | 5/5 | 4/5 | r1 fail, r2–r5 pass | r1: `reply ISSUES[\s\S]{0,120}?unknown`, `reply CI[\s\S]{0,120}?unknown` |
+| without skill | `2026-11-13T09-49-36--report-project-status--without-skill` | 5/5 | 0/5 | r1–r5 fail | all five: `skill report-project-status`, `reply STATUS:`, both `unknown` lines, `reply NEXT STEPS`; r2, r3, r5 also `noreply #[0-9]+` |
+
+**Class: separator — 5/5 clean vs 5/5 clean, with 4/5 passing against 0/5.** The
+control reached five clean draws, so the cell is not `unresolved`; the skill
+carries the report contract the control does not. The case-level verdict is
+`failed` in both arms because `--min-pass` defaults to 1 and the with-skill arm
+lost one draw; the published numbers above are per draw, as the five-draw rule
+counts them.
+
+The red draw is named, not softened: in
+`2026-11-13T09-53-13--report-project-status` r1 the skill loaded and printed
+every block, but localised the degradation token — `**ISSUES** … - open:
+**desconhecido**` and `**CI** … **desconhecido**` — so the literal `unknown`
+never appears. The skill's own "Degradation and refusal" section requires
+`ISSUES: unknown` and `CI: unknown`, so this is a miss against the contract, not
+a harness artefact; the other four draws print the literal token inside an
+otherwise Portuguese report (r2: `- abertas: **unknown** — gh issue list falhou`),
+so the assertion is reachable and not language-hostile. The oracle was not edited
+after the first draw. A follow-up decides between the two honest fixes (assert
+the degradation in the reply's language, or require the literal token in the
+skill) — both are outside this spec. One observation is recorded rather than
+fixed: `noreply #[0-9]+` also matches "AC #1" / "AC #2" phrasing, so three of the
+control's reds are that numbering, not an invented issue; the control still fails
+all five on the surface, so the class is unchanged.
+
+**The pilot, instrumented.** The passive one-week pilot starts at the 0.8.1 cut,
+2026-11-13. Metric: **user turns from session start to the first action in
+status sessions** (a session whose opening turn asks for project status or next
+steps). Baseline: the **15 sessions / 635 turns** of the `report-project-status`
+cluster in `docs/analysis/skills-from-sessions-2026-11-07.md`. Window: one week,
+closing 2026-11-20. The result is appended to this note after the week as a
+follow-up, not a gate; if the week is not observable (no status sessions), that
+reason is recorded here and the AC is still met. Nothing in this checkout
+collects it retroactively — the pilot is passive by design.
 
 ## Discriminating set (issue #5)
 

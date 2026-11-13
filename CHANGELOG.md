@@ -7,6 +7,43 @@ project uses [Semantic Versioning](https://semver.org/). The artifact is the set
 of skills plus the evidence that backs them, so a version is a claim: which
 skills, which cases, and which published measurements.
 
+## [0.8.1] — 2026-11-13
+
+The status report's claim is measured.
+
+`report-project-status` case 3 was `status: manual`: a reader, not a harness,
+checked that a repo without a GitHub remote degrades issues and CI to `unknown`.
+It now stages `evals/report-project-status/fixtures/3/` — a plain repo with no
+remote, an `AGENTS.md` that names its backlog index, its specs directory and its
+gates, one `ready` spec, one backlog task, a two-entry changelog and a sentinel
+`src/app.js` — and asserts the surface the skill promises: the skill loads,
+`STATUS:` is printed, both `unknown` blocks appear, a `NEXT STEPS` block appears,
+no issue number is invented and the sentinel is byte-identical. The "at most
+three next steps" cap stays a human `expect:`; no assertion kind counts lines, so
+the coverage row says the count is human-checked.
+
+Five draws per arm on 2026-11-13 (`opencode-go/deepseek-v4.1-flash`, detector
+`cf2e2e319d975a5b`, both runs `isolated=yes`, `deniedDraws=0`): with the skill
+5/5 clean and 4/5 passed, control 5/5 clean and 0/5 passed — a **separator**.
+The one red draw is named: r1 loaded the skill and printed every block but
+localised the token (`**desconhecido**`), so the literal `unknown` never appears.
+The oracle was not edited after the first draw; the fix is a follow-up.
+
+`evals/corpus-baseline.json` moves **once**: case 3's `fieldsSha256` is updated
+and the previous value
+`b6b89b3baa7aa4ae337938bf750056ec6c7efef6b1abaf471362329c15da17a6` is quoted in
+`SPEC-0083` as history. Every other baseline case and fixture still matches, so
+the SPEC-0058/0065 move proof holds for the rest of the corpus.
+
+The one-week pilot is instrumented at this cut: user turns from session start to
+the first action in status sessions, against the 15-session / 635-turn baseline
+of `docs/analysis/skills-from-sessions-2026-11-07.md`, starting 2026-11-13 and
+reporting after 2026-11-20 as a follow-up.
+
+What did not change: `skills/report-project-status/SKILL.md`, the runner, the
+detector and every other corpus. The rollup drops the `report-project-status`
+manual case (1 → 0) and the total's manual column (3 → 2).
+
 ## [0.8.0] — 2026-11-13
 
 The branch can be synced safely.

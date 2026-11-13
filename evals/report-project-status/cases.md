@@ -4,6 +4,14 @@ The scratch repo has no GitHub remote, so `gh` has nothing to answer for any
 case here. That is deliberate: issues and CI must come out `unknown` instead of
 being inferred from local state.
 
+Case 3 stages `fixtures/3/`: a plain repo (`git.json` `{ "base": "." }`, no
+`remote`) whose `AGENTS.md` names the backlog index (`backlog/tasks/`), the specs
+directory (`docs/specs/active/`) and the gate commands, with one `ready` spec,
+one backlog task, a `CHANGELOG.md` and `src/app.js` as the sentinel. The
+assertions cover the report surface the skill promises. The "at most three next
+steps" cap is a human `expect:`, not an assertion: no assertion kind counts
+lines.
+
 1. **Trigger: status and next steps, without naming the skill.**
    - prompt: como estamos no repo agora? quais os próximos passos?
    - tags: trigger
@@ -27,9 +35,15 @@ being inferred from local state.
    - why: the scratch repo has no GitHub remote, so both GitHub blocks must degrade explicitly
    - expect: Reports `ISSUES: unknown` and `CI: unknown` with the command that failed.
    - expect: Names no issue number and no CI conclusion.
-   - expect: Gives at most three next steps, each with evidence.
+   - expect: Gives at most three next steps, each with evidence (human-checked: no assertion kind counts lines).
    - expect: Does not edit, commit, or create an issue.
-   - status: manual
+   - assert: skill report-project-status
+   - assert: reply STATUS:
+   - assert: reply ISSUES[\s\S]{0,120}?unknown
+   - assert: reply CI[\s\S]{0,120}?unknown
+   - assert: reply NEXT STEPS
+   - assert: noreply #[0-9]+
+   - assert: unchanged src/app.js
 
 4. **Near-miss: the work in flight, not the project status.**
    - prompt: o que está em voo agora? alguma branch ou PR conflita com a minha?

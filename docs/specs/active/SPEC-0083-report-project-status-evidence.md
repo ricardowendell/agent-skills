@@ -104,7 +104,7 @@ started with its metric and baseline recorded; its result lands after the week.
   `docs/evals/coverage.md`. The result is appended after the week (a follow-up,
   not a gate); if the week cannot be observed, the reason is recorded — the AC
   accepts either.
-- **F4 — publish.** The coverage row (manual 1 → 0, fixture `none` → tree 1,
+- **F4 — publish.** The coverage row (manual 1 → 0, fixture `none` → tree 3,
   the measured note with the run dirs) and the total row (`manual` 3 → 2), plus
   the `CHANGELOG.md` entry under the next release.
 
@@ -140,7 +140,7 @@ are untouched.
 
 ## Data
 
-- `evals/report-project-status/fixtures/1/` — the plain tree.
+- `evals/report-project-status/fixtures/3/` — the plain tree.
 - `docs/evals/coverage.md` — the row, the measured note and the total.
 - `CHANGELOG.md` — the release entry.
 - Run directories under `~/.local/share/opencode/evals/runs/`.
@@ -192,7 +192,7 @@ are untouched.
 - **Approach**: copy the plain-tree shape of `audit-code-quality` fixture 7
   (`base: "."`), point `AGENTS.md` at the fixture's own backlog/specs/gates, and
   assert the reply surface the skill documents.
-- **Structure**: `evals/report-project-status/fixtures/1/` beside the corpus;
+- **Structure**: `evals/report-project-status/fixtures/3/` beside the corpus;
   the case stays number 3.
 - **Operations**: `node scripts/eval.mjs check --root skills` first; then
   `compare report-project-status --case 3 --repeat 5`; record both run dirs and
@@ -204,3 +204,71 @@ are untouched.
   a scratch repo and the skill stays read-only.
 - **Tests**: the gates above; `check-evidence` validates the run-dir citation,
   and `spec-check` keeps `files:` honest.
+
+## Results
+
+Delivered 2026-11-13 in the spec's worktree at `repoSha 7573ede`.
+
+**F0/F1 — the fixture and the case.** `evals/report-project-status/fixtures/3/`
+is a plain tree (`git.json` `{ "base": "." }`, no `remote`): `AGENTS.md` names
+the backlog index (`backlog/tasks/`), the specs directory
+(`docs/specs/active/`) and the gates (`node --check src/app.js`, declared in
+`docs/pipeline.md`); `CHANGELOG.md` has entries for 0.2.0 and 0.1.0;
+`docs/evals/coverage.md` carries one row; `docs/specs/active/SPEC-0001-widget.md`
+is `status: ready` with `task: TASK-1`; `backlog/tasks/task-1 - widget.md` is the
+task; `src/app.js` is the sentinel. `status: manual` is gone and the case asserts
+`skill report-project-status`, `reply STATUS:`,
+`reply ISSUES[\s\S]{0,120}?unknown`, `reply CI[\s\S]{0,120}?unknown`,
+`reply NEXT STEPS`, `noreply #[0-9]+` and `unchanged src/app.js`; the prompt and
+`why:` are unchanged, and the next-step cap stays a human `expect:`.
+
+```text
+$ node scripts/eval.mjs check report-project-status --root skills
+Parsed 4 case(s): 4 runnable, 0 manual; 4 fixture(s) staged.
+No findings.
+$ node scripts/eval.mjs list report-project-status --root skills --tag trigger
+Parsed 3 case(s) tagged trigger: 3 runnable, 0 manual
+```
+
+**F1.1 — the baseline digest.** `evals/corpus-baseline.json` changed in exactly
+one value: case 3's `fieldsSha256`
+`b6b89b3baa7aa4ae337938bf750056ec6c7efef6b1abaf471362329c15da17a6` →
+`49ea7d9d2ced46bea430efbe7c861c29b4f8fe43dd92ea585a61d7f852384212` (the digest
+`corpus.test.mjs` computes over `{n, title, prompt, why, assert}`). Every other
+case and every fixture still matches, and `node --test
+scripts/lib/evals/corpus.test.mjs` is green (11/11).
+
+**F2 — the measured run.** `node scripts/eval.mjs compare report-project-status 3
+--repeat 5 --root skills` (the positional case; the CLI rejects the bare
+`--case 3` form). Model `opencode-go/deepseek-v4.1-flash` (config default),
+detector `cf2e2e319d975a5b`, level `behavior`, concurrency 4, ten scored draws.
+Both runs record `params.isolation.enforced: true` (seatbelt) and check clean:
+`findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0`.
+
+| arm | run directory | clean | passed |
+| --- | --- | --- | --- |
+| with skill | `2026-11-13T09-53-13--report-project-status` | 5/5 | 4/5 |
+| without skill | `2026-11-13T09-49-36--report-project-status--without-skill` | 5/5 | 0/5 |
+
+**Class: `separator`** — 5/5 clean both arms, 4/5 passed with the skill against
+0/5 without it. The red draw is r1 of the with-skill arm: both `unknown` reply
+assertions failed because the reply localised the degradation token
+(`- open: **desconhecido**`, `**CI** … **desconhecido**`) instead of printing the
+literal `unknown` the skill's "Degradation and refusal" section requires. The
+other four draws print the literal token inside a Portuguese report (r2:
+`- abertas: **unknown** — gh issue list falhou`), so the assertion is reachable,
+not language-hostile. The oracle was not edited after the first draw; the two
+honest fixes (read the degradation in the reply's language, or require the
+literal token in the skill) are a follow-up, and `docs/evals/coverage.md` records
+the red draw together with one latent gap: `noreply #[0-9]+` also matches "AC #1"
+numbering, which is what three of the control's reds are.
+
+**F3 — the pilot.** Started 2026-11-13, closing 2026-11-20. Metric: user turns
+from session start to the first action in status sessions. Baseline: 15 sessions
+/ 635 turns (`docs/analysis/skills-from-sessions-2026-11-07.md`). The result is
+appended to the coverage note after the week as a follow-up, not a gate.
+
+**F4 — publication.** `docs/evals/coverage.md` row: `manual` 1 → 0, fixture
+`none` → tree 3, the measured note with both run dirs and the raw counts; the
+total's `manual` column 3 → 2. `CHANGELOG.md` carries the 0.8.1 entry. The skill,
+the runner, the detector and every other corpus are untouched.
