@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "external_run_id": "ea5eb547-aefa-497f-979f-4713e4c590c0",
+  "slug": "SPEC-0083-report-project-status-evidence",
+  "events": [
+    {
+      "stage": "dispatch",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-13T12:35:01.806Z",
+      "ended_at": "2026-11-13T12:35:02.570Z",
+      "duration_ms": 764,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "59b7885d8228dd27788619caac7a6f0a6a27e82af971f9a1bc4bcad8bacfc424",
+        "head_sha": "52f31f61ccbb85866e02dedcdcfcbd1c284e569a",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "review",
+      "attempt_id": 1,
+      "status": "approved",
+      "started_at": "2026-11-13T13:13:25.146Z",
+      "ended_at": "2026-11-13T13:13:25.419Z",
+      "duration_ms": 273,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "23bf95be0ed97bc8aad51533a46eda8289ecba47f7aee210f52f922ebf0b06b1",
+        "head_sha": "f36b351366b599cc7ede3c6fc81656d2671ee9f4",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "lint",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-13T13:13:25.874Z",
+      "ended_at": "2026-11-13T13:13:26.059Z",
+      "duration_ms": 185,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "23bf95be0ed97bc8aad51533a46eda8289ecba47f7aee210f52f922ebf0b06b1",
+        "head_sha": "f36b351366b599cc7ede3c6fc81656d2671ee9f4",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "selftest",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-13T13:13:26.061Z",
+      "ended_at": "2026-11-13T13:14:00.229Z",
+      "duration_ms": 34168,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "23bf95be0ed97bc8aad51533a46eda8289ecba47f7aee210f52f922ebf0b06b1",
+        "head_sha": "f36b351366b599cc7ede3c6fc81656d2671ee9f4",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-13T13:13:25.543Z",
+      "ended_at": "2026-11-13T13:14:00.509Z",
+      "duration_ms": 34966,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "23bf95be0ed97bc8aad51533a46eda8289ecba47f7aee210f52f922ebf0b06b1",
+        "head_sha": "f36b351366b599cc7ede3c6fc81656d2671ee9f4",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "merge",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-13T13:21:01.809Z",
+      "ended_at": "2026-11-13T13:21:31.856Z",
+      "duration_ms": 30047,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "23bf95be0ed97bc8aad51533a46eda8289ecba47f7aee210f52f922ebf0b06b1",
+        "head_sha": "f36b351366b599cc7ede3c6fc81656d2671ee9f4",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "audit",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-13T13:21:44.640Z",
+      "ended_at": "2026-11-13T13:21:44.733Z",
+      "duration_ms": 93,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "23bf95be0ed97bc8aad51533a46eda8289ecba47f7aee210f52f922ebf0b06b1",
+        "head_sha": "f36b351366b599cc7ede3c6fc81656d2671ee9f4",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      },
+      "metrics": {
+        "tokens_in": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_out": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_cache": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "calls": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "cost": {
+          "value": null,
+          "provenance": "unknown"
+        }
+      },
+      "adapter": {
+        "source": "unavailable"
+      }
+    }
+  ]
+}

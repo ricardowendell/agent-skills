@@ -1,9 +1,10 @@
 ---
 id: TASK-70
 title: 'evals: medir e publicar a cobertura da report-project-status (issue #11)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-09T00:46:00Z'
+updated_date: '2026-11-13T13:21:00Z'
 labels: []
 dependencies: []
 references:
