@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "about": "Closed list of third-party companion skills this catalog measured. An entry needs a measurement; a skill without evidence does not enter. This is internal organization of the catalog this repo owns, not the open template/stack selection registry excluded by issue #9.",
+  "scopeLegend": {
+    "global": "Makes sense in any host repo (searching, browsing, orchestration).",
+    "project": "Only makes sense when the repo carries the matching signals."
+  },
+  "signalKindLegend": {
+    "files": "Glob matched against tracked files at the repo root (or anywhere for a leading **/).",
+    "directories": "Directory path that must exist in the repo.",
+    "dependencies": "Dependency name declared in the repo's manifest (package.json, pyproject.toml, requirements)."
+  },
+  "companions": [
+    {
+      "id": "breaking-change-check",
+      "group": "datacontract",
+      "scope": "project",
+      "source": "datacontract/datacontract-skills",
+      "sourceUrl": "https://github.com/datacontract/datacontract-skills",
+      "pin": "dc0666466d2bdc0fa077b4ee08d07c43aa4db2c8",
+      "path": "skills/breaking-change-check",
+      "license": "MIT",
+      "signals": {
+        "files": ["*.odcs.yaml"],
+        "directories": ["contracts/"],
+        "dependencies": ["datacontract"]
+      },
+      "evidence": "SPEC-0085 (0.9.0)"
+    },
+    {
+      "id": "create-data-contract",
+      "group": "datacontract",
+      "scope": "project",
+      "source": "datacontract/datacontract-skills",
+      "sourceUrl": "https://github.com/datacontract/datacontract-skills",
+      "pin": "dc0666466d2bdc0fa077b4ee08d07c43aa4db2c8",
+      "path": "skills/create-data-contract",
+      "license": "MIT",
+      "signals": {
+        "files": ["*.odcs.yaml"],
+        "directories": ["contracts/"],
+        "dependencies": ["datacontract"]
+      },
+      "evidence": "SPEC-0085 (0.9.0)"
+    },
+    {
+      "id": "datacontract-cli",
+      "group": "datacontract",
+      "scope": "project",
+      "source": "datacontract/datacontract-skills",
+      "sourceUrl": "https://github.com/datacontract/datacontract-skills",
+      "pin": "dc0666466d2bdc0fa077b4ee08d07c43aa4db2c8",
+      "path": "skills/datacontract-cli",
+      "license": "MIT",
+      "signals": {
+        "files": ["*.odcs.yaml"],
+        "directories": ["contracts/"],
+        "dependencies": ["datacontract"]
+      },
+      "evidence": "SPEC-0085 (0.9.0)"
+    }
+  ]
+}

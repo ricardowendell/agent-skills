@@ -169,6 +169,26 @@ and syntax-checks the docs sensor. Install output (`node_modules`, lockfiles,
 installed hook binaries) is never part of the test: a fresh clone has none, and
 completeness must be decidable before it exists.
 
+### Companion skills (opt-in)
+
+After the stack is known, and independent of the harness state, check whether
+this repo wants a measured companion skill:
+
+1. Read `../../companion-skills.json` from this skill's directory. No manifest →
+   no suggestion; say so and continue.
+2. Intersect each entry's `signals` with what detection already found — `files`,
+   `directories`, `dependencies`. Nothing matched → say no companion applies and
+   continue. A React app sees no data-contract suggestion.
+3. On a match, **ask before installing**, showing `id`, `pin`, `license` and
+   `evidence`; silence is not consent.
+4. Only on accept, install the pinned copy into the agent's skills directory
+   (clone `sourceUrl`, check out `pin`, copy `path`) and add a
+   `## Companion skills` section to the consumer's `AGENTS.md` with id, pin and
+   why.
+
+Never auto-install and never copy upstream files into the repo. The detail is in
+`references/companions.md`; the manifest is the only list.
+
 ## Step by Step
 
 **Step 0 is the state script.** Run it before anything else and obey it. Do not

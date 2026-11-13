@@ -38,6 +38,14 @@ Claude Code and Codex have their own plugin marketplace channels
 (`claude plugin marketplace add …` / `codex plugin marketplace add …`); use those
 when available instead of copying files.
 
+The same three entries are **machine-readable** in
+[`companion-skills.json`](../../companion-skills.json): id, group, `project`
+scope, source, pin, path, MIT license, detection signals (`*.odcs.yaml`,
+`contracts/`, `datacontract` in dependencies) and the `SPEC-0085` evidence.
+`/bootstrap` reads that manifest, intersects the signals with what it detected,
+and asks before installing; nothing is installed on its own. The manifest is a
+closed list — the unmeasured skills above stay out of it.
+
 The pin is recorded here and in the run evidence, not in
 `.skill-lock.json` (that file is host state, gitignored). Re-derive with the
 commands above if the lock does not know the skill.

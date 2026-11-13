@@ -64,6 +64,11 @@ wording.
 
 ## Skills
 
+Fifteen first-party skills, grouped into five scopes — `pipeline`, `verify`,
+`observe`, `maintain`, `record` — in [`skills.index.json`](skills.index.json).
+The index is data for humans and tooling; agents route by each `SKILL.md`
+`description`, so editing the index changes no `skillHash`.
+
 | Skill | What it does | Call it with |
 | --- | --- | --- |
 | `bootstrap-project-harness` | Docs tree, `AGENTS.md`, hooks, lint limits and CI, for a new or existing repo | `/bootstrap` |
@@ -463,7 +468,12 @@ on a regression, for when the question is "did this wave break anything".
 
 Some instructions (notably the `bootstrap-project-harness` workflow template)
 mention skills that are **not** part of this repo. They are third-party projects
-with their own licenses; install them from the upstream source:
+with their own licenses; install them from the upstream source. The skills this
+catalog measured are pinned in
+[`companion-skills.json`](companion-skills.json) — a closed list with scope,
+detection signals, license and evidence; `/bootstrap` reads it and only suggests
+a companion when the repo carries the matching signals. Unmeasured upstream
+skills are listed below, not in the manifest.
 
 | Skill | Upstream |
 | --- | --- |

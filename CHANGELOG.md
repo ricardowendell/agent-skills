@@ -17,6 +17,26 @@ limits. The README companion table links to it. No upstream content is
 redistributed; the pin lives in the doc and the run evidence, not in the
 gitignored `.skill-lock.json`.
 
+The companion catalog now has scope and detection signals. `companion-skills.json`
+is a closed manifest of the three measured data-contract skills — `project`
+scope, signals (`*.odcs.yaml`, `contracts/`, `datacontract` in dependencies), pin
+`dc06664`, MIT, `SPEC-0085` evidence — and `skills.index.json` groups the 15
+first-party skills into `pipeline`, `verify`, `observe`, `maintain` and `record`,
+with an empty `data` scope until a measured data skill exists. The index is data,
+not frontmatter.
+
+`bootstrap-project-harness` gained an additive, opt-in step after stack
+detection: it reads the manifest relative to the skill, intersects the signals
+with what it detected, asks (showing id, pin, license and evidence) before
+installing the pinned copy, and records the choice in the consumer's `AGENTS.md`;
+no manifest or no matching signal means no suggestion. It never auto-installs and
+nothing upstream is vendored. One screening draw of case 1 passed
+(`2026-11-13T17-59-53--bootstrap-project-harness`, `skillHash 8af8e10e…`) — proof
+the default flow is not derailed, not a separation claim. `check-staleness` moves
+from 49 to 51 stale cells (73 → 74 cited) because the bootstrap body edit unstaged
+`#15` and `#20`; no other cell moved. No frontmatter changed, no installer script
+exists, and no other skill, harness, detector or corpus changed.
+
 ## [0.9.0] — 2026-11-13
 
 The contract capability is measured before it is built.
