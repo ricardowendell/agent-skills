@@ -1,10 +1,10 @@
 ---
 id: TASK-78
 title: 'evals: corpus discriminativo de arquitetura e produtos de dados (issue #13)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-10T15:07:00Z'
-updated_date: '2026-11-10T15:58:00Z'
+updated_date: '2026-11-13T16:23:00Z'
 labels: []
 dependencies: []
 references:
