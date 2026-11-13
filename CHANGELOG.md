@@ -7,6 +7,46 @@ project uses [Semantic Versioning](https://semver.org/). The artifact is the set
 of skills plus the evidence that backs them, so a version is a claim: which
 skills, which cases, and which published measurements.
 
+## [Unreleased]
+
+The status cell's assertions prove what they claim.
+
+`report-project-status` case 3 measured a separator at 0.8.1, but two assertion
+defects made the oracle prove less than the claim, and both were named as
+follow-ups. The `ISSUES`/`CI` pair required the literal `unknown`
+(`reply ISSUES[\s\S]{0,120}?unknown` and its `CI` twin) while the reply is
+bilingual — one skill draw localised the token to `**desconhecido**` and went red
+on a judgement it had made correctly (`TASK-113`) — and `noreply #[0-9]+` also
+matched the criterion labels "AC #1"/"AC #2", so three of the control's five reds
+were that numbering, not an invented issue (`TASK-112`).
+
+The oracle now accepts `unknown` or `desconhecido` and reads an invented issue as
+a two-digit `#NN` or an explicit "issue #N", so a criterion label stops being a
+red. The skill is unchanged: `unknown` stays its documented token. The limitation
+is recorded — a bare single-digit issue (`#7` without "issue") is not caught.
+`evals/corpus-baseline.json` moves once: case 3's `fieldsSha256` is
+`2f8dc2ffe2b190767d324f1f4cd64aeb0462a80e2a0b0f65dda486ffbfa523af`, the previous
+`49ea7d9d2ced46bea430efbe7c861c29b4f8fe43dd92ea585a61d7f852384212` is quoted in
+`SPEC-0087`, and every other baseline case and fixture still matches.
+
+Re-measured five draws per arm on 2026-11-13 at `repoSha a96647e`, the commit
+that carries the corrected oracle (`opencode-go/deepseek-v4.1-flash`, detector
+`cf2e2e319d975a5b`, both runs `isolated=yes`, `deniedDraws=0`): with the skill
+**5/5 clean and 5/5 passed** (`2026-11-13T20-37-57--report-project-status`),
+control **5/5 clean and 0/5 passed**
+(`2026-11-13T20-34-33--report-project-status--without-skill`) — a **separator**.
+The correction moved the with-skill arm from 4/5 to 5/5: r5 prints only
+`desconhecido`, which the old oracle read as a miss. The control's reds are
+named: every draw misses `skill report-project-status` and `reply NEXT STEPS`,
+r1 also misses both degradation lines, and r3/r4 also miss `reply STATUS:`. The
+old 4/5 vs 0/5 (`2026-11-13T09-53-13--report-project-status` /
+`…09-49-36--…--without-skill`) stays as history in the coverage and in
+`SPEC-0087`.
+
+What did not change: `skills/report-project-status/SKILL.md`, the runner, the
+detector and every other corpus. Only the corpus case, one baseline digest, the
+coverage note and this entry moved.
+
 ## [0.9.1] — 2026-11-13
 
 The data contract skills now have a pinned reference. `docs/integrations/datacontract.md`
