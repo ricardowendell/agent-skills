@@ -472,6 +472,7 @@ with their own licenses; install them from the upstream source:
 | `agent-browser` | <https://github.com/vercel-labs/agent-browser> |
 | `orchestration` | <https://github.com/stablyai/orca> |
 | `find-skills` | <https://github.com/vercel-labs/skills> |
+| `datacontract-skills` | <https://github.com/datacontract/datacontract-skills> — `breaking-change-check`, `create-data-contract` and `datacontract-cli`, pinned at `dc06664` and measured in 0.9.0; see [`docs/integrations/datacontract.md`](docs/integrations/datacontract.md) |
 
 No third-party skill content is redistributed here.
 

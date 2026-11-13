@@ -7,6 +7,16 @@ project uses [Semantic Versioning](https://semver.org/). The artifact is the set
 of skills plus the evidence that backs them, so a version is a claim: which
 skills, which cases, and which published measurements.
 
+## [Unreleased]
+
+The data contract skills now have a pinned reference. `docs/integrations/datacontract.md`
+records the upstream `datacontract-skills` (MIT, `dc06664`), the one-liner that
+installs the three measured skills and the CLI, which skill answers which ask, the
+ODCS-vs-ODPS distinction, and the 0.9.0 A/B verdict with its three instrument
+limits. The README companion table links to it. No upstream content is
+redistributed; the pin lives in the doc and the run evidence, not in the
+gitignored `.skill-lock.json`.
+
 ## [0.9.0] — 2026-11-13
 
 The contract capability is measured before it is built.
