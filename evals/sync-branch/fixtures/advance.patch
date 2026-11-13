@@ -1,0 +1,9 @@
+diff --git a/src/format.js b/src/format.js
+--- a/src/format.js
++++ b/src/format.js
+@@ -1 +1,5 @@
+ export const CURRENCY = "USD"
++
++export function money(cents) {
++  return (cents / 100).toFixed(2)
++}

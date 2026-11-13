@@ -161,6 +161,97 @@ test("a git fixture still applies a patch on main when no branch is named", () =
   assert.equal(git(scratch, "status", "--porcelain"), "", "staging left a dirty tree")
 })
 
+test("mainPatch advances main after the branch is cut, leaving the branch behind", () => {
+  const skillDir = repo(
+    { "SKILL.md": "---\nname: demo\n---\n" },
+    {
+      "fixtures/1/base/shared.js": "one\n",
+      "fixtures/1/advance.patch":
+        "diff --git a/shared.js b/shared.js\n--- a/shared.js\n+++ b/shared.js\n@@ -1 +1 @@\n-one\n+advanced\n",
+      "fixtures/1/git.json": JSON.stringify({ base: "base", branch: "develop", mainPatch: "advance.patch" }),
+    },
+  )
+  const scratch = makeScratch("demo", 10)
+  stageFixture({ id: "demo", dir: skillDir }, { n: 1 }, scratch)
+
+  assert.equal(git(scratch, "rev-parse", "--abbrev-ref", "HEAD"), "develop")
+  assert.equal(git(scratch, "show", "main:shared.js"), "advanced")
+  assert.equal(git(scratch, "show", "develop:shared.js"), "one")
+  assert.equal(git(scratch, "rev-list", "--count", "develop..main"), "1")
+  assert.equal(git(scratch, "status", "--porcelain"), "", "staging left a dirty tree")
+})
+
+test("mainPatch is pushed to the local remote, so the branch is behind origin/main", () => {
+  const skillDir = repo(
+    { "SKILL.md": "---\nname: demo\n---\n" },
+    {
+      "fixtures/1/base/shared.js": "one\n",
+      "fixtures/1/advance.patch":
+        "diff --git a/shared.js b/shared.js\n--- a/shared.js\n+++ b/shared.js\n@@ -1 +1 @@\n-one\n+advanced\n",
+      "fixtures/1/git.json": JSON.stringify({
+        base: "base",
+        remote: true,
+        branches: [{ name: "develop" }],
+        mainPatch: "advance.patch",
+      }),
+    },
+  )
+  const scratch = makeScratch("demo", 11)
+  stageFixture({ id: "demo", dir: skillDir }, { n: 1 }, scratch)
+
+  assert.equal(git(scratch, "rev-parse", "--abbrev-ref", "HEAD"), "develop")
+  assert.equal(git(scratch, "show", "origin/main:shared.js"), "advanced")
+  assert.equal(git(scratch, "show", "origin/develop:shared.js"), "one")
+  assert.equal(git(scratch, "rev-list", "--count", "develop..origin/main"), "1")
+})
+
+test("dirty writes an uncommitted change after the last commit", () => {
+  const skillDir = repo(
+    { "SKILL.md": "---\nname: demo\n---\n" },
+    {
+      "fixtures/1/base/shared.js": "one\n",
+      "fixtures/1/dirty.patch":
+        "diff --git a/seen.txt b/seen.txt\nnew file mode 100644\n--- /dev/null\n+++ b/seen.txt\n@@ -0,0 +1 @@\n+committed\n",
+      "fixtures/1/git.json": JSON.stringify({
+        base: "base",
+        branch: "develop",
+        patch: "dirty.patch",
+        dirty: [{ path: "shared.js", content: "one local\n" }, { path: "notes/local.md", content: "mine\n" }],
+      }),
+    },
+  )
+  const scratch = makeScratch("demo", 12)
+  stageFixture({ id: "demo", dir: skillDir }, { n: 1 }, scratch)
+
+  assert.equal(git(scratch, "rev-parse", "--abbrev-ref", "HEAD"), "develop")
+  assert.equal(readFileSync(join(scratch, "shared.js"), "utf8"), "one local\n")
+  assert.equal(readFileSync(join(scratch, "notes/local.md"), "utf8"), "mine\n")
+  assert.equal(git(scratch, "show", "HEAD:shared.js"), "one", "the dirty change was committed")
+  assert.equal(git(scratch, "ls-files", "notes/local.md"), "", "the dirty file was tracked")
+  const status = git(scratch, "status", "--porcelain", "--untracked-files=all")
+  assert.match(status, /M shared\.js/)
+  assert.match(status, /\?\? notes\/local\.md/)
+})
+
+test("a manifest without mainPatch or dirty stages exactly as before", () => {
+  const skillDir = repo(
+    { "SKILL.md": "---\nname: demo\n---\n" },
+    {
+      "fixtures/1/base/shared.js": "one\n",
+      "fixtures/1/p.patch": "diff --git a/shared.js b/shared.js\n--- a/shared.js\n+++ b/shared.js\n@@ -1 +1 @@\n-one\n+patched\n",
+      "fixtures/1/git.json": JSON.stringify({ base: "base", branch: "develop", patch: "p.patch" }),
+    },
+  )
+  const scratch = makeScratch("demo", 13)
+  stageFixture({ id: "demo", dir: skillDir }, { n: 1 }, scratch)
+
+  assert.equal(git(scratch, "rev-parse", "--abbrev-ref", "HEAD"), "develop")
+  assert.equal(git(scratch, "rev-parse", "--abbrev-ref", "main"), "main")
+  assert.equal(git(scratch, "rev-list", "--count", "HEAD"), "2")
+  assert.equal(readFileSync(join(scratch, "shared.js"), "utf8"), "patched\n")
+  assert.equal(git(scratch, "status", "--porcelain"), "")
+})
+
 test("a pinned skill stays out of the fixture's git status", () => {
   const skillDir = repo(
     { "SKILL.md": "---\nname: demo\n---\n" },
@@ -337,6 +428,28 @@ test("fixtureEntries lists the base, prune and both sides of the patch", () => {
   assert.ok(rels.includes("new.js"), "the patch addition was not listed")
   assert.ok(!rels.includes("docs/old.md"), "remove: was not pruned")
   assert.ok(!rels.some((r) => r.endsWith("git.json")))
+})
+
+test("fixtureEntries lists mainPatch and dirty targets", () => {
+  const skillDir = repo(
+    { "SKILL.md": "---\nname: demo\n---\n" },
+    {
+      "fixtures/1/base/keep.js": "one\n",
+      "fixtures/1/git.json": JSON.stringify({
+        base: "base",
+        branch: "develop",
+        mainPatch: "advance.patch",
+        dirty: [{ path: "local/notes.md", content: "mine\n" }],
+      }),
+      "fixtures/1/advance.patch":
+        "diff --git a/new.js b/new.js\nnew file mode 100644\n--- /dev/null\n+++ b/new.js\n@@ -0,0 +1 @@\n+new\n",
+    },
+  )
+  const rels = fixtureEntries({ id: "demo", dir: skillDir }, { n: 1 }).map((e) => e.rel)
+  assert.ok(rels.includes("keep.js"))
+  assert.ok(rels.includes("new.js"), "the mainPatch addition was not listed")
+  assert.ok(rels.includes("local/notes.md"), "the dirty file was not listed")
+  assert.ok(rels.includes("local"), "the dirty file's directory was not listed")
 })
 
 test("the snapshot records staged content, so a later edit is visible", () => {

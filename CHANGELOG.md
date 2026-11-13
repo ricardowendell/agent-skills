@@ -9,6 +9,28 @@ skills, which cases, and which published measurements.
 
 ## [Unreleased]
 
+`sync-branch` turns the top uncovered cluster in the session analysis into a
+skill. The stub's workflow is kept intact — read the policy, capture the
+pre-state, `fetch --prune`, handle a dirty tree, check out, compute the relation,
+`ff-only` or rebase/merge, stop at the first conflict, run the gates, report the
+delta — and so are its refusals: no `--force`, no `--force-with-lease`, no
+`reset --hard`, no `clean -fd`, no branch deletion, no side-picking a conflict,
+and no push without an explicit request. `survey-inflight-work` stays the
+read-only counterpart; the new description does not reuse its vocabulary.
+
+The corpus has six cases. Four stage real history: `mainPatch` commits on `main`
+after the branches are cut (a branch is genuinely behind or diverged) and `dirty`
+leaves a file modified and uncommitted. Both keys are additive and optional, with
+unit tests in `fixture.test.mjs`; a manifest without them stages exactly as
+before. Cases 1–4 assert the deterministic git state (`unchanged` for the files
+the sync must not touch), case 2 is the dirty-tree adversarial case and case 3 the
+conflict one; cases 5–6 pin the trigger and the near-miss against the read-only
+survey. The harness has no "did not run" assertion kind, so "never force-pushes"
+and "no `reset --hard`" are observed only by the surviving bytes and the reply;
+that gap is recorded in `docs/evals/coverage.md`, not claimed as a measurement.
+No paid draw was spent: the six fixtures stage 6/6 with `--level smoke`
+(`SPEC-0039`).
+
 ## [0.7.7] — 2026-11-11
 
 A verdict that opens with a negation is a rejection, and the corpus reads it that

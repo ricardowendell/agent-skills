@@ -78,6 +78,7 @@ wording.
 | `record-decision` | Records a decision as an ADR, including what was traded away | `/record-decision` |
 | `tighten-harness` | Tightens one gate, with evidence and no source changes | `/tighten-harness` |
 | `survey-inflight-work` | Surveys branches, worktrees and PRs; reports overlap, blockers and landing order | `/inflight` |
+| `sync-branch` | Brings a branch up to date with its base: fetch, ff/rebase/merge, stop on conflict | `/sync-branch` |
 | `report-project-status` | One-page status from open issues, backlog, specs and CI; at most three next steps | `/status` |
 | `audit-code-quality` | Read-only audit of coupling, duplication, tests and debt; ranked register, no score | `/quality-check` |
 
@@ -94,10 +95,11 @@ wording.
 | 7 | Review | diff + spec | no files — a verdict with evidence | an AC lacks evidence, a gate fails, or the change cannot be isolated |
 | 8 | Audit | all docs | findings + proposed edits | nothing — it is read-only |
 
-Two skills sit outside this loop, because they answer questions that span
-several specs rather than one change: `/inflight` before choosing what to work
-on and before a merge fan-in, and `/quality-check` at a milestone or before
-planning a refactor. `tighten-harness` is the third, and it only touches config.
+Four skills sit outside this loop, because they answer questions or take actions
+that span several specs rather than one change: `/inflight` before choosing what
+to work on and before a merge fan-in, `/sync-branch` when a branch must catch up
+with its base, and `/quality-check` at a milestone or before planning a refactor.
+`tighten-harness` is the fourth, and it only touches config.
 
 The spec status is the contract between stages:
 

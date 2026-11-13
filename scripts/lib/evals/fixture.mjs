@@ -13,6 +13,16 @@
 //                    branches each cut from `main`; the last one is left checked
 //                    out. A branch without a patch is an empty branch.
 //
+// Two further optional keys stage the state a sync skill needs, so a branch can
+// be genuinely behind its base or carry uncommitted work:
+//   "mainPatch": "..."
+//                    applied and committed on `main` *after* the branches are
+//                    cut (and pushed to `origin` when `remote` is set), then the
+//                    working branch is checked out again.
+//   "dirty": [{ "path": "...", "content": "..." }]
+//                    written after the last commit and left uncommitted.
+// Both keys are optional; a manifest without them stages exactly as before.
+//
 // The skill is copied into `<scratch>/.opencode/skills/<id>/` because OpenCode
 // gives a project-local skill precedence over a global install of the same id
 // (verified: the `skill` tool reports `directory` inside the scratch dir). That
@@ -197,6 +207,31 @@ export function stageFixture(skill, c, scratch) {
     if (spec.remote) run("push", "-q", "-u", "origin", b.name)
   }
 
+  // The branch the manifest leaves checked out. With `mainPatch` this is the
+  // branch the case is about, so the advanced base is visible behind it and a
+  // `dirty` entry lands on the working tree, not on `main`.
+  let checkedOut = spec.branch ?? "main"
+  for (const b of spec.branches ?? []) checkedOut = b.name
+
+  // `mainPatch` advances the base after the branches are cut. The commit is on
+  // `main` only, so a branch that was already pushed is genuinely behind it (or
+  // diverged) rather than sharing the commit.
+  if (spec.mainPatch) {
+    run("checkout", "-q", "main")
+    applyPatch(spec.mainPatch)
+    commit("chore: advance main")
+    if (spec.remote) run("push", "-q", "origin", "main")
+    if (checkedOut !== "main") run("checkout", "-q", checkedOut)
+  }
+
+  // `dirty` is written after the last commit and never staged: the case needs a
+  // working tree with uncommitted work, and a commit would make it history.
+  for (const f of spec.dirty ?? []) {
+    const path = join(scratch, f.path)
+    mkdirSync(dirname(path), { recursive: true })
+    writeFileSync(path, f.content ?? "")
+  }
+
   return { hash: treeHash(scratch) }
 }
 
@@ -299,15 +334,21 @@ export function fixtureEntries(skill, c) {
   const add = (rel, isDir) => {
     if (!entries.some((e) => e.rel === rel)) entries.push({ rel, isDir })
   }
-  const patches = [spec.patch, ...(spec.branches ?? []).map((b) => b.patch)].filter(Boolean)
+  const addPath = (rel) => {
+    add(rel, false)
+    for (let dir = dirname(rel); dir && dir !== "." && dir !== "/"; dir = dirname(dir)) add(dir, true)
+  }
+  // `dirty` files exist in the scratch tree without a patch, so the authoring
+  // view must list them or `unchanged` on one reads as an unverified target.
+  for (const f of spec.dirty ?? []) if (f?.path) addPath(f.path)
+  const patches = [spec.patch, spec.mainPatch, ...(spec.branches ?? []).map((b) => b.patch)].filter(Boolean)
   for (const patch of patches) {
     const file = join(caseDir, patch)
     if (!existsSync(file)) continue
     for (const line of readFileSync(file, "utf8").split("\n")) {
       const m = line.match(/^(?:\+\+\+ b\/|--- a\/)(.+)$/)
       if (!m || m[1] === "/dev/null") continue
-      add(m[1], false)
-      for (let dir = dirname(m[1]); dir && dir !== "." && dir !== "/"; dir = dirname(dir)) add(dir, true)
+      addPath(m[1])
     }
   }
   return entries

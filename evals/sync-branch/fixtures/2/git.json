@@ -1,0 +1,12 @@
+{
+  "base": "../base",
+  "remote": true,
+  "branch": "develop",
+  "mainPatch": "../advance.patch",
+  "dirty": [
+    {
+      "path": "src/cart.js",
+      "content": "export function total(items) {\n  const localDiscount = 0.1\n  return items.reduce((sum, item) => sum + item.price, 0) * (1 - localDiscount)\n}\n"
+    }
+  ]
+}

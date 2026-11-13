@@ -17,11 +17,22 @@ blocks: []
 files:
   - scripts/lib/evals/fixture.mjs
   - scripts/lib/evals/fixture.test.mjs
+  - scripts/lib/evals/corpus.test.mjs
   - skills/sync-branch/SKILL.md
   - evals/sync-branch/cases.md
+  - evals/sync-branch/fixtures/base/AGENTS.md
+  - evals/sync-branch/fixtures/base/src/app.js
+  - evals/sync-branch/fixtures/base/src/cart.js
+  - evals/sync-branch/fixtures/base/src/format.js
+  - evals/sync-branch/fixtures/advance.patch
+  - evals/sync-branch/fixtures/advance-discount.patch
+  - evals/sync-branch/fixtures/develop-tax.patch
+  - evals/sync-branch/fixtures/1/git.json
+  - evals/sync-branch/fixtures/2/git.json
+  - evals/sync-branch/fixtures/3/git.json
+  - evals/sync-branch/fixtures/4/git.json
   - commands/sync-branch.md
   - claude/commands/sync-branch.md
-  - evals/survey-inflight-work/cases.md
   - docs/analysis/skill-stubs/README.md
   - docs/evals/coverage.md
   - README.md

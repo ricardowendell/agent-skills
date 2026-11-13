@@ -139,7 +139,11 @@ test("every case and fixture survived the move byte-for-byte", () => {
     .filter((e) => e.isDirectory())
     .map((e) => e.name)
     .sort()
-  assert.deepEqual(onDisk, Object.keys(baseline).sort(), "the set of skills with a corpus changed")
+  // The baseline is a pre-move snapshot, not a closed set: a skill added later
+  // has no baseline entries and must not fail the move's parity check. SPEC-0065
+  // already made the case/fixture comparison a subset; the skill set follows it.
+  const missing = Object.keys(baseline).filter((id) => !onDisk.includes(id))
+  assert.deepEqual(missing, [], "a skill with a baseline corpus disappeared")
 
   const mismatches = []
   for (const [id, expected] of Object.entries(baseline)) {

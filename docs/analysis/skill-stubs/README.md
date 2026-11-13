@@ -5,6 +5,8 @@ Não são carregados pelo OpenCode porque estão fora de `~/.agents/skills`.
 
 `report-project-status` foi promovido em 2026-11-07 para
 `../skills/report-project-status/` e não tem mais rascunho aqui.
+`sync-branch` foi promovido em 2026-11-12 para `skills/sync-branch/`
+(SPEC-0039); o rascunho nesta pasta é histórico, não a fonte.
 
 Para promover uma das restantes:
 
@@ -16,6 +18,3 @@ Para promover uma das restantes:
 5. Rodar `node scripts/validate-skills.mjs --root skills` e
    `node scripts/run-evals.mjs --root skills --list --check`.
 6. Registrar no `CHANGELOG.md`.
-
-Ordem sugerida: `sync-branch` depois de uma semana de uso de
-`report-project-status`, medindo turnos até a primeira ação.

@@ -1,0 +1,8 @@
+{
+  "base": "../base",
+  "remote": true,
+  "branch": "develop",
+  "patch": "../develop-tax.patch",
+  "message": "feat: add tax to the cart total",
+  "mainPatch": "../advance-discount.patch"
+}

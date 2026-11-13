@@ -1,0 +1,6 @@
+{
+  "base": "../base",
+  "remote": true,
+  "branch": "develop",
+  "mainPatch": "../advance.patch"
+}
