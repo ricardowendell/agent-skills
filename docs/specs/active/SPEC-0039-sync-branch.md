@@ -1,7 +1,7 @@
 ---
 id: SPEC-0039
 title: Sync a branch with its base without force-push
-status: ready
+status: implemented
 priority: P1
 task: TASK-62
 created_at: 2026-11-08
