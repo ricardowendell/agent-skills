@@ -7,6 +7,33 @@ project uses [Semantic Versioning](https://semver.org/). The artifact is the set
 of skills plus the evidence that backs them, so a version is a claim: which
 skills, which cases, and which published measurements.
 
+## [0.8.3] — 2026-11-13
+
+The data corpus can see a duplicated-key join.
+
+`SPEC-0082` turns issue #13's data half into an instrument: six small trees under
+`docs/analysis/data-corpus/` — a duplicated dimension key that multiplies a join,
+a retry/backfill that is not idempotent, an incompatible contract change, a
+documented additive drift, and two healthy negatives — each with a deterministic
+oracle (`sqlite3` or `python3`, no network, no model). Ten exit codes are the
+proof: every defect fails on the staged tree and passes on the corrected one,
+the negatives stay silent, and the documented drift is accepted while the same
+column undocumented is rejected.
+
+The holdout `incompatible-contract` is frozen in `decision.md` with the harness
+`treeHash` (`b96b88d3…`, comparable with the run record's `fixtureHash`) and the
+per-file hashes; no candidate skill was measured and no paid draw was spent. The
+memo decides per capability: `join/quality`, `migration` and `contract` are
+`build new` **provisional** (the B arm is not staged and the existing
+`review-code`/`audit-code-quality` were not measured against these trees), and
+`review/ops` is `do not add` because nothing in this slice shows that gap.
+Known limits are recorded in section 6: no CSV/SQLite input, the retry uses
+identical values, the drift check compares type but not nullability, and the
+corrected state is embedded, so a read-only measurement must freeze a
+staged-only copy first.
+
+No skill, runner, detector or eval store changed.
+
 ## [0.8.2] — 2026-11-13
 
 The two red cells are measured against the behaviour the skill promises, not
