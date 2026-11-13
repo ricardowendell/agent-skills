@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "77105418-5e9f-4fc4-abea-444ebc85bdd1",
+  "started_at": "2026-11-13T17:22:48.123Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.6.0"
+  },
+  "base_commit": "299da8efa17c7744ec3f82f6d79036ad09f6aad0",
+  "head_commit": "71f9aa3c1d810f9aaba80773d84329ed6907de4d",
+  "task": "SPEC-0085",
+  "spec_sha": "050892503c69598c1e16c06d76cbf8e04d19c091daa348adc425d5b3207347fa",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0085-contract-ab-measurement.json",
+      "sha256": "fe7938cb51fd4f00eb7131a6617873cf8b8410a08a715ea126e37e6b66cdd6ca"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0085-contract-ab-measurement.json",
+      "sha256": "1e75ff0e3cb238caff0970f820b6dd497853487f3eb0aba849836dd5a839e1fc"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "8edadc046215337c3a59226612ac03c8bba90a60f6e55e91ccf02f847cf99c37"
+    }
+  ],
+  "attempts": 1,
+  "duration": 10134,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "71f9aa3c1d810f9aaba80773d84329ed6907de4d"
+}

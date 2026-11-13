@@ -1,9 +1,10 @@
 ---
 id: TASK-83
 title: 'data: composicao ODCS para design-data-contract (issue #18)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-10T15:07:00Z'
+updated_date: '2026-11-13T20:11:00Z'
 labels: []
 dependencies:
   - TASK-81
