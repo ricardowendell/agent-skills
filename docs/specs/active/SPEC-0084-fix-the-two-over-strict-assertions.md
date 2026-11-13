@@ -1,7 +1,7 @@
 ---
 id: SPEC-0084
 title: Fix the two over-strict assertions and re-measure
-status: ready
+status: implemented
 priority: P1
 task: TASK-87
 created_at: 2026-11-13
