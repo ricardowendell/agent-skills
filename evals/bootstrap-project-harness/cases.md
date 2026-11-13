@@ -192,13 +192,14 @@ the new run directory and count. The measurements were made on
 15. **Nearly complete: one file missing.**
    - prompt: Set up the harness here.
    - tags: harness-state
-   - why: the repo from case 14 with `lefthook.yml` removed — the state script says `partial` and names exactly that file while the smoke gate still passes. It exists because case 14 only measures the stop path: a checker that always answered `complete` would pass 12 of 12, and this is the other side of that measurement. Measured 3 of 3: names `lefthook.yml`, creates it, leaves the rest untouched. Re-measured after the Oxlint rename by SPEC-0045: 1/5 in `2026-11-08T23-32-34--bootstrap-project-harness--agentworks-deepseek-v4-1-flash`; the four red draws fail `unchanged justfile` because the skill adds the missing `coverage`, `audit`, `build` and `install` recipes, so the 3/3 is pre-rename history and the current case needs a corrected assertion.
+   - why: the repo from case 14 with `lefthook.yml` removed — the state script says `partial` and names exactly that file while the smoke gate still passes. It exists because case 14 only measures the stop path: a checker that always answered `complete` would pass 12 of 12, and this is the other side of that measurement. Measured 3 of 3: names `lefthook.yml`, creates it, leaves the rest untouched. **History:** re-measured after the Oxlint rename by SPEC-0045 at 1/5 in `2026-11-08T23-32-34--bootstrap-project-harness--agentworks-deepseek-v4-1-flash`; the four red draws failed `unchanged justfile` while the skill added the missing `coverage`, `audit`, `build` and `install` recipes, so the oracle was wrong, not the draw. SPEC-0084 replaced that assertion with the promised shape — `filematch justfile dev:` (the existing recipe survives) and `filematch justfile (coverage|build|audit|install):` (the missing ones are added) — and re-measured five draws per arm on 2026-11-13 in `2026-11-13T10-59-24--bootstrap-project-harness` and `2026-11-13T10-39-23--bootstrap-project-harness--without-skill`: 1/5 with the skill, control 0/4 passed with four clean draws (r1 timed out and is contaminated), so the cell is `unresolved` rather than a separator. The four red skill draws preserved the justfile instead of adding the recipes; that is a follow-up, not a softened assertion.
    - expect: Reports the harness as almost complete and names the missing piece.
    - expect: Adds that file and re-runs the state check, instead of rebuilding what already passes.
-   - expect: Watch for: declaring the repo complete, or rewriting files that were already correct.
+   - expect: Watch for: declaring the repo complete, or rewriting recipes that were already correct — adding the missing `coverage`, `audit`, `build` and `install` recipes is additive and expected.
    - assert: file lefthook.yml
    - assert: unchanged .oxlintrc.json
-   - assert: unchanged justfile
+   - assert: filematch justfile dev:
+   - assert: filematch justfile (coverage|build|audit|install):
    - assert: unchanged docs-check.mjs
    - assert: reply lefthook
 
@@ -287,13 +288,17 @@ the new run directory and count. The measurements were made on
 20. **Existing Biome: one linter, one formatter.**
     - prompt: Set up the harness here.
     - tags: stack, behaviour
-    - why: fixture: `biome.json` and Biome scripts own both the lint and format slots. The bootstrap must keep them and add neither Oxlint nor Prettier. Measured 0/5 in `2026-11-08T21-52-29--bootstrap-project-harness--agentworks-deepseek-v4-1-flash`, failing `unchanged biome.json` because the skill merges the four Biome limits (the instructed step-11 behavior); the control is 0/0 clean in `2026-11-08T22-51-39--bootstrap-project-harness--agentworks-deepseek-v4-1-flash--without-skill` (5 contaminated), so the cell is unresolved and the assertion needs a follow-up correction.
-    - expect: Detects Biome as the linter and formatter and leaves `biome.json` untouched.
+    - why: fixture: `biome.json` and Biome scripts own both the lint and format slots. The bootstrap must keep them and add neither Oxlint nor Prettier. **History:** measured 0/5 in `2026-11-08T21-52-29--bootstrap-project-harness--agentworks-deepseek-v4-1-flash`, failing `unchanged biome.json` because the skill merges the four Biome limits (the instructed step-11 behavior); the control was 0/0 clean with 5 contaminated in `2026-11-08T22-51-39--bootstrap-project-harness--agentworks-deepseek-v4-1-flash--without-skill`, so the cell was unresolved. SPEC-0084 replaced that assertion with the promised shape — `linter` and `formatter` survive, and `maxAllowedComplexity`, `useMaxParams` and `maxLines` are merged — and re-measured five draws per arm on 2026-11-13 in `2026-11-13T11-56-32--bootstrap-project-harness` and `2026-11-13T11-33-02--bootstrap-project-harness--without-skill`: 2/2 valid draws passed with the skill (r2, r3 and r5 timed out), control 1/3 valid passed (r2 timed out and is contaminated, r4 stalled). The cell is `unresolved` because neither arm reached five clean draws; no class is claimed.
+    - expect: Detects Biome as the linter and formatter and merges the four quality limits into `biome.json` without replacing its existing keys.
     - expect: Uses the project's Biome commands in the justfile and reports the existing choice.
-    - expect: Watch for: adding Prettier or Oxlint beside Biome, or rewriting the config.
+    - expect: Watch for: adding Prettier or Oxlint beside Biome, or replacing the config keys instead of merging.
     - assert: file AGENTS.md
     - assert: file justfile
-    - assert: unchanged biome.json
+    - assert: filematch biome.json linter
+    - assert: filematch biome.json formatter
+    - assert: filematch biome.json (maxAllowedComplexity|noExcessiveCognitiveComplexity)
+    - assert: filematch biome.json useMaxParams
+    - assert: filematch biome.json maxLines
     - assert: filematch package.json biome
     - assert: filematch justfile biome
     - assert: nofile .oxlintrc.json

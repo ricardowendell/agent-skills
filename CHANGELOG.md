@@ -7,6 +7,45 @@ project uses [Semantic Versioning](https://semver.org/). The artifact is the set
 of skills plus the evidence that backs them, so a version is a claim: which
 skills, which cases, and which published measurements.
 
+## [0.8.2] — 2026-11-13
+
+The two red cells are measured against the behaviour the skill promises, not
+against the wrong oracle.
+
+`bootstrap-project-harness` #15 and #20 were red for the wrong reason. Case 15
+asserted `unchanged justfile`, while the skill is instructed to add the missing
+`coverage`, `audit`, `build` and `install` recipes to an existing justfile; case
+20 asserted `unchanged biome.json`, while the skill is instructed to merge the
+four quality limits into the existing Biome config. The assertions now check the
+merge — `filematch justfile dev:` (the existing recipe survives) and
+`filematch justfile (coverage|build|audit|install):` (the missing ones are
+added); `linter` and `formatter` survive, and `maxAllowedComplexity` (or
+`noExcessiveCognitiveComplexity`), `useMaxParams` and `maxLines` are merged. The
+old 1/5 and 0/5 stay as history in `docs/evals/coverage.md`, beside the new
+numbers.
+
+`evals/corpus-baseline.json` moves **twice**: #15's and #20's `fieldsSha256` are
+updated, and the previous values
+`abc772a4a3f9957d58e84e32de3cd62bb6c2023c63041b55caca38842ab55729` and
+`8f610106dca66959c4a94d8b8ead9434e9bc9689d499be72df4b13b12a8fc845` are quoted in
+`SPEC-0084` as history. Every other baseline case and fixture still matches, so
+the SPEC-0058/0065 move proof holds for the rest of the corpus.
+
+Re-measured five draws per arm on 2026-11-13
+(`opencode-go/deepseek-v4.1-flash`, detector `cf2e2e319d975a5b`, both arms
+`isolated=yes`): #15 is 1/5 with the skill against a 0/4 clean control, #20 is
+2/2 valid with the skill against 1/3 valid without it. Both cells are
+**unresolved**: provider timeouts and one stall left fewer than five clean draws
+per arm (#15's control lost r1; #20 lost five of ten draws), so no class is
+claimed. The red draws are named, not softened: #15's four red skill draws
+preserved the justfile instead of adding the recipes — a follow-up, not an
+oracle edit.
+
+What did not change: `skills/bootstrap-project-harness/` (the skill, its
+references and its templates), the fixtures, the runner and the detector. Only
+the two corpus cases, the two baseline digests, the coverage row and this entry
+moved.
+
 ## [0.8.1] — 2026-11-13
 
 The status report's claim is measured.
