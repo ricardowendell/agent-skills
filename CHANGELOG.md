@@ -7,7 +7,7 @@ project uses [Semantic Versioning](https://semver.org/). The artifact is the set
 of skills plus the evidence that backs them, so a version is a claim: which
 skills, which cases, and which published measurements.
 
-## [Unreleased]
+## [0.9.1] — 2026-11-13
 
 The data contract skills now have a pinned reference. `docs/integrations/datacontract.md`
 records the upstream `datacontract-skills` (MIT, `dc06664`), the one-liner that
