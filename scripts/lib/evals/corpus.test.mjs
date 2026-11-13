@@ -133,6 +133,14 @@ function parityFindings(expected, cases, fixtureHashes) {
   return findings
 }
 
+// The skill set follows the same subset rule as the cases: a skill added after
+// the baseline has no baseline entries and must not fail the parity check, while
+// a baseline entry that vanished is a deletion. Pure, so both directions can be
+// proven without a checkout.
+function missingBaseline(onDisk, baseline) {
+  return Object.keys(baseline).filter((id) => !onDisk.includes(id))
+}
+
 test("every case and fixture survived the move byte-for-byte", () => {
   const baseline = JSON.parse(readFileSync(BASELINE, "utf8")).cases
   const onDisk = readdirSync(join(REPO, "evals"), { withFileTypes: true })
@@ -142,8 +150,7 @@ test("every case and fixture survived the move byte-for-byte", () => {
   // The baseline is a pre-move snapshot, not a closed set: a skill added later
   // has no baseline entries and must not fail the move's parity check. SPEC-0065
   // already made the case/fixture comparison a subset; the skill set follows it.
-  const missing = Object.keys(baseline).filter((id) => !onDisk.includes(id))
-  assert.deepEqual(missing, [], "a skill with a baseline corpus disappeared")
+  assert.deepEqual(missingBaseline(onDisk, baseline), [], "a skill with a baseline corpus disappeared")
 
   const mismatches = []
   for (const [id, expected] of Object.entries(baseline)) {
@@ -162,6 +169,14 @@ test("every case and fixture survived the move byte-for-byte", () => {
     for (const finding of parityFindings(expected, cases, fixtureHashes)) mismatches.push(`${id}: ${finding}`)
   }
   assert.deepEqual(mismatches, [])
+})
+
+// The set check has one direction for each outcome: a new corpus is growth and
+// passes; a baseline corpus that disappeared is a deletion and fails.
+test("the corpus set check allows a new skill and reports a missing one", () => {
+  const baseline = { "capture-idea": {}, "sync-branch": {} }
+  assert.deepEqual(missingBaseline(["capture-idea", "sync-branch", "new-skill"], baseline), [])
+  assert.deepEqual(missingBaseline(["capture-idea"], baseline), ["sync-branch"])
 })
 
 // The four directions of the subset rule. A regression in the move still fails;

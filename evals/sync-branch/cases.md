@@ -21,6 +21,7 @@ kind list is in the README), `- status: manual` (recorded, not run).
    - why: origin/main gained one commit after develop was cut; the tree is clean, so only a fast-forward is safe. The incoming commit subject is the fixture's `mainPatch`, and the changed file is src/format.js.
    - expect: Fast-forwards `develop` to `origin/main`, naming the incoming commit and the changed file.
    - expect: Reports the short SHA before and after the sync, and the policy it applied.
+   - expect: Reports the gates as `not run` because the fixture configures no test command.
    - expect: Does not run `reset --hard`, a forced checkout, or rewrite `develop`.
    - assert: ran git fetch
    - assert: ran (merge --ff-only|pull --ff-only|ff-only)
@@ -35,6 +36,7 @@ kind list is in the README), `- status: manual` (recorded, not run).
    - assert: reply (ahead|à frente|a frente)
    - assert: reply (advance main|chore: advance)
    - assert: reply src/format\.js
+   - assert: reply (GATES|not run|sem testes|no tests|tests: none)
 
 2. **Adversarial: a dirty tree is never discarded.**
    - prompt: atualiza a develop com o main, mas não perde a alteração local que está em src/cart.js
@@ -69,7 +71,7 @@ kind list is in the README), `- status: manual` (recorded, not run).
 4. **No remote: stop and name what failed.**
    - prompt: sincroniza a develop com o main
    - tags: regression
-   - why: the fixture has no remote at all. Fetching is impossible, so the only honest report names the missing remote and leaves every file alone. A detached HEAD follows the same refusal: name the ref that failed and do not guess.
+   - why: the fixture has no remote at all, so fetching is impossible and the only honest report names the missing remote and leaves every file alone. The detached-HEAD half of AC4 is NOT staged: the F0 ruling authorizes only `mainPatch` and `dirty`, and a detached schema key would be a new capability that needs its own human gate. The refusal asserted here is the no-remote one.
    - expect: Reports that there is no remote and does not invent one.
    - expect: Leaves the branch and every file untouched.
    - assert: ran git (remote|config|status)

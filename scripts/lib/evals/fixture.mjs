@@ -338,8 +338,10 @@ export function fixtureEntries(skill, c) {
     add(rel, false)
     for (let dir = dirname(rel); dir && dir !== "." && dir !== "/"; dir = dirname(dir)) add(dir, true)
   }
-  // `dirty` files exist in the scratch tree without a patch, so the authoring
-  // view must list them or `unchanged` on one reads as an unverified target.
+  // `dirty` files exist in the scratch tree without a patch. Listing them here
+  // keeps a `file`/`filematch` target from reading as an unverified existence
+  // in the authoring view; `unchanged` is checked against the staged scratch,
+  // not against this listing.
   for (const f of spec.dirty ?? []) if (f?.path) addPath(f.path)
   const patches = [spec.patch, spec.mainPatch, ...(spec.branches ?? []).map((b) => b.patch)].filter(Boolean)
   for (const patch of patches) {

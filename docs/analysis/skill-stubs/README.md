@@ -16,5 +16,5 @@ Para promover uma das restantes:
 4. Criar o comando em `~/.agents/commands/<id>.md` e o espelho em
    `~/.agents/claude/commands/`.
 5. Rodar `node scripts/validate-skills.mjs --root skills` e
-   `node scripts/run-evals.mjs --root skills --list --check`.
+   `node scripts/eval.mjs check --root skills`.
 6. Registrar no `CHANGELOG.md`.
