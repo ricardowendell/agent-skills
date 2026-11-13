@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "11edcf61-78bd-4017-84e2-94cd9350e7e1",
+  "started_at": "2026-11-13T13:36:36.417Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.6.0"
+  },
+  "base_commit": "9b6c25dd98ff52a6a8fb8733958fb0df40da0915",
+  "head_commit": "c1aa3c7f3072007c40f8666bfea5b831a07add6a",
+  "task": "SPEC-0084",
+  "spec_sha": "d565a15b2a21fe7e7dd1bbcdec54116c47b06dea6f72b2fe9896877d712a1f11",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0084-fix-the-two-over-strict-assertions.json",
+      "sha256": "ec1b3602a3a1e692c7a37a9e5616d41460f0181635a7ea6e7b8daca206e03004"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0084-fix-the-two-over-strict-assertions.json",
+      "sha256": "d3aeeab52c63bb6c4bb37d62c7361591ccb5994f35aa334928bb56b64d90d626"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "328adfc71ff5626dc198952893d4a51ad821345a08cbc37463eb7e670b02dfc0"
+    }
+  ],
+  "attempts": 1,
+  "duration": 8454,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "c1aa3c7f3072007c40f8666bfea5b831a07add6a"
+}

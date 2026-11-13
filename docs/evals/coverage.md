@@ -102,7 +102,9 @@ Cases #15 and #20 were red for the wrong reason: the oracle asserted
 add the missing `coverage`, `audit`, `build` and `install` recipes to an existing
 justfile and to merge the four quality limits into an existing Biome config.
 SPEC-0084 replaced the two assertions with the promised shape and re-measured
-both cells in this checkout (`repoSha 9b6c25d`) with
+both cells in this checkout (`repoSha 9b6c25d`; the corrected oracle was the
+uncommitted worktree edit that became `c1aa3c7`, and each draw's `assertions`
+array pins it) with
 `node scripts/eval.mjs compare bootstrap-project-harness <n> --repeat 5 --root skills`
 (the positional form is required; without `--root` the CLI measures the
 *installed* skills). Model `opencode-go/deepseek-v4.1-flash` (config default),
@@ -110,7 +112,7 @@ level `behavior`, concurrency 4, detector `cf2e2e319d975a5b`, five draws per arm
 The with-skill runs record `skillHash fee0292c…`; the control stages no skill, so
 its `skillHash` is `null` by construction.
 
-| case | arm | run directory | clean | passed | draws | red assertion |
+| case | arm | run directory | clean | passed | draws | red assertions (union across draws) |
 | --- | --- | --- | --- | --- | --- | --- |
 | #15 | with skill | `2026-11-13T10-59-24--bootstrap-project-harness` | 5/5 | 1/5 | r1–r3, r5 fail | `filematch justfile (coverage\|build\|audit\|install):` |
 | #15 | without skill | `2026-11-13T10-39-23--bootstrap-project-harness--without-skill` | 4/5 (r1 timed out, contaminated) | 0/4 | r1 infrastructure, r2–r5 fail | `file lefthook.yml`, the recipes assertion, `reply lefthook` |
@@ -118,7 +120,9 @@ its `skillHash` is `null` by construction.
 | #20 | without skill | `2026-11-13T11-33-02--bootstrap-project-harness--without-skill` | 3/5 valid (r2 timed out and contaminated, r4 stalled) | 1/3 | r1 pass, r3 and r5 fail | `file justfile`, the three Biome limit rules, `filematch justfile biome` |
 
 **Class: both cells `unresolved`.** #15's control reached four clean draws, not
-five; #20 lost five of ten draws to provider timeouts and one stall (the runner's
+five — #19's separator was a replay-based base (SPEC-0047), while these four
+clean control draws are from this paid run, and the rule does not inherit across
+them; #20 lost five of ten draws to provider timeouts and one stall (the runner's
 own single retry per slot also failed), so neither arm carries five clean draws
 and no separator or non-discriminator is claimed. The reds are named, not
 softened: the four red #15 skill draws kept the justfile byte-for-byte instead of

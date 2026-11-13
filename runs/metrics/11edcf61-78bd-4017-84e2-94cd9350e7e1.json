@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "external_run_id": "11edcf61-78bd-4017-84e2-94cd9350e7e1",
+  "slug": "SPEC-0084-fix-the-two-over-strict-assertions",
+  "events": [
+    {
+      "stage": "dispatch",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-13T13:36:35.620Z",
+      "ended_at": "2026-11-13T13:36:36.620Z",
+      "duration_ms": 1000,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "d565a15b2a21fe7e7dd1bbcdec54116c47b06dea6f72b2fe9896877d712a1f11",
+        "head_sha": "9b6c25dd98ff52a6a8fb8733958fb0df40da0915",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "review",
+      "attempt_id": 1,
+      "status": "approved",
+      "started_at": "2026-11-13T15:53:37.149Z",
+      "ended_at": "2026-11-13T15:53:37.365Z",
+      "duration_ms": 216,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "d565a15b2a21fe7e7dd1bbcdec54116c47b06dea6f72b2fe9896877d712a1f11",
+        "head_sha": "c1aa3c7f3072007c40f8666bfea5b831a07add6a",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "lint",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-13T15:53:37.779Z",
+      "ended_at": "2026-11-13T15:53:37.943Z",
+      "duration_ms": 164,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "d565a15b2a21fe7e7dd1bbcdec54116c47b06dea6f72b2fe9896877d712a1f11",
+        "head_sha": "c1aa3c7f3072007c40f8666bfea5b831a07add6a",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "selftest",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-13T15:53:37.944Z",
+      "ended_at": "2026-11-13T15:54:05.314Z",
+      "duration_ms": 27370,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "d565a15b2a21fe7e7dd1bbcdec54116c47b06dea6f72b2fe9896877d712a1f11",
+        "head_sha": "c1aa3c7f3072007c40f8666bfea5b831a07add6a",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-13T15:53:37.498Z",
+      "ended_at": "2026-11-13T15:54:05.484Z",
+      "duration_ms": 27986,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "d565a15b2a21fe7e7dd1bbcdec54116c47b06dea6f72b2fe9896877d712a1f11",
+        "head_sha": "c1aa3c7f3072007c40f8666bfea5b831a07add6a",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "merge",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-13T15:57:19.413Z",
+      "ended_at": "2026-11-13T15:57:31.231Z",
+      "duration_ms": 11818,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "d565a15b2a21fe7e7dd1bbcdec54116c47b06dea6f72b2fe9896877d712a1f11",
+        "head_sha": "c1aa3c7f3072007c40f8666bfea5b831a07add6a",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "audit",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-13T15:57:31.595Z",
+      "ended_at": "2026-11-13T15:57:31.700Z",
+      "duration_ms": 105,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "d565a15b2a21fe7e7dd1bbcdec54116c47b06dea6f72b2fe9896877d712a1f11",
+        "head_sha": "c1aa3c7f3072007c40f8666bfea5b831a07add6a",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      },
+      "metrics": {
+        "tokens_in": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_out": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_cache": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "calls": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "cost": {
+          "value": null,
+          "provenance": "unknown"
+        }
+      },
+      "adapter": {
+        "source": "unavailable"
+      }
+    }
+  ]
+}

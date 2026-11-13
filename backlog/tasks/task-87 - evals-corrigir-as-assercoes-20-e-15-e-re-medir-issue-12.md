@@ -1,9 +1,10 @@
 ---
 id: TASK-87
 title: 'evals: corrigir as assercoes #20 e #15 e re-medir (issue #12)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-10T15:07:00Z'
+updated_date: '2026-11-13T15:57:00Z'
 labels: []
 dependencies: []
 references:
