@@ -7,7 +7,9 @@ project uses [Semantic Versioning](https://semver.org/). The artifact is the set
 of skills plus the evidence that backs them, so a version is a claim: which
 skills, which cases, and which published measurements.
 
-## [Unreleased]
+## [0.8.0] — 2026-11-13
+
+The branch can be synced safely.
 
 `sync-branch` turns the top uncovered cluster in the session analysis into a
 skill. The stub's workflow is kept intact — read the policy, capture the
