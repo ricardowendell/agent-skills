@@ -5,7 +5,7 @@ status: ready
 priority: P1
 task: TASK-78
 created_at: 2026-11-12
-updated_at: 2026-11-12
+updated_at: 2026-11-13
 source_docs:
   - backlog/tasks/task-78 - evals-corpus-discriminativo-de-arquitetura-e-produtos-de-dados-issue-13.md
   - https://github.com/ricardowendell/agent-skills/issues/13
