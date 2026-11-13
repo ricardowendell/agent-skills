@@ -1,7 +1,7 @@
 ---
 id: SPEC-0085
 title: The contract capability is measured before it is built
-status: ready
+status: implemented
 priority: P1
 task: TASK-83
 created_at: 2026-11-13
