@@ -5,14 +5,14 @@ pipeline (`docs/pipeline.md`) governs how work runs; this page says what the wor
 is and in which order. A change of direction is a human decision, and the
 releases themselves are the record of what shipped.
 
-Status: **0.8.0 opened** on 2026-11-12 — the post-corpus re-decision is
-recorded. `sync-branch` (SPEC-0039) is the next `ready` spec and the 0.8.0
-claim: the only P1 the demand data supports (top uncovered cluster, 6 sessions,
-$7.74, 2 projects). `report-project-status` evidence (TASK-70, issue #11)
-follows in 0.8.1, then the oracle fix left by the closed issue #12 (TASK-87);
-the data-product corpus (TASK-78) is groomed in parallel and dispatched after
-them. The visual/UX and framing specs stay paused on the same demand evidence.
-0.7.7 released on 2026-11-11 — a verdict that opens with a
+Status: **0.9.0 opened** on 2026-11-13 — the data program starts with the
+contract capability (#18), the keystone: ODCS quality rules live inside the
+contract, #19 judges against it and #21 builds on it. The wave is **A/B first**
+(control vs the official MIT `datacontract-skills`, pinned at `dc06664`), and the
+local candidate is authored only if the pin shows a gap. 0.8.0–0.8.3 released on
+2026-11-13 — `sync-branch`; the status report measured (separator 4/5 vs 0/5);
+the two over-strict assertions corrected; the data corpus (six trees, ten
+deterministic proofs, a frozen holdout). 0.7.7 released on 2026-11-11 — a verdict that opens with a
 negation is a rejection, so "not ready" / "not implemented" score instead of
 reading as silence; 6 stored verdict lines move, review-code #4's control goes
 2/5 → 5/5 replayed, and the class stays a non-discriminator. 0.7.6 released on 2026-11-11 — the review-code corpus
@@ -86,6 +86,15 @@ framing specs remain paused: the `ui-refactor` cluster is 3 sessions, $6.90 and
 one project, with gap 0 because `impeccable` and `simplify` cover it, and no
 cluster maps to framing.
 
+The data program is the exception the same rule allows: it is **maintainer-driven**
+like the stack review (#12), because the 14-day sample predates the data issues
+and the operator's own data work is the demand. Within the program the order is
+chosen by evidence strength and upstreamness, not by issue number: the contract
+(#18) is first because it is the keystone and its B arm — the official MIT
+`datacontract-skills` — is verifiable; #17 follows as the strongest
+self-contained separation; #16 is re-decided by the screen rather than asserted;
+#20/#21 wait for a real consumer.
+
 ## Stack review (#12) — the order
 
 Issue #12 reviews the default TypeScript/Node stack (runtime, compiler, lint,
@@ -106,29 +115,25 @@ human decision.
 
 ## Data product engineering (#13–#21)
 
-Nine issues arrived on 2026-11-10 (seven P1, two P2). None was in 0.7.0: the gate
-is #13, the discrimination corpus for architecture and data, and #13's data half
-depended on #6 — which shipped in 0.7.0, so the dependency is satisfied. The gate
-is a spike, not a mandate to create skills; each issue may end as `reuse
-external`, `extend existing`, `build new` or `do not add`.
+Nine issues arrived on 2026-11-10 (seven P1, two P2). The gate (#13) shipped in
+0.8.3: the architecture slice (`SPEC-0054`/`0055`/`0056`, 0.7.6) and the data
+corpus (`SPEC-0082`, six trees with deterministic oracles and a frozen holdout).
+The gate is a spike, not a mandate to create skills; each issue may end as
+`reuse external`, `extend existing`, `build new` or `do not add`.
 
 `TASK-78`–`TASK-86` mirror the issues. The architecture slice shipped: `TASK-89`
 built the three architecture fixtures (`SPEC-0054`), and `TASK-79`/`TASK-80`
 (`SPEC-0055`/`SPEC-0056`) measured the skills in 0.7.6. The data half (`TASK-78`)
-is groomed as `SPEC-0082` but dispatched only after the 0.8.x P1s; its first
-decision is per capability, not a skill. The order below is otherwise the one the
-issues declare:
+shipped in 0.8.3 (`SPEC-0082`). The issues declare the dependency graph, but not
+the order within it; the program starts with **#18 contract**:
 
 ```
-13 ──► 14, 15, 16, 17
-16 ──► 18
-15, 16, 18 ──► 19
-17 ──► 20
-18, 20 ──► 21
+#18 contract ──► the A/B verdict (reuse external or a documented gap)
+#17 migration ─► the strongest self-contained separation, next
+#16 quality ───► re-decided by the screen, not asserted
+#19 review ────► decided with the control evidence from #16–#18
+#20/#21 ───────► deferred until a real post-migration consumer exists
 ```
-
-#20 also needs a real post-migration consumer. Nothing here changes the 0.7.0
-slice or authorises paid draws before the corpus is decided.
 
 ## Where the bottleneck is
 
@@ -143,11 +148,10 @@ routing, not behaviour (`TASK-101`). The visual half stays unmeasurable by
 design: SPEC-0077 declares human review and no browser oracle.
 
 With the harness frozen (2026-11-11), the constraint is no longer the mechanism.
-It is the distance between the one measured uncovered cluster (`sync-branch`,
-6 sessions, $7.74) and the unmeasured data-product program (#13–#21, seven
-issues, four P1). So the order is: ship the measured P1 first, close the
-evidence debt of what already shipped (`TASK-70`, `TASK-87`), and let the data
-program start at its corpus gate (`TASK-78`), not at a skill.
+0.8.0–0.8.3 closed the measured-demand queue and the evidence debt, and the data
+program now has its corpus. The remaining question is whether the official skills
+already cover the contract capability: the 0.9.0 A/B wave answers it with the
+pinned MIT `datacontract-skills` before any local skill is authored.
 
 ## Releases
 
@@ -155,41 +159,47 @@ program start at its corpus gate (`TASK-78`), not at a skill.
 | --- | --- | --- | --- |
 | **0.6.2** (released) | an aborted run is never clean | `TASK-52`, `TASK-38`, `TASK-39`, `TASK-40`, `TASK-54`; `TASK-36` documented, `TASK-35` done | 0 draws |
 | **0.6.3–0.7.7** (released) | the stack is chosen with numbers; the control arm is enforced; the corpus can see a small change; the instrument is fixed; review-code is measured again; the verdict vocabulary is closed; the harness is frozen | `SPEC-0041`–`SPEC-0081`; `TASK-56`/`TASK-57` and their verdicts; the 0.7.0 defects (`TASK-100`–`TASK-103`) and the re-measurement (`TASK-98`, `TASK-109`, `SPEC-0078`); the freeze (`SPEC-0081`) | see `CHANGELOG.md` |
-| **0.8.0** (next) | the branch can be synced safely | `SPEC-0039` (`TASK-62`) | ~10–20 draws, mostly deterministic |
-| **0.8.1** | the status report's claim is measured | `TASK-70` (issue #11) | ~10 draws |
-| **unscheduled** | the published cells are re-measured after the oracle fix | `TASK-87` (the closed issue #12 leftover) | ~20 draws |
-| **unscheduled** | data products are measured before any skill is built | `TASK-78`–`TASK-86` (#13–#21), `TASK-78` first | measurement |
+| **0.8.0** (released) | the branch can be synced safely | `SPEC-0039` (`TASK-62`) | 0 paid draws |
+| **0.8.1** (released) | the status report's claim is measured | `SPEC-0083` (`TASK-70`, issue #11) | ~10 draws |
+| **0.8.2** (released) | the two over-strict cells are measured honestly | `SPEC-0084` (`TASK-87`) | ~20 draws |
+| **0.8.3** (released) | the data corpus can see a duplicated-key join | `SPEC-0082` (`TASK-78`, #13) | 0 paid draws |
+| **0.9.0** (next) | the contract capability is measured before it is built (#18) | A/B: control vs the pinned MIT `datacontract-skills`; C only if the pin shows a gap | ~30–40 draws |
+| **0.9.1** | migration is measured before it is built (#17) | `TASK-82`; local corpus, strongest separation | ~20 draws |
+| **decision** | data quality is re-decided by the screen (#16) | `TASK-81`; screening by evidence | 0–20 draws |
+| **decision** | review/ops is decided with the #16–#18 control evidence (#19) | `TASK-84` | 0 |
+| **deferred** | operate/assess wait for a real post-migration consumer (#20/#21) | `TASK-85`/`TASK-86` | — |
 | **unscheduled** | a screen can be reviewed by a person; the harness does not separate a visual change | `TASK-58`/`TASK-60` on declared human review; the visual oracle (`TASK-61`) is a future item with its own budget — no consumer today | 0 draws |
 | **unscheduled** | — | `TASK-59` framing, conditional on a gap the corpus shows | measurement |
-| unscheduled | — | `TASK-63`: a stakeholder recap as a mode of the status report, behind the P1s | 0–20 |
+| unscheduled | — | `TASK-63` recap and `TASK-112`–`TASK-115` follow-ups, as riders | 0–30 |
 | unscheduled | — | `diagnose-failure`: needs a captured problem statement first | 0 until then |
 | unscheduled | — | `agent-skills doctor`: zero draws, rides any release | 0 |
 
-## 0.8.0 — the order
+## 0.9.0 — the order
 
-**Opened 2026-11-12** by the post-corpus re-decision. The 0.7.0 wave answered
-the question this section used to carry: the corpus can see a small change, the
-quick-refine spike closed as `do not add skill`, and the remainders shipped in
-0.7.1–0.7.7. The next wave is the only P1 the demand data supports.
+**Opened 2026-11-13.** The earlier 0.8.0 section is history: `sync-branch`
+shipped, the status report was measured, the two over-strict cells were corrected,
+and the data corpus was built. The data program now starts where the evidence is
+strongest and most upstream.
 
-0. **The harness precondition is met.** The control arm is denied the corpus and
-   the eval store, and the detector separates a denied attempt from a leak
-   (`SPEC-0046`–`SPEC-0052`, detector v6). The control no longer reads the
-   install.
-1. **Groom → ready (done).** `SPEC-0039` is `ready` with the fixture capability
-   as F0; the freeze ruling of 2026-11-12 records that extension as corpus
-   staging, not a frozen harness feature.
-2. **F0 — fixture capability.** `mainPatch` and `dirty` in `git.json`, with unit
-   tests in `fixture.test.mjs`; a manifest without them keeps the old behaviour.
-3. **F1–F4 — promote, cases, run, publish.** Six deterministic cases: behind and
-   clean, dirty tree, conflict, no remote/detached HEAD, trigger, near-miss. The
-   guardrails are the product; no paid draw unless a behavioural case is added.
-4. **F5 — the cut.** `lint` and `selftest` green on `main`, `coverage.md` updated,
-   and the release gate cuts 0.8.0.
+0. **The B arm is pinned.** `datacontract-skills` at `dc06664` (MIT), copied to
+   an ignored pinned root under `.lane/pinned/` and staged from there; nothing is
+   redistributed, and `datacontract-cli` 1.2.9 is installed for `lint` and
+   `breaking`.
+1. **F0 — fixtures dual-format.** The contract trees gain a native ODCS v3 YAML
+   next to the deterministic oracle, plus a semantic-change tree (same schema,
+   changed meaning) and a composition tree (requirements → ODCS).
+2. **F1 — the A/B corpus.** Cases for the external `breaking-change-check` and
+   `create-data-contract` in the pinned mirror; the same prompts and fixtures
+   under `evals/design-data-contract/` for the later C arm.
+3. **F2 — A vs B.** Control vs the official skills, five draws per cell; the
+   holdout stays the staged-only copy of `incompatible-contract`.
+4. **F3 — the verdict.** `reuse external` (the deliverable is the thin routing
+   reference the issue's hypothesis predicts) or a documented gap that justifies
+   C in its own spec. `do not add` remains a valid outcome.
 
 ## Why the visual work has no release
 
-The 0.8.0 wave does **not** start with a browser/visual oracle. `TASK-58`
+The 0.9.0 wave does **not** start with a browser/visual oracle. `TASK-58`
 (visual change planning) and `TASK-60` (experience review) are accepted on
 **declared human review**: a person reads the diff or the preview and says
 whether it holds, and that review is the evidence. No release claim of measured
