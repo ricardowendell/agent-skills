@@ -1,7 +1,7 @@
 ---
 id: SPEC-0083
 title: The status report's claim is measured
-status: ready
+status: implemented
 priority: P1
 task: TASK-70
 created_at: 2026-11-13
