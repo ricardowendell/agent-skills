@@ -1,7 +1,7 @@
 ---
 id: SPEC-0082
 title: A data corpus that can see a duplicated-key join
-status: ready
+status: implemented
 priority: P1
 task: TASK-78
 created_at: 2026-11-12
