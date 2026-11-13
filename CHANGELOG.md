@@ -30,12 +30,14 @@ detection: it reads the manifest relative to the skill, intersects the signals
 with what it detected, asks (showing id, pin, license and evidence) before
 installing the pinned copy, and records the choice in the consumer's `AGENTS.md`;
 no manifest or no matching signal means no suggestion. It never auto-installs and
-nothing upstream is vendored. One screening draw of case 1 passed
-(`2026-11-13T17-59-53--bootstrap-project-harness`, `skillHash 8af8e10e…`) — proof
-the default flow is not derailed, not a separation claim. `check-staleness` moves
+nothing upstream is vendored. One screening draw of case 1 passed, re-screened
+after the reference edit at `2026-11-13T18-19-05--bootstrap-project-harness`
+(`skillHash baa2f48a…`; the earlier `8af8e10e…` draw is history) — proof the
+default flow is not derailed, not a separation claim. `check-staleness` moves
 from 49 to 51 stale cells (73 → 74 cited) because the bootstrap body edit unstaged
-`#15` and `#20`; no other cell moved. No frontmatter changed, no installer script
-exists, and no other skill, harness, detector or corpus changed.
+`#15` and `#20`; the reference edit briefly unstaged the first screening and the
+re-screen restored it, with no other cell moved. No frontmatter changed, no
+installer script exists, and no other skill, harness, detector or corpus changed.
 
 ## [0.9.0] — 2026-11-13
 
