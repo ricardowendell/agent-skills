@@ -1,9 +1,10 @@
 ---
 id: TASK-62
 title: 'skill: sync-branch — atualizar a branch com o base sem force-push'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-08T01:56:00Z'
+updated_date: '2026-11-13T10:18:00Z'
 labels: []
 dependencies:
   - TASK-56
