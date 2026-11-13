@@ -32,17 +32,17 @@ lines.
 3. **Status without `gh`: issues and CI are unknown, never guessed.**
    - prompt: qual o status do projeto e o que fazer agora?
    - tags: matrix
-   - why: the scratch repo has no GitHub remote, so both GitHub blocks must degrade explicitly
-   - expect: Reports `ISSUES: unknown` and `CI: unknown` with the command that failed.
+   - why: the scratch repo has no GitHub remote, so both GitHub blocks must degrade explicitly; the reply is bilingual, so the degradation token is `unknown` or `desconhecido`; an invented issue reads as a two-digit `#NN` or an explicit "issue #N", which a criterion label ("AC #1") is not — a bare single-digit issue (`#7` without "issue") is still missed
+   - expect: Reports the degradation explicitly — `ISSUES` and `CI` as `unknown` or `desconhecido` — with the command that failed.
    - expect: Names no issue number and no CI conclusion.
    - expect: Gives at most three next steps, each with evidence (human-checked: no assertion kind counts lines).
    - expect: Does not edit, commit, or create an issue.
    - assert: skill report-project-status
    - assert: reply STATUS:
-   - assert: reply ISSUES[\s\S]{0,120}?unknown
-   - assert: reply CI[\s\S]{0,120}?unknown
+   - assert: reply ISSUES[\s\S]{0,120}?(unknown|desconhecido)
+   - assert: reply CI[\s\S]{0,120}?(unknown|desconhecido)
    - assert: reply NEXT STEPS
-   - assert: noreply #[0-9]+
+   - assert: noreply (#[0-9]{2,}|issue\s*#\s*[0-9]+|issues\s*#\s*[0-9]+)
    - assert: unchanged src/app.js
 
 4. **Near-miss: the work in flight, not the project status.**
