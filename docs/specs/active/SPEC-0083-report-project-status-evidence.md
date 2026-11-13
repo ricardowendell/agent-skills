@@ -13,19 +13,21 @@ source_docs:
   - skills/report-project-status/SKILL.md
   - evals/report-project-status/cases.md
   - docs/analysis/skills-from-sessions-2026-11-07.md
+  - docs/specs/SPEC-0065-recover-the-parked-corpus.md
 related_decisions: []
 depends_on: []
 blocks: []
 files:
   - evals/report-project-status/cases.md
-  - evals/report-project-status/fixtures/1/git.json
-  - evals/report-project-status/fixtures/1/AGENTS.md
-  - evals/report-project-status/fixtures/1/CHANGELOG.md
-  - evals/report-project-status/fixtures/1/docs/pipeline.md
-  - evals/report-project-status/fixtures/1/docs/evals/coverage.md
-  - evals/report-project-status/fixtures/1/docs/specs/active/SPEC-0001-widget.md
-  - evals/report-project-status/fixtures/1/backlog/tasks/task-1 - widget.md
-  - evals/report-project-status/fixtures/1/src/app.js
+  - evals/report-project-status/fixtures/3/git.json
+  - evals/report-project-status/fixtures/3/AGENTS.md
+  - evals/report-project-status/fixtures/3/CHANGELOG.md
+  - evals/report-project-status/fixtures/3/docs/pipeline.md
+  - evals/report-project-status/fixtures/3/docs/evals/coverage.md
+  - evals/report-project-status/fixtures/3/docs/specs/active/SPEC-0001-widget.md
+  - evals/report-project-status/fixtures/3/backlog/tasks/task-1 - widget.md
+  - evals/report-project-status/fixtures/3/src/app.js
+  - evals/corpus-baseline.json
   - docs/evals/coverage.md
   - CHANGELOG.md
   - docs/specs/active/SPEC-0083-report-project-status-evidence.md
@@ -66,7 +68,7 @@ started with its metric and baseline recorded; its result lands after the week.
 ## Scope
 
 - **F0 — the fixture.** One plain tree, no GitHub remote
-  (`evals/report-project-status/fixtures/1/`, `git.json` `{ "base": "." }`):
+  (`evals/report-project-status/fixtures/3/`, `git.json` `{ "base": "." }`):
   - `AGENTS.md` names the backlog index, the specs directory and the gate
     commands (the skill resolves all three from it);
   - `CHANGELOG.md` with two dated entries, one of them the current release;
@@ -81,6 +83,13 @@ started with its metric and baseline recorded; its result lands after the week.
   leaves `src/app.js` byte-identical (`unchanged`). The "at most three next
   steps, each with evidence" stays a human `expect:` — no assertion kind counts
   lines, so the coverage row says the count is human-checked, not machine-checked.
+- **F1.1 — the baseline digest moves once.** Adding assertions changes the case's
+  parsed fields, and `evals/corpus-baseline.json` guards them (SPEC-0065). Update
+  **only** `report-project-status` case 3's `fieldsSha256`; the old value
+  `b6b89b3baa7aa4ae337938bf750056ec6c7efef6b1abaf471362329c15da17a6` stays here as
+  history, and every other baseline case and fixture is untouched. This supersedes
+  SPEC-0065's "the baseline is not edited" for this one entry, recorded rather than
+  silent: the move proof holds for every other case and for every fixture.
 - **F2 — the measured run.** Both arms, five draws each
   (`node scripts/eval.mjs compare report-project-status --case 3 --repeat 5`,
   model recorded), under the current detector. Classify the cell as `separator`,
@@ -108,6 +117,8 @@ are untouched.
 - No change to `skills/report-project-status/SKILL.md` or its command stubs. If
   the measured run exposes a defect, record it as a follow-up with the failing
   assertion; do not fix it here.
+- No edit to any baseline entry other than case 3 of `report-project-status`;
+  the rest of the move proof stays exactly as recorded.
 - No new assertion kind or runner flag — the freeze covers those; the case uses
   `skill`, `reply`, `noreply` and `unchanged` only.
 - No issue actions, no `gh` call in the fixture, no benchmark of the 50-issue
@@ -156,6 +167,8 @@ are untouched.
    and the CHANGELOG entry states what changed and what did not.
 8. **Nothing else moves**: no skill, runner, detector or other corpus change;
    every `tests:` command passes.
+9. **The baseline moves once and says so**: case 3's digest is updated, the old
+   value is quoted in this spec, and every other baseline entry still matches.
 
 ## Open Questions
 
