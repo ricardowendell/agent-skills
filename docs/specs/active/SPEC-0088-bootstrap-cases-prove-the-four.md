@@ -1,7 +1,7 @@
 ---
 id: SPEC-0088
 title: The bootstrap cases prove the four recipes and the four limits
-status: ready
+status: implemented
 priority: P1
 task: TASK-114
 created_at: 2026-11-13
