@@ -53,6 +53,15 @@ What did not change: `skills/report-project-status/SKILL.md`, the runner, the
 detector and every other corpus. Only the corpus case, one baseline digest, the
 coverage note and this entry moved.
 
+**Correction of the 0.9.1 figure.** The 0.9.1 entry (and the earlier reading of
+the coverage) said the bootstrap screening moved the stale count from 49 to 52.
+The published command does not reproduce 52: `node scripts/check-staleness.mjs`
+reads 74 cited / **51 stale** / 3 uncited, because `bootstrap-project-harness#1`
+is decided by the contaminated-but-hashed run `2026-11-13T19-27-21` (its case
+result's `skillHash` is the current filtered tree) while the stalled `19-37-19`
+records no cells and is not a candidate. The 0.9.1 entry keeps the published 52
+as history; 51 is the value to cite.
+
 ## [0.9.1] — 2026-11-13
 
 The data contract skills now have a pinned reference. `docs/integrations/datacontract.md`

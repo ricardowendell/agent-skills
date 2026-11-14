@@ -1,9 +1,10 @@
 ---
 id: TASK-113
 title: 'evals: o token de degradacao do report-project-status e language-bound'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-13T13:22:00Z'
+updated_date: '2026-11-14T00:21:00Z'
 labels:
   - evals
 dependencies: []
@@ -20,7 +21,19 @@ Origem: SPEC-0083 (F2, run 2026-11-13T09-53-13--report-project-status). O caso 3
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A decisao esta escrita com a evidencia do r1 e a regra de nao reescrever o oraculo depois do draw.
-- [ ] #2 A correcao escolhida roda e o caso 3 fica verde nos 5 draws de um braco, ou o limite e registrado.
-- [ ] #3 A coverage cita o run dir e o resultado; nenhuma taxa publicada e recomputada.
+- [x] #1 A decisao esta escrita com a evidencia do r1 e a regra de nao reescrever o oraculo depois do draw.
+- [x] #2 A correcao escolhida roda e o caso 3 fica verde nos 5 draws de um braco, ou o limite e registrado.
+- [x] #3 A coverage cita o run dir e o resultado; nenhuma taxa publicada e recomputada.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-11-14T00:21:21.407Z
+
+---
+
+Resolvida na 0.9.2 (SPEC-0087): a assertion do caso 3 aceita (unknown|desconhecido), o r5 que respondia só 'desconhecido' ficou verde, e a célula foi re-medida em separator 5/5 vs 0/5 (ambos 5/5 clean). O token documentado da skill continua 'unknown'; nenhuma edição de SKILL.md.
+
+---
+<!-- COMMENTS:END -->

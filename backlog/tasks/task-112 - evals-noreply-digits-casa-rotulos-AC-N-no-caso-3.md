@@ -1,9 +1,10 @@
 ---
 id: TASK-112
 title: 'evals: noreply #<digits> casa rotulos AC #N no caso 3'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-13T13:22:00Z'
+updated_date: '2026-11-14T00:21:00Z'
 labels:
   - evals
 dependencies: []

@@ -410,8 +410,9 @@ cells, 51 stale, 3 uncited**. The `**/*.odcs.yaml` example line moved the
 bootstrap tree past `baa2f48a…`, but `#1` still reads **fresh**, and the reason is
 the rule rather than the prose: the newest **cited** run that recorded governed
 hashes decides the cell, and that is
-`2026-11-13T19-27-21--bootstrap-project-harness` — completed, with `skillHashes`
-`913614a6…`, the current filtered tree — even though it is not evidence
+`2026-11-13T19-27-21--bootstrap-project-harness` — completed, with the case
+result's `skillHash 913614a6…`, the current filtered tree — even though it is
+not evidence
 (`hostReads=1`, `isolated=no`). The re-screen
 `2026-11-13T19-37-19--bootstrap-project-harness` is unfinished and is not a
 candidate: its manifest records no `skillHashes` and its `cases/` holds no draws,

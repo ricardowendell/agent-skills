@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "external_run_id": "410652d1-4758-4c85-a159-49e3ee20429d",
+  "slug": "SPEC-0087-status-assertions",
+  "events": [
+    {
+      "stage": "dispatch",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-13T23:27:49.017Z",
+      "ended_at": "2026-11-13T23:27:50.030Z",
+      "duration_ms": 1013,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "71e74fdeacc35d6837920ca6d96feae75d893179ef69c1542b91a33d51cfbc28",
+        "head_sha": "d6895309f7fa6b5d8f513eb4044f198dbfa52ff8",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "review",
+      "attempt_id": 1,
+      "status": "approved",
+      "started_at": "2026-11-14T00:18:40.919Z",
+      "ended_at": "2026-11-14T00:18:41.267Z",
+      "duration_ms": 348,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "71e74fdeacc35d6837920ca6d96feae75d893179ef69c1542b91a33d51cfbc28",
+        "head_sha": "12fd2c2b00e2a942b26a096b6e839bf17ba0e184",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "lint",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-14T00:18:41.760Z",
+      "ended_at": "2026-11-14T00:18:41.938Z",
+      "duration_ms": 178,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "71e74fdeacc35d6837920ca6d96feae75d893179ef69c1542b91a33d51cfbc28",
+        "head_sha": "12fd2c2b00e2a942b26a096b6e839bf17ba0e184",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "selftest",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-14T00:18:41.938Z",
+      "ended_at": "2026-11-14T00:19:12.599Z",
+      "duration_ms": 30661,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "71e74fdeacc35d6837920ca6d96feae75d893179ef69c1542b91a33d51cfbc28",
+        "head_sha": "12fd2c2b00e2a942b26a096b6e839bf17ba0e184",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-14T00:18:41.415Z",
+      "ended_at": "2026-11-14T00:19:12.781Z",
+      "duration_ms": 31366,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "71e74fdeacc35d6837920ca6d96feae75d893179ef69c1542b91a33d51cfbc28",
+        "head_sha": "12fd2c2b00e2a942b26a096b6e839bf17ba0e184",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "merge",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-14T00:20:57.196Z",
+      "ended_at": "2026-11-14T00:21:12.717Z",
+      "duration_ms": 15521,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "71e74fdeacc35d6837920ca6d96feae75d893179ef69c1542b91a33d51cfbc28",
+        "head_sha": "12fd2c2b00e2a942b26a096b6e839bf17ba0e184",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "audit",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-14T00:21:12.886Z",
+      "ended_at": "2026-11-14T00:21:12.984Z",
+      "duration_ms": 98,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "71e74fdeacc35d6837920ca6d96feae75d893179ef69c1542b91a33d51cfbc28",
+        "head_sha": "12fd2c2b00e2a942b26a096b6e839bf17ba0e184",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      },
+      "metrics": {
+        "tokens_in": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_out": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_cache": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "calls": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "cost": {
+          "value": null,
+          "provenance": "unknown"
+        }
+      },
+      "adapter": {
+        "source": "unavailable"
+      }
+    }
+  ]
+}
