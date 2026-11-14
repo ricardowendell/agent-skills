@@ -193,7 +193,7 @@
         {
           "n": 15,
           "title": "Nearly complete: one file missing.",
-          "fieldsSha256": "4dec9dd58a5438e2533b51f313743132a8f55552af31d35e22bdaf69e4b20856",
+          "fieldsSha256": "745b472538460f9f2342c951dece937f8278917705d67d83491bba01ee696007",
           "fixtureSha256": "2f05dda22cd0fa838bd0dfb07f5875918258bea1bd34a7b7b897f13d35207eba"
         },
         {
@@ -223,7 +223,7 @@
         {
           "n": 20,
           "title": "Existing Biome: one linter, one formatter.",
-          "fieldsSha256": "a49b61a36b2c55f14dec405422548b9b43db34e7517437f4cc8acf0c0d5ed360",
+          "fieldsSha256": "e18fb81e1c7f8459115c82c97c1a42d7811e0a53d77030e51c810d716e9094a0",
           "fixtureSha256": "f0e293fccf69fd6d1b0ae0aa66314bdd80f7fea4853025d01de3a83057290fbe"
         },
         {
