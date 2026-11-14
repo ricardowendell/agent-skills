@@ -263,7 +263,7 @@ docs/
    dependency), leave it in place and do not also add the Lefthook staging
    commands. Python: nothing here — `ruff` config lives in `pyproject.toml`
    (step 9).
-8. Add `justfile` from `templates/<stack>/justfile.template`. The template is the default's shape: on an existing stack, keep the project's `justfile`, add only the missing recipes, and make each recipe call the detected package manager and runner (`npm run …`, `pnpm run …`, `bun run …`) instead of the template's `bun`. Beyond a typical project the template carries four recipes — `coverage`, `audit`, `build`, `install` — and each must be present after this step; when a recipe already exists, keep its body and add only the ones that are missing.
+8. Add `justfile` from `templates/<stack>/justfile.template`. The template is the default's shape: on an existing stack, keep the project's `justfile`, add only the missing recipes, and make each recipe call the detected package manager and runner (`npm run …`, `pnpm run …`, `bun run …`) instead of the template's `bun`. **TS:** the TypeScript template carries four recipes beyond a typical project — `coverage`, `audit`, `build`, `install` — and each must be present after this step; when a recipe already exists, keep its body and add only the ones that are missing. **Python (uv):** the template has none of those four — `check` runs `pip-audit` and `fresh` is the install — so do not invent them.
 9. **Deps and scripts** (**merge — never overwrite**). TS: when the repo has no
    `package.json`, add it from `templates/ts/package.json.template`; otherwise
    merge the script **keys** that template carries — `test`, `test:watch`,
@@ -429,7 +429,7 @@ ls AGENTS.md README.md .editorconfig
 # replace the list with detection's one answer: lefthook.yml | .husky | .pre-commit-config.yaml
 for f in lefthook.yml; do ls -d "$f" 2>/dev/null || echo "MISSING $f"; done
 ls -d .git/hooks/pre-commit .git/hooks/pre-push .git/hooks/commit-msg
-for r in check coverage audit build install; do grep -qE "^$r:" justfile && echo "OK $r" || echo "MISSING $r"; done
+grep -qE "^(check|ci):" justfile && echo "OK" || echo "MISSING"
 ls docs/WORKFLOW.md .opencode/opencode.json docs/pipeline.md
 ```
 
@@ -444,6 +444,8 @@ against a Biome or Vitest repo.
 # replace the list with detection's answer: package.json, tsconfig.json, plus
 # exactly one lockfile and the formatter/linter config files it named
 for f in package.json tsconfig.json .prettierrc .oxlintrc.json; do ls "$f" 2>/dev/null || echo "MISSING $f"; done
+# the TS template's four extra recipes, plus the shared check/ci gate
+for r in check coverage audit build install; do grep -qE "^$r:" justfile && echo "OK $r" || echo "MISSING $r"; done
 npm run typecheck        # or pnpm run / bun run
 npm run lint             # the detected linter's script; check its own success line
 npm test                 # the detected runner's script
