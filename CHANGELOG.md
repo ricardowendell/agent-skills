@@ -32,8 +32,10 @@ enough. `evals/corpus-baseline.json` moves exactly twice: case 15
 Re-measured five draws per arm with `--timeout 1200` (`repoSha ad86758`,
 `opencode-go/deepseek-v4.1-flash`, detector `cf2e2e319d975a5b`): case 15 is
 **4/5 vs 0/5** with both arms 5/5 clean — a **separator**
-(`2026-11-14T07-05-09--bootstrap-project-harness`; the control run is
-`2026-11-13T21-36-29--bootstrap-project-harness--without-skill`). Case 20 is
+(`2026-11-14T07-05-09--bootstrap-project-harness`; the control arm is the one
+measured in this spec before the tree move,
+`2026-11-13T21-36-29--bootstrap-project-harness--without-skill`, `repoSha
+c48921a` — it stages no skill, so its identity is unchanged). Case 20 is
 **unresolved** — its with-skill run is unscored because all five draws stalled
 at the 120 s watchdog
 (157–469 s per draw over two attempts), while the control reached 3/5 clean and

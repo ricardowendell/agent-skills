@@ -509,16 +509,14 @@ paragraph said **52**; that was a manual count the published command does not
 reproduce, and it is superseded here.
 
 Eighth run (2026-11-14, after the `SPEC-0088` skill edits and their re-measures):
-**74 cited cells, 50 stale, 3 uncited**. The step-8 and audit-checklist edits
-moved the bootstrap tree from `913614a6…` to `f91268cf…`, which unstaged `#1`,
-`#15` and `#20` again (49 → 52 stale). `#15` with-skill and `#1` were re-measured at
-the new hash and are fresh; `#20` was **not** re-measured after the final tree
-move, so its last with-skill run (`2026-11-13T22-24-04--bootstrap-project-harness`,
-`33e34baa…`) is stale — not counted among the cells restored by measurement.
-Against the 74 cited / 51 stale at the start of this spec the count is 50:
-`#15` and `#1` are fresh at the new hash, `#20` is stale and unmeasured, and
-`#14`, `#16`–`#19` and `#21`–`#23` keep their older `dd55fd88…` tree. Nothing
-else moves.
+**74 cited cells, 50 stale, 3 uncited**. The chain: 51 stale at the start of the
+spec; 52 with the first edit (the tree moved to `33e34baa…` and unstaged `#1`);
+49 after that round's re-measures restored `#1`, `#15` and `#20`; 52 again with
+the blocker correction (the tree moved to `f91268cf…` and unstaged all three);
+and **50 now**. In the final state `#15` with-skill and `#1` are fresh at
+`f91268cf…`; `#20` is stale by hash and was not re-measured, so it is not
+counted among the cells restored by measurement; `#14`, `#16`–`#19` and
+`#21`–`#23` keep their older `dd55fd88…` tree. Nothing else moves.
 
 A tree hash covers a skill's files and its non-empty directories: an untracked
 **file** still changes it by design, which is what makes a dirty checkout visible
