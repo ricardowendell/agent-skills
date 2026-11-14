@@ -8,14 +8,18 @@ machine-checked after the case (see `eval.mjs`).
 
 1. **Create the implementation prompt for SPEC-0007.**
    - prompt: Create the implementation prompt for SPEC-0007.
-   - why: fixture: a `ready` spec + architecture doc
+   - why: fixture: a `ready` spec + architecture doc. The shape assertions prove the test is mentioned before the implementation inside a bounded window (600 characters after `## Operations` for the test, 300 more for the implementation) — a textual-order proxy, not a machine-checkable step order: an implementation-first prompt that mentions a test later in the same window would pass. The false-pass case is recorded, not hidden; case 13's transcript signature is the behavioural check.
    - expect: Reads the spec and its source docs/ADRs.
    - expect: Writes `docs/prompts/SPEC-0007-<short-name>.prompt.md` with Requirements/Entities/Approach/Structure/Operations/Norms/Safeguards/Verification.
    - expect: Records `spec_sha` in the prompt frontmatter (via `spec-sha.mjs`).
    - expect: Restates the project's own architecture rules; invents no stack-specific rules.
+   - expect: Puts the test step before the implementation in Operations and names the failing run.
    - expect: Watch for: reinterpreting the spec instead of copying it, or a prompt too large to review.
    - assert: filematch docs/prompts/SPEC-0007-*.prompt.md ## Verification
    - assert: filematch docs/prompts/SPEC-0007-*.prompt.md spec_sha:
+   - assert: filematch docs/prompts/SPEC-0007-*.prompt.md ## Operations
+   - assert: filematch docs/prompts/SPEC-0007-*.prompt.md ## Operations[\s\S]{0,600}?(test|spec file)[\s\S]{0,300}?(implement|add and export)
+   - assert: filematch docs/prompts/SPEC-0007-*.prompt.md [Ss]ee (it )?fail
    - assert: unchanged docs/specs/SPEC-0007-demo.md
 
 2. **Make a prompt for SPEC-0008.**

@@ -135,3 +135,17 @@ machine-checked after the case (see `eval.mjs`).
    - expect: Watch for: choosing a status and a new style on its own.
    - assert: unchanged **
    - assert: reply \?
+
+13. **A prompt that asks for the test first.**
+   - prompt: Implement docs/prompts/SPEC-0001-slug.prompt.md.
+   - tags: matrix
+   - why: the fixture's prompt artifact is already in the generator's test-first shape — Operations writes the failing test, runs it and sees it fail, then implements — so the case measures whether the executor follows the ordered artifact. The function landing, the spec status and the untouched Safeguards section are the three observable outcomes; the red→green signature is read from the transcript by `scripts/check-tdd-signature.mjs`, not asserted, because the freeze allows no new assertion kind.
+   - expect: Reads `AGENTS.md`, the prompt and its source spec before the first edit.
+   - expect: Writes the test and runs it before implementing the function.
+   - expect: Implements only the Operations; applies Norms and keeps Safeguards visible.
+   - expect: Sets the source spec `status: implemented` and records the test.
+   - expect: Reports the red run and the green run.
+   - expect: Watch for: implementing first and then writing a test that was never red.
+   - assert: filematch src/index.js slugify
+   - assert: filematch docs/specs/SPEC-0001-slug.md status: implemented
+   - assert: filematch docs/prompts/SPEC-0001-slug.prompt.md ## Safeguards
