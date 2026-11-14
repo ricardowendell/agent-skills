@@ -122,11 +122,14 @@ or an explicit "issue #N" is an invented reference, "AC #1" is not. The
 limitation is recorded, not hidden: a bare single-digit issue (`#7` without
 "issue") is not caught, and a two-digit criterion label ("AC #10") would read as
 one — contextual matching is brittle and would not change the class. The skill
-was not edited. `evals/corpus-baseline.json` moves **once**: case 3's
-`fieldsSha256` goes from
+was not edited. `evals/corpus-baseline.json` moves with the case, never with the
+measurement: the assertion correction takes case 3's `fieldsSha256` from
 `49ea7d9d2ced46bea430efbe7c861c29b4f8fe43dd92ea585a61d7f852384212` to
-`2f8dc2ffe2b190767d324f1f4cd64aeb0462a80e2a0b0f65dda486ffbfa523af` (both quoted in
-full in `SPEC-0087`), and every other entry still matches.
+`2f8dc2ffe2b190767d324f1f4cd64aeb0462a80e2a0b0f65dda486ffbfa523af`, and the
+`why:` note that records the "AC #10" limitation — written after the draws, with
+prompt, fixture and assertions unchanged — moves it to
+`71f39ce8feecf7d77c8a3f840fcf0e186827ee610496f254b5ad3dfa6dd89b1d`, the value on
+disk. All three are quoted here; every other baseline entry still matches.
 
 Re-measured 2026-11-13 in the spec's worktree at `repoSha a96647e`, the commit
 that carries the corrected oracle, with
@@ -155,7 +158,10 @@ softened: no draw loads the skill or prints a `NEXT STEPS` block, r1 names
 neither degradation token (r2–r5 say `desconhecido` and pass those two lines, so
 the assert is reachable in the reply's own language), and r3/r4 print no
 `STATUS:`. `noreply` passes in all ten draws: no invented issue, and the "AC #"
-numbering no longer counts. The oracle was not edited after the first draw.
+numbering no longer counts. The assertions were not edited after the first draw:
+the one post-measurement change to the case is the `why:` note above, which never
+reaches the agent and does not enter `gradingHash` (`gate` plus the
+`(kind, arg)` pairs).
 
 **History (superseded, not deleted).** The pre-correction cell stays in the
 section above: 5/5 clean and 4/5 passed with the skill against 5/5 clean and 0/5
@@ -400,16 +406,21 @@ superseded first draw (`2026-11-13T17-59-53--bootstrap-project-harness`,
 cell. Nothing else moves.
 
 Seventh run (2026-11-13, after the land-time one-line reference fix): **74 cited
-cells, 52 stale, 3 uncited**. The `**/*.odcs.yaml` example line moved the
-bootstrap tree past `baa2f48a…`, so `#1` is stale again (`changed
-references/companions.md`) by a doc-only change: `SKILL.md` is byte-identical and
-the no-op path the screening exercised does not read the example. The two
-re-screens at the fixed tree are **not evidence** —
-`2026-11-13T19-27-21--bootstrap-project-harness` is contaminated (`hostReads=1`,
-`isolated=no`) and `2026-11-13T19-37-19--bootstrap-project-harness` (unfinished)
-stalled (0 reps, infrastructure). The screening stands at `18-19-05`; the delta against
-the pre-spec baseline is two stale bootstrap cells (`#15`, `#20`) and one cited
-screening cell that is now stale by the prose fix.
+cells, 51 stale, 3 uncited**. The `**/*.odcs.yaml` example line moved the
+bootstrap tree past `baa2f48a…`, but `#1` still reads **fresh**, and the reason is
+the rule rather than the prose: the newest **cited** run that recorded governed
+hashes decides the cell, and that is
+`2026-11-13T19-27-21--bootstrap-project-harness` — completed, with `skillHashes`
+`913614a6…`, the current filtered tree — even though it is not evidence
+(`hostReads=1`, `isolated=no`). The re-screen
+`2026-11-13T19-37-19--bootstrap-project-harness` is unfinished and is not a
+candidate: its manifest records no `skillHashes` and its `cases/` holds no draws,
+so it contributes no cell. The screening therefore still stands at
+`18-19-05` (`baa2f48a…`) as the last draws that count, while `#1`'s *governed
+hash* comes from the contaminated run; the delta against the pre-spec baseline is
+two stale bootstrap cells (`#15`, `#20`), not three. The earlier reading of this
+paragraph said **52**; that was a manual count the published command does not
+reproduce, and it is superseded here.
 
 A tree hash covers a skill's files and its non-empty directories: an untracked
 **file** still changes it by design, which is what makes a dirty checkout visible

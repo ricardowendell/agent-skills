@@ -32,7 +32,7 @@ lines.
 3. **Status without `gh`: issues and CI are unknown, never guessed.**
    - prompt: qual o status do projeto e o que fazer agora?
    - tags: matrix
-   - why: the scratch repo has no GitHub remote, so both GitHub blocks must degrade explicitly; the reply is bilingual, so the degradation token is `unknown` or `desconhecido`; an invented issue reads as a two-digit `#NN` or an explicit "issue #N", which a criterion label ("AC #1") is not — a bare single-digit issue (`#7` without "issue") is still missed
+   - why: the scratch repo has no GitHub remote, so both GitHub blocks must degrade explicitly; the reply is bilingual, so the degradation token is `unknown` or `desconhecido`; an invented issue reads as a two-digit `#NN` or an explicit "issue #N", which a criterion label ("AC #1") is not — a bare single-digit issue (`#7` without "issue") is still missed; a two-digit criterion label ("AC #10") is read as one, a declared limitation rather than a defect
    - expect: Reports the degradation explicitly — `ISSUES` and `CI` as `unknown` or `desconhecido` — with the command that failed.
    - expect: Names no issue number and no CI conclusion.
    - expect: Gives at most three next steps, each with evidence (human-checked: no assertion kind counts lines).

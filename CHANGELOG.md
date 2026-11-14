@@ -22,12 +22,18 @@ were that numbering, not an invented issue (`TASK-112`).
 
 The oracle now accepts `unknown` or `desconhecido` and reads an invented issue as
 a two-digit `#NN` or an explicit "issue #N", so a criterion label stops being a
-red. The skill is unchanged: `unknown` stays its documented token. The limitation
-is recorded — a bare single-digit issue (`#7` without "issue") is not caught.
-`evals/corpus-baseline.json` moves once: case 3's `fieldsSha256` is
-`2f8dc2ffe2b190767d324f1f4cd64aeb0462a80e2a0b0f65dda486ffbfa523af`, the previous
-`49ea7d9d2ced46bea430efbe7c861c29b4f8fe43dd92ea585a61d7f852384212` is quoted in
-`SPEC-0087`, and every other baseline case and fixture still matches.
+red. The skill is unchanged: `unknown` stays its documented token. Both limits
+are recorded — a bare single-digit issue (`#7` without "issue") is not caught,
+and a two-digit criterion label ("AC #10") reads as an issue reference; the
+latter is a declared limitation, not a defect.
+`evals/corpus-baseline.json` moves with the case: the assertion correction takes
+case 3's `fieldsSha256` from
+`49ea7d9d2ced46bea430efbe7c861c29b4f8fe43dd92ea585a61d7f852384212` to
+`2f8dc2ffe2b190767d324f1f4cd64aeb0462a80e2a0b0f65dda486ffbfa523af`, and the
+`why:` note that records the "AC #10" limit — added after the draws, with prompt,
+fixture and assertions unchanged — moves it to
+`71f39ce8feecf7d77c8a3f840fcf0e186827ee610496f254b5ad3dfa6dd89b1d`. Every other
+baseline case and fixture still matches.
 
 Re-measured five draws per arm on 2026-11-13 at `repoSha a96647e`, the commit
 that carries the corrected oracle (`opencode-go/deepseek-v4.1-flash`, detector
