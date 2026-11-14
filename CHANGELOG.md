@@ -30,7 +30,8 @@ Re-measured five draws per arm with `--timeout 1200` (`repoSha c48921a`,
 **2/5 vs 0/5** with both arms 5/5 clean — `unresolved`, not a separator
 (`2026-11-13T21-45-08--bootstrap-project-harness` /
 `2026-11-13T21-36-29--bootstrap-project-harness--without-skill`); case 20 is
-**unscored** because all five with-skill draws stalled at the 120 s watchdog
+**unresolved** — its with-skill run is unscored because all five draws stalled
+at the 120 s watchdog
 (157–469 s per draw over two attempts), while the control reached 3/5 clean and
 passed none (`2026-11-13T22-24-04--bootstrap-project-harness` /
 `2026-11-13T22-03-18--bootstrap-project-harness--without-skill`). The old 1/5
