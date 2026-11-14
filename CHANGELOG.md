@@ -23,10 +23,14 @@ prompt artifact is already test-first.
 Measured 2026-11-14 at `repoSha c69a32e` with `--repeat 5 --root skills`,
 `opencode-go/deepseek-v4.1-flash`, detector `cf2e2e319d975a5b`:
 
-- `write-implementation-prompt` #1: **3/5 vs 0/5**, both arms clean. The control
-  writes none of the required sections; two skill draws fail only the
-  bounded-window assertion because scaffolding steps precede the test step — the
-  limit is recorded in the `why:`, and the old 5/5 stays as history.
+- `write-implementation-prompt` #1: **3/5 vs 0/5**, both arms clean, class
+  **unresolved (oracle-limited)**. The control writes none of the required
+  sections; the two red skill draws are test-first prompts that miss the
+  300-character second hop (r2's test at 569, intended implement at 507; r3's
+  test at 42, implement at 999), and the intended step is capitalised while the
+  regex is case-sensitive. The assertion is a proxy and was not moved after the
+  draws; its correction is a follow-up with human gate and re-measurement. The
+  old 5/5 stays as history.
 - `implement-from-prompt` #13: **5/5 vs 5/5** — a non-discriminator on its
   assertions — while the transcript signature is test-first 5/5 and
   red-before-implementation **5/5 in both arms**: the new-shape artifact alone

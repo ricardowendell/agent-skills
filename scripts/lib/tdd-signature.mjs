@@ -159,7 +159,13 @@ export function signature(transcript) {
   const firstTest = mutations.find((m) => m.class === "test") ?? null
   const firstSource = mutations.find((m) => m.class === "source") ?? null
   const testFirst = Boolean(firstTest) && (firstSource === null || firstTest.index < firstSource.index)
-  const redBeforeImplementation = Boolean(firstSource) && testRuns.some((run) => run.failed && run.index < firstSource.index)
+  // The red must be *this unit's* red: the test exists before the failing run,
+  // and the failing run precedes the implementation. A pre-existing broken
+  // suite, failing before any write, is not evidence of a TDD step.
+  const redBeforeImplementation =
+    Boolean(firstTest) &&
+    Boolean(firstSource) &&
+    testRuns.some((run) => run.failed && firstTest.index < run.index && run.index < firstSource.index)
 
   const filesOf = (klass) => [...new Set(mutations.filter((m) => m.class === klass).map((m) => m.path))]
   const addedOf = (klass) => mutations.filter((m) => m.class === klass).reduce((sum, m) => sum + m.added, 0)

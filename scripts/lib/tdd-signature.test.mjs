@@ -100,6 +100,17 @@ test("a green run that mentions fail 0 is not red", () => {
   assert.equal(result.redBeforeImplementation, false)
 })
 
+test("a pre-existing red suite before any write is not a TDD red", () => {
+  const result = signature(
+    transcript([
+      shell("node --test", 1, "ℹ fail 1\n✖ failing tests:\n  'test failed'\n"),
+      edit("src/index.js", 1),
+    ]),
+  )
+  assert.equal(result.testFirst, false, "no test file was written")
+  assert.equal(result.redBeforeImplementation, false, "the failing run predates the test write")
+})
+
 test("lines added are counted per class from edits and writes", () => {
   const result = signature(
     transcript([

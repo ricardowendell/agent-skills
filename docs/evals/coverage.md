@@ -21,7 +21,7 @@ the layout at the time of that run; SPEC-0058 moved the corpus out of the skill.
 | `sync-branch` | 6 | 2 | 0 | trees 1–4 via `git.json` (shared `base/`; `mainPatch` advances the base after the branch is cut, `dirty` adds the uncommitted change); 5–6 stage no fixture | declared, not measured — six deterministic cases staged 6/6 with `--level smoke` on 2026-11-12 (`2026-11-12T21-57-40--sync-branch`, `manifest.json` `counts.staged: 6`; the manifest is the evidence, not a scored result), no paid draw. Case 1 asserts the branch name and the ahead/behind relation in the reply; there is no git-state assertion kind (adding one is frozen), so only `unchanged` is deterministic state, and branch/ahead/behind are observed through `reply`. The GATES surface is asserted through `reply` as `not run`/no tests because the fixture configures no test command. Cases 1–4 assert the protected files with `unchanged`, case 2 is the dirty-tree adversarial case and case 3 the conflict one. Two observations are gaps, not passes: the harness has no "did not run" kind, so "never force-pushes" and "no `reset --hard`" are observed only by `unchanged` plus the reply; and AC4's detached-HEAD half is not staged because the F0 ruling authorizes only `mainPatch`/`dirty` (a detached key would be a new capability), so case 4 stages the no-remote refusal (`SPEC-0039`, F3). Source: `SPEC-0039` |
 | `audit-code-quality` | 9 | 2 | 0 | trees 1 and 4 via `git.json`; 5–8 via `git.json`; 9 stages tree 6 via `evals/9/git.json` | iteration 1: with-skill 4/4 (`2026-11-04T21-55-53`); control case 1 0/1, only coverage `unknown` separated (`…21-47-51`); case 4 on the final 8-assertion version 1/1 with skill (`2026-11-04T21-59-17`) against 0/1 without (`2026-11-04T21-59-17--audit-code-quality--without-skill`) on `SCOPE:`/`rule`/`CAPTURE OPTIONS` — one draw per arm, so it does not separate reliably (`…21-57-53` is the pre-contract 5-assertion version); **SPEC-0055 wave:** architecture cases 5–7 and deterministic cases 8–9, five draws per arm on `agentworks/deepseek-v4-1-flash`; skill arms 5/5, 4/5, 4/5, 3/5 and 4/5 passed against 0/5 in every control; all ten published cells are clean under the enforced boundary; see the SPEC-0055 wave below |
 | `tighten-harness` | 6 | 2 | 0 | trees 1, 2, 3, 5, 6 | case 5: 3/3 passed, skill loaded 0/3 (`why:`, no run dir) |
-| `write-implementation-prompt` | 6 | 2 | 1 | trees 1–4 | SPEC-0030 re-measure at `dcf5177` (`skillHash 046369c2…`, detector v2; the clean behavioural cells are `isolated=yes`, the trigger runs carry their findings): #1 5/5 clean (`2026-11-06T19-25-26--write-implementation-prompt`), control **unresolved** under v2: default 0/3 clean in two runs (`2026-11-07T01-46-26--write-implementation-prompt--without-skill`, `…02-58-14…`) and agentworks 0/2 (`08-17-29`); every clean draw failed `spec_sha:`. Four v1 attempts are history; #2 5/5 clean (`2026-11-06T19-28-47--write-implementation-prompt`), control **separator** under v2 on the default model (`2026-11-07T03-01-29--write-implementation-prompt--without-skill`: 5/5 clean, **0/5 passed**); the agentworks control (`08-20-10`) only reached 0/4 clean, a route difference. The v1 `15-30-39` 0/4 replay-clean is history; #4 5/5 clean (`2026-11-06T19-30-26--write-implementation-prompt`), control **non-discriminator** under v2: default **4/4 valid passed** (`2026-11-07T02-03-01--write-implementation-prompt--without-skill`; 1 rep aborted), agentworks 2/2 (`08-22-28`); the v1 `14-37-23` 4/4 passed is history; #3 `manual` (history `14-01-54` split 4/5; not re-run); triggers: #5 stays a **trigger case** — `loaded 5/5` in both `2026-11-06T19-32-45--write-implementation-prompt` and `2026-11-06T19-53-34--write-implementation-prompt`, **no behavioural cell** and no stall-free cell: r1 285.3 s, r4 150.9 s, r3 477.7 s and r5 268.4 s each killed by the 120 s watchdog after its last event (a `step_start` with nothing after it), retried once and the retry stalled too; best clean subsets 1/1 and 2/2, contamination 2/5 and 1/5. The store's support goes to the **runner** (SPEC-0076): `scripts/lib/evals/agent.mjs` arms the watchdog on stream bytes, and this stream is silent while a tool runs — #5 ran a host-hunt `shell` for 118.51 s with no bytes and `exit 0` (`19-53-34` r3, `state.time`), so 120 s of silence can be a live child at work, not a dead stream — while the provider stays **undecided**: no `provider.*` frame is stored in any stall (the `error` field is absent from every stalled `execution`), and the killed window cannot be separated from a live-but-quiet tool either; the two are separable by instrumentation, not by another draw. The empty #5 fixture (the draw hunts the host for `SPEC-0012`) is what makes its silent steps long, not a long prompt-file generation; #6 clean 5/5 in `2026-11-06T20-12-15--write-implementation-prompt` (`findings=0 warnings=0 isolated=yes`), 5/5 in `19-32-45`, 4/5 in `19-53-34` (r3 loaded) — improved but not deterministic; canary 12/12 `13-51-35`; `13-46-05` discarded (`r8` read `.lane/trees`); re-measured under the enforced boundary (SPEC-0050, five draws): #1 is 5/5 clean with the skill (`2026-11-09T13-07-02--write-implementation-prompt--agentworks-deepseek-v4-1-flash`, `findings=0 isolated=yes`) and the control `2026-11-09T13-11-33--write-implementation-prompt--…--without-skill` is 0/5 clean (`deniedDraws=1`, `isolated=yes`), every draw red on `filematch docs/prompts/SPEC-0007-*.prompt.md spec_sha:` — **separator** (5/5 vs 0/5). **SPEC-0090:** the test-first generator edit was re-measured on #1 with five draws per arm (`opencode-go/deepseek-v4.1-flash`, detector `cf2e2e319d975a5b`, `repoSha c69a32e`): **3/5 vs 0/5**, both arms clean — the two red skill draws fail only the bounded-window assertion (`## Operations[\s\S]{0,600}?…`) because scaffolding steps precede the test step while the test still precedes the implementation; the window is a proxy and the `why:` says so. The old 5/5 stays as history. #2, #4, #5 and #6 are declared **stale** by `changed SKILL.md` and were not re-measured; #1 is fresh at `SKILL.md a3cbe98a…`. See `write-implementation-prompt-matrix.md` and the section below. |
+| `write-implementation-prompt` | 6 | 2 | 1 | trees 1–4 | SPEC-0030 re-measure at `dcf5177` (`skillHash 046369c2…`, detector v2; the clean behavioural cells are `isolated=yes`, the trigger runs carry their findings): #1 5/5 clean (`2026-11-06T19-25-26--write-implementation-prompt`), control **unresolved** under v2: default 0/3 clean in two runs (`2026-11-07T01-46-26--write-implementation-prompt--without-skill`, `…02-58-14…`) and agentworks 0/2 (`08-17-29`); every clean draw failed `spec_sha:`. Four v1 attempts are history; #2 5/5 clean (`2026-11-06T19-28-47--write-implementation-prompt`), control **separator** under v2 on the default model (`2026-11-07T03-01-29--write-implementation-prompt--without-skill`: 5/5 clean, **0/5 passed**); the agentworks control (`08-20-10`) only reached 0/4 clean, a route difference. The v1 `15-30-39` 0/4 replay-clean is history; #4 5/5 clean (`2026-11-06T19-30-26--write-implementation-prompt`), control **non-discriminator** under v2: default **4/4 valid passed** (`2026-11-07T02-03-01--write-implementation-prompt--without-skill`; 1 rep aborted), agentworks 2/2 (`08-22-28`); the v1 `14-37-23` 4/4 passed is history; #3 `manual` (history `14-01-54` split 4/5; not re-run); triggers: #5 stays a **trigger case** — `loaded 5/5` in both `2026-11-06T19-32-45--write-implementation-prompt` and `2026-11-06T19-53-34--write-implementation-prompt`, **no behavioural cell** and no stall-free cell: r1 285.3 s, r4 150.9 s, r3 477.7 s and r5 268.4 s each killed by the 120 s watchdog after its last event (a `step_start` with nothing after it), retried once and the retry stalled too; best clean subsets 1/1 and 2/2, contamination 2/5 and 1/5. The store's support goes to the **runner** (SPEC-0076): `scripts/lib/evals/agent.mjs` arms the watchdog on stream bytes, and this stream is silent while a tool runs — #5 ran a host-hunt `shell` for 118.51 s with no bytes and `exit 0` (`19-53-34` r3, `state.time`), so 120 s of silence can be a live child at work, not a dead stream — while the provider stays **undecided**: no `provider.*` frame is stored in any stall (the `error` field is absent from every stalled `execution`), and the killed window cannot be separated from a live-but-quiet tool either; the two are separable by instrumentation, not by another draw. The empty #5 fixture (the draw hunts the host for `SPEC-0012`) is what makes its silent steps long, not a long prompt-file generation; #6 clean 5/5 in `2026-11-06T20-12-15--write-implementation-prompt` (`findings=0 warnings=0 isolated=yes`), 5/5 in `19-32-45`, 4/5 in `19-53-34` (r3 loaded) — improved but not deterministic; canary 12/12 `13-51-35`; `13-46-05` discarded (`r8` read `.lane/trees`); re-measured under the enforced boundary (SPEC-0050, five draws): #1 is 5/5 clean with the skill (`2026-11-09T13-07-02--write-implementation-prompt--agentworks-deepseek-v4-1-flash`, `findings=0 isolated=yes`) and the control `2026-11-09T13-11-33--write-implementation-prompt--…--without-skill` is 0/5 clean (`deniedDraws=1`, `isolated=yes`), every draw red on `filematch docs/prompts/SPEC-0007-*.prompt.md spec_sha:` — **separator** (5/5 vs 0/5; **history** under the SPEC-0090 oracle, not recomputed). **SPEC-0090:** the test-first generator edit was re-measured on #1 with five draws per arm (`opencode-go/deepseek-v4.1-flash`, detector `cf2e2e319d975a5b`, `repoSha c69a32e`): **3/5 vs 0/5**, both arms clean, class **unresolved (oracle-limited)**. The two red skill draws are test-first prompts that miss the 300-character second hop: r2's first `test` is at 569 characters and its intended `**Implement the toggle handler**` 507 later (the first case-sensitive `implement` is "implemented" at 810); r3's `test` is at 42 and its `implement` at 999. The assertion is the proxy the `why:` names and was not moved after the draws; correcting it (case-insensitive / anchored to the test step) is a follow-up with human gate and re-measurement. The old 5/5 stays as history. #2, #4, #5 and #6 are declared **stale** by `changed SKILL.md` and were not re-measured; #1 is fresh at `SKILL.md a3cbe98a…`. See `write-implementation-prompt-matrix.md` and the section below. |
 | `report-project-status` | 4 | 3 | 0 | tree 3 (`base: "."`, no remote) | case 3 measured 2026-11-13 under the corrected oracle (`SPEC-0087`), five draws per arm, `opencode-go/deepseek-v4.1-flash`, detector `cf2e2e319d975a5b`: **separator** — with the skill 5/5 clean and 5/5 passed, control 5/5 clean and 0/5 passed; both run dirs and the reds in the section below. **History:** the pre-correction `SPEC-0083` cell, 5/5 clean and 4/5 passed against 0/5, kept in its section and not recomputed. Triggers #1/#2/#4 stay declared (`why:`, no run dir). The "at most three next steps" cap is human-checked, not machine-checked. Source: issue #11, `SPEC-0083`, `SPEC-0087` |
 | **total** | **108** | **33** | **2** | | |
 
@@ -330,29 +330,43 @@ read.
 `opencode-go/deepseek-v4.1-flash` (config default), level `behavior`,
 concurrency 4, detector `cf2e2e319d975a5b`, five scored draws per arm. Both runs
 of both cells are clean under `node scripts/check-eval-run.mjs`
-(`findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0`).
+(`findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes`); `deniedDraws` is
+**0 / 1 / 0 / 0** by table row. The one is the generator control's r1, which
+attempted three blocked reads; under SPEC-0051 a denied read delivers no content
+and is not a finding, so the draw remains a scored failure and the 0/5 stands.
 
-| cell | arm | run directory | clean | passed | per-draw | red assertions |
-| --- | --- | --- | --- | --- | --- | --- |
-| `write-implementation-prompt` #1 | with skill | `2026-11-14T09-20-09--write-implementation-prompt` | 5/5 | 3/5 | r1, r4, r5 pass; r2, r3 fail | r2/r3: `filematch docs/prompts/SPEC-0007-*.prompt.md ## Operations[\s\S]{0,600}?(test\|spec file)[\s\S]{0,300}?(implement\|add and export)` |
-| `write-implementation-prompt` #1 | without skill | `2026-11-14T09-17-19--write-implementation-prompt--without-skill` | 5/5 | 0/5 | r1–r5 fail | all five: `spec_sha:`, `## Operations`, the bounded window and `[Ss]ee (it )?fail` |
-| `implement-from-prompt` #13 | with skill | `2026-11-14T09-26-38--implement-from-prompt` | 5/5 | 5/5 | r1–r5 pass | — |
-| `implement-from-prompt` #13 | without skill | `2026-11-14T09-23-39--implement-from-prompt--without-skill` | 5/5 | 5/5 | r1–r5 pass | — |
+| cell | arm | run directory | clean | passed | denied | per-draw | red assertions |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `write-implementation-prompt` #1 | with skill | `2026-11-14T09-20-09--write-implementation-prompt` | 5/5 | 3/5 | 0 | r1, r4, r5 pass; r2, r3 fail | r2/r3: `filematch docs/prompts/SPEC-0007-*.prompt.md ## Operations[\s\S]{0,600}?(test\|spec file)[\s\S]{0,300}?(implement\|add and export)` |
+| `write-implementation-prompt` #1 | without skill | `2026-11-14T09-17-19--write-implementation-prompt--without-skill` | 5/5 | 0/5 | 1 (r1: 3 denied, none delivered) | r1–r5 fail | all five: `spec_sha:`, `## Operations`, the bounded window and `[Ss]ee (it )?fail` |
+| `implement-from-prompt` #13 | with skill | `2026-11-14T09-26-38--implement-from-prompt` | 5/5 | 5/5 | 0 | r1–r5 pass | — |
+| `implement-from-prompt` #13 | without skill | `2026-11-14T09-23-39--implement-from-prompt--without-skill` | 5/5 | 5/5 | 0 | r1–r5 pass | — |
 
-**The generator cell is 3/5 vs 0/5.** The control is red on every draw because
-its prompts use their own section names (`## Goal`, `## Implementation Steps`,
-`## Task`, `## What to Build`) and never write `## Operations`, `spec_sha:` or a
-red step: the 0/5 is the shape, not a wording preference. The two red skill
-draws are named, not softened: in r2 and r3 the Operations section opens with
-"Locate the home screen" and "Scaffold the widget component" before the test
-step, so the first `test` token falls outside the 600-character window even
-though the test step still precedes the implementation step. The window is the
-proxy its `why:` says it is, and the assertion was not moved after the draws.
+**The generator cell is `unresolved` (oracle-limited): 3/5 vs 0/5.** The
+control is red on every draw because its prompts use their own section names
+(`## Goal`, `## Implementation Steps`, `## Task`, `## What to Build`) and never
+write `## Operations`, `spec_sha:` or a red step: the 0/5 is the shape, not a
+wording preference. The two red skill draws are named, not softened: r2 puts the
+first `test` **569** characters after `## Operations` — inside the 600 — and the
+intended implementation step (`**Implement the toggle handler**`) **507**
+characters later, past the 300 window; the first case-sensitive `implement` the
+regex can reach is the "implemented" in the later spec-status step at **810**.
+r3's first `test` is **42** characters in ("Confirm the stack and test
+command"), and its next `implement` is at **999**. Both prompts still put the
+test step before the implementation step; the assertion is the proxy its `why:`
+says it is, and it was not moved after the draws. Because two of the three red
+draws are an oracle false-fail, the cell cannot support a separator claim: the
+5/5 vs 0/5 in the corpus row is **history** under this oracle, and correcting
+the assertion (case-insensitive, anchored to the test step) is a follow-up with
+human gate and re-measurement — not a silent edit here.
 
 **The executor cell is a non-discriminator on its assertions and a positive
 reading on the signature.** Both arms pass 5/5 — the function lands, the spec
-reaches `status: implemented`, and the artifact's Safeguards section is
-untouched — and the transcript signature is test-first 5/5 and
+reaches `status: implemented`, and the prompt artifact is unchanged (its
+Safeguards section included; the assertion is `unchanged
+docs/prompts/SPEC-0001-slug.prompt.md`, and all ten stored transcripts only read
+the file, so the swap from the weaker `filematch … ## Safeguards` leaves the
+score unchanged) — and the transcript signature is test-first 5/5 and
 red-before-implementation 5/5 in **both** arms. The Open Question is answered for
 this cell: the new-shape artifact alone produces the red step; the unchanged
 `implement-from-prompt` skill is not what supplies it, and no executor edit is
@@ -628,12 +642,14 @@ because that skill is byte-identical; its control run
 (`2026-11-14T09-23-39--implement-from-prompt--without-skill`) is cited beside the
 with-skill run, and the newer hash-bearing run decides the cell. `#2`, `#4`,
 `#5` and `#6` remain stale by `changed SKILL.md` and are **declared**, not
-re-measured. The old case-1 5/5 stays cited as history. Nothing else moves. The
-existing `implement-from-prompt` cells are **not** fresh: the skill is untouched
-by this spec, but every prior citation still names `0389466e…`/`a58c5074…`
-against the current `52379e16…`, so those cells were stale before this change
-and stay stale; re-measuring them is the re-baseline the Non-Goals exclude. The
-new `#13` is fresh.
+re-measured. The old case-1 5/5 stays cited as history. Nothing else moves. The literal AC6
+sentence "no `implement-from-prompt` cell is stale" is **false and unreachable
+under the Non-Goal**: the cells were already stale before this diff — `#1`–`#10`
+at `0389466e…`/`a58c5074…`, `#11` by `changed SKILL.md`, `#12` by `empty
+governed hash set` — and re-measuring them is the re-baseline the Non-Goals
+exclude. What this diff guarantees is narrower and true: no
+`implement-from-prompt` cell became stale **because of this diff** (the skill is
+byte-identical), and the new `#13` is fresh.
 
 A tree hash covers a skill's files and its non-empty directories: an untracked
 **file** still changes it by design, which is what makes a dirty checkout visible
