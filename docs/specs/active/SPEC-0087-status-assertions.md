@@ -1,7 +1,7 @@
 ---
 id: SPEC-0087
 title: The status case's assertions prove what they claim
-status: ready
+status: implemented
 priority: P1
 task: TASK-112
 created_at: 2026-11-13
