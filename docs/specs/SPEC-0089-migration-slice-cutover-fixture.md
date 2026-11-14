@@ -75,8 +75,10 @@ it without writing a fixture first.
 
 - **F0 — the defect tree `migration-sliced-cutover`.** Three files, the corpus
   shape (`AGENTS.md`, `pipeline.py`, `check.py`), sqlite in memory, standard
-  library only, `FIXTURE_STATE` switching `staged` (default) and `corrected`.
-  The story: `orders_legacy` is migrated to `orders_v2` in two slices through a
+  library only, `FIXTURE_STATE` switching `staged` (default), `corrected`, and
+  the two mixed states added during review to prove fault independence —
+  `mapping-fixed` (only the cutover still fails) and `cutover-fixed` (only the
+  mapping still fails). The story: `orders_legacy` is migrated to `orders_v2` in two slices through a
   `customer_map`, then cut over with the legacy table kept for rollback.
   - **Fault 1, the duplicated mapping.** `customer_map(legacy_id, customer_ref,
     region, mapped_on)` has no unique key on `legacy_id` in `staged`, and the
