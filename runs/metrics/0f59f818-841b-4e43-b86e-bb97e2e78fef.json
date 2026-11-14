@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "external_run_id": "0f59f818-841b-4e43-b86e-bb97e2e78fef",
+  "slug": "SPEC-0088-bootstrap-cases-prove-the-four",
+  "events": [
+    {
+      "stage": "dispatch",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-14T00:34:19.972Z",
+      "ended_at": "2026-11-14T00:34:20.769Z",
+      "duration_ms": 797,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "2ef240c228cbba23758649e4e1c717cb9c5fa3db150e39ddec6d24b8a4651122",
+        "head_sha": "2cd4332e4fd5162bf3b6ffff4a21b9829e5dcf36",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "review",
+      "attempt_id": 1,
+      "status": "approved",
+      "started_at": "2026-11-14T10:44:23.802Z",
+      "ended_at": "2026-11-14T10:44:23.905Z",
+      "duration_ms": 103,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "2ef240c228cbba23758649e4e1c717cb9c5fa3db150e39ddec6d24b8a4651122",
+        "head_sha": "2a9c1d0f4e6eb3f9575ec8ed00ad9fab3ea925ca",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "lint",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-14T10:44:24.085Z",
+      "ended_at": "2026-11-14T10:44:24.156Z",
+      "duration_ms": 71,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "2ef240c228cbba23758649e4e1c717cb9c5fa3db150e39ddec6d24b8a4651122",
+        "head_sha": "2a9c1d0f4e6eb3f9575ec8ed00ad9fab3ea925ca",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "selftest",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-14T10:44:24.156Z",
+      "ended_at": "2026-11-14T10:44:35.763Z",
+      "duration_ms": 11607,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "2ef240c228cbba23758649e4e1c717cb9c5fa3db150e39ddec6d24b8a4651122",
+        "head_sha": "2a9c1d0f4e6eb3f9575ec8ed00ad9fab3ea925ca",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-14T10:44:23.990Z",
+      "ended_at": "2026-11-14T10:44:35.990Z",
+      "duration_ms": 12000,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "2ef240c228cbba23758649e4e1c717cb9c5fa3db150e39ddec6d24b8a4651122",
+        "head_sha": "2a9c1d0f4e6eb3f9575ec8ed00ad9fab3ea925ca",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "merge",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-14T10:58:08.087Z",
+      "ended_at": "2026-11-14T10:58:22.167Z",
+      "duration_ms": 14080,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "2ef240c228cbba23758649e4e1c717cb9c5fa3db150e39ddec6d24b8a4651122",
+        "head_sha": "adae8642ba078c2a4e943389fc6ff00eae461dd2",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "audit",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-14T10:58:22.328Z",
+      "ended_at": "2026-11-14T10:58:22.403Z",
+      "duration_ms": 75,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "2ef240c228cbba23758649e4e1c717cb9c5fa3db150e39ddec6d24b8a4651122",
+        "head_sha": "2a9c1d0f4e6eb3f9575ec8ed00ad9fab3ea925ca",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      },
+      "metrics": {
+        "tokens_in": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_out": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "tokens_cache": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "calls": {
+          "value": null,
+          "provenance": "unknown"
+        },
+        "cost": {
+          "value": null,
+          "provenance": "unknown"
+        }
+      },
+      "adapter": {
+        "source": "unavailable"
+      }
+    }
+  ]
+}

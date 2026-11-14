@@ -1,9 +1,10 @@
 ---
 id: TASK-114
 title: 'skill: o bootstrap nao adiciona as quatro receitas ausentes no caso 15'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-13T15:58:00Z'
+updated_date: '2026-11-14T10:58:00Z'
 labels:
   - evals
 dependencies: []

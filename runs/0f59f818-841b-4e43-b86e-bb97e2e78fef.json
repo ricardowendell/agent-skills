@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "project": "github.com/ricardowendell/agent-skills",
+  "external_run_id": "0f59f818-841b-4e43-b86e-bb97e2e78fef",
+  "started_at": "2026-11-14T00:34:20.609Z",
+  "executor": {
+    "name": "pdlc",
+    "version": "1.6.0"
+  },
+  "base_commit": "2cd4332e4fd5162bf3b6ffff4a21b9829e5dcf36",
+  "head_commit": "2a9c1d0f4e6eb3f9575ec8ed00ad9fab3ea925ca",
+  "task": "SPEC-0088",
+  "spec_sha": "2ef240c228cbba23758649e4e1c717cb9c5fa3db150e39ddec6d24b8a4651122",
+  "gates": [
+    {
+      "name": "lint",
+      "ok": true,
+      "exit": 0
+    },
+    {
+      "name": "selftest",
+      "ok": true,
+      "exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "path": ".pdlc/reviews/SPEC-0088-bootstrap-cases-prove-the-four.json",
+      "sha256": "f40ca3e85f90303e395d28b4b19393daf68a7219b9894f193c45104ba7f8b96e"
+    },
+    {
+      "path": ".pdlc/verifications/SPEC-0088-bootstrap-cases-prove-the-four.json",
+      "sha256": "22d039c46289db84a895254ea870558919ee27fd96d6ff8c30a05e3b478367dc"
+    },
+    {
+      "path": ".pdlc/verified.json",
+      "sha256": "20d2963fbfb97d8235e8c8b6ce5ab2d0cc3470909de238c0003b634689a9fa39"
+    }
+  ],
+  "attempts": 1,
+  "duration": 37440,
+  "status": "merged",
+  "cycle": "cycle",
+  "patterns": [],
+  "learn": [],
+  "merge_commit": "adae8642ba078c2a4e943389fc6ff00eae461dd2"
+}
