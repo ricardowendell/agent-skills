@@ -354,7 +354,7 @@ regex can reach is the "implemented" in the later spec-status step at **810**.
 r3's first `test` is **42** characters in ("Confirm the stack and test
 command"), and its next `implement` is at **999**. Both prompts still put the
 test step before the implementation step; the assertion is the proxy its `why:`
-says it is, and it was not moved after the draws. Because two of the three red
+says it is, and it was not moved after the draws. Because both red
 draws are an oracle false-fail, the cell cannot support a separator claim: the
 5/5 vs 0/5 in the corpus row is **history** under this oracle, and correcting
 the assertion (case-insensitive, anchored to the test step) is a follow-up with
