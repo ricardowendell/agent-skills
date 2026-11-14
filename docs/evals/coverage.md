@@ -9,7 +9,7 @@ the layout at the time of that run; SPEC-0058 moved the corpus out of the skill.
 | Skill | Cases | Trigger | Manual | Fixture | Evidence recorded |
 | --- | --- | --- | --- | --- | --- |
 | `audit-docs` | 4 | 2 | 0 | tree 1; tree 3 staged via `git.json`; tree 4 drift fixture | case 3: 3/3, skill loaded 3/3 (`why:`, no run dir); case 4: 3/3, defect + intentional evolution + future filtered, no writes (`2026-11-05T08-46-00--audit-docs`) |
-| `bootstrap-project-harness` | 23 | 3 | 1 | trees 1, 2, 3, 5, 7, 9, 10, 11, 14, 15, 16–23; 14 and 15 via `git.json` | case 14: 12/12 re-judged (first pass 9/12 on a reply regex); case 15: 3/3 (`why:`, no run dir). **SPEC-0088:** the skill now names the four recipes in step 8 and checks all five in the audit loop; the stricter oracle measured case 15 at 2/5 with the skill against 0/5 without (both arms 5/5 clean) and case 20 as **unresolved** (its with-skill run is unscored: all five draws stalled; the control passed 0/3 clean draws); `#1` re-screened 1/1 at the same `skillHash 33e34baa…`; counts, dirs and reds in the section below. **History:** re-measured after the Oxlint rename (SPEC-0045, `agentworks/deepseek-v4-1-flash`, five draws), case 14 5/5 and case 15 1/5 (failing `unchanged justfile`) in `2026-11-08T23-32-34--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` (clean, `findings=0`, `isolated=yes`); that 1/5 is superseded, not deleted. Under the corrected SPEC-0084 oracle case 15 is **1/5** with five clean skill draws in `2026-11-13T10-59-24--bootstrap-project-harness` (`findings=0`, `isolated=yes`), control **0/4** passed in `2026-11-13T10-39-23--bootstrap-project-harness--without-skill` (`findings=1` for r1's timeout; r1 also records a contaminated skill read), so the cell is **unresolved** on four clean control draws; the four red skill draws preserve the justfile instead of adding the four recipes (follow-up). Stack review, skill arm: #16 4/4 clean (1 stalled), #17 4/4 clean (1 stalled), #18 5/5, #19 5/5, #20 0/5 on `unchanged biome.json` (the skill merged the four Biome limits; **history**, superseded by SPEC-0084 — the corrected cell is 2/2 valid with the skill against 1/3 valid without, both arms short of five clean draws, so **unresolved**), #21 5/5, #22 5/5, #23 trigger 4/4 clean + 1 contaminated (host read), all in `2026-11-08T21-52-29--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` (dirty: 2 stalls + 1 host read, `isolated=no`). Control: no cell reached five clean draws; #19 reached 2 clean draws and both failed, the other cells 0 clean with 5 contaminated each, in `2026-11-08T22-51-39--bootstrap-project-harness--agentworks-deepseek-v4-1-flash--without-skill` (dirty: 33 skill leaks + 7 host reads, `isolated=no`); the control still read the real install, so every behavioural cell was **unresolved** at that point, not a separator. **#19 is measured without another draw (SPEC-0047):** with-skill `2026-11-09T07-37-44--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` is 5/5 passed and `isolated=yes`; the control `2026-11-09T10-59-41--bootstrap-project-harness--…--without-skill` replays under the current detector (v6) with `node scripts/eval.mjs inspect --leaks` to four clean draws, `deniedDraws=1`: r1 is a **store leak** (SPEC-0052), so the four other draws are the evidentiary base, with 0/4 passed (all four red on `file AGENTS.md`, `file justfile`, `filematch eslint.config.js` and `filematch justfile eslint`) — a **separator** on the rule (5/5 vs 0/4). The stored control `result.json` still records the older v3 contamination (`skillLeaks=1`, `isolated=no`) by design; the replay is the evidence, not the artefact. **SPEC-0086 screening:** the additive companion step leaves #1 at 1/1 in `2026-11-13T18-19-05--bootstrap-project-harness` (`skillHash baa2f48a…`); a land-time one-line prose fix moved the tree past that hash and the re-screens at it were contaminated/stalled, so #1 is stale by a doc-only change with `SKILL.md` unchanged — screening, not a separation claim (section below) |
+| `bootstrap-project-harness` | 23 | 3 | 1 | trees 1, 2, 3, 5, 7, 9, 10, 11, 14, 15, 16–23; 14 and 15 via `git.json` | case 14: 12/12 re-judged (first pass 9/12 on a reply regex); case 15: 3/3 (`why:`, no run dir). **SPEC-0088:** step 8 names the four TypeScript recipes and the audit checklist checks them in the TypeScript block while the shared gate stays `check`/`ci`; the stricter oracle measured case 15 at **4/5 vs 0/5** (both arms 5/5 clean — **separator**) and case 20 as **unresolved** (its last with-skill run is unscored: all five draws stalled; the control passed 0/3 clean draws; not re-measured after the final tree move); `#1` re-screened 1/1 at `skillHash f91268cf…`; counts, dirs and reds in the section below. **History:** re-measured after the Oxlint rename (SPEC-0045, `agentworks/deepseek-v4-1-flash`, five draws), case 14 5/5 and case 15 1/5 (failing `unchanged justfile`) in `2026-11-08T23-32-34--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` (clean, `findings=0`, `isolated=yes`); that 1/5 is superseded, not deleted. Under the corrected SPEC-0084 oracle case 15 is **1/5** with five clean skill draws in `2026-11-13T10-59-24--bootstrap-project-harness` (`findings=0`, `isolated=yes`), control **0/4** passed in `2026-11-13T10-39-23--bootstrap-project-harness--without-skill` (`findings=1` for r1's timeout; r1 also records a contaminated skill read), so the cell is **unresolved** on four clean control draws; the four red skill draws preserve the justfile instead of adding the four recipes (follow-up). Stack review, skill arm: #16 4/4 clean (1 stalled), #17 4/4 clean (1 stalled), #18 5/5, #19 5/5, #20 0/5 on `unchanged biome.json` (the skill merged the four Biome limits; **history**, superseded by SPEC-0084 — the corrected cell is 2/2 valid with the skill against 1/3 valid without, both arms short of five clean draws, so **unresolved**), #21 5/5, #22 5/5, #23 trigger 4/4 clean + 1 contaminated (host read), all in `2026-11-08T21-52-29--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` (dirty: 2 stalls + 1 host read, `isolated=no`). Control: no cell reached five clean draws; #19 reached 2 clean draws and both failed, the other cells 0 clean with 5 contaminated each, in `2026-11-08T22-51-39--bootstrap-project-harness--agentworks-deepseek-v4-1-flash--without-skill` (dirty: 33 skill leaks + 7 host reads, `isolated=no`); the control still read the real install, so every behavioural cell was **unresolved** at that point, not a separator. **#19 is measured without another draw (SPEC-0047):** with-skill `2026-11-09T07-37-44--bootstrap-project-harness--agentworks-deepseek-v4-1-flash` is 5/5 passed and `isolated=yes`; the control `2026-11-09T10-59-41--bootstrap-project-harness--…--without-skill` replays under the current detector (v6) with `node scripts/eval.mjs inspect --leaks` to four clean draws, `deniedDraws=1`: r1 is a **store leak** (SPEC-0052), so the four other draws are the evidentiary base, with 0/4 passed (all four red on `file AGENTS.md`, `file justfile`, `filematch eslint.config.js` and `filematch justfile eslint`) — a **separator** on the rule (5/5 vs 0/4). The stored control `result.json` still records the older v3 contamination (`skillLeaks=1`, `isolated=no`) by design; the replay is the evidence, not the artefact. **SPEC-0086 screening:** the additive companion step leaves #1 at 1/1 in `2026-11-13T18-19-05--bootstrap-project-harness` (`skillHash baa2f48a…`); a land-time one-line prose fix moved the tree past that hash and the re-screens at it were contaminated/stalled, so #1 is stale by a doc-only change with `SKILL.md` unchanged — screening, not a separation claim (section below) |
 | `capture-idea` | 3 | 2 | 0 | trees 1–3 | published matrix: #1 5/5 with the skill; control **unresolved** under v2 (`2026-11-07T08-27-30--capture-idea--agentworks-deepseek-v4-1-flash--without-skill`: 0/0 clean, 5 contaminated — every draw read the install under `/Users/wendell/.agents/skills` (`r1` the directory, the rest the `SKILL.md`)), after v1 clean subsets 0/2, 0/2 and 0/0 (every clean draw failed `status: unprocessed`; dirs `2026-11-06T16-40-32--capture-idea`, `…17-07-09--without-skill`, `…17-23-44…`, `…17-32-50…`, all dirty); #2 trigger 5/5; #3 routing **5/5** with `process-inbox` staged as the declared sibling in `2026-11-06T19-06-50--capture-idea` (v2, `isolated=yes`), replacing the pre-fix 0/4 clean cross-skill-staging record `2026-11-06T16-50-30--capture-idea` (findings=1); re-measured under the enforced boundary (SPEC-0050, `agentworks/deepseek-v4-1-flash`, five draws): #1 is 5/5 clean with the skill (`2026-11-09T12-39-33--capture-idea--agentworks-deepseek-v4-1-flash`, `findings=0 isolated=yes`); the control `2026-11-09T12-41-57--capture-idea--…--without-skill` is 5/5 clean and 1/5 passed under the v5 replay (SPEC-0051, `deniedDraws=2`), the other four red on `filematch docs/inbox/*.md status: unprocessed` — **separator** (5/5 vs 1/5). Its stored `result.json` still records r1 as a v4 `skillLeaks=1` on `/Users/wendell/.config/opencode/skills`; SPEC-0051 re-judged that draw as `denied` (empty listing, content from another file), so the replay is the evidence. See `pipeline-bookends-matrix.md` |
 | `find-blind-spots` | 4 | 2 | 0 | tree 4 | case 4: 3/3, skill loaded 3/3 (`why:`, no run dir) |
 | `groom-backlog` | 7 | 2 | 0 | trees 1, 3, 4, 5 | ablation on 4 fixture cases, 2026-11-05: both arms 4/4; index-first not promoted (tokens +65% on the adversarial case) (`09-32-51`, `09-34-43`, `09-39-15`, `09-43-45`); #2: pre-detector 3/3 with and 3/3 without at `3d38b31` (`2026-11-05T17-09-40--groom-backlog`, `2026-11-05T17-13-34--groom-backlog--without-skill`); re-run under the leak detector at `8777e0b`: with skill 3/3 clean (`2026-11-06T07-53-16--groom-backlog`), without it 0/3 with 2 contaminated — clean control 0/1 (`2026-11-06T07-47-34--groom-backlog--without-skill`), so #2 was unresolved at that point, not a regression case; re-measured under the enforced boundary (SPEC-0050, five draws): the skill arm is 5/5 clean (`2026-11-09T12-50-37--groom-backlog--agentworks-deepseek-v4-1-flash`, `findings=0 isolated=yes`) and the control `2026-11-09T12-55-35--groom-backlog--…--without-skill` is 4/5 clean under the v6 replay (`deniedDraws=2`): r2 is a **store leak** (`evals/groom-backlog/2.md`, the previous `result.json` and prior `2.r*.md` transcripts), so the four other draws are the evidentiary base (4/4 passed) — **non-discriminator** (5/5 vs 5/5). The store is corpus and the read is denied under enforcement (SPEC-0052). The control artefact still records r2 as v4 `skillLeaks=1` for `skills/groom/SKILL.md` and `hostReads=1` for `/Users/wendell/.agents/commands`; SPEC-0051 re-judged it as `denied` because the `cat` returned `No such file or directory`, not the file's content, so the replay is the evidence |
@@ -218,11 +218,15 @@ recipes" and `SKILL.md:45` places `justfile` under **Additive only**, so the
 instruction asked for the four; the end-of-run audit checklist at
 `SKILL.md:432` grepped only `check:` and never saw them. The fix is in the skill:
 step 8 now names `coverage`, `audit`, `build` and `install` as the four recipes
-the template adds beyond a typical project and says each must be present (an
-existing recipe keeps its body), and the checklist runs
-`for r in check coverage audit build install; do grep -qE "^$r:" justfile …`,
-so the gate sees the same five the instruction names. The assertion is not
-weakened.
+the **TypeScript** template adds beyond a typical project and says each must be
+present (an existing recipe keeps its body). The Python template has none of the
+four — `check` runs `pip-audit` and `fresh` is the install — so step 8 says not
+to invent them. The audit checklist keeps `grep -qE "^(check|ci):" justfile` as
+the **shared** gate and runs the
+`for r in check coverage audit build install; do grep -qE "^$r:" justfile …`
+loop only in the **TypeScript/Node** block, so the TS gate sees the same five the
+instruction names without asking a Python bootstrap for recipes its template
+never had. The assertion is not weakened.
 
 **The oracle now proves four.** Case 15 asserts each recipe independently
 (`(^|\n)coverage:`, `(^|\n)audit:`, `(^|\n)build:`, `(^|\n)install:`); a draw
@@ -235,7 +239,8 @@ reads green. `evals/corpus-baseline.json` moves exactly twice: case 15
 `4dec9dd5…b20856` → `745b4725…696007`, case 20 `a49b61a3…ed360` →
 `e18fb81e…9094a0`; every other entry and fixture matches.
 
-Re-measured on 2026-11-13/14 in this worktree (`repoSha c48921a`) with
+Re-measured on 2026-11-14 in this worktree (`repoSha ad86758`,
+`skillHash f91268cf…`) with
 `node scripts/eval.mjs compare bootstrap-project-harness <n> --repeat 5
 --timeout 1200 --root skills`; model `opencode-go/deepseek-v4.1-flash` (config
 default), level `behavior`, concurrency 4, detector `cf2e2e319d975a5b`, five
@@ -244,18 +249,21 @@ draws per arm. The console scorecard prints the case-level aggregate with
 
 | case | arm | run directory | clean | passed | red assertions |
 | --- | --- | --- | --- | --- | --- |
-| #15 | with skill | `2026-11-13T21-45-08--bootstrap-project-harness` | 5/5 | 2/5 (r2, r4) | r1, r3, r5: `filematch justfile (^|\n)coverage:`, `…audit:`, `…build:`, `…install:` |
-| #15 | without skill | `2026-11-13T21-36-29--bootstrap-project-harness--without-skill` | 5/5 | 0/5 | every draw: `file lefthook.yml`, the four recipes, `reply lefthook`; r2 also `unchanged docs-check.mjs` |
+| #15 | with skill | `2026-11-14T07-05-09--bootstrap-project-harness` | 5/5 | 4/5 (r2–r5) | r1: `filematch justfile (^|\n)coverage:`, `…audit:`, `…build:`, `…install:` |
+| #15 | without skill | `2026-11-13T21-36-29--bootstrap-project-harness--without-skill` | 5/5 | 0/5 | every draw: `file lefthook.yml`, the four recipes, `reply lefthook`; r2 also `unchanged docs-check.mjs`; `deniedDraws=4`, `findings=0`, `isolated=yes` |
 | #20 | with skill | `2026-11-13T22-24-04--bootstrap-project-harness` | 0/5 | 0/0 | r1–r5 `infrastructure: stalled` (the runner's single retry stalled too); no assertion evidence, `isolated=unknown`, `findings=5` |
 | #20 | without skill | `2026-11-13T22-03-18--bootstrap-project-harness--without-skill` | 3/5 (r2, r4, r5; r1 contaminated, r3 stalled and contaminated) | 0/3 | `file justfile`, `filematch justfile biome`, the complexity and params rules, the two line rules and their two values; `deniedDraws=4`, `skillLeaks=1`, `isolated=no`, `findings=2` |
 
-**Case 15: `unresolved`, no separator.** With 5/5 clean draws in both arms and
-2/5 passed against 0/5, the skill moved the rate but still fails three of five;
-the three reds are the four recipe assertions, named rather than softened. The
-old SPEC-0084 counts — 1/5 with the skill and 0/4 with the control
+**Case 15: `separator` — 5/5 clean vs 5/5 clean, 4/5 passing against 0/5.** The
+control reached five clean draws and passed none; the skill lost r1 only, and
+that red is the four recipe assertions, named rather than softened. The earlier
+2/5 at the previous tree hash (`2026-11-13T21-45-08--bootstrap-project-harness`,
+`33e34baa…`) is **history** — this spec was never merged and that number was
+never published, so it is not a recomputation of a published figure. The old
+SPEC-0084 counts — 1/5 with the skill and 0/4 with the control
 (`2026-11-13T10-59-24--bootstrap-project-harness` /
 `2026-11-13T10-39-23--bootstrap-project-harness--without-skill`) — stay as
-history and are not recomputed.
+history too and are not recomputed.
 
 **Case 20: `unresolved`, no class.** The with-skill run is `unscored` — all
 five draws were infrastructure — so there is no behavioural evidence for the
@@ -267,14 +275,18 @@ not the 1200 s timeout (the SPEC-0076 finding, unchanged). The control reached
 old 2/2 valid with the skill vs 1/3 valid without
 (`2026-11-13T11-56-32--bootstrap-project-harness` /
 `2026-11-13T11-33-02--bootstrap-project-harness--without-skill`) stays as
-history.
+history. **#20 was not re-measured after the final tree move**: the blocker fix
+took the skill from `33e34baa…` to `f91268cf…`, so the `22-24-04` with-skill run
+is now stale by hash as well as unscored — a stalled draw carries the governed
+hash, but it is not a draw. The cell is not counted among the cells restored by
+measurement.
 
-**`#1` restored.** The F1 edit moved the tree from `913614a6…` to
-`33e34baa…`. `node scripts/eval.mjs run bootstrap-project-harness 1 --repeat 1
---root skills` on 2026-11-13 in `2026-11-13T22-51-07--bootstrap-project-harness`
+**`#1` restored.** The skill edits moved the tree from `913614a6…` to
+`f91268cf…`. `node scripts/eval.mjs run bootstrap-project-harness 1 --repeat 1
+--root skills` on 2026-11-14 in `2026-11-14T07-25-42--bootstrap-project-harness`
 is 1/1 passed and clean (`findings=0 warnings=0 skillLeaks=0 hostReads=0
-deniedDraws=0 isolated=yes`), at the same `skillHash 33e34baa…` the two measured
-cells record, so the screening cell is fresh again and no stale-by-a-doc-only
+deniedDraws=0 isolated=yes`), at the same `skillHash f91268cf…` the measured
+cell records, so the screening cell is fresh again and no stale-by-a-doc-only
 change remains.
 
 ## Discriminating set (issue #5)
@@ -494,13 +506,15 @@ two stale bootstrap cells (`#15`, `#20`), not three. The earlier reading of this
 paragraph said **52**; that was a manual count the published command does not
 reproduce, and it is superseded here.
 
-Eighth run (2026-11-13, after the `SPEC-0088` skill edit and its re-measures):
-**74 cited cells, 49 stale, 3 uncited**. The step-8 and audit-checklist edit
-moved the bootstrap tree from `913614a6…` to `33e34baa…`, which unstaged `#1`
-(51 → 52 stale). The three runs cited above restore every measured bootstrap
-cell at the new hash — `#15` with-skill, `#20` with-skill (a stalled draw still
-carries the governed hash) and the `#1` re-screen — so the count lands at 49,
-two below the pre-spec baseline: `#15` and `#20` are no longer stale, while
+Eighth run (2026-11-14, after the `SPEC-0088` skill edits and their re-measures):
+**74 cited cells, 50 stale, 3 uncited**. The step-8 and audit-checklist edits
+moved the bootstrap tree from `913614a6…` to `f91268cf…`, which unstaged `#1`,
+`#15` and `#20` (49 → 52 stale). `#15` with-skill and `#1` were re-measured at
+the new hash and are fresh; `#20` was **not** re-measured after the final tree
+move, so its last with-skill run (`2026-11-13T22-24-04--bootstrap-project-harness`,
+`33e34baa…`) is stale — not counted among the cells restored by measurement.
+Against the 74 cited / 51 stale at the start of this spec the count is 50:
+`#15` and `#1` are fresh at the new hash, `#20` is stale and unmeasured, and
 `#14`, `#16`–`#19` and `#21`–`#23` keep their older `dd55fd88…` tree. Nothing
 else moves.
 

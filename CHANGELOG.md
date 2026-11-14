@@ -13,9 +13,13 @@ The bootstrap cases prove the four recipes and the four limits.
 
 `bootstrap-project-harness` case 15 was 1/5 because the skill kept the justfile
 instead of adding `coverage`, `audit`, `build` and `install`: step 8 asked for
-them, but the end-of-run audit checklist grepped only `check:`. The skill now
-names the four in step 8 and its checklist loops over `check coverage audit
-build install`, keeping an existing recipe's body. The oracle was not weakened.
+them, but the end-of-run audit checklist grepped only `check:`. Step 8 now names
+the four as the **TypeScript** template's extra recipes and says the Python
+template has none (`check` runs `pip-audit`, `fresh` is the install), so a
+Python bootstrap is not asked to invent them. The shared checklist keeps
+`grep -qE "^(check|ci):" justfile`, and the `check coverage audit build install`
+loop runs in the **TypeScript/Node** block, keeping an existing recipe's body.
+The oracle was not weakened.
 
 Case 15 now asserts each recipe independently and case 20 splits the Biome line
 rules into `noExcessiveLinesPerFunction`/`maxLines": 60` and
@@ -25,19 +29,20 @@ enough. `evals/corpus-baseline.json` moves exactly twice: case 15
 `4dec9dd5…b20856` → `745b4725…696007` and case 20 `a49b61a3…ed360` →
 `e18fb81e…9094a0`.
 
-Re-measured five draws per arm with `--timeout 1200` (`repoSha c48921a`,
+Re-measured five draws per arm with `--timeout 1200` (`repoSha ad86758`,
 `opencode-go/deepseek-v4.1-flash`, detector `cf2e2e319d975a5b`): case 15 is
-**2/5 vs 0/5** with both arms 5/5 clean — `unresolved`, not a separator
-(`2026-11-13T21-45-08--bootstrap-project-harness` /
-`2026-11-13T21-36-29--bootstrap-project-harness--without-skill`); case 20 is
+**4/5 vs 0/5** with both arms 5/5 clean — a **separator**
+(`2026-11-14T07-05-09--bootstrap-project-harness`; the control run is
+`2026-11-13T21-36-29--bootstrap-project-harness--without-skill`). Case 20 is
 **unresolved** — its with-skill run is unscored because all five draws stalled
 at the 120 s watchdog
 (157–469 s per draw over two attempts), while the control reached 3/5 clean and
 passed none (`2026-11-13T22-24-04--bootstrap-project-harness` /
-`2026-11-13T22-03-18--bootstrap-project-harness--without-skill`). The old 1/5
-and 2/2-vs-1/3 stay as history. `#1` was re-screened after the tree moved and is
-1/1 clean at `skillHash 33e34baa…`
-(`2026-11-13T22-51-07--bootstrap-project-harness`).
+`2026-11-13T22-03-18--bootstrap-project-harness--without-skill`); it was not
+re-measured after the final tree move and is stale by hash. The earlier 2/5 and
+the old 1/5 and 2/2-vs-1/3 stay as history, not recomputed. `#1` was re-screened
+after the tree moved and is 1/1 clean at `skillHash f91268cf…`
+(`2026-11-14T07-25-42--bootstrap-project-harness`).
 
 ## [0.9.2] — 2026-11-13
 
