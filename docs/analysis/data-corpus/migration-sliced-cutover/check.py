@@ -62,17 +62,26 @@ def main():
 
     migrated = migrated_order_ids()
 
-    # 1. The mapping key is unique and the slice join does not fan out.
+    # 1. The mapping key is unique and the slice join matches the sliced orders
+    #    exactly: the same order_id, once each. Comparing only the row count
+    #    would pass a load that loses one order and duplicates another.
+    order_ids = [order_id for order_id, _ref, _amount, _placed_on in orders_v2]
     duplicated = pipeline.duplicated_legacy_ids(mapping)
-    if duplicated or len(orders_v2) != len(migrated):
+    if duplicated or order_ids != migrated:
         detail = (
             ", ".join(f"{legacy_id} x{count}" for legacy_id, count in duplicated)
             or "no duplicate legacy_id"
         )
+        extra = len(order_ids) - len(migrated)
+        mismatch = (
+            "; the orders_v2 order_ids do not match the sliced orders"
+            if extra == 0
+            else ""
+        )
         findings.append(
             f"customer_map is not unique on legacy_id: {detail}; the slice join"
-            f" wrote {len(orders_v2)} orders_v2 rows for {len(migrated)} migrated"
-            f" orders ({len(orders_v2) - len(migrated)} extra)"
+            f" wrote {len(order_ids)} orders_v2 rows for {len(migrated)} migrated"
+            f" orders ({extra} extra){mismatch}"
         )
 
     # 2. The cutover is reversible: rollback restores the pre-cutover table.

@@ -1,6 +1,6 @@
 # Data corpus
 
-Seven small, realistic data-pipeline trees and the deterministic oracles that judge
+Eight small, realistic data-pipeline trees and the deterministic oracles that judge
 them, plus the four contract A/B fixtures under `contract-ab/`. The corpus is an
 **instrument**: it exists so a later spec can measure whether a skill sees a data
 defect. The 0.8.3 trees are not skills and are not staged under `evals/`; the
@@ -49,6 +49,9 @@ the defect and the fix without editing a file:
 
 - SQL trees take the sqlite3 parameter `@state` (`staged` or `corrected`).
 - Python trees read `FIXTURE_STATE` (`staged` or `corrected`).
+- `migration-sliced-cutover` also accepts `mapping-fixed` and `cutover-fixed`:
+  each fixes one of its two faults and leaves the other red, so the oracle's
+  independence is a test in `decision.md` rather than a claim.
 
 The negatives have no switch: their only state is the healthy one.
 

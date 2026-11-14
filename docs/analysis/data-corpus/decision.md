@@ -199,7 +199,7 @@ No rate is claimed until that arm is staged. `contract` is different: the offici
 - **B arm:** `unknown` for the same reason.
 - **Decision:** **build new** — provisional: the B arm is not staged, and
   `review-code`/`audit-code-quality` were not measured against these trees.
-- **Next step:** tag the three migration fixtures for the candidate the human gate
+- **Next step:** tag the four migration fixtures for the candidate the human gate
   picks, and stage them with the follow-up measurement.
 
 ### `contract`

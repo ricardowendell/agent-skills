@@ -5,7 +5,7 @@ status: ready
 priority: P1
 task: TASK-82
 created_at: 2026-11-13
-updated_at: 2026-11-13
+updated_at: 2026-11-14
 source_docs:
   - backlog/tasks/task-82 - data-migrate-data-pipeline-com-equivalencia-semantica-e-rollback-issue-17.md
   - docs/analysis/data-corpus/README.md
@@ -29,6 +29,8 @@ files:
 tests:
   - sh -c 'python3 docs/analysis/data-corpus/migration-sliced-cutover/check.py >/dev/null; test $? -eq 1'
   - sh -c 'FIXTURE_STATE=corrected python3 docs/analysis/data-corpus/migration-sliced-cutover/check.py >/dev/null'
+  - sh -c 'FIXTURE_STATE=mapping-fixed python3 docs/analysis/data-corpus/migration-sliced-cutover/check.py >/dev/null; test $? -eq 1'
+  - sh -c 'FIXTURE_STATE=cutover-fixed python3 docs/analysis/data-corpus/migration-sliced-cutover/check.py >/dev/null; test $? -eq 1'
   - sh -c 'python3 docs/analysis/data-corpus/negative-safe-cutover/check.py >/dev/null'
   - sh -c 'test -z "$(find docs/analysis/data-corpus -name __pycache__ -print -quit)"'
   - node scripts/validate-skills.mjs --root skills
@@ -96,7 +98,7 @@ it without writing a fixture first.
   Anything else is a manufactured defect.
 - **F2 — the proofs are recorded.** `README.md` gains the tree in "What is here",
   the runnable block and the requirements, and the "six trees" prose becomes
-  seven; `decision.md` gains the exit-code rows in §1 and the healthy-input row
+  eight; `decision.md` gains the exit-code rows in §1 and the healthy-input row
   in §3. The `migration` section of §4 says the instrument now covers slices,
   duplicate mapping and cutover, and keeps the decision **provisional** — no
   rate, no skill, the B arm still `unknown`.

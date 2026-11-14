@@ -70,11 +70,22 @@ def main():
                 for plan_id, count in pipeline.duplicated_plan_ids(plans)
             )
         )
-    if len(subscriptions_v2) != len(migrated):
+    subscription_ids = [
+        subscription_id
+        for subscription_id, _ref, _tier, _amount, _started_on in subscriptions_v2
+    ]
+    if subscription_ids != migrated:
+        extra = len(subscription_ids) - len(migrated)
+        mismatch = (
+            "; the subscriptions_v2 subscription_ids do not match the sliced"
+            " subscriptions"
+            if extra == 0
+            else ""
+        )
         findings.append(
             "the slice join wrote "
-            f"{len(subscriptions_v2)} subscriptions_v2 rows for {len(migrated)}"
-            " migrated subscriptions"
+            f"{len(subscription_ids)} subscriptions_v2 rows for {len(migrated)}"
+            f" migrated subscriptions ({extra} extra){mismatch}"
         )
     if after_rollback != before_cutover:
         findings.append(
