@@ -22,12 +22,22 @@ The proof is the exit code plus the finding line; the commands are repeated in
 | `join-duplicate-keys` | `@state=corrected` | **0** | `PASS join-duplicate-keys: 4 enriched rows for 4 orders` |
 | `migration-retry-backfill` | `FIXTURE_STATE=staged` | **1** | retry moved the row count 4→8, changed the content hash, backfill left 12 rows for 6 `event_id`s; `event_id is not unique after the backfill: evt-1001, evt-1002, evt-1003, evt-1004` |
 | `migration-retry-backfill` | `FIXTURE_STATE=corrected` | **0** | `PASS migration-retry-backfill: 6 rows, hash 1d15ef89c998785c` |
+| `migration-sliced-cutover` | `FIXTURE_STATE=staged` | **1** | `customer_map is not unique on legacy_id: C-200 x2; the slice join wrote 8 orders_v2 rows for 6 migrated orders (2 extra)`; `rollback did not restore the pre-cutover legacy table: 1 of 7 orders_legacy rows restored; the cutover copied the legacy table after deleting the migrated rows` |
+| `migration-sliced-cutover` | `FIXTURE_STATE=corrected` | **0** | `PASS migration-sliced-cutover: 6 orders in orders_v2 from 3 mapping rows; rollback restored 7 legacy rows` |
+| `migration-sliced-cutover` | `FIXTURE_STATE=mapping-fixed` | **1** | only `rollback did not restore the pre-cutover legacy table: 1 of 7 orders_legacy rows restored; the cutover copied the legacy table after deleting the migrated rows` |
+| `migration-sliced-cutover` | `FIXTURE_STATE=cutover-fixed` | **1** | only `customer_map is not unique on legacy_id: C-200 x2; the slice join wrote 8 orders_v2 rows for 6 migrated orders (2 extra)` |
 | `incompatible-contract` | `FIXTURE_STATE=staged` | **1** | `required column customer_id is missing; the producer renamed or dropped it`; `column customer_ref is not declared by the contract` |
 | `incompatible-contract` | `FIXTURE_STATE=corrected` | **0** | `PASS incompatible-contract: table orders_export matches 4 required column(s)` |
 | `schema-drift-documented` | documented (tree) | **0** | `PASS schema-drift-documented: table orders_export accepts 1 documented additive column(s)` |
 | `schema-drift-documented` | undocumented variant | **1** | `column channel is not declared by the contract` |
 | `negative-healthy` | tree | **0** | `PASS negative-healthy: 3 customer rows, 4 event rows after the retry` |
 | `negative-safe-retry` | tree | **0** | `PASS negative-safe-retry: 6 rows, hash 8310b465261bd950` |
+| `negative-safe-cutover` | tree | **0** | `PASS negative-safe-cutover: 6 subscriptions in subscriptions_v2 from 3 plan rows; rollback restored 7 legacy rows` |
+
+The two `migration-sliced-cutover` mixed states are the independence proof: fixing
+the mapping alone leaves the rollback line red, and fixing the cutover alone
+leaves the duplicated-`legacy_id` line red. The default `staged` state reports
+both; `corrected` reports neither.
 
 The four `contract-ab/` trees added by SPEC-0085 obey the same rule; the exact
 commands are in [`contract-ab/README.md`](contract-ab/README.md) §"The proofs"
@@ -129,18 +139,20 @@ change to the tree invalidates the holdout.
 ## 3. False-positive check (F2)
 
 A contract check only judges a tree that declares that contract, so "healthy"
-means each tree's non-defective state: `corrected` for the three defect trees,
+means each tree's non-defective state: `corrected` for the four defect trees,
 the documented state for `schema-drift-documented`, and the staged state for the
-two negatives. Every run below returned exit 0 with zero `FAIL` lines.
+three negatives. Every run below returned exit 0 with zero `FAIL` lines.
 
 | Check | Healthy input | Finding lines |
 | --- | --- | --- |
 | `join-duplicate-keys/check.sql` | `@state=corrected` | 0 |
 | `migration-retry-backfill/check.py` | `FIXTURE_STATE=corrected` | 0 |
+| `migration-sliced-cutover/check.py` | `FIXTURE_STATE=corrected` | 0 |
 | `incompatible-contract/check.py` | `FIXTURE_STATE=corrected` | 0 |
 | `schema-drift-documented/check.py` | tree's documented contract | 0 |
 | `negative-healthy/check.sql` | staged tree | 0 |
 | `negative-safe-retry/check.py` | staged tree | 0 |
+| `negative-safe-cutover/check.py` | tree | 0 |
 
 No check manufactured a defect on the healthy state of its own capability.
 
@@ -174,14 +186,20 @@ No rate is claimed until that arm is staged. `contract` is different: the offici
 
 - **Evidence:** `migration-retry-backfill` fails after a retry (4→8 rows, content
   hash changed) and a backfill (12 rows for 6 events); the corrected loader is
-  idempotent (4→4→6). `negative-safe-retry` accepts an upsert loader and
-  `negative-healthy` accepts a correct incremental load, both with zero findings.
-- **Gap shown:** retry/backfill idempotency is measurable by an oracle and is not
-  covered by an existing skill.
+  idempotent (4→4→6). `migration-sliced-cutover` fails on a duplicated
+  `legacy_id` (`C-200` twice, 8 `orders_v2` rows for 6 migrated orders) and on a
+  cutover whose rollback restores 1 of 7 legacy rows; the corrected state passes.
+  `negative-safe-retry` accepts an upsert loader and `negative-safe-cutover`
+  accepts a sliced migration whose backup precedes the delete, both with zero
+  findings; `negative-healthy` accepts a correct incremental load with zero
+  findings.
+- **Gap shown:** retry/backfill idempotency, sliced migration, a duplicated
+  mapping that fans out the join, and a reversible cutover are all measurable by
+  an oracle and are not covered by an existing skill.
 - **B arm:** `unknown` for the same reason.
 - **Decision:** **build new** — provisional: the B arm is not staged, and
   `review-code`/`audit-code-quality` were not measured against these trees.
-- **Next step:** tag the two migration fixtures for the candidate the human gate
+- **Next step:** tag the three migration fixtures for the candidate the human gate
   picks, and stage them with the follow-up measurement.
 
 ### `contract`
@@ -209,7 +227,7 @@ No rate is claimed until that arm is staged. `contract` is different: the offici
 ### `review/ops`
 
 - **Evidence:** none in this slice. No fixture asks a reviewer/ops skill to judge
-  a data pipeline; the two negatives show that checks stay silent on healthy
+  a data pipeline; the negatives show that checks stay silent on healthy
   pipelines, which is not evidence that a review capability is missing.
 - **Gap shown:** none. `unknown` evidence is not a zero-finding result.
 - **B arm:** `unknown`.

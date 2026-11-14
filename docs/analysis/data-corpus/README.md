@@ -1,6 +1,6 @@
 # Data corpus
 
-Six small, realistic data-pipeline trees and the deterministic oracles that judge
+Seven small, realistic data-pipeline trees and the deterministic oracles that judge
 them, plus the four contract A/B fixtures under `contract-ab/`. The corpus is an
 **instrument**: it exists so a later spec can measure whether a skill sees a data
 defect. The 0.8.3 trees are not skills and are not staged under `evals/`; the
@@ -16,10 +16,12 @@ are in [`ab-cases.md`](ab-cases.md).
 | --- | --- | --- | --- |
 | `join-duplicate-keys` | defect | `join/quality` | 1 |
 | `migration-retry-backfill` | defect | `migration` | 1 |
+| `migration-sliced-cutover` | defect | `migration` | 1 |
 | `incompatible-contract` | defect, **holdout** | `contract` | 1 |
 | `schema-drift-documented` | documented drift (must pass) | `contract` | 0 |
 | `negative-healthy` | negative | `join/quality`, `migration` | 0 |
 | `negative-safe-retry` | negative | `migration` | 0 |
+| `negative-safe-cutover` | negative | `migration` | 0 |
 
 The four contract A/B fixtures sit beside these, in
 [`contract-ab/`](contract-ab/README.md):
@@ -53,7 +55,7 @@ The negatives have no switch: their only state is the healthy one.
 ## Requirements
 
 - `sqlite3` for `join-duplicate-keys` and `negative-healthy`.
-- `python3`, standard library only, for the other four.
+- `python3`, standard library only, for the other six.
 - No network, no credential, no external data. Every input is embedded in the
   pipeline and lives in memory. A check writes nothing into the tree.
 
@@ -75,6 +77,11 @@ python3 docs/analysis/data-corpus/migration-retry-backfill/check.py        # exi
 FIXTURE_STATE=corrected \
   python3 docs/analysis/data-corpus/migration-retry-backfill/check.py      # exit 0
 
+# migration-sliced-cutover: defect, then fixed
+python3 docs/analysis/data-corpus/migration-sliced-cutover/check.py        # exit 1
+FIXTURE_STATE=corrected \
+  python3 docs/analysis/data-corpus/migration-sliced-cutover/check.py      # exit 0
+
 # incompatible-contract (holdout): defect, then fixed
 python3 docs/analysis/data-corpus/incompatible-contract/check.py           # exit 1
 FIXTURE_STATE=corrected \
@@ -95,6 +102,7 @@ sqlite3 :memory: -bail \
   ".read docs/analysis/data-corpus/negative-healthy/pipeline.sql" \
   ".read docs/analysis/data-corpus/negative-healthy/check.sql"             # exit 0
 python3 docs/analysis/data-corpus/negative-safe-retry/check.py             # exit 0
+python3 docs/analysis/data-corpus/negative-safe-cutover/check.py           # exit 0
 
 # contract A/B fixtures: see contract-ab/README.md for the full proof set
 python3 docs/analysis/data-corpus/contract-ab/incompatible-staged/check.py   # exit 1

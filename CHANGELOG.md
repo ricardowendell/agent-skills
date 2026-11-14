@@ -7,6 +7,22 @@ project uses [Semantic Versioning](https://semver.org/). The artifact is the set
 of skills plus the evidence that backs them, so a version is a claim: which
 skills, which cases, and which published measurements.
 
+## [Unreleased]
+
+The migration instrument covers slices, a duplicated mapping and a reversible
+cutover.
+
+`docs/analysis/data-corpus/migration-sliced-cutover/` is a new defect tree:
+`orders_legacy` migrates to `orders_v2` in two date slices through
+`customer_map`, then cuts over with the legacy table kept for rollback. The
+`staged` state fails on two independent faults — a replayed mapping chunk leaves
+`C-200` with two rows and the slice join writes 8 `orders_v2` rows for 6 migrated
+orders, and the cutover copies the legacy table after deleting the migrated rows
+so `rollback` restores 1 of 7 rows. `FIXTURE_STATE=corrected` passes. The
+negative `docs/analysis/data-corpus/negative-safe-cutover/` runs the same shape
+on subscriptions and passes. The corpus index and `decision.md` record the exit
+codes; the `migration` decision stays provisional, with no skill and no rate.
+
 ## [0.9.3] — 2026-11-14
 
 The bootstrap cases prove the four recipes and the four limits.
