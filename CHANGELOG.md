@@ -7,6 +7,43 @@ project uses [Semantic Versioning](https://semver.org/). The artifact is the set
 of skills plus the evidence that backs them, so a version is a claim: which
 skills, which cases, and which published measurements.
 
+## [Unreleased]
+
+The generated prompt asks for the test first, and the run shows it red.
+
+`write-implementation-prompt`'s Operations default now puts the failing test
+before the implementation, names the command and the "run it and see it fail"
+step, and states the exception for a spec-marked non-testable change; Norms
+states the one-test-per-AC-or-unit pyramid and Verification names the red run.
+No section or artifact field was added. Case 1 gains the three shape assertions
+(its `fieldsSha256` moves `040c0e38…` → `8564c258…`; no other baseline entry
+moves), and `implement-from-prompt` case 13 stages a five-file fixture whose
+prompt artifact is already test-first.
+
+Measured 2026-11-14 at `repoSha c69a32e` with `--repeat 5 --root skills`,
+`opencode-go/deepseek-v4.1-flash`, detector `cf2e2e319d975a5b`:
+
+- `write-implementation-prompt` #1: **3/5 vs 0/5**, both arms clean. The control
+  writes none of the required sections; two skill draws fail only the
+  bounded-window assertion because scaffolding steps precede the test step — the
+  limit is recorded in the `why:`, and the old 5/5 stays as history.
+- `implement-from-prompt` #13: **5/5 vs 5/5** — a non-discriminator on its
+  assertions — while the transcript signature is test-first 5/5 and
+  red-before-implementation **5/5 in both arms**: the new-shape artifact alone
+  produces the red step, with no change to `implement-from-prompt`.
+
+`scripts/lib/tdd-signature.mjs` (with `tdd-signature.test.mjs`) and
+`scripts/check-tdd-signature.mjs` read a stored transcript per draw. The reader
+counts a red run from the transcript the agent saw when a pipeline or `echo`
+masked the shell exit; the strict shell-exit reading (4/5 vs 1/5) is recorded in
+`docs/evals/coverage.md` beside the published 5/5 vs 5/5. #2, #4, #5 and #6 are
+stale by the generator edit and were not re-measured.
+
+Run dirs: `2026-11-14T09-20-09--write-implementation-prompt`,
+`2026-11-14T09-17-19--write-implementation-prompt--without-skill`,
+`2026-11-14T09-26-38--implement-from-prompt`,
+`2026-11-14T09-23-39--implement-from-prompt--without-skill`.
+
 ## [0.9.4] — 2026-11-14
 
 The migration instrument covers slices, a duplicated mapping and a reversible

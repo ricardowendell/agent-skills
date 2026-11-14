@@ -24,9 +24,9 @@ const toolUse = (tool, input, metadata = undefined) => ({
   part: { tool, state: { status: "completed", input, metadata } },
 })
 
-const shell = (command, exit) => ({
+const shell = (command, exit, output = "") => ({
   type: "tool_use",
-  part: { tool: "shell", state: { status: "completed", input: { command }, metadata: { metadata: { exit } } } },
+  part: { tool: "shell", state: { status: "completed", input: { command }, output, metadata: { metadata: { exit } } } },
 })
 
 const edit = (path, additions) => toolUse("edit", { path, oldString: "old", newString: "new" }, { metadata: { files: [{ file: path, additions }] } })
@@ -63,6 +63,41 @@ test("the TDD pattern is red before the source and green after it", () => {
   assert.deepEqual(result.sourceFiles, ["src/index.js"])
   assert.deepEqual(result.added, { test: 3, source: 3 })
   assert.deepEqual(result.testRuns.map((run) => run.failed), [true, false])
+})
+
+test("a piped or echoed test run is red from the output the wrapper kept", () => {
+  const result = signature(
+    transcript([
+      write("test/slug.test.js", 'import { slugify } from "../src/index.js"\n'),
+      shell("node --test 2>&1 | tail -30", 0, "ℹ tests 1\nℹ pass 0\nℹ fail 1\n✖ failing tests:\n  'test failed'\n"),
+      edit("src/index.js", 4),
+    ]),
+  )
+  assert.equal(result.redBeforeImplementation, true, "the pipeline's exit 0 must not hide the runner's red")
+  assert.deepEqual(result.testRuns.map((run) => [run.exit, run.failed]), [[0, true]])
+})
+
+test("an explicit EXIT marker is the test's status, not the echo's", () => {
+  const result = signature(
+    transcript([
+      write("test/slug.test.js", "line\n"),
+      shell('node --test 2>&1; echo "EXIT=$?"', 0, "ℹ pass 0\nℹ fail 1\nEXIT=1\n"),
+      edit("src/index.js", 1),
+    ]),
+  )
+  assert.equal(result.redBeforeImplementation, true)
+  assert.deepEqual(result.testRuns.map((run) => run.failed), [true])
+})
+
+test("a green run that mentions fail 0 is not red", () => {
+  const result = signature(
+    transcript([
+      write("test/slug.test.js", "line\n"),
+      shell("node --test 2>&1 | tail -5", 0, "ℹ pass 1\nℹ fail 0\nEXIT=0\n"),
+      edit("src/index.js", 1),
+    ]),
+  )
+  assert.equal(result.redBeforeImplementation, false)
 })
 
 test("lines added are counted per class from edits and writes", () => {

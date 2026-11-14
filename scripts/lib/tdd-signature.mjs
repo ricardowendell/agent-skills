@@ -104,6 +104,24 @@ function exitOf(state) {
   return null
 }
 
+// A runner is routinely piped (`node --test | tail`, `node --test; echo $?`),
+// so the shell tool's exit is the last pipeline element's, not the test's. The
+// transcript still records the verdict, and this reader must not turn a red run
+// into a green one just because the wrapper masked its status. The explicit
+// `EXIT=<n>` marker wins; then the runner's own failure summary; then the tool
+// exit.
+function failedRun(output, exit) {
+  const text = String(output ?? "")
+  const markers = [...text.matchAll(/(?:^|\n)\s*EXIT=(-?\d+)\s*(?=\n|$)/g)]
+  if (markers.length) return Number(markers[markers.length - 1][1]) !== 0
+  const failCounts = [...text.matchAll(/(?:^|\n)\s*ℹ fail (\d+)/g)]
+  if (failCounts.length) return Number(failCounts[failCounts.length - 1][1]) > 0
+  if (/(?:^|\n)\s*✖ failing tests:/m.test(text)) return true
+  if (/(?:^|\n)\s*'test failed'/m.test(text)) return true
+  if (/(?:^|\n)\s*FAIL\b/m.test(text)) return true
+  return exit !== null && exit !== 0
+}
+
 function isMutation(tool) {
   return tool === "write" || tool === "edit"
 }
@@ -133,7 +151,8 @@ export function signature(transcript) {
       const command = String(state.input?.command ?? "")
       if (!TEST_COMMAND.test(command)) return
       const exit = exitOf(state)
-      testRuns.push({ index, command: command.trim(), exit, failed: exit !== null && exit !== 0 })
+      const output = state.output ?? state.metadata?.output ?? ""
+      testRuns.push({ index, command: command.trim(), exit, failed: failedRun(output, exit) })
     }
   })
 

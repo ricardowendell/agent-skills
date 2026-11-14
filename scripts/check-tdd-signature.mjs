@@ -55,7 +55,7 @@ function main(argv) {
     return 0
   }
   const json = argv.includes("--json")
-  const dirs = argv.filter((a) => !a.startsWith("--")).map(resolve)
+  const dirs = argv.filter((a) => !a.startsWith("--")).map((a) => resolve(a))
 
   const report = []
   let unreadable = false
