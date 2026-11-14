@@ -1,7 +1,7 @@
 ---
 id: SPEC-0089
 title: The migration fixture covers slices, duplicate mapping and a reversible cutover
-status: ready
+status: implemented
 priority: P1
 task: TASK-82
 created_at: 2026-11-13
