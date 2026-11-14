@@ -244,8 +244,10 @@ Re-measured on 2026-11-14 in this worktree (`repoSha ad86758`,
 `node scripts/eval.mjs compare bootstrap-project-harness <n> --repeat 5
 --timeout 1200 --root skills`; model `opencode-go/deepseek-v4.1-flash` (config
 default), level `behavior`, concurrency 4, detector `cf2e2e319d975a5b`, five
-draws per arm. The console scorecard prints the case-level aggregate with
-`repetitions` dropped, so the counts below come from each `result.json`.
+draws per arm. The control arm was reused from `2026-11-13T21-36-29…`: it
+stages no skill, so the tree edit does not change its identity. The console
+scorecard prints the case-level aggregate with `repetitions` dropped, so the
+counts below come from each `result.json`.
 
 | case | arm | run directory | clean | passed | red assertions |
 | --- | --- | --- | --- | --- | --- |
@@ -509,7 +511,7 @@ reproduce, and it is superseded here.
 Eighth run (2026-11-14, after the `SPEC-0088` skill edits and their re-measures):
 **74 cited cells, 50 stale, 3 uncited**. The step-8 and audit-checklist edits
 moved the bootstrap tree from `913614a6…` to `f91268cf…`, which unstaged `#1`,
-`#15` and `#20` (49 → 52 stale). `#15` with-skill and `#1` were re-measured at
+`#15` and `#20` again (49 → 52 stale). `#15` with-skill and `#1` were re-measured at
 the new hash and are fresh; `#20` was **not** re-measured after the final tree
 move, so its last with-skill run (`2026-11-13T22-24-04--bootstrap-project-harness`,
 `33e34baa…`) is stale — not counted among the cells restored by measurement.
