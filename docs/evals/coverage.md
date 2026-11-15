@@ -435,6 +435,16 @@ the repository's implementation-first artifact
 `ce940dfa59a24b9ad1ea57e3a4b769d890bb0208d079b703b80c375147e705e6`; every other
 entry is untouched and `corpus.test.mjs` is green.
 
+**The last digest move is the `why:` alone.** The fourth value is the provenance
+sentence above and nothing the run graded: the move `73df4641…` → `ce940dfa…`
+leaves `n`, `title`, `prompt` and `assert` byte-identical to the measured case.
+The `why:` never reaches the agent (`scripts/lib/evals/parse.mjs:23`) and does
+not enter `gradingHash`, which is `{gate, assert}` over the `(kind, arg)` pairs
+(`scripts/lib/evals/cache.mjs:94-96`), so the identity of the
+`2026-11-15T02-11-01--write-implementation-prompt` run — `promptHash 4ac94dfc…`,
+`fixtureHash 5157bf5f…`, the same six assertions — is unchanged and the 5/5
+stands.
+
 **The 80-character cap was the same defect one level down.** The first version of
 the anchor kept a `[^\n]{0,80}` window between the test token and the red state,
 and it read **4/5 vs 0/5** (`2026-11-15T01-58-03--write-implementation-prompt` /

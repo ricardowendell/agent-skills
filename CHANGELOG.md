@@ -26,7 +26,12 @@ r4 of the first re-measure, and the implementation-first fixture
 which fails both. Case 1's `fieldsSha256` is the only baseline entry that moves,
 `8564c2587b690b953c13453aa0f816239ff39a55443572c4f262ca62f5e6f652` →
 `ce940dfa59a24b9ad1ea57e3a4b769d890bb0208d079b703b80c375147e705e6`; every other
-entry is untouched. No skill, fixture, runner or other case changed.
+entry is untouched. The last move of that digest, `73df4641…` → `ce940dfa…`, is
+the provenance sentence alone: the `why:` never reaches the agent
+(`scripts/lib/evals/parse.mjs:23`) and is not part of `gradingHash`
+(`{gate, assert}`, `scripts/lib/evals/cache.mjs:94-96`), so the run's identity
+(`promptHash 4ac94dfc…`, `fixtureHash 5157bf5f…`, the same assertions) and its
+5/5 are unchanged. No skill, fixture, runner or other case changed.
 
 The first version of the anchor kept an 80-character cap after the test token and
 read **4/5 vs 0/5**; its one red was the same defect one level down — r4 is
