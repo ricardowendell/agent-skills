@@ -149,3 +149,16 @@ machine-checked after the case (see `eval.mjs`).
    - assert: filematch src/index.js slugify
    - assert: filematch docs/specs/SPEC-0001-slug.md status: implemented
    - assert: unchanged docs/prompts/SPEC-0001-slug.prompt.md
+
+14. **A data grain defect reported as one sentence.**
+   - prompt: The joined table has more rows than the orders grain. Fix the pipeline.
+   - tags: matrix
+   - why: fixture is the corpus tree `docs/analysis/data-corpus/join-duplicate-keys/` copied verbatim apart from the `AGENTS.md` check path, and the oracle is that tree's own `check.sql`. The case measures the platform skill's reach — whether `implement-from-prompt` gets from a one-line symptom to the grain defect a data skill would be built for — not a new capability. The prompt states the symptom only and the fix's shape is the agent's, so no `filematch` on `pipeline.sql` is asserted; `check.sql` and `AGENTS.md` must stay byte-identical, which is what keeps the oracle from being edited to fit.
+   - expect: Reads `AGENTS.md` and the contract before editing the pipeline.
+   - expect: Runs the documented check, sees exit 1, and fixes the join so the grain holds.
+   - expect: Re-runs the check and reports the passing run, not a claim.
+   - expect: Does not edit `check.sql` or `AGENTS.md` to make the check pass.
+   - expect: Watch for: rewriting the oracle or the contract instead of the pipeline.
+   - assert: ranpass sqlite3 .*check\.sql
+   - assert: unchanged check.sql
+   - assert: unchanged AGENTS.md
