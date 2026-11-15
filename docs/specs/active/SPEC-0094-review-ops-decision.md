@@ -146,3 +146,27 @@ and — only in the `extend` branch — one reference file plus one line in
 ## Queue note (2026-11-15)
 
 Both screens merged (2026-11-15): the join screen decided `do not add`, the migration screen decided `build` on a deliverable-level red. This spec reads those results and is now `ready`.
+
+## Results
+
+The decision is **do not add** for review/ops, read from the two screens this
+queue already merged — no draw was bought and no number recomputed. In
+`join/quality` the control fixed the grain defect in **5/5** clean draws
+(`2026-11-15T13-16-31--implement-from-prompt--without-skill`) against **3/5**
+scored for the staged skill arm (`2026-11-15T13-21-22--implement-from-prompt`);
+`migration` scored **1/5** with the skill
+(`2026-11-15T14-06-13--implement-from-prompt`) against **2/5** without
+(`2026-11-15T13-56-31--implement-from-prompt--without-skill`), with **10/10**
+draws re-pointing the fixture state and **0/10** touching the fault body.
+
+The join half is reached without a skill, so `extend review-code` has no measured
+delta for grain/cardinality; the migration half is a builder gap whose screen has
+no rate and is already owned by the `build` recorded in the `migration` section
+(`TASK-82`); `compose` is contradicted by the 3/5 and 1/5 skill arms; and one
+builder screen with no rate cannot underwrite a new review skill. F2 therefore
+changed nothing outside the decision — no `references/data-review.md`, no
+`SKILL.md` line, no new skill — and the two `review-code` paths declared in
+`files:` stay untouched, which `spec-check` reports as warnings, not errors.
+`docs/analysis/data-corpus/decision.md` §4 carries the counts, the dirs and the
+old `do not add` as history; `docs/evals/coverage.md` carries both screens and
+the decision. `TASK-84` closes on this negative result.

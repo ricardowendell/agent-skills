@@ -9,6 +9,25 @@ skills, which cases, and which published measurements.
 
 ## [Unreleased]
 
+`review/ops` is decided: **do not add** a review/ops skill or a `review-code`
+data reference, read from the two composition screens already measured.
+
+The join screen reaches the grain fault without a skill — the control fixed it in
+**5/5** clean draws (`2026-11-15T13-16-31--implement-from-prompt--without-skill`)
+against **3/5** scored for the staged skill arm
+(`2026-11-15T13-21-22--implement-from-prompt`) — and the migration screen
+separates neither arm: **1/5** with the skill
+(`2026-11-15T14-06-13--implement-from-prompt`) against **2/5** without
+(`2026-11-15T13-56-31--implement-from-prompt--without-skill`), with **10/10**
+draws re-pointing the fixture state and **0/10** touching the fault body. The gap
+is narrower than issue #19 assumed: the join half is reached by the model, and
+the migration half is a builder gap already owed by the `build` in
+`docs/analysis/data-corpus/decision.md` §4 (`TASK-82`). `compose` is contradicted
+by the 3/5 and 1/5 skill arms; `extend review-code` would load a reference for
+every code review with no measured delta. No draw was bought, no number
+recomputed, and no skill file changes; `docs/evals/coverage.md` cites both screens
+under the decision.
+
 `migration` is decided: **build** a migration skill, measured on the composition
 arm.
 

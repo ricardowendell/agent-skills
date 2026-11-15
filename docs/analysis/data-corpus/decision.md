@@ -6,8 +6,9 @@
 - **Status:** the corpus and its deterministic oracles are proved. The contract
   capability has a staged B arm and a paid A/B measurement (section 7);
   `join/quality` and `migration` have paid composition measurements (section 4)
-  that decide them — `do not add` and `build` respectively; `review/ops` remains
-  `unknown` with no draw. No skill is created by this memo.
+  that decide them — `do not add` and `build` respectively; `review/ops` is
+  `do not add`, read from those two screens rather than from a draw of its own.
+  No skill is created by this memo.
 
 This memo records what the instrument shows, freezes the holdout, and names the
 decision per capability. It does not create a skill.
@@ -386,14 +387,53 @@ declared limit (section 6), not a thing to edit after the draws.
 
 ### `review/ops`
 
-- **Evidence:** none in this slice. No fixture asks a reviewer/ops skill to judge
-  a data pipeline; the negatives show that checks stay silent on healthy
-  pipelines, which is not evidence that a review capability is missing.
-- **Gap shown:** none. `unknown` evidence is not a zero-finding result.
-- **B arm:** `unknown`.
-- **Decision:** **do not add**. Nothing in this corpus supports a new
-  review/ops skill. Revisit only if a pipeline-review fixture is groomed and
-  shows a gap.
+- **Evidence:** measured, from the two composition screens this corpus already
+  bought (2026-11-15) — no new draw. `join/quality` (§4 above): the control
+  fixed the duplicated-key join from the one-line symptom in **5/5** clean draws
+  (`2026-11-15T13-16-31--implement-from-prompt--without-skill`), while the
+  staged `implement-from-prompt` arm scored **3/5** and edited the pipeline in
+  4/5 (`2026-11-15T13-21-22--implement-from-prompt`; r3 missed the load gate,
+  r5 left `pipeline.sql` untouched). `migration` (§4 above): neither arm fixed
+  the two faults — **1/5** with the skill
+  (`2026-11-15T14-06-13--implement-from-prompt`) against **2/5** without
+  (`2026-11-15T13-56-31--implement-from-prompt--without-skill`) — and **10/10**
+  draws re-pointed the fixture's default state while **0/10** touched
+  `connect`, `load_mapping` or `cutover`. Both pairs are clean and
+  `isolated=yes`; the counts are the ones published in §4, quoted here, not
+  recomputed.
+- **Gap shown:** the narrower one. The join screen passes for the model: the
+  grain/cardinality fault is reached without a skill, so a reviewer reference
+  adds nothing measured on that dimension. The migration screen fails for both
+  arms, but it is a **builder** screen — the prompt is "The migration is failing
+  its contract. Fix it." — whose oracle cannot separate a fix from a state flip
+  (§4, "the limit this oracle has"). It measures that the platform does not
+  reach the migration faults, not that a reviewer misses them. That gap already
+  has an owner: the `build` in §4 `migration`, whose follow-up owes the
+  staged-only copy as its first cell.
+- **B arm:** `unknown` for both screens (dbt Labs / Databricks skills not staged),
+  the same limit §4 records for `join/quality` and `migration`.
+- **Decision:** **do not add**. No review/ops skill is created and `review-code`
+  is not extended. The options that would add something fail on their own counts,
+  not on preference. `compose` needs the platform path to be the route: the
+  staged skill arm is **3/5** on the join screen and **1/5** on the migration
+  one, so it supplies no route either. `extend review-code` would add a reference
+  for grain/cardinality — the one dimension the control reaches **5/5** without a
+  skill — and a pointer for migration/idempotency/cutover, where the only
+  measurement is a builder screen with **no rate**; a reference without a case is
+  a pointer, not a claim (SPEC-0094's rule), and it would load on every
+  code review with no measured delta behind it. `build` for review/ops is not
+  what the migration counts underwrite: they underwrite the migration
+  capability §4 already decided, and a screen with no rate cannot carry a
+  second, review-shaped skill. The old wording — **do not add**: "Nothing in this
+  corpus supports a new review/ops skill. Revisit only if a pipeline-review
+  fixture is groomed and shows a gap." — is kept as history: the corpus now has
+  the closest evidence it can buy without a new draw (one fix screen per tree),
+  and neither shows a review-shaped gap.
+- **Next step:** no review/ops skill and no `review-code` data reference is
+  authored; `TASK-84` closes on this negative result. The one measured gap
+  (migration) stays with `TASK-82`'s `build` follow-up. Reopening the question
+  needs a review-shaped case — a diff to judge, not a pipeline to fix — measured
+  against `review-code`, with a count that separates the arms.
 
 ## 5. What this memo does not decide
 
