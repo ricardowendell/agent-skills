@@ -162,13 +162,15 @@ case 15 asks for the failing contract in one sentence. Five draws per arm at
 (`2026-11-15T14-06-13--implement-from-prompt`) against **2/5** without
 (`2026-11-15T13-56-31--implement-from-prompt--without-skill`), both clean and
 `isolated=yes`. The limit is measured, not assumed: the tree's default state is
-the defect switch, 0/5 skill draws touched `fixes()`, and the three scored draws
-greened the check through the tree's own `corrected` branch. Per AC4 the failed
-skill arm decides **build**; `docs/analysis/data-corpus/decision.md` §4 carries
-the counts, the reds and the provisional sentence as history, and
-`docs/evals/coverage.md` cites both run dirs. The follow-up owes a staged-only
-copy of the tree as its first cell. No oracle change was made after the first
-draw.
+the defect switch, so **10/10** draws re-pointed it (9 on `state()`'s default,
+the control's r1 on `fixes()`'s `staged` line) and **0/10** touched `connect`,
+`load_mapping` or `cutover`; the three scored draws ran the tree's own
+`corrected` branch. The cell is a screen: red for the deliverable, no rate, no
+separator. Per AC4 the failed skill arm decides **build**;
+`docs/analysis/data-corpus/decision.md` §4 carries the counts, the reds and the
+provisional sentence as history, and `docs/evals/coverage.md` cites both run
+dirs. The follow-up owes a staged-only copy of the tree as its first cell. No
+oracle change was made after the first draw.
 
 ## Corrections during implementation
 
@@ -187,9 +189,9 @@ default `staged` run exits 1 with both findings before the fix; `corrected` exit
 assertions in F1. Two alternate forms were rejected without being measured:
 dropping `unchanged AGENTS.md` (it would have read 4/5 with the skill and 5/5
 without, because every one of those greens was a draw that had re-pointed the
-default at the tree's `corrected` branch) and asserting `FIXTURE_STATE=staged`
-in the invocation (the literal-invocation defect SPEC-0092 already recorded, and
-it does not repair the switch).
+fixture state at the tree's `corrected` branch) and asserting
+`FIXTURE_STATE=staged` in the invocation (the literal-invocation defect SPEC-0092
+already recorded, and it does not repair the switch).
 
 **F2/F3 — the measured limit, carried into the decision.** The composition arm
 scores 1/5 with the skill and 2/5 without, both clean and `isolated=yes`
@@ -197,11 +199,11 @@ scores 1/5 with the skill and 2/5 without, both clean and `isolated=yes`
 `2026-11-15T13-56-31--implement-from-prompt--without-skill`, `repoSha 5588b08`).
 The reds and the counts are in the memo §4 and the coverage section. The
 finding that decides how the numbers are read: the tree's default state is the
-defect switch, so **0/5** skill draws touched `fixes()` while 5/5 changed the
-default, and the three scored draws across both arms greened the documented
-command by running the tree's own `corrected` branch. That is enough for the
-`build` the AC4 rule names when the skill arm fails, and not enough to claim a
-rate for the capability: the follow-up's first cell must be a staged-only copy
-of `migration-sliced-cutover` (no `corrected` branch, no state switch), so a
-draw cannot green the check by flipping the default.
+defect switch, so **10/10** draws re-pointed it and **0/10** touched `connect`,
+`load_mapping` or `cutover`, and the three scored draws across both arms greened
+the documented command by running the tree's own `corrected` branch. That is
+enough for the `build` the AC4 rule names when the skill arm fails, and not
+enough to claim a rate for the capability: the follow-up's first cell must be a
+staged-only copy of `migration-sliced-cutover` (no `corrected` branch, no state
+switch), so a draw cannot green the check by flipping the default.
 

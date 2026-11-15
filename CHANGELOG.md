@@ -26,12 +26,13 @@ Five draws per arm on 2026-11-15 at `repoSha 5588b08`
 `isolated=yes`. Four of the five skill reds are `unchanged AGENTS.md` and one is
 also `ranpass`; the control's reds are one `unchanged AGENTS.md`, one
 `ranpass` with the doc edit, and one `ranpass` alone. The limit is named: the
-tree's default state is the defect switch, so **0/5** skill draws touched
-`fixes()` — nine of ten draws changed which state is the default, and the three
-that scored did so by running the tree's own `corrected` branch. The cell is a
-red for the capability with no separator claim; `docs/analysis/data-corpus/decision.md`
-§4 moves from `build new (provisional)` to `build`, measured, keeps the old
-sentence as history, and owes the staged-only copy as the follow-up's first cell.
+tree's default state is the defect switch, so **10/10** draws re-pointed it (9 on
+`state()`'s default, the control's r1 on `fixes()`'s `staged` line) and **0/10**
+touched `connect`, `load_mapping` or `cutover` — the three scored draws ran the
+tree's own `corrected` branch. The cell is a **screen: red for the deliverable,
+no rate and no separator**; `docs/analysis/data-corpus/decision.md` §4 moves
+from `build new (provisional)` to `build`, measured, keeps the old sentence as
+history, and owes the staged-only copy as the follow-up's first cell.
 
 No oracle change was made after the first draw. Two forms were considered and
 rejected unmeasured: dropping `unchanged AGENTS.md` would have read 4/5 with the

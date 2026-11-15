@@ -273,13 +273,14 @@ apply unchanged; n=5, as everywhere, does not exclude a small effect.
 - **Composition arm:** measured — SPEC-0093 staged `migration-sliced-cutover` as
   `implement-from-prompt` case 15 and ran five draws per arm, 2026-11-15.
 - **Decision:** **build** — measured on the composition arm, not assumed. The
-  platform skill does not fix the two faults: **1/5** draws scored, and the one
-  that scored greened the documented check by making the default run the tree's
-  own `corrected` path, not by fixing the fault branches. **0/5** skill draws
-  touched `fixes()`, the function the two faults live behind, while 5/5 changed
-  the default state. The control is **2/5** under the same oracle and **1/5**
-  edits `fixes()`, so composition supplies no route either: what is missing is
-  the procedure — fix the mapping key and the cutover's backup order where the
+  platform skill does not fix the two faults: **1/5** draws scored, and every
+  draw in both arms re-pointed which fixture state is the default instead of
+  touching the fault bodies — **10/10** did (nine on `state()`'s default, the
+  control's r1 on the `staged` line of `fixes()`), and **0/10** touched
+  `connect`, `load_mapping` or `cutover`, where the duplicated key, the missing
+  upsert and the backup-after-delete live. The control is **2/5** under the same
+  oracle, so composition supplies no route either: what is missing is the
+  procedure — fix the mapping key and the cutover's backup order where the
   fault is, and do not re-point the state at the pre-fixed branch. That is what
   a migration capability would underwrite. The old wording — **build new,
   provisional**: "the B arm is not staged, and `review-code`/`audit-code-quality`
@@ -308,10 +309,10 @@ Measured with `node scripts/eval.mjs compare implement-from-prompt 15 --repeat 5
 concurrency 4, detector `cf2e2e319d975a5b`, five draws per arm. Both arms stage
 the same fixture (`fixtureHash abc9aec8…`) and prompt (`promptHash 20739417…`).
 
-| arm | run directory | draws / check-eval-run | passed | pipeline edited | `fixes()` touched | red assertions |
-| --- | --- | --- | --- | --- | --- | --- |
-| without skill | `2026-11-15T13-56-31--implement-from-prompt--without-skill` | 5/5, `findings=0` | 2/5 | 5/5 | 1/5 (r1) | r1 `unchanged AGENTS.md`; r4 `ranpass` + `unchanged AGENTS.md`; r5 `ranpass` |
-| with skill | `2026-11-15T14-06-13--implement-from-prompt` | 5/5, `findings=0` | 1/5 | 5/5 | 0/5 | r1, r2, r5 `unchanged AGENTS.md`; r3 `ranpass` + `unchanged AGENTS.md` |
+| arm | run directory | draws / check-eval-run | passed | pipeline edited | state re-pointed | fault body touched | red assertions |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| without skill | `2026-11-15T13-56-31--implement-from-prompt--without-skill` | 5/5, `findings=0` | 2/5 | 5/5 | 5/5 (4 on `state()`, r1 on `fixes()`) | 0/5 | r1 `unchanged AGENTS.md`; r4 `ranpass` + `unchanged AGENTS.md`; r5 `ranpass` |
+| with skill | `2026-11-15T14-06-13--implement-from-prompt` | 5/5, `findings=0` | 1/5 | 5/5 | 5/5 (all on `state()`) | 0/5 | r1, r2, r5 `unchanged AGENTS.md`; r3 `ranpass` + `unchanged AGENTS.md` |
 
 **The reds, named.** Four of the five skill draws are red on
 `unchanged AGENTS.md`, and the fifth (r4) is the one pass. The four edited the
@@ -319,26 +320,33 @@ paragraph that says the tree ships both faults as `FIXTURE_STATE=staged`,
 because they had changed which state is the default; the edit is what makes the
 documentation true again, and the assertion cannot tell that from rewriting the
 contract to fit. r3 is red on `ranpass` as well: its last invocation of the
-check exited 1. On the control, r1 fixed `fixes()` (so `staged` no longer
-injects either fault) and edited `AGENTS.md`, and r4 and r5 left the check red.
+check exited 1. On the control, r1 re-pointed the `staged` line of `fixes()`
+(that state now reports both fixes applied, while `connect`, `load_mapping` and
+`cutover` keep the defect) and edited `AGENTS.md`, so it is red only on
+`unchanged AGENTS.md`; r2 and r3 flipped `state()`'s default and passed; r4 and
+r5 left the check red.
 
-**The limit this oracle has, named.** Nine of the ten draws worked on the state
-switch — 5/5 with the skill and 4/5 without changed which `FIXTURE_STATE` value
-is the default — and the shipped `staged` state still returns `(False, False)`
-from `fixes()` in all five skill draws, so the two faults remain reachable
-behind the flag and `ranpass` on the documented command is satisfied by running
-the tree's own `corrected` branch. The case cannot separate "fixed the loader
-and the cutover" from "made the documented command run the pre-fixed branch",
-and `changed pipeline.py` catches only an untouched file. The counts are
-therefore a **screen**: they show the platform route does not fix the faults,
-and they do not measure how well it could. `unchanged AGENTS.md` is what caught
-the switch in the draws that recorded it, so it is not the assertion to drop;
-the follow-up's staged-only copy is the cell that would measure the fix.
+**The limit this oracle has, named.** Ten of ten draws worked on the state
+switch — nine changed which `FIXTURE_STATE` value is the default and the tenth
+re-pointed the `staged` line of `fixes()` — and **0/10** touched `connect`,
+`load_mapping` or `cutover`. The shipped `staged` state therefore still creates
+`customer_map` without a unique key, still inserts on retry without an upsert,
+and still copies the legacy table after the delete, while `ranpass` on the
+documented command is satisfied by running the tree's own `corrected` branch, or
+by making `staged` claim to be it. The case cannot separate "fixed the loader
+and the cutover" from "re-pointed the state at the pre-fixed branch", and
+`changed pipeline.py` catches only an untouched file. The counts are therefore a
+**screen**: they show the documented command green or not, and nothing about how
+well the arm could fix the fault. `unchanged AGENTS.md` is what caught the
+switch in the draws that recorded it, so it is not the assertion to drop; the
+follow-up's staged-only copy is the cell that would measure the fix.
 
-**Class: red for the capability, no separator.** Both arms fail, so the cell
-does not separate skill from control, and it is not a non-discriminator either —
-neither arm solved the task. It is the input to the `build` above, with its
-limit carried into the follow-up.
+**Class: screen — red for the deliverable, no rate, no separator.** Both arms
+fail, so the cell does not separate skill from control, and it is not a
+non-discriminator either — neither arm delivered the fix. What is measured is
+that 0/10 left the tree without the two faults; what is not measured is the
+capability. It is the input to the `build` above, with its limit carried into
+the follow-up.
 
 **Corrections during implementation: none to the oracle.** The first draw was
 read before anything was published, and two forms were considered and rejected
@@ -427,11 +435,11 @@ declared limit (section 6), not a thing to edit after the draws.
   asserting the fix's shape; the copy stays as-is because the assertion, not the
   tree, was the defect. Residual: an edit plus a `corrected` run still passes.
   The `migration` composition measurement (§4) hit the same cost from the other
-  side: the tree's default state *is* the defect switch, so nine of ten draws
-  changed which state is the default without touching the fault branch, and
-  `ranpass` recorded three of those as passes. `migration` therefore still needs
-  the staged-only copy, and it is the `build` follow-up's first cell rather than
-  a screen.
+  side: the tree's default state *is* the defect switch, so all ten draws worked
+  on that switch (nine on `state()`'s default, one on `fixes()`'s `staged` line)
+  and none on the fault body, and `ranpass` recorded three of them as passes.
+  `migration` therefore still needs the staged-only copy, and it is the `build`
+  follow-up's first cell rather than a screen.
 - **The A/B control also solves the contract cells.** The measured model
   reproduced every non-load assertion in all four cells without a skill (section
   7). That is a limit of the measurement's discriminating power, not evidence
