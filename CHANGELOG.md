@@ -15,23 +15,35 @@ skills, which cases, and which published measurements.
 (`pipeline.sql` and `check.sql` byte-identical; only the two `AGENTS.md` check
 paths rewritten, so the documented command runs from the fixture root) and asks
 for the defect in one sentence. The oracle is the tree's own `check.sql`
-(`ranpass`), with `unchanged check.sql` and `unchanged AGENTS.md`.
+(`ranpass`), plus `changed pipeline.sql` and `unchanged check.sql`/`AGENTS.md`.
 
-Five draws per arm on 2026-11-15 at `repoSha 4160991`
+Five draws per arm on 2026-11-15 at `repoSha 6446e9f`
 (`opencode-go/deepseek-v4.1-flash` config default, detector
-`cf2e2e319d975a5b`): the control fixed the grain in **5/5** clean draws
-(`2026-11-15T10-36-00--implement-from-prompt--without-skill`, `findings=0`); the
-skill arm scored **2/5** and fixed the pipeline in 3/5
-(`2026-11-15T10-49-31--implement-from-prompt`), red on r3/r4
+`cf2e2e319d975a5b`, `--refresh`): the control fixed the grain in **5/5** clean
+draws (`2026-11-15T13-16-31--implement-from-prompt--without-skill`,
+`findings=0`); the skill arm scored **3/5** and edited the pipeline in 4/5
+(`2026-11-15T13-21-22--implement-from-prompt`), red on r3
 `skill implement-from-prompt` (the prompt did not route) and r5
-`unchanged AGENTS.md`. The cell is a **non-discriminator** — the model reaches the
-defect without a skill — so `docs/analysis/data-corpus/decision.md` §4 moves from
-`build new (provisional)` to `do not add`, and the old sentence stays as history.
-One oracle limit is named, not hidden: `ranpass` accepts the tree's documented
-`@state = corrected`, so two skill draws that edited nothing scored green; a
-`changed pipeline.sql` is a follow-up case revision, not an edit after the first
-draw. No skill, runner, fixture in `docs/analysis/data-corpus/`, or earlier case
-was changed.
+`changed pipeline.sql` (untouched). The cell is a **non-discriminator** — the model
+reaches the defect without a skill — so `docs/analysis/data-corpus/decision.md` §4
+moves from `build new (provisional)` to `do not add`, and the old sentence stays as
+history.
+
+The oracle was corrected **before publication**, and both earlier forms are
+history, not published counts. `ranpass sqlite3 .*check\.sql` alone false-passed a
+no-op, because the tree documents `@state = corrected`, which exits 0 on the
+defective pipeline (`2026-11-15T10-49-31--implement-from-prompt` read 2/5 that
+way). A stricter form that also required the literal `staged` false-failed two
+clean control draws (`2026-11-15T11-03-56--implement-from-prompt--without-skill`:
+one looped over both states, one printed `EXIT staged=0`, which the exit resolver
+cannot read), so the state is not asserted. Residual limit, named: an edit plus a
+`corrected` run still passes; `changed pipeline.sql` is what makes the no-op
+impossible. A retry pair (`2026-11-15T11-25-40--implement-from-prompt--without-skill`,
+`2026-11-15T11-57-05--implement-from-prompt`) stalled at the provider and
+contributes no count. No skill, runner, fixture in
+`docs/analysis/data-corpus/`, or earlier case was changed.
+
+## [0.9.6] — 2026-11-15
 
 ## [0.9.6] — 2026-11-15
 

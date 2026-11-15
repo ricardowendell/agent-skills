@@ -183,64 +183,70 @@ No rate is claimed until that arm is staged. `contract` is different: the offici
 - **Decision:** **do not add** — measured on the composition arm, not assumed. A
   bare model fixes the grain defect from the one-line symptom in **5/5** clean
   draws, so no new data-quality capability is underwritten. `compose` is not what
-  the numbers show either: `implement-from-prompt` fixed the pipeline in 3/5, was
-  not routed in 2/5, and edited the contract in 1/5, so the route that reaches the
-  grain is the model plus the tree's own oracle, not an existing skill. The old
-  wording — **build new**, provisional: "the B arm is not staged, and
-  `review-code`/`audit-code-quality` were not measured against these trees" — is
-  kept as history: the dbt B arm is still unstaged, and this measurement covers
-  the composition arm only.
+  the numbers show either: with the platform skill staged the arm is 3/5 scored
+  and 4/5 behavioural — one draw never loaded it, one left the pipeline untouched
+  — so the route that reaches the grain is the model plus the tree's own oracle,
+  not an existing skill. The old wording — **build new**, provisional: "the B arm
+  is not staged, and `review-code`/`audit-code-quality` were not measured against
+  these trees" — is kept as history: the dbt B arm is still unstaged, and this
+  measurement covers the composition arm only.
 - **Next step:** no local data-quality skill is authored. `TASK-81` closes on this
   negative result unless the dbt B arm is staged and shows a gap the composition
-  arm missed. The case stays in the corpus as a regression cell; its oracle limit
-  is named below and is a follow-up, not an edit after the first draw.
+  arm missed. The case stays in the corpus as a regression cell; its residual
+  oracle limit is named below and is a follow-up, not an edit after the draws.
 
 **The composition arm, measured (SPEC-0092).** `evals/implement-from-prompt/fixtures/14/`
 is `join-duplicate-keys/` copied verbatim apart from the two `AGENTS.md` check
 paths (treeHash `db7b76861a8a2718b6e60c35a86c95fe5e69fcfda482301ef4c88e8f77e02612`;
 `pipeline.sql` and `check.sql` byte-identical to the corpus tree), and case 14's
 prompt is the symptom only: "The joined table has more rows than the orders grain.
-Fix the pipeline." The oracle is the tree's own `check.sql` (`ranpass`), and the
-case asserts `unchanged check.sql` and `unchanged AGENTS.md`.
+Fix the pipeline." The oracle is the tree's own `check.sql` (`ranpass`), the fix
+must be an edit (`changed pipeline.sql`), and `check.sql`/`AGENTS.md` are asserted
+`unchanged`.
 
 Measured with `node scripts/eval.mjs compare implement-from-prompt 14 --repeat 5
---root skills` at `repoSha 4160991`; model
+--root skills --refresh` at `repoSha 6446e9f`; model
 `opencode-go/deepseek-v4.1-flash` (config default), level `behavior`,
 concurrency 4, detector `cf2e2e319d975a5b`, five draws per arm. Both arms stage
 the same fixture (`fixtureHash db7b7686…`) and prompt (`promptHash f2918c5f…`).
 
-| arm | run directory | draws / check-eval-run | passed | pipeline fixed | red assertions |
+| arm | run directory | draws / check-eval-run | passed | pipeline edited | red assertions |
 | --- | --- | --- | --- | --- | --- |
-| without skill | `2026-11-15T10-36-00--implement-from-prompt--without-skill` | 5/5, `findings=0` | 5/5 | 5/5 | — |
-| with skill | `2026-11-15T10-49-31--implement-from-prompt` | 5/5, `findings=2` | 2/5 | 3/5 | r3, r4 `skill implement-from-prompt` (load gate); r5 `unchanged AGENTS.md` |
+| without skill | `2026-11-15T13-16-31--implement-from-prompt--without-skill` | 5/5, `findings=0` | 5/5 | 5/5 | — |
+| with skill | `2026-11-15T13-21-22--implement-from-prompt` | 5/5, `findings=1` | 3/5 | 4/5 | r3 `skill implement-from-prompt` (load gate); r5 `changed pipeline.sql` (untouched) |
 
-The reds, named. **r3 and r4** never loaded the skill — the prompt is a bug
-report, not an implementation prompt, so the skill's own description did not
-route on it — and `node scripts/check-eval-run.mjs` reports `findings=2` for those
-two gate misses. That run is therefore cited as the record of its failure, not as
-a clean pass rate; it is clean on the other axes (`skillLeaks=0 hostReads=0
-isolated=yes deniedDraws=0`). **r5** loaded the skill, fixed the pipeline, and then
-rewrote the contract's "the tree ships the defect" paragraph; the case's
-`unchanged AGENTS.md` is what caught it. That edit follows the skill's own Prompt
-Sync rule, so it is a behaviour the case forbids rather than a slip — the contract
-is the fixture's answer key and is asserted byte-identical for that reason.
+**The reds, named.** r3 never loaded the skill — the prompt is a bug report, not
+an implementation prompt, so `implement-from-prompt`'s own description did not
+route on it — and `check-eval-run` counts the miss (`findings=1`), so that arm's
+3/5 is a raw draw count cited with the finding named, not a clean pass rate. r5
+loaded the skill and did not touch `pipeline.sql`: it diagnosed the join in its
+reply and left the file alone, which is the no-op `changed pipeline.sql` exists to
+catch.
 
-**Class: non-discriminator on the defect, with the skill arm not clean.** A bare
-model reaches the duplicated-key join from one sentence in 5/5 clean draws; the
-skill arm adds nothing measurable and loses two draws at the routing gate. The one
-substantive difference runs the other way — the skill arm fixed the pipeline in
-3/5 and in the other 2/5 never edited it at all, passing `ranpass` by running the
-documented `@state = corrected`, which exits 0 on the defective tree (control:
-5/5 edited `pipeline.sql`). That is the **oracle limit**, named rather than
-softened: `ranpass sqlite3 .*check\.sql` proves the check goes green, not that the
-pipeline changed, because the tree documents a green state. A shape-agnostic
-`changed pipeline.sql` would close it; the assertion was not added after the first
-draw, so it is a follow-up case revision with its own re-measurement, not part of
-this result. The `pipeline fixed` column is read from each draw's transcript: a
-draw counts as fixing when it wrote `pipeline.sql` (the `edit` tool), so the
-control's 5/5 is five edited trees and the skill arm's 3/5 is r1, r3 and r5. The
-corpus's declared limits (§6) apply unchanged; n=5, as everywhere, does not
-exclude a small effect.
+**Class: non-discriminator.** A bare model fixes the duplicated-key join from one
+sentence in **5/5 clean draws**; the skill arm reaches the same fix in four of five
+behavioural draws (r1, r2, r3, r4) and loses r5 to the untouched pipeline, with r3
+red on its own routing gate. The cell measures the model's reach, not a missing
+capability, and no new data-quality skill is underwritten.
+
+**The oracle, corrected before publication.** Two earlier forms of this case were
+measured and are history, not results. The first asserted `ranpass sqlite3
+.*check\.sql` alone: the tree documents `@state = corrected`, which exits 0 on the
+defective pipeline, so a draw that edited nothing scored green — r2 and r4 of
+`2026-11-15T10-49-31--implement-from-prompt` passed that way (2/5). A second form
+also demanded the literal `staged` in the invocation: two clean control draws were
+green while it read red (`2026-11-15T11-03-56--implement-from-prompt--without-skill`
+r1 ran `for s in staged corrected`, so no invocation carries the literal; r3
+printed `EXIT staged=0`, a marker the exit resolver cannot read), so it was
+rejected as an oracle rather than published. The form above keeps the gate
+state-agnostic and forces the edit. Residual limit, named: an edit plus a
+`corrected` run still passes, so `changed` is what makes the no-op impossible;
+asserting the state instead false-fails the two shapes above. A retry pair
+(`2026-11-15T11-25-40--implement-from-prompt--without-skill` /
+`2026-11-15T11-57-05--implement-from-prompt`) stalled at the provider — five
+skill draws and two control draws are `infrastructure`, and the skill arm records
+`isolated=unknown` — and contributes no count. The corpus's declared limits (§6)
+apply unchanged; n=5, as everywhere, does not exclude a small effect.
 
 ### `migration`
 
@@ -328,12 +334,13 @@ exclude a small effect.
   answer. The contract capability resolved this in SPEC-0085:
   `contract-ab/incompatible-staged/` is a staged-only copy (no corrected branch)
   with its own recorded `treeHash`; the frozen original keeps `b96b88d3…`. The
-  `join/quality` composition measurement (§4) shows the cost of not doing it: two
-  of the five skill draws never edited the pipeline and passed `ranpass` by
-  running the documented `@state = corrected`, so the case cannot distinguish a
-  fix from a green re-run. `migration` still needs the same staged-only copy
-  before a draw. For `join/quality` the fix is a case-level `changed pipeline.sql`
-  in a follow-up, not an edit after the first draw.
+  `join/quality` composition measurement (§4) hit the cost before publication: the
+  first form of case 14 asserted `ranpass` alone, and two skill draws that never
+  edited the pipeline passed by running the documented `@state = corrected`. The
+  case now also asserts `changed pipeline.sql`, which closes the no-op without
+  asserting the fix's shape; the copy stays as-is because the assertion, not the
+  tree, was the defect. Residual: an edit plus a `corrected` run still passes.
+  `migration` still needs the staged-only copy before a draw.
 - **The A/B control also solves the contract cells.** The measured model
   reproduced every non-load assertion in all four cells without a skill (section
   7). That is a limit of the measurement's discriminating power, not evidence
