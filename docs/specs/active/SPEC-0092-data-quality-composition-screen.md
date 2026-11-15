@@ -1,7 +1,7 @@
 ---
 id: SPEC-0092
 title: The platform skill already sees the duplicated-key join, or the gap is real
-status: ready
+status: implemented
 priority: P1
 task: TASK-81
 created_at: 2026-11-15
