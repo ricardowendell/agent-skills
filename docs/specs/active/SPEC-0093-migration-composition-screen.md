@@ -1,7 +1,7 @@
 ---
 id: SPEC-0093
 title: The platform skill already sees the migration faults, or the gap is real
-status: ready
+status: paused
 priority: P1
 task: TASK-82
 created_at: 2026-11-15
@@ -11,7 +11,8 @@ source_docs:
   - docs/specs/SPEC-0089-migration-slice-cutover-fixture.md
   - docs/analysis/data-corpus/decision.md
 related_decisions: []
-depends_on: []
+depends_on:
+  - SPEC-0092
 blocks: []
 files:
   - evals/implement-from-prompt/cases.md
@@ -147,3 +148,7 @@ the coverage inventory and the release entry. No skill, no runner, no oracle.
 - **Safeguards**: do not edit `check.py` or `AGENTS.md` in the case; no skill;
   no new assertion kind.
 - **Tests**: the gates above; the new case is an addition, not a baseline move.
+
+## Queue note (2026-11-15)
+
+Queued behind `SPEC-0092`: both add a case to `evals/implement-from-prompt/cases.md`, so the queue keeps one `ready` spec at a time. Flip to `ready` when 0092 merges.

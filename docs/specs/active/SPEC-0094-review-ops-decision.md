@@ -1,7 +1,7 @@
 ---
 id: SPEC-0094
 title: Review/ops is decided by the measured controls, not asserted
-status: ready
+status: paused
 priority: P2
 task: TASK-84
 created_at: 2026-11-15
@@ -143,3 +143,7 @@ and — only in the `extend` branch — one reference file plus one line in
 - **Safeguards**: no new skill, no corpus edit, no silent rewrite of the memo.
 - **Tests**: the gates above; `validate-skills` proves the `extend` branch's
   reference does not break the skill.
+
+## Queue note (2026-11-15)
+
+Queued behind `SPEC-0093`: it reads the 0092/0093 measurements and shares `decision.md`/`coverage.md`. Flip to `ready` when 0093 merges.

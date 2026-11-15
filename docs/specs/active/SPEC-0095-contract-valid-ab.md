@@ -1,7 +1,7 @@
 ---
 id: SPEC-0095
 title: The official contract skill is measured with a neutral prompt and no CLI in the A arm
-status: ready
+status: paused
 priority: P2
 task: TASK-116
 created_at: 2026-11-15
@@ -11,7 +11,8 @@ source_docs:
   - docs/analysis/data-corpus/ab-cases.md
   - docs/analysis/data-corpus/decision.md
 related_decisions: []
-depends_on: []
+depends_on:
+  - SPEC-0092
 blocks: []
 files:
   - docs/analysis/data-corpus/ab-cases.md
@@ -156,3 +157,7 @@ runner change.
 - **Safeguards**: no runner edit, no flag, no fixture change, no pin update.
 - **Tests**: the gates above; `check-evidence` must keep the new citations
   honest.
+
+## Queue note (2026-11-15)
+
+Blocked on a human harness decision: the isolation layer shares `~/.local`, so the CLI is reachable by absolute path and the A arm cannot be made CLI-free without a freeze exception. F0 (neutral prompt) is committed; no paid draw was taken.
