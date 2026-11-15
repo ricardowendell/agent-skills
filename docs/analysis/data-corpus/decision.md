@@ -232,15 +232,18 @@ capability, and no new data-quality skill is underwritten.
 **The oracle, corrected before publication.** Two earlier forms of this case were
 measured and are history, not results. The first asserted `ranpass sqlite3
 .*check\.sql` alone: the tree documents `@state = corrected`, which exits 0 on the
-defective pipeline, so a draw that edited nothing scored green — r2 and r4 of
-`2026-11-15T10-49-31--implement-from-prompt` passed that way (2/5). A second form
+defective pipeline, so a draw that edited nothing scored green — **r2** of
+`2026-11-15T10-49-31--implement-from-prompt` passed that way with no edit at all,
+while r1 and r5 did edit (r1 passed, r5 was red on `unchanged AGENTS.md`) and r3
+and r4 were red only on the load gate (`findings=2`); that pair read 2/5. A second form
 also demanded the literal `staged` in the invocation: two clean control draws were
 green while it read red (`2026-11-15T11-03-56--implement-from-prompt--without-skill`
 r1 ran `for s in staged corrected`, so no invocation carries the literal; r3
 printed `EXIT staged=0`, a marker the exit resolver cannot read), so it was
 rejected as an oracle rather than published. The form above keeps the gate
 state-agnostic and forces the edit. Residual limits, named: an edit plus a
-`corrected` run still passes, so `changed` is what makes the no-op impossible;
+`corrected` run still passes, so `changed` is what makes the **untouched** no-op
+impossible;
 asserting the state instead false-fails the two shapes above; and a draw whose
 check status the resolver cannot read (`2026-11-15T11-03-56--…` r3 printed
 `EXIT staged=0`) fails `ranpass` closed by the harness's declared masked-exit

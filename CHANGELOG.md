@@ -30,20 +30,18 @@ moves from `build new (provisional)` to `do not add`, and the old sentence stays
 history.
 
 The oracle was corrected **before publication**, and both earlier forms are
-history, not published counts. `ranpass sqlite3 .*check\.sql` alone false-passed a
+history, not published tables. `ranpass sqlite3 .*check\.sql` alone false-passed a
 no-op, because the tree documents `@state = corrected`, which exits 0 on the
-defective pipeline (`2026-11-15T10-49-31--implement-from-prompt` read 2/5 that
-way). A stricter form that also required the literal `staged` false-failed two
-clean control draws (`2026-11-15T11-03-56--implement-from-prompt--without-skill`:
+defective pipeline (`2026-11-15T10-49-31--implement-from-prompt` read 2/5, one of
+them r2 with no edit at all). A stricter form that also required the literal
+`staged` false-failed two clean control draws (`2026-11-15T11-03-56--implement-from-prompt--without-skill`:
 one looped over both states, one printed `EXIT staged=0`, which the exit resolver
 cannot read), so the state is not asserted. Residual limit, named: an edit plus a
-`corrected` run still passes; `changed pipeline.sql` is what makes the no-op
-impossible. A retry pair (`2026-11-15T11-25-40--implement-from-prompt--without-skill`,
+`corrected` run still passes; `changed pipeline.sql` is what makes the
+**untouched** no-op impossible. A retry pair (`2026-11-15T11-25-40--implement-from-prompt--without-skill`,
 `2026-11-15T11-57-05--implement-from-prompt`) stalled at the provider and
 contributes no count. No skill, runner, fixture in
 `docs/analysis/data-corpus/`, or earlier case was changed.
-
-## [0.9.6] — 2026-11-15
 
 ## [0.9.6] — 2026-11-15
 

@@ -541,14 +541,17 @@ gate. The decision this cell underwrites is in
 `join/quality` is **do not add**, not `build`.
 
 **The oracle, corrected before publication.** Two earlier forms of this case were
-measured and are history, not results, and no count from either was published.
+measured and are history, not results: no table was published from either, and the
+numbers quoted below are labelled history.
 
 - **The first form asserted `ranpass sqlite3 .*check\.sql` alone and false-passed
   a no-op.** The tree documents `@state = corrected`, which exits 0 on the
-  defective pipeline, so r2 and r4 of
-  `2026-11-15T10-49-31--implement-from-prompt` scored green without editing
-  anything; its control is `2026-11-15T10-36-00--implement-from-prompt--without-skill`
-  (5/5, clean). That pair read 5/5 vs 2/5 and is superseded.
+  defective pipeline, so **r2** of
+  `2026-11-15T10-49-31--implement-from-prompt` scored green with no edit at all
+  (r1 and r5 edited — r1 passed, r5 was red on `unchanged AGENTS.md`; r3 and r4
+  were red only on the load gate, `findings=2`). Its control is
+  `2026-11-15T10-36-00--implement-from-prompt--without-skill` (5/5, clean). That
+  pair read 5/5 vs 2/5 historically and is superseded by the published pair above.
 - **A second form also demanded the literal `staged` in the invocation and was
   rejected as an oracle.** Two clean control draws were green while it read red in
   `2026-11-15T11-03-56--implement-from-prompt--without-skill`: r1 ran
@@ -562,11 +565,11 @@ measured and are history, not results, and no count from either was published.
   re-run above.
 
 Residual limits, named: an edit plus a `corrected` run still passes, so
-`changed pipeline.sql` is what makes the no-op impossible; asserting the state
-instead false-fails the two shapes above; and a draw whose check status the
-resolver cannot read fails `ranpass` closed by the harness's declared masked-exit
-rule (`2026-11-15T11-03-56--implement-from-prompt--without-skill` r3 printed
-`EXIT staged=0`), which this case does not override.
+`changed pipeline.sql` is what makes the **untouched** no-op impossible; asserting
+the state instead false-fails the two shapes above; and a draw whose check status
+the resolver cannot read fails `ranpass` closed by the harness's declared
+masked-exit rule (`2026-11-15T11-03-56--implement-from-prompt--without-skill` r3
+printed `EXIT staged=0`), which this case does not override.
 
 ## Discriminating set (issue #5)
 

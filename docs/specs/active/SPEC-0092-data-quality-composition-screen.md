@@ -70,10 +70,14 @@ of the earlier provisional wording.
 - **F1 — the case.** Case 14 in `evals/implement-from-prompt/cases.md`:
   prompt `The joined table has more rows than the orders grain. Fix the pipeline.`
   `why:` names the corpus tree and says the case measures the platform skill's
-  reach, not a new capability. Assertions: `ranpass sqlite3 .*check\.sql` (the
-  oracle ran and passed), `unchanged check.sql` and `unchanged AGENTS.md` (the
-  oracle and the contract are not edited to fit), `filematch pipeline.sql (distinct|DISTINCT|GROUP BY|group by)`
-  is **not** asserted: the fix's shape is the agent's, the oracle is the gate.
+  reach, not a new capability. Assertions: `ranpass sqlite3 [\s\S]*check\.sql`
+  (the oracle ran and passed; `[\s\S]*` rather than `.*` because the documented
+  command is multi-line — see "Corrections during implementation"),
+  `changed pipeline.sql` (the fix is an edit of the pipeline, and this is what
+  makes an untouched no-op fail), `unchanged check.sql` and `unchanged AGENTS.md`
+  (the oracle and the contract are not edited to fit),
+  `filematch pipeline.sql (distinct|DISTINCT|GROUP BY|group by)` is **not**
+  asserted: the fix's shape is the agent's, the oracle is the gate.
 - **F2 — measure.** `node scripts/eval.mjs compare implement-from-prompt 14
   --repeat 5 --root skills`; model and detector recorded, both run dirs cited,
   raw counts and reds named, classified.
@@ -101,8 +105,37 @@ the coverage inventory and the release entry. No skill, no runner, no oracle.
 
 1. **F0/F1 — fixture and case.** Copy, adjust the one path, write the case.
 2. **F2 — run.** Five draws per arm.
-3. **F3 — decide and publish.** The memo and the coverage; no oracle edit after
-   the first draw.
+3. **F3 — decide and publish.** The memo and the coverage; no oracle edit after a
+   published draw. The two corrections that happened before publication are below.
+
+## Corrections during implementation
+
+The case's oracle was corrected twice **before publication**; no table from an
+earlier form shipped, and the pairs are recorded as history in
+`docs/analysis/data-corpus/decision.md` §4 and `docs/evals/coverage.md`.
+
+1. **`ranpass` alone false-passed a no-op.** The tree documents
+   `@state = corrected`, which exits 0 on the defective pipeline, so a draw that
+   edited nothing scored green — r2 of
+   `2026-11-15T10-49-31--implement-from-prompt` passed with no edit at all.
+   `changed pipeline.sql` closes it without asserting the fix's shape, which is
+   what F1 forbids.
+2. **`.*` cannot cross the documented multi-line invocation.** The fixture's own
+   `AGENTS.md` command is written with backslash continuations; the resolver keeps
+   that as one command containing newlines, and `.` does not match a newline. The
+   published gate is `[\s\S]*`, so a draw that pastes the documented command is
+   not false-failed.
+3. **The literal `staged` was tried and rejected by measurement.** Requiring it
+   read red on two clean control draws in
+   `2026-11-15T11-03-56--implement-from-prompt--without-skill`: r1 ran
+   `for s in staged corrected` (no single invocation carries the literal) and r3
+   printed `EXIT staged=0`, a marker the exit resolver cannot read. Its skill arm
+   is `2026-11-15T11-12-41--implement-from-prompt` (1/5, `findings=2`). The state
+   is therefore not asserted; the residual (an edit plus a `corrected` run) is
+   named in the decision memo.
+
+No new assertion kind, flag or stage was added: the change is one added assertion
+inside the existing vocabulary.
 
 ## Data
 
