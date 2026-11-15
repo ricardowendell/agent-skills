@@ -11,7 +11,8 @@ source_docs:
   - docs/specs/SPEC-0089-migration-slice-cutover-fixture.md
   - docs/analysis/data-corpus/decision.md
 related_decisions: []
-depends_on: []
+depends_on:
+  - SPEC-0092
 blocks: []
 files:
   - evals/implement-from-prompt/cases.md
