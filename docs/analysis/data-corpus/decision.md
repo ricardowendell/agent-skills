@@ -4,8 +4,10 @@
   SPEC-0085 — The contract capability is measured before it is built
 - **Date:** 2026-11-13
 - **Status:** the corpus and its deterministic oracles are proved. The contract
-  capability has a staged B arm and a paid A/B measurement (section 7); the
-  other capabilities remain `unknown` with no draw. No skill is created.
+  capability has a staged B arm and a paid A/B measurement (section 7);
+  `join/quality` has a paid composition measurement (section 4) that decides it;
+  `migration` and `review/ops` remain `unknown` with no draw. No skill is
+  created.
 
 This memo records what the instrument shows, freezes the holdout, and names the
 decision per capability. It does not create a skill.
@@ -172,15 +174,73 @@ No rate is claimed until that arm is staged. `contract` is different: the offici
   aggregate join with zero findings.
 - **Gap shown:** an oracle can distinguish a row-multiplying join from a healthy
   one, and no skill in the current inventory (`audit-code-quality`,
-  `review-code`, …) judges data grain. The corpus shows a capability gap, not a
-  false positive.
+  `review-code`, …) judges data grain. The corpus shows a measurement gap, not a
+  false positive; whether it is also a capability gap is what the composition arm
+  below decides.
 - **B arm:** `unknown` (dbt Labs / Databricks skills not staged).
-- **Decision:** **build new** — provisional: the B arm is not staged, and
-  `review-code`/`audit-code-quality` were not measured against these trees.
-  Candidate host for the first measurement: `test-data-quality` (#16), chosen
-  by the human gate before that spec is groomed. This memo does not create it.
-- **Next step:** stage this tree under `evals/<candidate>/` and measure a
-  candidate against it in a follow-up spec.
+- **Composition arm:** measured — SPEC-0092 staged the tree as
+  `implement-from-prompt` case 14 and ran five draws per arm, 2026-11-15.
+- **Decision:** **do not add** — measured on the composition arm, not assumed. A
+  bare model fixes the grain defect from the one-line symptom in **5/5** clean
+  draws, so no new data-quality capability is underwritten. `compose` is not what
+  the numbers show either: `implement-from-prompt` fixed the pipeline in 3/5, was
+  not routed in 2/5, and edited the contract in 1/5, so the route that reaches the
+  grain is the model plus the tree's own oracle, not an existing skill. The old
+  wording — **build new**, provisional: "the B arm is not staged, and
+  `review-code`/`audit-code-quality` were not measured against these trees" — is
+  kept as history: the dbt B arm is still unstaged, and this measurement covers
+  the composition arm only.
+- **Next step:** no local data-quality skill is authored. `TASK-81` closes on this
+  negative result unless the dbt B arm is staged and shows a gap the composition
+  arm missed. The case stays in the corpus as a regression cell; its oracle limit
+  is named below and is a follow-up, not an edit after the first draw.
+
+**The composition arm, measured (SPEC-0092).** `evals/implement-from-prompt/fixtures/14/`
+is `join-duplicate-keys/` copied verbatim apart from the two `AGENTS.md` check
+paths (treeHash `db7b76861a8a2718b6e60c35a86c95fe5e69fcfda482301ef4c88e8f77e02612`;
+`pipeline.sql` and `check.sql` byte-identical to the corpus tree), and case 14's
+prompt is the symptom only: "The joined table has more rows than the orders grain.
+Fix the pipeline." The oracle is the tree's own `check.sql` (`ranpass`), and the
+case asserts `unchanged check.sql` and `unchanged AGENTS.md`.
+
+Measured with `node scripts/eval.mjs compare implement-from-prompt 14 --repeat 5
+--root skills` at `repoSha 4160991`; model
+`opencode-go/deepseek-v4.1-flash` (config default), level `behavior`,
+concurrency 4, detector `cf2e2e319d975a5b`, five draws per arm. Both arms stage
+the same fixture (`fixtureHash db7b7686…`) and prompt (`promptHash f2918c5f…`).
+
+| arm | run directory | draws / check-eval-run | passed | pipeline fixed | red assertions |
+| --- | --- | --- | --- | --- | --- |
+| without skill | `2026-11-15T10-36-00--implement-from-prompt--without-skill` | 5/5, `findings=0` | 5/5 | 5/5 | — |
+| with skill | `2026-11-15T10-49-31--implement-from-prompt` | 5/5, `findings=2` | 2/5 | 3/5 | r3, r4 `skill implement-from-prompt` (load gate); r5 `unchanged AGENTS.md` |
+
+The reds, named. **r3 and r4** never loaded the skill — the prompt is a bug
+report, not an implementation prompt, so the skill's own description did not
+route on it — and `node scripts/check-eval-run.mjs` reports `findings=2` for those
+two gate misses. That run is therefore cited as the record of its failure, not as
+a clean pass rate; it is clean on the other axes (`skillLeaks=0 hostReads=0
+isolated=yes deniedDraws=0`). **r5** loaded the skill, fixed the pipeline, and then
+rewrote the contract's "the tree ships the defect" paragraph; the case's
+`unchanged AGENTS.md` is what caught it. That edit follows the skill's own Prompt
+Sync rule, so it is a behaviour the case forbids rather than a slip — the contract
+is the fixture's answer key and is asserted byte-identical for that reason.
+
+**Class: non-discriminator on the defect, with the skill arm not clean.** A bare
+model reaches the duplicated-key join from one sentence in 5/5 clean draws; the
+skill arm adds nothing measurable and loses two draws at the routing gate. The one
+substantive difference runs the other way — the skill arm fixed the pipeline in
+3/5 and in the other 2/5 never edited it at all, passing `ranpass` by running the
+documented `@state = corrected`, which exits 0 on the defective tree (control:
+5/5 edited `pipeline.sql`). That is the **oracle limit**, named rather than
+softened: `ranpass sqlite3 .*check\.sql` proves the check goes green, not that the
+pipeline changed, because the tree documents a green state. A shape-agnostic
+`changed pipeline.sql` would close it; the assertion was not added after the first
+draw, so it is a follow-up case revision with its own re-measurement, not part of
+this result. The `pipeline fixed` column is read from each draw's transcript: a
+draw counts as fixing when it wrote `pipeline.sql` (the `edit` tool), so the
+control's 5/5 is five edited trees and the skill arm's 3/5 is r1, r3 and r5. The
+corpus's declared limits (§6) apply unchanged; n=5, as everywhere, does not
+exclude a small effect.
 
 ### `migration`
 
@@ -241,9 +301,12 @@ No rate is claimed until that arm is staged. `contract` is different: the offici
 - No case is staged in this checkout's `evals/`: the contract cases live in the
   gitignored mirror `.lane/pinned/datacontract/`, and the other capabilities
   still have no case and no draw.
-- No pass rate and no comparability claim for `join/quality` or `migration`: their
-  B arm is `unknown`, not zero. The contract counts in section 7 are per draw,
-  for the model and detector named there, and are not a product claim.
+- No pass rate and no comparability claim for `migration`: its B arm is `unknown`,
+  not zero. `join/quality` now has a paid composition measurement (§4) whose
+  counts are per draw, for the model and detector named there, and are not a
+  product claim; its external (dbt) B arm is still `unknown`. The contract counts
+  in section 7 are per draw, for the model and detector named there, and are not
+  a product claim.
 - DuckDB remains an option, not a requirement; these checks use `sqlite3` and
   `python3` only.
 
@@ -265,7 +328,12 @@ No rate is claimed until that arm is staged. `contract` is different: the offici
   answer. The contract capability resolved this in SPEC-0085:
   `contract-ab/incompatible-staged/` is a staged-only copy (no corrected branch)
   with its own recorded `treeHash`; the frozen original keeps `b96b88d3…`. The
-  other capabilities still need the same staged-only copy before a draw.
+  `join/quality` composition measurement (§4) shows the cost of not doing it: two
+  of the five skill draws never edited the pipeline and passed `ranpass` by
+  running the documented `@state = corrected`, so the case cannot distinguish a
+  fix from a green re-run. `migration` still needs the same staged-only copy
+  before a draw. For `join/quality` the fix is a case-level `changed pipeline.sql`
+  in a follow-up, not an edit after the first draw.
 - **The A/B control also solves the contract cells.** The measured model
   reproduced every non-load assertion in all four cells without a skill (section
   7). That is a limit of the measurement's discriminating power, not evidence

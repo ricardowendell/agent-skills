@@ -19,6 +19,7 @@ files:
   - evals/implement-from-prompt/fixtures/14/AGENTS.md
   - evals/implement-from-prompt/fixtures/14/pipeline.sql
   - evals/implement-from-prompt/fixtures/14/check.sql
+  - docs/analysis/data-corpus/decision.md
   - docs/evals/coverage.md
   - CHANGELOG.md
   - docs/specs/active/SPEC-0092-data-quality-composition-screen.md

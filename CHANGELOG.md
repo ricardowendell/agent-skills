@@ -7,6 +7,32 @@ project uses [Semantic Versioning](https://semver.org/). The artifact is the set
 of skills plus the evidence that backs them, so a version is a claim: which
 skills, which cases, and which published measurements.
 
+## [Unreleased]
+
+`join/quality` is decided: **do not add** a data-quality skill, measured.
+
+`implement-from-prompt` case 14 stages the `join-duplicate-keys` corpus tree
+(`pipeline.sql` and `check.sql` byte-identical; only the two `AGENTS.md` check
+paths rewritten, so the documented command runs from the fixture root) and asks
+for the defect in one sentence. The oracle is the tree's own `check.sql`
+(`ranpass`), with `unchanged check.sql` and `unchanged AGENTS.md`.
+
+Five draws per arm on 2026-11-15 at `repoSha 4160991`
+(`opencode-go/deepseek-v4.1-flash` config default, detector
+`cf2e2e319d975a5b`): the control fixed the grain in **5/5** clean draws
+(`2026-11-15T10-36-00--implement-from-prompt--without-skill`, `findings=0`); the
+skill arm scored **2/5** and fixed the pipeline in 3/5
+(`2026-11-15T10-49-31--implement-from-prompt`), red on r3/r4
+`skill implement-from-prompt` (the prompt did not route) and r5
+`unchanged AGENTS.md`. The cell is a **non-discriminator** — the model reaches the
+defect without a skill — so `docs/analysis/data-corpus/decision.md` §4 moves from
+`build new (provisional)` to `do not add`, and the old sentence stays as history.
+One oracle limit is named, not hidden: `ranpass` accepts the tree's documented
+`@state = corrected`, so two skill draws that edited nothing scored green; a
+`changed pipeline.sql` is a follow-up case revision, not an edit after the first
+draw. No skill, runner, fixture in `docs/analysis/data-corpus/`, or earlier case
+was changed.
+
 ## [0.9.6] — 2026-11-15
 
 The generator's case proves a failing test step, not a character window.
