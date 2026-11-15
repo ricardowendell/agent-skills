@@ -1,7 +1,7 @@
 ---
 id: SPEC-0094
 title: Review/ops is decided by the measured controls, not asserted
-status: ready
+status: implemented
 priority: P2
 task: TASK-84
 created_at: 2026-11-15
