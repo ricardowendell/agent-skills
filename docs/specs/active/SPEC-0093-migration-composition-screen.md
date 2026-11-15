@@ -152,6 +152,24 @@ the coverage inventory and the release entry. No skill, no runner, no oracle.
 
 `SPEC-0092` merged (2026-11-15); this spec is the next in the queue and is now `ready`.
 
+## Results
+
+`evals/implement-from-prompt/fixtures/15/` stages the `migration-sliced-cutover`
+tree (fixture treeHash `abc9aec8…`; `pipeline.py`/`check.py` byte-identical) and
+case 15 asks for the failing contract in one sentence. Five draws per arm at
+`repoSha 5588b08` (`opencode-go/deepseek-v4.1-flash`, detector
+`cf2e2e319d975a5b`): **1/5** with the skill
+(`2026-11-15T14-06-13--implement-from-prompt`) against **2/5** without
+(`2026-11-15T13-56-31--implement-from-prompt--without-skill`), both clean and
+`isolated=yes`. The limit is measured, not assumed: the tree's default state is
+the defect switch, 0/5 skill draws touched `fixes()`, and the three scored draws
+greened the check through the tree's own `corrected` branch. Per AC4 the failed
+skill arm decides **build**; `docs/analysis/data-corpus/decision.md` §4 carries
+the counts, the reds and the provisional sentence as history, and
+`docs/evals/coverage.md` cites both run dirs. The follow-up owes a staged-only
+copy of the tree as its first cell. No oracle change was made after the first
+draw.
+
 ## Corrections during implementation
 
 **F0 — the fixture.** `evals/implement-from-prompt/fixtures/15/` is the corpus
