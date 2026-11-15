@@ -1,9 +1,10 @@
 ---
 id: TASK-81
 title: 'data: test-data-quality orientada a invariantes de negocio (issue #16)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-10T15:07:00Z'
+updated_date: '2026-11-15T16:53:00Z'
 labels: []
 dependencies:
   - TASK-78

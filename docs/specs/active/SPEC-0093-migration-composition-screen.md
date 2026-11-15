@@ -1,7 +1,7 @@
 ---
 id: SPEC-0093
 title: The platform skill already sees the migration faults, or the gap is real
-status: paused
+status: ready
 priority: P1
 task: TASK-82
 created_at: 2026-11-15
@@ -151,4 +151,4 @@ the coverage inventory and the release entry. No skill, no runner, no oracle.
 
 ## Queue note (2026-11-15)
 
-Queued behind `SPEC-0092`: both add a case to `evals/implement-from-prompt/cases.md`, so the queue keeps one `ready` spec at a time. Flip to `ready` when 0092 merges.
+`SPEC-0092` merged (2026-11-15); this spec is the next in the queue and is now `ready`.
