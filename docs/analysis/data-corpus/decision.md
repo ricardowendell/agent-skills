@@ -239,9 +239,12 @@ green while it read red (`2026-11-15T11-03-56--implement-from-prompt--without-sk
 r1 ran `for s in staged corrected`, so no invocation carries the literal; r3
 printed `EXIT staged=0`, a marker the exit resolver cannot read), so it was
 rejected as an oracle rather than published. The form above keeps the gate
-state-agnostic and forces the edit. Residual limit, named: an edit plus a
+state-agnostic and forces the edit. Residual limits, named: an edit plus a
 `corrected` run still passes, so `changed` is what makes the no-op impossible;
-asserting the state instead false-fails the two shapes above. A retry pair
+asserting the state instead false-fails the two shapes above; and a draw whose
+check status the resolver cannot read (`2026-11-15T11-03-56--…` r3 printed
+`EXIT staged=0`) fails `ranpass` closed by the harness's declared masked-exit
+rule, which this case does not override. A retry pair
 (`2026-11-15T11-25-40--implement-from-prompt--without-skill` /
 `2026-11-15T11-57-05--implement-from-prompt`) stalled at the provider — five
 skill draws and two control draws are `infrastructure`, and the skill arm records

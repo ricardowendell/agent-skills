@@ -561,9 +561,12 @@ measured and are history, not results, and no count from either was published.
   `isolated=unknown`) contribute no count; the published pair is the `--refresh`
   re-run above.
 
-Residual limit, named: an edit plus a `corrected` run still passes, so
+Residual limits, named: an edit plus a `corrected` run still passes, so
 `changed pipeline.sql` is what makes the no-op impossible; asserting the state
-instead false-fails the two shapes above.
+instead false-fails the two shapes above; and a draw whose check status the
+resolver cannot read fails `ranpass` closed by the harness's declared masked-exit
+rule (`2026-11-15T11-03-56--implement-from-prompt--without-skill` r3 printed
+`EXIT staged=0`), which this case does not override.
 
 ## Discriminating set (issue #5)
 
