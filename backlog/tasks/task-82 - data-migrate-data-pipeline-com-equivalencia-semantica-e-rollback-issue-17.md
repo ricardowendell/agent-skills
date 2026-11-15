@@ -1,10 +1,10 @@
 ---
 id: TASK-82
 title: 'data: migrate-data-pipeline com equivalencia semantica e rollback (issue #17)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-10T15:07:00Z'
-updated_date: '2026-11-14T11:15:00Z'
+updated_date: '2026-11-15T17:59:00Z'
 labels: []
 dependencies:
   - TASK-78

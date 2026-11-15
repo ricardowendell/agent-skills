@@ -1,7 +1,7 @@
 ---
 id: SPEC-0094
 title: Review/ops is decided by the measured controls, not asserted
-status: paused
+status: ready
 priority: P2
 task: TASK-84
 created_at: 2026-11-15
@@ -12,9 +12,7 @@ source_docs:
   - docs/specs/SPEC-0092-data-quality-composition-screen.md
   - docs/specs/SPEC-0093-migration-composition-screen.md
 related_decisions: []
-depends_on:
-  - SPEC-0092
-  - SPEC-0093
+depends_on: []
 blocks: []
 files:
   - docs/analysis/data-corpus/decision.md
@@ -146,4 +144,4 @@ and — only in the `extend` branch — one reference file plus one line in
 
 ## Queue note (2026-11-15)
 
-Queued behind `SPEC-0093`: it reads the 0092/0093 measurements and shares `decision.md`/`coverage.md`. Flip to `ready` when 0093 merges.
+Both screens merged (2026-11-15): the join screen decided `do not add`, the migration screen decided `build` on a deliverable-level red. This spec reads those results and is now `ready`.
