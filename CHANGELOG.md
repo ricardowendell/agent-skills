@@ -7,7 +7,7 @@ project uses [Semantic Versioning](https://semver.org/). The artifact is the set
 of skills plus the evidence that backs them, so a version is a claim: which
 skills, which cases, and which published measurements.
 
-## [Unreleased]
+## [0.9.7] — 2026-11-15
 
 `review/ops` is decided: **do not add** a review/ops skill or a `review-code`
 data reference, read from the two composition screens already measured.
