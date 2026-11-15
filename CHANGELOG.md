@@ -23,10 +23,10 @@ signature is the behavioural check. Validated before the draws against all five
 stored artifacts of `2026-11-14T09-20-09--write-implementation-prompt` (r1–r5),
 r4 of the first re-measure, and the implementation-first fixture
 `evals/write-implementation-prompt/fixtures/4/docs/prompts/SPEC-0007-import-csv.prompt.md`,
-which fails both. Case 1's `fieldsSha256` moves once,
+which fails both. Case 1's `fieldsSha256` is the only baseline entry that moves,
 `8564c2587b690b953c13453aa0f816239ff39a55443572c4f262ca62f5e6f652` →
-`73df464185c753c98997b2707b0ba7fb6d4175f9e98ae75b85301d3a5f57ff51`; no other
-baseline entry moves. No skill, fixture, runner or other case changed.
+`ce940dfa59a24b9ad1ea57e3a4b769d890bb0208d079b703b80c375147e705e6`; every other
+entry is untouched. No skill, fixture, runner or other case changed.
 
 The first version of the anchor kept an 80-character cap after the test token and
 read **4/5 vs 0/5**; its one red was the same defect one level down — r4 is
@@ -37,8 +37,11 @@ publication, so that 4/5 is history and was never published.
 Re-measured 2026-11-15 at `repoSha d282fbe` with `--repeat 5 --root skills`,
 `opencode-go/deepseek-v4.1-flash`, detector `cf2e2e319d975a5b`, five draws per
 arm, both runs clean and enforced (`deniedDraws=0` in both): **5/5 vs 0/5**, a
-**separator**. The control writes none of the required sections; no skill draw is
-red. The 3/5 (`2026-11-14T09-20-09--write-implementation-prompt`) and the 5/5
+**separator**. `d282fbe` is the commit the run started from, not the oracle it
+used: the run was made over the dirty tree that became `e1c0031`, and the
+assertions recorded in its `result.json` are byte-identical to that HEAD's. The
+control writes none of the required sections; no skill draw is red. The 3/5
+(`2026-11-14T09-20-09--write-implementation-prompt`) and the 5/5
 (`2026-11-09T13-07-02--write-implementation-prompt--agentworks-deepseek-v4-1-flash`)
 stay as history, not recomputed.
 

@@ -68,15 +68,18 @@ and the class named from the new counts instead of left oracle-limited.
 - **F0 — the two assertions.** In `evals/write-implementation-prompt/cases.md`
   case 1, replace the window assertion with
 
-      ## Operations(?:[^\n]|\n(?!## ))*?\n\s*(?:\d+\.|[-*])\s*[^\n]{0,160}?[Tt]est[^\n]{0,80}?(red|fail|failing)
+      ## Operations(?:[^\n]|\n(?!## ))*?\n\s*(?:\d+\.|[-*])\s*[^\n]{0,160}?[Tt]est[^\n]*(red|fail|failing)
 
   which is bounded to the Operations section (a newline followed by `## ` ends
   it), accepts a numbered or bulleted step, and requires the step to name the
-  test and its red state; and broaden `[Ss]ee (it )?fail` to
+  test and its red state **on the same line**, with no character cap between the
+  two; and broaden `[Ss]ee (it )?fail` to
   `([Ss]ee|[Ww]atch) (it )?[Ff]ail` (r1 says "watch it fail"). The `why:`
   records the correction and its limit: the assertion proves the artifact
   **names** a failing test step, not that the steps execute in order; the
-  executor cell 13's red→green signature is the behavioural check.
+  executor cell 13's red→green signature is the behavioural check. See
+  `## Corrections during implementation` for the `{0,80}` cap this replaced and
+  for the draws under each version.
 - **F1 — the baseline moves once.** Case 1's `fieldsSha256` goes from
   `8564c2587b690b953c13453aa0f816239ff39a55443572c4f262ca62f5e6f652` to the new
   value; every other entry is untouched.
@@ -167,3 +170,25 @@ other case.
 - **Safeguards**: no skill edit, no fixture edit, no new assertion kind, no
   extra draws.
 - **Tests**: the gates above; `corpus.test.mjs` proves the one-digest move.
+
+## Corrections during implementation
+
+1. **The 80-character cap was the same defect, and it was removed before
+   publication.** F0's first version kept
+   `[^\n]{0,80}?(red|fail|failing)` between the test token and the red state.
+   Under it, r4 of `2026-11-15T01-58-03--write-implementation-prompt` read red
+   although the artifact is test-first: its step 3 is a single 507-character
+   line, `test` at character 15 and "see it fail" **374** characters later. The
+   cap was replaced by the same-line rule — `[^\n]*(red|fail|failing)` — before
+   the result was published, so that 4/5 is history and was **never published**;
+   the published counts come from the new draws below.
+2. **The oracle changed after the first paid set, and a second set was
+   measured.** The first set (10 draws, `2026-11-15T01-53-22--…--without-skill`
+   / `2026-11-15T01-58-03--write-implementation-prompt`) ran under the
+   `{0,80}` version; after the correction above a second set of 10 draws
+   (`2026-11-15T02-08-11--…--without-skill` / `2026-11-15T02-11-01--…`) ran
+   under the final oracle — **20 draws in total**. That exceeds both "no extra
+   draws beyond the ten" (Non-Goals, F2) and "the oracle is not edited after the
+   first draw" (Flow, Norms). The merge gate authorized it as the correction of a
+   measurement that had classified a paid run wrongly; the published 5/5 comes
+   from the new draws, not from re-scoring the first set.
