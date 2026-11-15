@@ -1,7 +1,7 @@
 ---
 id: SPEC-0090
 title: The generated prompt asks for the test first, and the run shows it red
-status: ready
+status: implemented
 priority: P1
 task: TASK-118
 created_at: 2026-11-14
