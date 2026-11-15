@@ -15,30 +15,35 @@ The generator's case proves a failing test step, not a character window.
 oracle, and both reds were test-first prompts the 600/300-character window could
 not read. The window is replaced by a step anchor — a numbered or bulleted step
 inside `## Operations` (the section ends at the next `## `) has to name a test
-and its red state — and `[Ss]ee (it )?fail` is broadened to
-`([Ss]ee|[Ww]atch) (it )?[Ff]ail`. The `why:` records the limit: the assertion
-proves the artifact **names** a failing-test step, not that the steps execute in
-order; the executor cell 13's signature is the behavioural check. Validated
-before the draws against all five stored artifacts of
-`2026-11-14T09-20-09--write-implementation-prompt` (r1–r5 pass) and the
-implementation-first fixture
+and its red state **on the same line, with no character cap between the two** —
+and `[Ss]ee (it )?fail` is broadened to `([Ss]ee|[Ww]atch) (it )?[Ff]ail`. The
+`why:` records the limit: the assertion proves the artifact **names** a
+failing-test step, not that the steps execute in order; the executor cell 13's
+signature is the behavioural check. Validated before the draws against all five
+stored artifacts of `2026-11-14T09-20-09--write-implementation-prompt` (r1–r5),
+r4 of the first re-measure, and the implementation-first fixture
 `evals/write-implementation-prompt/fixtures/4/docs/prompts/SPEC-0007-import-csv.prompt.md`,
 which fails both. Case 1's `fieldsSha256` moves once,
 `8564c2587b690b953c13453aa0f816239ff39a55443572c4f262ca62f5e6f652` →
-`77d4bffc2e8f57f39304895c29d9269ee52dccbd5c20e439a55e992a25258d91`; no other
+`73df464185c753c98997b2707b0ba7fb6d4175f9e98ae75b85301d3a5f57ff51`; no other
 baseline entry moves. No skill, fixture, runner or other case changed.
 
-Re-measured 2026-11-15 at `repoSha 51ce544` with `--repeat 5 --root skills`,
+The first version of the anchor kept an 80-character cap after the test token and
+read **4/5 vs 0/5**; its one red was the same defect one level down — r4 is
+test-first, but its step 3 is a single 507-character line with "test" at
+character 15 and "see it fail" 374 characters later. The cap was removed before
+publication, so that 4/5 is history and was never published.
+
+Re-measured 2026-11-15 at `repoSha d282fbe` with `--repeat 5 --root skills`,
 `opencode-go/deepseek-v4.1-flash`, detector `cf2e2e319d975a5b`, five draws per
-arm, both runs clean and enforced: **4/5 vs 0/5**, class **unresolved**. The one
-red skill draw is r4 — test-first, but its step 3 is a single 507-character line
-with "test" at character 15 and "see it fail" 374 characters later, past the
-anchor's 80-character same-step bound. The 3/5 (`09-20-09`) and the 5/5
+arm, both runs clean and enforced (`deniedDraws=0` in both): **5/5 vs 0/5**, a
+**separator**. The control writes none of the required sections; no skill draw is
+red. The 3/5 (`2026-11-14T09-20-09--write-implementation-prompt`) and the 5/5
 (`2026-11-09T13-07-02--write-implementation-prompt--agentworks-deepseek-v4-1-flash`)
 stay as history, not recomputed.
 
-Run dirs: `2026-11-15T01-58-03--write-implementation-prompt`,
-`2026-11-15T01-53-22--write-implementation-prompt--without-skill`.
+Run dirs: `2026-11-15T02-11-01--write-implementation-prompt`,
+`2026-11-15T02-08-11--write-implementation-prompt--without-skill`.
 
 ## [0.9.5] — 2026-11-14
 
