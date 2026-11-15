@@ -8,7 +8,7 @@ machine-checked after the case (see `eval.mjs`).
 
 1. **Create the implementation prompt for SPEC-0007.**
    - prompt: Create the implementation prompt for SPEC-0007.
-   - why: fixture: a `ready` spec + architecture doc. The shape assertions prove the test is mentioned before the implementation inside a bounded window (600 characters after `## Operations` for the test, 300 more for the implementation) — a textual-order proxy, not a machine-checkable step order: an implementation-first prompt that mentions a test later in the same window would pass. The false-pass case is recorded, not hidden; case 13's transcript signature is the behavioural check.
+   - why: fixture: a `ready` spec + architecture doc. The shape assertion is step-anchored: a numbered or bulleted step inside `## Operations` (bounded — a line starting `## ` ends the section) must name a test and its red state in the same step, and the fail phrase reads `see` or `watch`. It proves the artifact **names** a failing-test step, not that the steps execute in order — the ordering is carried by the guidance, and the executor cell 13's arrangement signature is the behavioural check. SPEC-0091 replaced the 600/300-character window, which false-failed two test-first prompts (`2026-11-14T09-20-09--write-implementation-prompt` r2/r3), and broadened `[Ss]ee (it )?fail` to `([Ss]ee|[Ww]atch) (it )?[Ff]ail` (r1 says "watch it fail"). Validated before the draws: all five artifacts of that run pass and the implementation-first fixture `evals/write-implementation-prompt/fixtures/4/docs/prompts/SPEC-0007-import-csv.prompt.md` fails both.
    - expect: Reads the spec and its source docs/ADRs.
    - expect: Writes `docs/prompts/SPEC-0007-<short-name>.prompt.md` with Requirements/Entities/Approach/Structure/Operations/Norms/Safeguards/Verification.
    - expect: Records `spec_sha` in the prompt frontmatter (via `spec-sha.mjs`).
@@ -18,8 +18,8 @@ machine-checked after the case (see `eval.mjs`).
    - assert: filematch docs/prompts/SPEC-0007-*.prompt.md ## Verification
    - assert: filematch docs/prompts/SPEC-0007-*.prompt.md spec_sha:
    - assert: filematch docs/prompts/SPEC-0007-*.prompt.md ## Operations
-   - assert: filematch docs/prompts/SPEC-0007-*.prompt.md ## Operations[\s\S]{0,600}?(test|spec file)[\s\S]{0,300}?(implement|add and export)
-   - assert: filematch docs/prompts/SPEC-0007-*.prompt.md [Ss]ee (it )?fail
+   - assert: filematch docs/prompts/SPEC-0007-*.prompt.md ## Operations(?:[^\n]|\n(?!## ))*?\n\s*(?:\d+\.|[-*])\s*[^\n]{0,160}?[Tt]est[^\n]{0,80}?(red|fail|failing)
+   - assert: filematch docs/prompts/SPEC-0007-*.prompt.md ([Ss]ee|[Ww]atch) (it )?[Ff]ail
    - assert: unchanged docs/specs/SPEC-0007-demo.md
 
 2. **Make a prompt for SPEC-0008.**

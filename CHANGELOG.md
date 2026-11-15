@@ -7,6 +7,39 @@ project uses [Semantic Versioning](https://semver.org/). The artifact is the set
 of skills plus the evidence that backs them, so a version is a claim: which
 skills, which cases, and which published measurements.
 
+## [Unreleased]
+
+The generator's case proves a failing test step, not a character window.
+
+`write-implementation-prompt` case 1 measured **3/5** under the `SPEC-0090`
+oracle, and both reds were test-first prompts the 600/300-character window could
+not read. The window is replaced by a step anchor — a numbered or bulleted step
+inside `## Operations` (the section ends at the next `## `) has to name a test
+and its red state — and `[Ss]ee (it )?fail` is broadened to
+`([Ss]ee|[Ww]atch) (it )?[Ff]ail`. The `why:` records the limit: the assertion
+proves the artifact **names** a failing-test step, not that the steps execute in
+order; the executor cell 13's signature is the behavioural check. Validated
+before the draws against all five stored artifacts of
+`2026-11-14T09-20-09--write-implementation-prompt` (r1–r5 pass) and the
+implementation-first fixture
+`evals/write-implementation-prompt/fixtures/4/docs/prompts/SPEC-0007-import-csv.prompt.md`,
+which fails both. Case 1's `fieldsSha256` moves once,
+`8564c2587b690b953c13453aa0f816239ff39a55443572c4f262ca62f5e6f652` →
+`77d4bffc2e8f57f39304895c29d9269ee52dccbd5c20e439a55e992a25258d91`; no other
+baseline entry moves. No skill, fixture, runner or other case changed.
+
+Re-measured 2026-11-15 at `repoSha 51ce544` with `--repeat 5 --root skills`,
+`opencode-go/deepseek-v4.1-flash`, detector `cf2e2e319d975a5b`, five draws per
+arm, both runs clean and enforced: **4/5 vs 0/5**, class **unresolved**. The one
+red skill draw is r4 — test-first, but its step 3 is a single 507-character line
+with "test" at character 15 and "see it fail" 374 characters later, past the
+anchor's 80-character same-step bound. The 3/5 (`09-20-09`) and the 5/5
+(`2026-11-09T13-07-02--write-implementation-prompt--agentworks-deepseek-v4-1-flash`)
+stay as history, not recomputed.
+
+Run dirs: `2026-11-15T01-58-03--write-implementation-prompt`,
+`2026-11-15T01-53-22--write-implementation-prompt--without-skill`.
+
 ## [0.9.5] — 2026-11-14
 
 The generated prompt asks for the test first, and the run shows it red.
