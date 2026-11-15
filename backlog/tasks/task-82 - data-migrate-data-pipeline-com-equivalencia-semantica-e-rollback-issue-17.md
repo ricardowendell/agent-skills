@@ -1,10 +1,10 @@
 ---
 id: TASK-82
 title: 'data: migrate-data-pipeline com equivalencia semantica e rollback (issue #17)'
-status: Done
+status: To Do
 assignee: []
 created_date: '2026-11-10T15:07:00Z'
-updated_date: '2026-11-15T17:59:00Z'
+updated_date: '2026-11-15T18:13:00Z'
 labels: []
 dependencies:
   - TASK-78
@@ -29,6 +29,14 @@ created: 2026-11-14T11:15:01.907Z
 ---
 
 Instrumento entregue, capacidade nao. A SPEC-0089 (0.9.4) adicionou migration-sliced-cutover (duas falhas independentes: mapping duplicado e rollback incompleto) e a negativa negative-safe-cutover, com exit codes provados e sem draw. Falta a decisao do candidato (skill nova vs compor existentes) e a medicao A/B; por isso o merge da spec nao fecha esta task.
+
+---
+
+created: 2026-11-15T18:13:12.863Z
+
+---
+
+O screen de composicao mediu 10/10 draws re-apontando o estado da fixture e 0/10 corrigindo connect/load_mapping/cutover; a decisao e build, com uma copia staged-only da fixture como primeira celula. O merge da SPEC-0093 fechou esta task mecanicamente; ela reabre porque a skill ainda nao existe.
 
 ---
 <!-- COMMENTS:END -->

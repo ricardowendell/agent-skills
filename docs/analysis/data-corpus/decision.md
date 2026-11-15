@@ -419,9 +419,9 @@ declared limit (section 6), not a thing to edit after the draws.
   one, so it supplies no route either. `extend review-code` would add a reference
   for grain/cardinality — the one dimension the control reaches **5/5** without a
   skill — and a pointer for migration/idempotency/cutover, where the only
-  measurement is a builder screen with **no rate**; a reference without a case is
-  a pointer, not a claim (SPEC-0094's rule), and it would load on every
-  code review with no measured delta behind it. `build` for review/ops is not
+  measurement is a builder screen with **no rate**; a reference with no measured
+  delta behind it would load on every code review as an unproven claim, and
+  `SPEC-0094` leaves the case that would prove it to a follow-up. `build` for review/ops is not
   what the migration counts underwrite: they underwrite the migration
   capability §4 already decided, and a screen with no rate cannot carry a
   second, review-shaped skill. The old wording — **do not add**: "Nothing in this
@@ -438,9 +438,10 @@ declared limit (section 6), not a thing to edit after the draws.
 ## 5. What this memo does not decide
 
 - No skill id is created, renamed or extended here.
-- No case is staged in this checkout's `evals/`: the contract cases live in the
-  gitignored mirror `.lane/pinned/datacontract/`, and the other capabilities
-  still have no case and no draw.
+- No case is staged in this checkout's `evals/` for the contract cells: they live
+  in the gitignored mirror `.lane/pinned/datacontract/`. The join and migration
+  capabilities now each have one composition case and its paid draws (§4); no
+  other capability does.
 - No pass rate and no comparability claim for the `migration` B arm: it is
   `unknown`, not zero. `join/quality` and `migration` now have paid composition
   measurements (§4) whose counts are per draw, for the model and detector named
