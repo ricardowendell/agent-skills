@@ -21,6 +21,7 @@ files:
   - docs/evals/coverage.md
   - CHANGELOG.md
   - docs/specs/active/SPEC-0094-review-ops-decision.md
+  - backlog/tasks/task-84 - data-review-data-pipeline-para-semantica-idempotencia-e-recuperacao-issue-19.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/eval.mjs check --root skills
