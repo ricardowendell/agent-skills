@@ -649,6 +649,37 @@ capability. The decision it underwrites is in
 `migration` is **build**, measured, with the staged-only copy owed as the
 follow-up's first cell.
 
+## The review/ops decision (SPEC-0094)
+
+Issue #19 asks whether a review capability over pipeline differences — grain,
+cardinality, joins, CDC/upsert, idempotency, schema evolution, lineage, PII —
+should extend `review-code`, compose, be built, or not exist. SPEC-0094 buys no
+new draw: it reads the two composition screens above, which are the corpus's
+evidence about whether the platform reaches the data trees, and decides from
+their counts.
+
+| screen | run directories | control | with skill | what it shows |
+| --- | --- | --- | --- | --- |
+| join/quality (case 14) | `2026-11-15T13-16-31--implement-from-prompt--without-skill` / `2026-11-15T13-21-22--implement-from-prompt` | **5/5** clean | **3/5** scored, 4/5 behavioural | the grain fault is reached without a skill |
+| migration (case 15) | `2026-11-15T13-56-31--implement-from-prompt--without-skill` / `2026-11-15T14-06-13--implement-from-prompt` | **2/5** | **1/5** | neither arm delivers; 10/10 re-pointed the state, 0/10 touched the fault body |
+
+Both pairs are clean and `isolated=yes`; the counts and reds are the ones in the
+two sections above and are quoted here, not recomputed.
+
+The decision is **do not add**, and both rows carry it. `compose` would need the
+staged skill to be the route: it is 3/5 on the join screen and 1/5 on the
+migration screen, so it is not. `extend review-code` would add a reference for
+grain/cardinality — the one dimension the control reaches 5/5 without a skill —
+and for migration/idempotency/cutover, where the only measurement is a builder
+screen with no rate whose oracle cannot separate a fix from a state flip; a
+reference without a case is a pointer, not a claim. `build` for review/ops is not
+underwritten by either screen: the migration gap is a builder gap, already
+decided as `build` in the `migration` section with `TASK-82`'s follow-up as its
+owner. No `review-code` file changes in this branch.
+`docs/analysis/data-corpus/decision.md` §4 carries the decision, the counts, the
+old `do not add` as history, and the reopen condition: a review-shaped case (a
+diff to judge, not a pipeline to fix) measured against `review-code`.
+
 ## Discriminating set (issue #5)
 
 Three cases separate two arms at n=5 under detector v2, with both arms clean:
