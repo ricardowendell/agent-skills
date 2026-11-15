@@ -153,12 +153,13 @@ machine-checked after the case (see `eval.mjs`).
 14. **A data grain defect reported as one sentence.**
    - prompt: The joined table has more rows than the orders grain. Fix the pipeline.
    - tags: matrix
-   - why: fixture is the corpus tree `docs/analysis/data-corpus/join-duplicate-keys/` copied verbatim apart from the `AGENTS.md` check path, and the oracle is that tree's own `check.sql`. The case measures the platform skill's reach — whether `implement-from-prompt` gets from a one-line symptom to the grain defect a data skill would be built for — not a new capability. The prompt states the symptom only and the fix's shape is the agent's, so no `filematch` on `pipeline.sql` is asserted; `check.sql` and `AGENTS.md` must stay byte-identical, which is what keeps the oracle from being edited to fit.
+   - why: fixture is the corpus tree `docs/analysis/data-corpus/join-duplicate-keys/` copied verbatim apart from the `AGENTS.md` check path, and the oracle is that tree's own `check.sql`. The case measures the platform skill's reach — whether `implement-from-prompt` gets from a one-line symptom to the grain defect a data skill would be built for — not a new capability. The prompt states the symptom only and the fix's shape is the agent's, so no `filematch` on `pipeline.sql` is asserted; `check.sql` and `AGENTS.md` must stay byte-identical, which is what keeps the oracle from being edited to fit. **Correction before publication (2026-11-15):** the first form asserted `ranpass sqlite3 .*check\.sql` alone and false-passed a no-op — the tree documents `@state = corrected`, which exits 0 on the defective pipeline, so a draw that edited nothing scored green. The assertion now requires a green invocation of the documented `staged` run (`sqlite3 [\s\S]*staged[\s\S]*check\.sql`; `[\s\S]*` because the documented command is multi-line, and an earlier `.*` form could not match it) plus `changed pipeline.sql`; the fix's shape is still not asserted. No count from the first form was published.
    - expect: Reads `AGENTS.md` and the contract before editing the pipeline.
-   - expect: Runs the documented check, sees exit 1, and fixes the join so the grain holds.
-   - expect: Re-runs the check and reports the passing run, not a claim.
+   - expect: Runs the documented check in its `staged` state, sees exit 1, and fixes the join so the grain holds.
+   - expect: Re-runs the check in the same `staged` state and reports the passing run, not a claim.
    - expect: Does not edit `check.sql` or `AGENTS.md` to make the check pass.
    - expect: Watch for: rewriting the oracle or the contract instead of the pipeline.
-   - assert: ranpass sqlite3 .*check\.sql
+   - assert: ranpass sqlite3 [\s\S]*staged[\s\S]*check\.sql
+   - assert: changed pipeline.sql
    - assert: unchanged check.sql
    - assert: unchanged AGENTS.md
