@@ -1,7 +1,7 @@
 ---
 id: SPEC-0091
 title: The generator's case proves a failing test step, not a character window
-status: ready
+status: implemented
 priority: P2
 task: TASK-119
 created_at: 2026-11-15
