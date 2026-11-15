@@ -1,7 +1,7 @@
 ---
 id: SPEC-0093
 title: The platform skill already sees the migration faults, or the gap is real
-status: ready
+status: implemented
 priority: P1
 task: TASK-82
 created_at: 2026-11-15
@@ -151,3 +151,39 @@ the coverage inventory and the release entry. No skill, no runner, no oracle.
 ## Queue note (2026-11-15)
 
 `SPEC-0092` merged (2026-11-15); this spec is the next in the queue and is now `ready`.
+
+## Corrections during implementation
+
+**F0 — the fixture.** `evals/implement-from-prompt/fixtures/15/` is the corpus
+tree with only the two `AGENTS.md` check commands rewritten to `python3 check.py`
+and `FIXTURE_STATE=corrected python3 check.py`; `pipeline.py` and `check.py` are
+byte-identical (`pipeline.py`
+`3d05b2568e5354ccc33844d9d823678a42d3515886bb04019f784e41a73e1629`,
+`check.py`
+`1c3d752506728aa4d127b01012dd17dc55823f0a99b127a64ab3793901cef4e4`), fixture
+treeHash `abc9aec85e791b4e6ee41d2ef9aad7aac7f284d681983871f665118318cc65b2`. The
+default `staged` run exits 1 with both findings before the fix; `corrected` exits
+0 and each mixed state keeps the other line red.
+
+**No oracle change after the first draw.** The case is exactly the four
+assertions in F1. Two alternate forms were rejected without being measured:
+dropping `unchanged AGENTS.md` (it would have read 4/5 with the skill and 5/5
+without, because every one of those greens was a draw that had re-pointed the
+default at the tree's `corrected` branch) and asserting `FIXTURE_STATE=staged`
+in the invocation (the literal-invocation defect SPEC-0092 already recorded, and
+it does not repair the switch).
+
+**F2/F3 — the measured limit, carried into the decision.** The composition arm
+scores 1/5 with the skill and 2/5 without, both clean and `isolated=yes`
+(`2026-11-15T14-06-13--implement-from-prompt`,
+`2026-11-15T13-56-31--implement-from-prompt--without-skill`, `repoSha 5588b08`).
+The reds and the counts are in the memo §4 and the coverage section. The
+finding that decides how the numbers are read: the tree's default state is the
+defect switch, so **0/5** skill draws touched `fixes()` while 5/5 changed the
+default, and the three scored draws across both arms greened the documented
+command by running the tree's own `corrected` branch. That is enough for the
+`build` the AC4 rule names when the skill arm fails, and not enough to claim a
+rate for the capability: the follow-up's first cell must be a staged-only copy
+of `migration-sliced-cutover` (no `corrected` branch, no state switch), so a
+draw cannot green the check by flipping the default.
+

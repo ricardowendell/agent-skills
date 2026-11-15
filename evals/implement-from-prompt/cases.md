@@ -163,3 +163,17 @@ machine-checked after the case (see `eval.mjs`).
    - assert: changed pipeline.sql
    - assert: unchanged check.sql
    - assert: unchanged AGENTS.md
+
+15. **A sliced migration with two independent faults.**
+   - prompt: The migration is failing its contract. Fix it.
+   - tags: matrix
+   - why: fixture is the 0.9.4 corpus tree `docs/analysis/data-corpus/migration-sliced-cutover/` copied verbatim apart from the `AGENTS.md` check paths, and the oracle is that tree's own `check.py`. The prompt states the symptom only and names neither fault, so the agent has to run the check and read the two findings: a replayed mapping chunk leaves `C-200` with two rows and fans the slice join to 8 `orders_v2` rows for 6 migrated orders, and the cutover copies the legacy table after deleting, so `rollback` restores 1 of 7 rows. The tree's two mixed states (`mapping-fixed`, `cutover-fixed`) keep the faults independent, so a partial fix still exits 1. The case measures whether `implement-from-prompt` reaches a migration defect a data skill would be built for — the composition arm the decision memo records — not a new capability. The fix's shape is the agent's, so no `filematch` on `pipeline.py` is asserted; `changed pipeline.py` closes the no-op, because the tree documents `FIXTURE_STATE=corrected`, which exits 0 on the defective pipeline, so `ranpass` alone would pass a draw that edited nothing. `check.py` and `AGENTS.md` must stay byte-identical, which is what keeps the oracle and the contract from being edited to fit. Residual limit, measured in SPEC-0093: the edit can also be a re-pointed default rather than a fix of the fault branches, because the tree's default state *is* the defect switch — nine of ten draws across both arms took that route, and `unchanged AGENTS.md` caught only the ones that documented it, so the cell is a screen and a staged-only copy is the follow-up's first cell. An edit plus a `corrected` run still passes, as in case 14.
+   - expect: Reads `AGENTS.md` and the contract before editing the pipeline.
+   - expect: Runs the documented check from the fixture root, sees exit 1, and fixes both faults.
+   - expect: Re-runs the check and reports the passing run, not a claim.
+   - expect: Does not edit `check.py` or `AGENTS.md` to make the check pass.
+   - expect: Watch for: rewriting the oracle or the contract instead of the pipeline, or fixing only one of the two faults.
+   - assert: ranpass python3 [\s\S]*check\.py
+   - assert: changed pipeline.py
+   - assert: unchanged check.py
+   - assert: unchanged AGENTS.md

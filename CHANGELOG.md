@@ -9,6 +9,35 @@ skills, which cases, and which published measurements.
 
 ## [Unreleased]
 
+`migration` is decided: **build** a migration skill, measured on the composition
+arm.
+
+`implement-from-prompt` case 15 stages the `migration-sliced-cutover` corpus tree
+(`pipeline.py` and `check.py` byte-identical; only the two `AGENTS.md` check
+commands rewritten, so the documented command runs from the fixture root) and
+asks for the failure in one sentence. The oracle is the tree's own `check.py`
+(`ranpass`), plus `changed pipeline.py` and `unchanged check.py`/`AGENTS.md`.
+
+Five draws per arm on 2026-11-15 at `repoSha 5588b08`
+(`opencode-go/deepseek-v4.1-flash` config default, detector
+`cf2e2e319d975a5b`): the skill arm scored **1/5**
+(`2026-11-15T14-06-13--implement-from-prompt`) and the control **2/5**
+(`2026-11-15T13-56-31--implement-from-prompt--without-skill`), both clean and
+`isolated=yes`. Four of the five skill reds are `unchanged AGENTS.md` and one is
+also `ranpass`; the control's reds are one `unchanged AGENTS.md`, one
+`ranpass` with the doc edit, and one `ranpass` alone. The limit is named: the
+tree's default state is the defect switch, so **0/5** skill draws touched
+`fixes()` — nine of ten draws changed which state is the default, and the three
+that scored did so by running the tree's own `corrected` branch. The cell is a
+red for the capability with no separator claim; `docs/analysis/data-corpus/decision.md`
+§4 moves from `build new (provisional)` to `build`, measured, keeps the old
+sentence as history, and owes the staged-only copy as the follow-up's first cell.
+
+No oracle change was made after the first draw. Two forms were considered and
+rejected unmeasured: dropping `unchanged AGENTS.md` would have read 4/5 with the
+skill and 5/5 without, every green a re-pointed default; asserting the
+`FIXTURE_STATE=staged` literal repeats the shape SPEC-0092 already rejected.
+
 `join/quality` is decided: **do not add** a data-quality skill, measured.
 
 `implement-from-prompt` case 14 stages the `join-duplicate-keys` corpus tree

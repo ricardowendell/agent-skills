@@ -5,9 +5,9 @@
 - **Date:** 2026-11-13
 - **Status:** the corpus and its deterministic oracles are proved. The contract
   capability has a staged B arm and a paid A/B measurement (section 7);
-  `join/quality` has a paid composition measurement (section 4) that decides it;
-  `migration` and `review/ops` remain `unknown` with no draw. No skill is
-  created.
+  `join/quality` and `migration` have paid composition measurements (section 4)
+  that decide them — `do not add` and `build` respectively; `review/ops` remains
+  `unknown` with no draw. No skill is created by this memo.
 
 This memo records what the instrument shows, freezes the holdout, and names the
 decision per capability. It does not create a skill.
@@ -267,12 +267,92 @@ apply unchanged; n=5, as everywhere, does not exclude a small effect.
   findings.
 - **Gap shown:** retry/backfill idempotency, sliced migration, a duplicated
   mapping that fans out the join, and a reversible cutover are all measurable by
-  an oracle and are not covered by an existing skill.
+  an oracle and are not covered by an existing skill. Whether the platform
+  already reaches them is what the composition arm below decides.
 - **B arm:** `unknown` for the same reason.
-- **Decision:** **build new** — provisional: the B arm is not staged, and
-  `review-code`/`audit-code-quality` were not measured against these trees.
-- **Next step:** tag the four migration fixtures for the candidate the human gate
-  picks, and stage them with the follow-up measurement.
+- **Composition arm:** measured — SPEC-0093 staged `migration-sliced-cutover` as
+  `implement-from-prompt` case 15 and ran five draws per arm, 2026-11-15.
+- **Decision:** **build** — measured on the composition arm, not assumed. The
+  platform skill does not fix the two faults: **1/5** draws scored, and the one
+  that scored greened the documented check by making the default run the tree's
+  own `corrected` path, not by fixing the fault branches. **0/5** skill draws
+  touched `fixes()`, the function the two faults live behind, while 5/5 changed
+  the default state. The control is **2/5** under the same oracle and **1/5**
+  edits `fixes()`, so composition supplies no route either: what is missing is
+  the procedure — fix the mapping key and the cutover's backup order where the
+  fault is, and do not re-point the state at the pre-fixed branch. That is what
+  a migration capability would underwrite. The old wording — **build new,
+  provisional**: "the B arm is not staged, and `review-code`/`audit-code-quality`
+  were not measured against these trees" — is kept as history: the decision no
+  longer rests on it.
+- **Next step:** a `build` follow-up spec, which owes the one cell this screen
+  cannot supply: a staged-only copy of `migration-sliced-cutover` (no
+  `corrected` branch, no state switch) as its first case, so a draw cannot green
+  the check by flipping the default. `TASK-82` stays open until that follow-up
+  lands. The oracle's limit is named below and is not an edit after the draws.
+
+**The composition arm, measured (SPEC-0093).**
+`evals/implement-from-prompt/fixtures/15/` is `migration-sliced-cutover/` copied
+verbatim apart from the two `AGENTS.md` check commands (treeHash
+`abc9aec85e791b4e6ee41d2ef9aad7aac7f284d681983871f665118318cc65b2`;
+`pipeline.py` and `check.py` byte-identical to the corpus tree), and case 15's
+prompt is the symptom only: "The migration is failing its contract. Fix it."
+The oracle is the tree's own `check.py` (`ranpass`), the fix must be an edit
+(`changed pipeline.py`), and `check.py`/`AGENTS.md` are asserted `unchanged`.
+The documented check exits 1 on the shipped `staged` state and 0 on `corrected`;
+`mapping-fixed` and `cutover-fixed` stay red on the other line.
+
+Measured with `node scripts/eval.mjs compare implement-from-prompt 15 --repeat 5
+--root skills` at `repoSha 5588b08`; model
+`opencode-go/deepseek-v4.1-flash` (config default), level `behavior`,
+concurrency 4, detector `cf2e2e319d975a5b`, five draws per arm. Both arms stage
+the same fixture (`fixtureHash abc9aec8…`) and prompt (`promptHash 20739417…`).
+
+| arm | run directory | draws / check-eval-run | passed | pipeline edited | `fixes()` touched | red assertions |
+| --- | --- | --- | --- | --- | --- | --- |
+| without skill | `2026-11-15T13-56-31--implement-from-prompt--without-skill` | 5/5, `findings=0` | 2/5 | 5/5 | 1/5 (r1) | r1 `unchanged AGENTS.md`; r4 `ranpass` + `unchanged AGENTS.md`; r5 `ranpass` |
+| with skill | `2026-11-15T14-06-13--implement-from-prompt` | 5/5, `findings=0` | 1/5 | 5/5 | 0/5 | r1, r2, r5 `unchanged AGENTS.md`; r3 `ranpass` + `unchanged AGENTS.md` |
+
+**The reds, named.** Four of the five skill draws are red on
+`unchanged AGENTS.md`, and the fifth (r4) is the one pass. The four edited the
+paragraph that says the tree ships both faults as `FIXTURE_STATE=staged`,
+because they had changed which state is the default; the edit is what makes the
+documentation true again, and the assertion cannot tell that from rewriting the
+contract to fit. r3 is red on `ranpass` as well: its last invocation of the
+check exited 1. On the control, r1 fixed `fixes()` (so `staged` no longer
+injects either fault) and edited `AGENTS.md`, and r4 and r5 left the check red.
+
+**The limit this oracle has, named.** Nine of the ten draws worked on the state
+switch — 5/5 with the skill and 4/5 without changed which `FIXTURE_STATE` value
+is the default — and the shipped `staged` state still returns `(False, False)`
+from `fixes()` in all five skill draws, so the two faults remain reachable
+behind the flag and `ranpass` on the documented command is satisfied by running
+the tree's own `corrected` branch. The case cannot separate "fixed the loader
+and the cutover" from "made the documented command run the pre-fixed branch",
+and `changed pipeline.py` catches only an untouched file. The counts are
+therefore a **screen**: they show the platform route does not fix the faults,
+and they do not measure how well it could. `unchanged AGENTS.md` is what caught
+the switch in the draws that recorded it, so it is not the assertion to drop;
+the follow-up's staged-only copy is the cell that would measure the fix.
+
+**Class: red for the capability, no separator.** Both arms fail, so the cell
+does not separate skill from control, and it is not a non-discriminator either —
+neither arm solved the task. It is the input to the `build` above, with its
+limit carried into the follow-up.
+
+**Corrections during implementation: none to the oracle.** The first draw was
+read before anything was published, and two forms were considered and rejected
+rather than measured. Dropping `unchanged AGENTS.md` was rejected: it would have
+read 4/5 with the skill and 5/5 without, and every one of those greens was a
+draw that had re-pointed the default at `corrected`. Asserting
+`FIXTURE_STATE=staged` in the invocation was rejected for the reason SPEC-0092
+already recorded — a literal state in the command is not a shape the transcript
+guarantees (a loop over both states, or a masked exit marker, reads red while
+the run is green) — and it would not repair the switch either, because
+`staged` is still the state a fix must make green. The fixture stays the corpus
+tree, the oracle stays as specified, and the tree's embedded answer key is the
+declared limit (section 6), not a thing to edit after the draws.
+
 
 ### `contract`
 
@@ -313,12 +393,12 @@ apply unchanged; n=5, as everywhere, does not exclude a small effect.
 - No case is staged in this checkout's `evals/`: the contract cases live in the
   gitignored mirror `.lane/pinned/datacontract/`, and the other capabilities
   still have no case and no draw.
-- No pass rate and no comparability claim for `migration`: its B arm is `unknown`,
-  not zero. `join/quality` now has a paid composition measurement (§4) whose
-  counts are per draw, for the model and detector named there, and are not a
-  product claim; its external (dbt) B arm is still `unknown`. The contract counts
-  in section 7 are per draw, for the model and detector named there, and are not
-  a product claim.
+- No pass rate and no comparability claim for the `migration` B arm: it is
+  `unknown`, not zero. `join/quality` and `migration` now have paid composition
+  measurements (§4) whose counts are per draw, for the model and detector named
+  there, and are not a product claim; the external (dbt) B arm is still
+  `unknown` for both. The contract counts in section 7 are per draw, for the
+  model and detector named there, and are not a product claim.
 - DuckDB remains an option, not a requirement; these checks use `sqlite3` and
   `python3` only.
 
@@ -346,7 +426,12 @@ apply unchanged; n=5, as everywhere, does not exclude a small effect.
   case now also asserts `changed pipeline.sql`, which closes the no-op without
   asserting the fix's shape; the copy stays as-is because the assertion, not the
   tree, was the defect. Residual: an edit plus a `corrected` run still passes.
-  `migration` still needs the staged-only copy before a draw.
+  The `migration` composition measurement (§4) hit the same cost from the other
+  side: the tree's default state *is* the defect switch, so nine of ten draws
+  changed which state is the default without touching the fault branch, and
+  `ranpass` recorded three of those as passes. `migration` therefore still needs
+  the staged-only copy, and it is the `build` follow-up's first cell rather than
+  a screen.
 - **The A/B control also solves the contract cells.** The measured model
   reproduced every non-load assertion in all four cells without a skill (section
   7). That is a limit of the measurement's discriminating power, not evidence
