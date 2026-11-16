@@ -163,7 +163,7 @@ Per-cell cost, measured (both arms, five draws each):
 | Cell | With skill | Control | Total | Draws |
 | --- | --- | --- | --- | --- |
 | critique (§5) | 0.129987 | 0.043013 | **0.173000** | 10 |
-| audit (§6) | 0.092201 | 0.075918 | **0.168118** | 10 |
+| audit (§6) | 0.092201 | 0.075917 | **0.168118** | 10 |
 | smoke (§3, discarded) | — | — | **0.108084** | 6 |
 | **stage total** | | | **0.449202** | 26 |
 
@@ -306,7 +306,7 @@ level and detector as §5; `repoSha 759b7af`, `repeat 5`, isolation enforced.
 | r4 | without | — | red: `skill` | 0.011098 | 3 |
 | r5 | without | — | red: `skill` | 0.017759 | 4 |
 
-**Cell cost: US$ 0.092201 (with) + US$ 0.075918 (without) = US$ 0.168118.**
+**Cell cost: US$ 0.092201 (with) + US$ 0.075917 (without) = US$ 0.168118.**
 
 `check-eval-run` on the two runs:
 
@@ -498,5 +498,6 @@ note) would be designed, alongside the two remaining cells.
   page-level non-discriminators do not close or reopen them, and the two
   artifact-shaped cells are the ones that could.
 - Whether `simplify` needs the same treatment — it lives outside this repo.
-- Whether the upstream `4.8.1` tag resolves — the entry records the pin and this
-  memo records the check as owed.
+- Whether the upstream `4.8.1` tag resolves — closed, not open: there is no
+  plain `4.8.1` ref; `skill-v4.8.1` and `cli-v4.8.1` peel to `924bbd19…`, and
+  the entry is withheld by the install contract (§9).

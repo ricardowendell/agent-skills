@@ -326,7 +326,7 @@ behavioural assertion 5/5.
 | with skill | `2026-11-16T10-47-01--impeccable--agentworks-deepseek-v4-1-flash` | **2/5** | 5/5 | 2/5 | **5/5** |
 | without skill | `2026-11-16T10-51-31--impeccable--agentworks-deepseek-v4-1-flash--without-skill` | 0/5 | 5/5 | 0/5 | **5/5** |
 
-Cost US$ 0.092201 + US$ 0.075918 = **US$ 0.168118**. `check-eval-run`: with
+Cost US$ 0.092201 + US$ 0.075917 = **US$ 0.168118**. `check-eval-run`: with
 `findings=3` (`gate-miss r2`, `r3`, `r4`), without `findings=0`; both
 `skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0`. No assertion needed
 correction: the label and contrast assertions passed in all ten draws.
@@ -401,7 +401,8 @@ nothing from the mirror is committed.
 - **`empty-state` and `document`** — the two artifact-shaped cells, deferred to
   `TASK-121`; their cells are `unresolved` in `decision.md` §7 and nothing about
   them is claimed.
-- **The upstream `4.8.1` tag check** — owed to `TASK-121` while it prepares the
-  follow-up.
+- **The upstream `4.8.1` tag check** — done: there is no plain `4.8.1` ref;
+  `skill-v4.8.1`/`cli-v4.8.1` peel to `924bbd19…`; the registry entry is
+  withheld by that install contract (see `decision.md` §9).
 - **No skill, harness, assertion kind, detector or `docs/evals/coverage.md`
   change** is part of this spec.
