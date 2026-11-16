@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "external_run_id": "9ac67ad9-266e-4f97-be91-10090b28aef6",
+  "slug": "SPEC-0097-the-ui-territory-is-measured",
+  "events": [
+    {
+      "stage": "dispatch",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-16T01:26:40.614Z",
+      "ended_at": "2026-11-16T01:26:41.627Z",
+      "duration_ms": 1013,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "d173e43133f7fcd67e2cdff70b9db093476dd3a75ea4092989eac6cb69f92d94",
+        "head_sha": "4c096905d3170c3493bf1fff50124b73f3fb93d5",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "review",
+      "attempt_id": 1,
+      "status": "failed",
+      "started_at": "2026-11-16T16:57:56.052Z",
+      "ended_at": "2026-11-16T16:57:56.054Z",
+      "duration_ms": 2,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "attempt_id": 1,
+      "status": "failed",
+      "started_at": "2026-11-16T16:57:56.414Z",
+      "ended_at": "2026-11-16T16:57:56.482Z",
+      "duration_ms": 68,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "review",
+      "attempt_id": 1,
+      "status": "approved",
+      "started_at": "2026-11-16T16:58:04.118Z",
+      "ended_at": "2026-11-16T16:58:04.221Z",
+      "duration_ms": 103,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "d173e43133f7fcd67e2cdff70b9db093476dd3a75ea4092989eac6cb69f92d94",
+        "head_sha": "746e59989a940a487c25290081a86522403e8beb",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "lint",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-16T16:58:04.389Z",
+      "ended_at": "2026-11-16T16:58:04.459Z",
+      "duration_ms": 70,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "d173e43133f7fcd67e2cdff70b9db093476dd3a75ea4092989eac6cb69f92d94",
+        "head_sha": "746e59989a940a487c25290081a86522403e8beb",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "gate": "selftest",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-16T16:58:04.460Z",
+      "ended_at": "2026-11-16T16:58:15.604Z",
+      "duration_ms": 11144,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "d173e43133f7fcd67e2cdff70b9db093476dd3a75ea4092989eac6cb69f92d94",
+        "head_sha": "746e59989a940a487c25290081a86522403e8beb",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "verify",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-16T16:58:04.292Z",
+      "ended_at": "2026-11-16T16:58:15.771Z",
+      "duration_ms": 11479,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "d173e43133f7fcd67e2cdff70b9db093476dd3a75ea4092989eac6cb69f92d94",
+        "head_sha": "746e59989a940a487c25290081a86522403e8beb",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    },
+    {
+      "stage": "merge",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-16T17:01:38.740Z",
+      "ended_at": "2026-11-16T17:01:39.793Z",
+      "duration_ms": 1053,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "d173e43133f7fcd67e2cdff70b9db093476dd3a75ea4092989eac6cb69f92d94",
+        "head_sha": "fd0a92b2c0af67cfe050803a189da44f0d15d439",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    }
+  ]
+}

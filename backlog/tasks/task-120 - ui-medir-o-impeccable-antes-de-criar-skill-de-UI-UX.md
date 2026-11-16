@@ -1,9 +1,10 @@
 ---
 id: TASK-120
 title: 'ui: medir o impeccable antes de criar skill de UI/UX'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-16T01:24:00Z'
+updated_date: '2026-11-16T17:01:00Z'
 labels: []
 dependencies: []
 documentation:
