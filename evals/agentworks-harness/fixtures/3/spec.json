@@ -1,0 +1,123 @@
+{
+  "name": "Gate Triad Demo",
+  "slug": "gate-triad-demo",
+  "workspace_id": "d627ad15-0087-4453-85bb-286ac597d3a0",
+  "goal": "Demo flow used by the harness eval: review, then proceed.",
+  "flow": {
+    "component_type": "Flow",
+    "execution_contract_version": 2,
+    "id": "gate_triad",
+    "name": "gate_triad",
+    "inputs": [{ "title": "state", "type": "object" }],
+    "outputs": [{ "title": "state", "type": "object" }],
+    "start_node": { "id": "start" },
+    "nodes": [
+      {
+        "id": "start",
+        "name": "Start",
+        "component_type": "StartNode",
+        "inputs": [{ "title": "state", "type": "object" }],
+        "outputs": [{ "title": "state", "type": "object" }]
+      },
+      {
+        "id": "review",
+        "name": "Review",
+        "component_type": "HumanInputNode",
+        "inputs": [{ "title": "state", "type": "object" }],
+        "actions": {
+          "approve": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "guidance": { "type": ["string", "null"] },
+              "review_comments": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "revise": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "guidance": { "type": ["string", "null"] },
+              "review_comments": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "reject": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "guidance": { "type": ["string", "null"] },
+              "review_comments": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      },
+      {
+        "id": "review_apply",
+        "name": "Review Apply",
+        "component_type": "ExternalTaskNode",
+        "task_type": "gate_triad.review_apply",
+        "inputs": [{ "title": "state", "type": "object" }],
+        "outputs": [{ "title": "state", "type": "object" }],
+        "result_schema": {
+          "type": "object",
+          "properties": {
+            "state": { "type": "object" },
+            "route": { "type": "string" }
+          },
+          "required": ["state"],
+          "additionalProperties": false
+        }
+      },
+      {
+        "id": "review_route",
+        "name": "Review Route",
+        "component_type": "BranchingNode",
+        "condition_input": "route",
+        "mapping": { "approve": "proceed", "revise": "proceed", "reject": "end" },
+        "branches": ["proceed", "end"],
+        "inputs": [{ "title": "route", "type": "string" }]
+      },
+      {
+        "id": "proceed",
+        "name": "Proceed",
+        "component_type": "ExternalTaskNode",
+        "task_type": "gate_triad.proceed",
+        "inputs": [{ "title": "state", "type": "object" }],
+        "outputs": [{ "title": "state", "type": "object" }],
+        "result_schema": {
+          "type": "object",
+          "properties": {
+            "state": { "type": "object" },
+            "route": { "type": "string" }
+          },
+          "required": ["state"],
+          "additionalProperties": false
+        }
+      },
+      {
+        "id": "end",
+        "name": "End",
+        "component_type": "EndNode",
+        "inputs": [{ "title": "state", "type": "object" }],
+        "outputs": [{ "title": "state", "type": "object" }]
+      }
+    ],
+    "control_flow_connections": [
+      { "from_node": { "id": "start" }, "to_node": { "id": "review" } },
+      { "from_node": { "id": "review" }, "to_node": { "id": "review_apply" }, "from_branch": "approve" },
+      { "from_node": { "id": "review" }, "to_node": { "id": "review_apply" }, "from_branch": "revise" },
+      { "from_node": { "id": "review" }, "to_node": { "id": "review_apply" }, "from_branch": "reject" },
+      { "from_node": { "id": "review_apply" }, "to_node": { "id": "review_route" } },
+      { "from_node": { "id": "review_route" }, "to_node": { "id": "proceed" }, "from_branch": "proceed" },
+      { "from_node": { "id": "review_route" }, "to_node": { "id": "end" }, "from_branch": "end" }
+    ],
+    "data_flow_connections": [
+      { "source_node": { "id": "start" }, "source_output": "state", "destination_node": { "id": "review" }, "destination_input": "state" },
+      { "source_node": { "id": "start" }, "source_output": "state", "destination_node": { "id": "review_apply" }, "destination_input": "state" },
+      { "source_node": { "id": "review_apply" }, "source_output": "state", "destination_node": { "id": "proceed" }, "destination_input": "state" },
+      { "source_node": { "id": "review_apply" }, "source_output": "state", "destination_node": { "id": "end" }, "destination_input": "state" },
+      { "source_node": { "id": "review_apply" }, "source_output": "route", "destination_node": { "id": "review_route" }, "destination_input": "route" },
+      { "source_node": { "id": "proceed" }, "source_output": "state", "destination_node": { "id": "end" }, "destination_input": "state" }
+    ]
+  }
+}

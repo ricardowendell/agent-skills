@@ -1,0 +1,84 @@
+{
+  "component_type": "Flow",
+  "execution_contract_version": 2,
+  "id": "retry_loop",
+  "name": "retry_loop",
+  "inputs": [{ "title": "state", "type": "object" }],
+  "outputs": [{ "title": "state", "type": "object" }],
+  "start_node": { "id": "start" },
+  "nodes": [
+    {
+      "id": "start",
+      "name": "Start",
+      "component_type": "StartNode",
+      "inputs": [{ "title": "state", "type": "object" }],
+      "outputs": [{ "title": "state", "type": "object" }]
+    },
+    {
+      "id": "work",
+      "name": "Work",
+      "component_type": "ExternalTaskNode",
+      "task_type": "retry_loop.work",
+      "inputs": [{ "title": "state", "type": "object" }],
+      "outputs": [{ "title": "state", "type": "object" }],
+      "result_schema": {
+        "type": "object",
+        "properties": {
+          "state": { "type": "object" },
+          "route": { "type": "string" }
+        },
+        "required": ["state"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "work_route",
+      "name": "Work Route",
+      "component_type": "BranchingNode",
+      "condition_input": "route",
+      "mapping": { "done": "finish", "retry": "work", "fail": "end" },
+      "branches": ["finish", "work", "end"],
+      "inputs": [{ "title": "route", "type": "string" }]
+    },
+    {
+      "id": "finish",
+      "name": "Finish",
+      "component_type": "ExternalTaskNode",
+      "task_type": "retry_loop.finish",
+      "inputs": [{ "title": "state", "type": "object" }],
+      "outputs": [{ "title": "state", "type": "object" }],
+      "result_schema": {
+        "type": "object",
+        "properties": {
+          "state": { "type": "object" },
+          "route": { "type": "string" }
+        },
+        "required": ["state"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "end",
+      "name": "End",
+      "component_type": "EndNode",
+      "inputs": [{ "title": "state", "type": "object" }],
+      "outputs": [{ "title": "state", "type": "object" }]
+    }
+  ],
+  "control_flow_connections": [
+    { "from_node": { "id": "start" }, "to_node": { "id": "work" } },
+    { "from_node": { "id": "work" }, "to_node": { "id": "work_route" } },
+    { "from_node": { "id": "work_route" }, "to_node": { "id": "finish" }, "from_branch": "finish" },
+    { "from_node": { "id": "work_route" }, "to_node": { "id": "work" }, "from_branch": "work" },
+    { "from_node": { "id": "work_route" }, "to_node": { "id": "end" }, "from_branch": "end" },
+    { "from_node": { "id": "finish" }, "to_node": { "id": "end" } }
+  ],
+  "data_flow_connections": [
+    { "source_node": { "id": "start" }, "source_output": "state", "destination_node": { "id": "work" }, "destination_input": "state" },
+    { "source_node": { "id": "work" }, "source_output": "state", "destination_node": { "id": "work" }, "destination_input": "state" },
+    { "source_node": { "id": "work" }, "source_output": "state", "destination_node": { "id": "finish" }, "destination_input": "state" },
+    { "source_node": { "id": "work" }, "source_output": "state", "destination_node": { "id": "end" }, "destination_input": "state" },
+    { "source_node": { "id": "work" }, "source_output": "route", "destination_node": { "id": "work_route" }, "destination_input": "route" },
+    { "source_node": { "id": "finish" }, "source_output": "state", "destination_node": { "id": "end" }, "destination_input": "state" }
+  ]
+}

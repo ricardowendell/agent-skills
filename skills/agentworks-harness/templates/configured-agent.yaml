@@ -1,0 +1,12 @@
+# Minimal valid configured agent. The platform synthesizes the flow from
+# goal + model_ref — no graph needed.
+#
+# check.mjs reads JSON only; for YAML the live validator is the gate:
+#   agentworks agent validate -f templates/configured-agent.yaml
+# Required fields: name, slug, workspace_id, goal.
+name: Hello Agent
+slug: hello-agent
+workspace_id: "<WORKSPACE_ID>"   # scope.workspace_ids from cluster_context
+goal: Answer the user's question concisely and cite sources when available.
+model_ref: "<MODEL_REF>"         # catalog slug, e.g. zai-org/GLM-5.3 (catalogs.models)
+system_prompt: You are a concise, helpful assistant.

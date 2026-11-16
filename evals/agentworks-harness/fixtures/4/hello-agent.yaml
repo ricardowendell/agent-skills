@@ -1,0 +1,7 @@
+# Minimal valid configured agent drafted for the eval case.
+name: Hello Agent
+slug: hello-agent
+workspace_id: "d627ad15-0087-4453-85bb-286ac597d3a0"
+goal: Answer the user's question concisely and cite sources when available.
+model_ref: "zai-org/GLM-5.3"
+system_prompt: You are a concise, helpful assistant.

@@ -1,0 +1,8 @@
+{
+  "agentworks_version": "0.2.0",
+  "schema_version": 2,
+  "include": "embedded-fallback",
+  "profile": "default",
+  "generated_at": "2026-11-06T13:46:40+00:00",
+  "expires_at": "2026-11-07T13:46:40+00:00"
+}

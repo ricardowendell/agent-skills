@@ -1,0 +1,308 @@
+{
+  "component_type": "Flow",
+  "execution_contract_version": 2,
+  "id": "data_product_delivery",
+  "name": "data_product_delivery",
+  "inputs": [{ "title": "state", "type": "object" }],
+  "outputs": [{ "title": "state", "type": "object" }],
+  "start_node": { "id": "start" },
+  "nodes": [
+    {
+      "id": "start",
+      "name": "Start",
+      "component_type": "StartNode",
+      "inputs": [{ "title": "state", "type": "object" }],
+      "outputs": [{ "title": "state", "type": "object" }]
+    },
+    {
+      "id": "capture",
+      "name": "Capture",
+      "component_type": "ExternalTaskNode",
+      "task_type": "data_product_delivery.capture",
+      "inputs": [{ "title": "state", "type": "object" }],
+      "outputs": [{ "title": "state", "type": "object" }],
+      "result_schema": {
+        "type": "object",
+        "properties": { "state": { "type": "object" }, "route": { "type": "string" } },
+        "required": ["state"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "process_inbox",
+      "name": "Process Inbox",
+      "component_type": "ExternalTaskNode",
+      "task_type": "data_product_delivery.process_inbox",
+      "inputs": [{ "title": "state", "type": "object" }],
+      "outputs": [{ "title": "state", "type": "object" }],
+      "result_schema": {
+        "type": "object",
+        "properties": { "state": { "type": "object" }, "route": { "type": "string" } },
+        "required": ["state"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "groom",
+      "name": "Groom Spec",
+      "component_type": "ExternalTaskNode",
+      "task_type": "data_product_delivery.groom",
+      "inputs": [{ "title": "state", "type": "object" }],
+      "outputs": [{ "title": "state", "type": "object" }],
+      "result_schema": {
+        "type": "object",
+        "properties": { "state": { "type": "object" }, "route": { "type": "string" } },
+        "required": ["state"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "spec_gate",
+      "name": "Spec Ready Gate",
+      "component_type": "HumanInputNode",
+      "inputs": [{ "title": "state", "type": "object" }],
+      "actions": {
+        "ready": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "guidance": { "type": ["string", "null"] },
+            "review_comments": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "revise": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "guidance": { "type": ["string", "null"] },
+            "review_comments": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "reject": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "guidance": { "type": ["string", "null"] },
+            "review_comments": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+    {
+      "id": "spec_gate_apply",
+      "name": "Spec Gate Apply",
+      "component_type": "ExternalTaskNode",
+      "task_type": "data_product_delivery.spec_gate_apply",
+      "inputs": [{ "title": "state", "type": "object" }],
+      "outputs": [{ "title": "state", "type": "object" }],
+      "result_schema": {
+        "type": "object",
+        "properties": { "state": { "type": "object" }, "route": { "type": "string" } },
+        "required": ["state"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "spec_gate_route",
+      "name": "Spec Gate Route",
+      "component_type": "BranchingNode",
+      "condition_input": "route",
+      "mapping": { "ready": "prompt", "revise": "groom", "reject": "end" },
+      "branches": ["prompt", "groom", "end"],
+      "inputs": [{ "title": "route", "type": "string" }]
+    },
+    {
+      "id": "prompt",
+      "name": "Write Implementation Prompt",
+      "component_type": "ExternalTaskNode",
+      "task_type": "data_product_delivery.prompt",
+      "inputs": [{ "title": "state", "type": "object" }],
+      "outputs": [{ "title": "state", "type": "object" }],
+      "result_schema": {
+        "type": "object",
+        "properties": { "state": { "type": "object" }, "route": { "type": "string" } },
+        "required": ["state"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "implement",
+      "name": "Implement And Gates",
+      "component_type": "ExternalTaskNode",
+      "task_type": "data_product_delivery.implement",
+      "inputs": [{ "title": "state", "type": "object" }],
+      "outputs": [{ "title": "state", "type": "object" }],
+      "result_schema": {
+        "type": "object",
+        "properties": { "state": { "type": "object" }, "route": { "type": "string" } },
+        "required": ["state"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "implement_route",
+      "name": "Implement Route",
+      "component_type": "BranchingNode",
+      "condition_input": "route",
+      "mapping": { "review": "review_assist", "retry": "implement", "fail": "end" },
+      "branches": ["review_assist", "implement", "end"],
+      "inputs": [{ "title": "route", "type": "string" }]
+    },
+    {
+      "id": "review_assist",
+      "name": "Review Assist",
+      "component_type": "ExternalTaskNode",
+      "task_type": "data_product_delivery.review_assist",
+      "inputs": [{ "title": "state", "type": "object" }],
+      "outputs": [{ "title": "state", "type": "object" }],
+      "result_schema": {
+        "type": "object",
+        "properties": { "state": { "type": "object" }, "route": { "type": "string" } },
+        "required": ["state"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "merge_gate",
+      "name": "Merge Gate",
+      "component_type": "HumanInputNode",
+      "inputs": [{ "title": "state", "type": "object" }],
+      "actions": {
+        "approve": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "guidance": { "type": ["string", "null"] },
+            "review_comments": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "revise": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "guidance": { "type": ["string", "null"] },
+            "review_comments": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "reject": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "guidance": { "type": ["string", "null"] },
+            "review_comments": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+    {
+      "id": "merge_gate_apply",
+      "name": "Merge Gate Apply",
+      "component_type": "ExternalTaskNode",
+      "task_type": "data_product_delivery.merge_gate_apply",
+      "inputs": [{ "title": "state", "type": "object" }],
+      "outputs": [{ "title": "state", "type": "object" }],
+      "result_schema": {
+        "type": "object",
+        "properties": { "state": { "type": "object" }, "route": { "type": "string" } },
+        "required": ["state"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "merge_gate_route",
+      "name": "Merge Gate Route",
+      "component_type": "BranchingNode",
+      "condition_input": "route",
+      "mapping": { "approve": "deploy", "revise": "implement", "reject": "end" },
+      "branches": ["deploy", "implement", "end"],
+      "inputs": [{ "title": "route", "type": "string" }]
+    },
+    {
+      "id": "deploy",
+      "name": "Deploy Dab",
+      "component_type": "ExternalTaskNode",
+      "task_type": "data_product_delivery.deploy",
+      "inputs": [{ "title": "state", "type": "object" }],
+      "outputs": [{ "title": "state", "type": "object" }],
+      "result_schema": {
+        "type": "object",
+        "properties": { "state": { "type": "object" }, "route": { "type": "string" } },
+        "required": ["state"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "docs",
+      "name": "Docs And Adr",
+      "component_type": "ExternalTaskNode",
+      "task_type": "data_product_delivery.docs",
+      "inputs": [{ "title": "state", "type": "object" }],
+      "outputs": [{ "title": "state", "type": "object" }],
+      "result_schema": {
+        "type": "object",
+        "properties": { "state": { "type": "object" }, "route": { "type": "string" } },
+        "required": ["state"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "end",
+      "name": "End",
+      "component_type": "EndNode",
+      "inputs": [{ "title": "state", "type": "object" }],
+      "outputs": [{ "title": "state", "type": "object" }]
+    }
+  ],
+  "control_flow_connections": [
+    { "from_node": { "id": "start" }, "to_node": { "id": "capture" } },
+    { "from_node": { "id": "capture" }, "to_node": { "id": "process_inbox" } },
+    { "from_node": { "id": "process_inbox" }, "to_node": { "id": "groom" } },
+    { "from_node": { "id": "groom" }, "to_node": { "id": "spec_gate" } },
+    { "from_node": { "id": "spec_gate" }, "to_node": { "id": "spec_gate_apply" }, "from_branch": "ready" },
+    { "from_node": { "id": "spec_gate" }, "to_node": { "id": "spec_gate_apply" }, "from_branch": "revise" },
+    { "from_node": { "id": "spec_gate" }, "to_node": { "id": "spec_gate_apply" }, "from_branch": "reject" },
+    { "from_node": { "id": "spec_gate_apply" }, "to_node": { "id": "spec_gate_route" } },
+    { "from_node": { "id": "spec_gate_route" }, "to_node": { "id": "prompt" }, "from_branch": "prompt" },
+    { "from_node": { "id": "spec_gate_route" }, "to_node": { "id": "groom" }, "from_branch": "groom" },
+    { "from_node": { "id": "spec_gate_route" }, "to_node": { "id": "end" }, "from_branch": "end" },
+    { "from_node": { "id": "prompt" }, "to_node": { "id": "implement" } },
+    { "from_node": { "id": "implement" }, "to_node": { "id": "implement_route" } },
+    { "from_node": { "id": "implement_route" }, "to_node": { "id": "review_assist" }, "from_branch": "review_assist" },
+    { "from_node": { "id": "implement_route" }, "to_node": { "id": "implement" }, "from_branch": "implement" },
+    { "from_node": { "id": "implement_route" }, "to_node": { "id": "end" }, "from_branch": "end" },
+    { "from_node": { "id": "review_assist" }, "to_node": { "id": "merge_gate" } },
+    { "from_node": { "id": "merge_gate" }, "to_node": { "id": "merge_gate_apply" }, "from_branch": "approve" },
+    { "from_node": { "id": "merge_gate" }, "to_node": { "id": "merge_gate_apply" }, "from_branch": "revise" },
+    { "from_node": { "id": "merge_gate" }, "to_node": { "id": "merge_gate_apply" }, "from_branch": "reject" },
+    { "from_node": { "id": "merge_gate_apply" }, "to_node": { "id": "merge_gate_route" } },
+    { "from_node": { "id": "merge_gate_route" }, "to_node": { "id": "deploy" }, "from_branch": "deploy" },
+    { "from_node": { "id": "merge_gate_route" }, "to_node": { "id": "implement" }, "from_branch": "implement" },
+    { "from_node": { "id": "merge_gate_route" }, "to_node": { "id": "end" }, "from_branch": "end" },
+    { "from_node": { "id": "deploy" }, "to_node": { "id": "docs" } },
+    { "from_node": { "id": "docs" }, "to_node": { "id": "end" } }
+  ],
+  "data_flow_connections": [
+    { "source_node": { "id": "start" }, "source_output": "state", "destination_node": { "id": "capture" }, "destination_input": "state" },
+    { "source_node": { "id": "capture" }, "source_output": "state", "destination_node": { "id": "process_inbox" }, "destination_input": "state" },
+    { "source_node": { "id": "process_inbox" }, "source_output": "state", "destination_node": { "id": "groom" }, "destination_input": "state" },
+    { "source_node": { "id": "groom" }, "source_output": "state", "destination_node": { "id": "spec_gate" }, "destination_input": "state" },
+    { "source_node": { "id": "groom" }, "source_output": "state", "destination_node": { "id": "spec_gate_apply" }, "destination_input": "state" },
+    { "source_node": { "id": "spec_gate_apply" }, "source_output": "state", "destination_node": { "id": "groom" }, "destination_input": "state" },
+    { "source_node": { "id": "spec_gate_apply" }, "source_output": "state", "destination_node": { "id": "prompt" }, "destination_input": "state" },
+    { "source_node": { "id": "spec_gate_apply" }, "source_output": "state", "destination_node": { "id": "end" }, "destination_input": "state" },
+    { "source_node": { "id": "spec_gate_apply" }, "source_output": "route", "destination_node": { "id": "spec_gate_route" }, "destination_input": "route" },
+    { "source_node": { "id": "prompt" }, "source_output": "state", "destination_node": { "id": "implement" }, "destination_input": "state" },
+    { "source_node": { "id": "implement" }, "source_output": "state", "destination_node": { "id": "review_assist" }, "destination_input": "state" },
+    { "source_node": { "id": "implement" }, "source_output": "state", "destination_node": { "id": "implement" }, "destination_input": "state" },
+    { "source_node": { "id": "implement" }, "source_output": "state", "destination_node": { "id": "end" }, "destination_input": "state" },
+    { "source_node": { "id": "implement" }, "source_output": "route", "destination_node": { "id": "implement_route" }, "destination_input": "route" },
+    { "source_node": { "id": "review_assist" }, "source_output": "state", "destination_node": { "id": "merge_gate" }, "destination_input": "state" },
+    { "source_node": { "id": "review_assist" }, "source_output": "state", "destination_node": { "id": "merge_gate_apply" }, "destination_input": "state" },
+    { "source_node": { "id": "merge_gate_apply" }, "source_output": "state", "destination_node": { "id": "implement" }, "destination_input": "state" },
+    { "source_node": { "id": "merge_gate_apply" }, "source_output": "state", "destination_node": { "id": "deploy" }, "destination_input": "state" },
+    { "source_node": { "id": "merge_gate_apply" }, "source_output": "state", "destination_node": { "id": "end" }, "destination_input": "state" },
+    { "source_node": { "id": "merge_gate_apply" }, "source_output": "route", "destination_node": { "id": "merge_gate_route" }, "destination_input": "route" },
+    { "source_node": { "id": "deploy" }, "source_output": "state", "destination_node": { "id": "docs" }, "destination_input": "state" },
+    { "source_node": { "id": "docs" }, "source_output": "state", "destination_node": { "id": "end" }, "destination_input": "state" }
+  ]
+}

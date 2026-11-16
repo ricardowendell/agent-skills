@@ -1,0 +1,16 @@
+{
+  "schema_version": 2,
+  "report_id": "replace-with-a-unique-report-id",
+  "status": "in_progress",
+  "summary": "What this build set out to do.",
+  "bundle_sha256": null,
+  "agent": { "id": null, "slug": null, "version_id": null },
+  "deployment": { "id": null, "slug": null, "environment": null },
+  "skills": [],
+  "validation": { "valid": null, "warnings": [], "errors": [] },
+  "runs": [],
+  "actions": [],
+  "tests_run": [],
+  "changes": [],
+  "remaining_risk": []
+}
