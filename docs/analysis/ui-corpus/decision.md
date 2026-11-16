@@ -8,8 +8,9 @@
   funded stage is closed at two cells; `empty-state` and `document` are deferred
   to `TASK-121` (follow-up), not measured. The stage spent **US$ 0.449202**,
   inside the amended US$ 0.95 ceiling; the smoke's six discarded draws are
-  included. `companion-skills.json` carries `impeccable` with the partial
-  measurement named in its evidence (§9). No skill is created by this memo.
+  included. The `companion-skills.json` entry is **withheld**: the measured tree
+  is a built artifact the registry's clone-and-copy contract cannot reproduce
+  (§9). No skill is created by this memo.
 
 ## 1. The instrument (F1–F2)
 
@@ -159,7 +160,7 @@ and the audit cell's US$ 0.168118.
 
 Per-cell cost, measured (both arms, five draws each):
 
-| Cell | With skill | Control | Cell | Draws |
+| Cell | With skill | Control | Total | Draws |
 | --- | --- | --- | --- | --- |
 | critique (§5) | 0.129987 | 0.043013 | **0.173000** | 10 |
 | audit (§6) | 0.092201 | 0.075918 | **0.168118** | 10 |
@@ -400,37 +401,53 @@ and §6's run directories.
 
 ## 9. The registry decision (F5)
 
-**`impeccable` enters `companion-skills.json`** with the partial measurement
-named in its evidence:
+**`impeccable` does not enter `companion-skills.json`.** The measurement is
+published (§5–§7) and is the evidence; the registry entry is withheld because
+the entry cannot name an install the bootstrap can perform, and the manifest
+lists only what can be materialised. The three datacontract entries are unchanged.
 
-```json
-{
-  "id": "impeccable",
-  "group": "ui",
-  "scope": "global",
-  "source": "pbakaus/impeccable",
-  "sourceUrl": "https://github.com/pbakaus/impeccable",
-  "pin": "4.8.1",
-  "path": "skills/impeccable",
-  "license": "Apache-2.0",
-  "signals": { "files": ["**/*.css", "**/*.html"] },
-  "evidence": "SPEC-0097 (critique + audit cells: non-discriminator)"
-}
-```
+The facts, confirmed before withdrawing the entry:
 
-- **Scope `global`** because a UI review applies to any host repo that has a
-  surface; the file signals are what the bootstrap intersects to decide whether
-  this repo has one. No `directories`/`dependencies` signal was invented.
-- **Pin `4.8.1`** is the installed skill's own `metadata.version` (engine
-  `0.1.19` from `scripts/VERSION`). **The upstream tag was not verified against
-  the remote**, so a bootstrap that runs `git checkout 4.8.1` should confirm it
-  resolves first — that check is owed to `TASK-121`, not claimed here.
-- **Licence Apache-2.0**, Copyright 2025 Paul Bakaus, confirmed 2026-11-16 in
-  the repository's `LICENSE`; no upstream file is redistributed, so no `NOTICE`
-  obligation is triggered.
-- **Evidence is the two measured cells, and says so.** The entry does not claim
-  the four-cell measurement the follow-up still owes; when `TASK-121` lands, the
-  evidence string is the line to update.
+- **A pin is a commit, never a version.** `companions.md` states it — "`pin` is
+  a commit, never a branch: the measured revision" — and the install step is
+  `git clone <sourceUrl> && git checkout <pin> && cp -R <path>`. A version string
+  such as `4.8.1` is not a ref the contract can check out.
+- **The upstream tags do not include `4.8.1`.** `git ls-remote --tags` on
+  <https://github.com/pbakaus/impeccable> lists `skill-v4.8.1` (tag object
+  `3a3dc83b…`) and `cli-v4.8.1` (`f8678973…`), both **peeling to**
+  `924bbd194d02e5e15a227e75b5901fb0d7a4ecad` (the `^{}` line). Either tag would
+  resolve there, but a tag is not a pin and no tag names the built tree this
+  memo measured.
+- **The upstream tree is not the tree measured.** At `924bbd19…` the skill lives
+  at `skill/` (singular) as `SKILL.src.md`; the installed tree has
+  `SKILL.md` plus the launcher, engine binary, references and agent files. The
+  install is a **built artifact** (the plugin/npm channel assembles it), so
+  clone + checkout + `cp -R skill/` does not reproduce the measured
+  `treeHash b1fbb5d8…`; it would stage a different tree and a
+  `skillHash` that no run in §5–§6 records.
+- **A materialisable entry would need a documented built-artifact channel**
+  (`npx impeccable install`, or the plugin distribution) in the schema, which
+  the current manifest has no field for. That is a schema decision, not a line
+  in this memo.
+
+What is verified and can be reused when that channel exists:
+
+| Fact | Value |
+| --- | --- |
+| Source | `pbakaus/impeccable` |
+| Licence | Apache-2.0, Copyright 2025 Paul Bakaus (confirmed 2026-11-16 in `LICENSE`) |
+| Skill version | `4.8.1` (`SKILL.md` → `metadata.version`); engine `0.1.19` |
+| Upstream tag → commit | `skill-v4.8.1` / `cli-v4.8.1` peel to `924bbd194d02e5e15a227e75b5901fb0d7a4ecad` |
+| Upstream path at that commit | `skill/` (singular), `SKILL.src.md` |
+| Measured tree | built artifact, `treeHash b1fbb5d8…` (not reproducible by clone+checkout+copy) |
+
+So the entry is **withheld, not refused**: the capability is measured (two
+cells, both non-discriminators), and what is missing is a way to install the
+artifact the measurement used. Listing it with a version-as-pin and a `path` the
+upstream does not have would put a skill in the manifest that the bootstrap
+cannot install — the failure mode the manifest exists to prevent. The blocker is
+this section; `TASK-121` is where a built-artifact field (or an install-channel
+note) would be designed, alongside the two remaining cells.
 
 ## 10. Known limitations
 
@@ -459,6 +476,14 @@ named in its evidence:
   resolves `scripts/bin/darwin-arm64/impeccable` (18 MB) from inside the scratch
   copy; the skill's own documented degraded path applies when the launcher cannot
   run. Neither measured cell needed it, and no draw was asked to render a page.
+- **The measured tree is a built artifact.** The installed
+  `~/.agents/skills/impeccable` is assembled by the plugin/npm channel: the
+  upstream repository at `924bbd19…` carries `skill/` (singular) with
+  `SKILL.src.md`, not the `SKILL.md`, launcher and engine the measurement ran.
+  `treeHash b1fbb5d8…` therefore identifies the artifact, and the registry's
+  clone + checkout + `cp -R` contract cannot reproduce it (§9). A field for a
+  built-artifact install channel is not in the schema; until one exists the entry
+  stays out, even though the capability is measured.
 - **n=5.** Five clean draws per arm can show a large separation or its absence;
   it cannot bound a small delta.
 - **The cost figures are recorded provider cost**, not a billing statement: the

@@ -31,7 +31,6 @@ files:
   - docs/analysis/ui-corpus/document/AGENTS.md
   - docs/analysis/ui-corpus/document/index.html
   - docs/analysis/ui-corpus/document/styles.css
-  - companion-skills.json
   - docs/specs/active/SPEC-0097-the-ui-territory-is-measured.md
 tests:
   - node scripts/validate-skills.mjs --root skills
@@ -72,8 +71,9 @@ considered.
 - A reader of `docs/analysis/ui-corpus/decision.md` sees, per measured cell,
   whether `impeccable` separates from the control, with the pin, the run
   directories and the raw counts — and which cells were out of scope and why.
-- `companion-skills.json` carries `impeccable` with the measurement it actually
-  has, and the entry says which cells it does not claim.
+- `companion-skills.json` carries `impeccable` only where the entry names an
+  install the bootstrap can perform; otherwise the decision says why not, and the
+  measurement is still published.
 - CI stays green: nothing about the installed skill or the mirror is committed.
 
 ## Scope
@@ -141,10 +141,17 @@ included):
 
 ### F5 — the registry, only with evidence
 
-Add `impeccable` to `companion-skills.json` (source `pbakaus/impeccable`, the
-declared licence, pin `4.8.1` / engine `0.1.19`, the staged tree hash recorded
-at measurement) **only if** the measurement exists. If the source or licence
-cannot be confirmed, `decision.md` records the gap and the entry waits.
+Add `impeccable` to `companion-skills.json` only if the entry names an install
+the bootstrap can perform: a `pin` that is a **commit**, the declared licence,
+and a `path` the cloned revision actually contains. The measurement exists (two
+cells), but the entry is **withheld**: the measured tree is a built artifact
+(`treeHash b1fbb5d8…`) assembled by the plugin/npm channel, while the upstream
+revision `924bbd194d02e5e15a227e75b5901fb0d7a4ecad` — tagged `skill-v4.8.1` and
+`cli-v4.8.1` (both peeling to `924bbd19…`) — carries `skill/` (singular) with
+`SKILL.src.md`. Recording it
+would list a skill that `git checkout <pin>` + `cp -R <path>` cannot install.
+The confirmed facts and the blocker are in `decision.md` §9; nothing enters the
+manifest.
 
 ### F6 — the pointer
 
@@ -156,6 +163,12 @@ already publishes there and the queue forbids the collision.
 
 - No new skill. `SPEC-0036` and `SPEC-0038` stay paused; their fate is decided by
   the evidence this spec publishes, not here.
+- No measurement of `empty-state` or `document` in this spec: the funded stage
+  closed at `critique` and `audit`, and the two remaining cells are deferred to
+  `TASK-121` — out of scope here, `unresolved` in `decision.md` §7.
+- No entry in `companion-skills.json` for `impeccable`: the measured tree is a
+  built artifact the manifest's commit-pin + `path` contract cannot install, so
+  the entry stays out and the blocker is recorded (`decision.md` §9).
 - No edit to `skills/impeccable` — it is upstream; the mirror copies it.
 - No new assertion kind, matcher, oracle or harness change (the freeze stands).
 - No screenshot comparison, DOM query, computed style or `axe`; those were the
@@ -198,8 +211,11 @@ already publishes there and the queue forbids the collision.
    `unresolved`) with the reason and the declared human-review items listed. The
    two deferred cells are declared out of scope (`TASK-121`) and `unresolved`,
    not scored.
-5. `companion-skills.json` carries the `impeccable` entry with source, licence
-   and pin named, and the partial measurement named in its `evidence`.
+5. `companion-skills.json` is unchanged: the `impeccable` entry is withheld,
+   because the measured tree is a built artifact the registry's commit-pin +
+   `path` contract cannot reproduce. `decision.md` §9 records the confirmed pin
+   (`skill-v4.8.1` → `924bbd19…`), the upstream `skill/` path with
+   `SKILL.src.md`, and the built-artifact gap.
 6. No skill file, harness file or assertion kind changed; every command in
    `tests:` exits 0.
 
@@ -237,9 +253,10 @@ already publishes there and the queue forbids the collision.
 
 **Status: implemented.** F1–F3 and F6 landed; **two cells are measured 5+5**
 (`critique`, `audit`) and both are **non-discriminators**; the other two cells
-are out of scope and owned by `TASK-121`; **F5** landed with the partial
-measurement named in the entry. The funded stage spent **US$ 0.449202** against
-the amended **US$ 0.95** ceiling, discarded smoke included.
+are out of scope and owned by `TASK-121`; **F5** is closed with the entry
+**withheld** and the confirmed blocker recorded. The funded stage spent
+**US$ 0.449202** against the amended **US$ 0.95** ceiling, discarded smoke
+included.
 
 ### F1 — the durable corpus (done)
 
@@ -330,33 +347,31 @@ with no `result.json` and no transcript. Zero draws, no recorded cost;
 `check-eval-run` reports `cases=0 reps=0 findings=2` (`incomplete manifest`,
 `incomplete impeccable--03 r0`). It is recorded as cancelled and counts nowhere.
 
-### F5 — the registry (done)
+### F5 — the registry (entry withheld)
 
-`companion-skills.json` now carries the entry, in the schema the datacontract
-entries use:
+`companion-skills.json` is **unchanged**: the three datacontract entries, no
+`impeccable`. The final review found the entry could not be listed honestly, and
+it was withdrawn rather than patched:
 
-```json
-{
-  "id": "impeccable",
-  "group": "ui",
-  "scope": "global",
-  "source": "pbakaus/impeccable",
-  "sourceUrl": "https://github.com/pbakaus/impeccable",
-  "pin": "4.8.1",
-  "path": "skills/impeccable",
-  "license": "Apache-2.0",
-  "signals": { "files": ["**/*.css", "**/*.html"] },
-  "evidence": "SPEC-0097 (critique + audit cells: non-discriminator)"
-}
-```
+- A pin in this registry is a **commit**, never a version: `companions.md` says
+  "`pin` is a commit, never a branch: the measured revision", and the install is
+  `git checkout <pin>` + `cp -R <path>`. `4.8.1` is not a ref.
+- `git ls-remote --tags` on `pbakaus/impeccable` lists `skill-v4.8.1` and
+  `cli-v4.8.1`, both **peeling to**
+  `924bbd194d02e5e15a227e75b5901fb0d7a4ecad`; there is no `4.8.1` tag.
+- At that commit the skill is `skill/` (singular) with `SKILL.src.md`; the
+  measured tree (`treeHash b1fbb5d8…`) is the **built artifact**, assembled by
+  the plugin/npm channel. Clone + checkout + copy cannot reproduce what the
+  cells measured, so the entry would list a skill the bootstrap cannot install.
+- Materialising it needs a documented built-artifact channel in the schema — a
+  decision, not a line in this spec.
 
-Apache-2.0, Copyright 2025 Paul Bakaus, confirmed 2026-11-16 in the upstream
-`LICENSE`; the staged tree hash at measurement is `b1fbb5d8…`. The evidence names
-the two measured cells and does not claim the four-cell measurement `TASK-121`
-still owes. **The pin `4.8.1` comes from the installed skill's own
-`metadata.version`; the upstream tag was not verified against the remote** — a
-bootstrap that checks it out should confirm it resolves, and that check is owed
-to `TASK-121` (`decision.md` §9).
+What was verified and is reusable when that channel exists: source
+`pbakaus/impeccable`, licence Apache-2.0 (Copyright 2025 Paul Bakaus, confirmed
+2026-11-16 in `LICENSE`), skill `4.8.1` / engine `0.1.19`, the tag → commit
+mapping above, and the measured tree hash. The measurement stays published in
+`decision.md` §5–§6 and is the evidence; the blocker is §9 there. `TASK-121`
+owns the built-artifact question alongside the two deferred cells.
 
 ### F6 — the pointer (done)
 
@@ -379,7 +394,7 @@ nothing from the mirror is committed.
 | `node scripts/check-sensor-parity.mjs` | pass — 2/2 fixtures in parity |
 | `node scripts/check-evidence.mjs` | pass — 6 documents, 0 errors, 0 warnings |
 | `node scripts/check-staleness.mjs` | pass (report: 77 cited, 49 stale, 3 uncited — pre-existing; this corpus is not cited there) |
-| `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0097-the-ui-territory-is-measured.md --base main` | pass — no findings |
+| `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0097-the-ui-territory-is-measured.md --base main` | pass — contract holds, no findings |
 
 ### Out of scope
 
