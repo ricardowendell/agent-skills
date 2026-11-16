@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Orders — Ledgerly</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/">Ledgerly</a>
+      <nav class="nav">
+        <a href="/invoices">Invoices</a>
+        <a href="/orders" aria-current="page">Orders</a>
+        <a href="/customers">Customers</a>
+        <a href="/settings">Settings</a>
+      </nav>
+    </header>
+
+    <main class="page">
+      <div class="page-head">
+        <h1>Orders</h1>
+        <a class="btn" href="/orders/new">New order</a>
+      </div>
+
+      <div class="filters">
+        <input type="search" name="q" placeholder="Search orders" aria-label="Search orders" />
+        <select name="status" aria-label="Filter by status">
+          <option value="">Any status</option>
+          <option value="paid">Paid</option>
+          <option value="open">Open</option>
+          <option value="void">Void</option>
+        </select>
+      </div>
+
+      <table class="orders">
+        <thead>
+          <tr>
+            <th scope="col">Order</th>
+            <th scope="col">Customer</th>
+            <th scope="col">Placed</th>
+            <th scope="col">Total</th>
+            <th scope="col">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="empty" colspan="5">No data</td>
+          </tr>
+        </tbody>
+      </table>
+    </main>
+  </body>
+</html>
