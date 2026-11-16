@@ -78,6 +78,9 @@ create/import → deploy exact versions → smoke → inspect → report
 
 - `references/practices.md`: the curated rules behind each loop step; read it
   before deciding how to proceed.
+- `references/catalog-practices.md`: scope, tags, naming, versions and
+  workspaces. Read it before promoting a skill beyond its workspace or
+  organizing a growing catalog.
 - `references/mcp-tool-map.md`: MCP tools by function, CLI equivalents and write
   gating. Read it before choosing MCP versus CLI for an operation.
 - `references/flow-recipes.md`: validated graph patterns and edge rules. Read it
