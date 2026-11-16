@@ -1,35 +1,36 @@
 ---
 id: SPEC-0037
 title: Frame a solution before choosing a template
-status: paused
+status: draft
 priority: P3
 task: TASK-59
 created_at: 2026-11-08
-updated_at: 2026-11-08
+updated_at: 2026-11-15
 source_docs:
   - https://github.com/ricardowendell/agent-skills/issues/9
   - backlog/tasks/task-59 - skill-framing-leve-de-solucao-antes-de-escolher-template.md
   - docs/specs/SPEC-0034-iterative-corpus.md
+  - docs/analysis/paused-specs-review.md
   - docs/roadmap.md
 related_decisions: []
-depends_on:
-  - SPEC-0034-iterative-corpus
+depends_on: []
 blocks: []
 files:
   - skills/solution-framing/SKILL.md
-  - skills/solution-framing/references/evals.md
-  - docs/evals/framing-corpus.md
+  - evals/solution-framing/cases.md
+  - docs/evals/solution-framing-matrix.md
   - docs/evals/coverage.md
   - docs/README.md
   - docs/specs/active/SPEC-0037-solution-framing.md
 tests:
   - node scripts/validate-skills.mjs --root skills
-  - node scripts/run-evals.mjs --root skills --list --check
+  - node scripts/eval.mjs check --root skills
   - node --test scripts/lib/evals/*.test.mjs
   - node --test scripts/lib/*.test.mjs
   - node --test skills/bootstrap-project-harness/scripts/*.test.mjs
   - node scripts/check-sensor-parity.mjs
   - node scripts/check-evidence.mjs
+  - node scripts/check-staleness.mjs
   - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0037-solution-framing.md --base main
 ---
 
@@ -44,12 +45,13 @@ requiring a full specification for an early exploration is excessive.
 The repo already has `capture-idea`, `groom-backlog` and `find-blind-spots`.
 A framing skill is justified only if it adds something those three do not.
 
-**Paused on 2026-11-08.** No cluster in the session analysis maps to this skill:
-of 58 human sessions, none is a framing request. Its three neighbours
-(`capture-idea`, `groom-backlog`, `find-blind-spots`) already cover the territory,
-and a fourth skill needs a gap that is not a rewording. It reopens when
-`SPEC-0034` shows the incumbent mishandling an underspecified request in a way
-those three do not cover, **and** a demand signal exists.
+**Rewritten on 2026-11-15, status `draft`.** The previous text waited on
+`SPEC-0034` to show the incumbent mishandling an underspecified request. That
+gate ran and closed in the incumbent's favour: `SPEC-0034` measured the exact
+case (`#12`) at **4/5 vs 0/5**, and the 2026-11-15 audit records that no cluster
+in the 58-session sample maps to framing. The premise is falsified, not pending;
+this rewrite states the trigger the skill now needs instead of re-waiting on a
+gate that already answered.
 
 ## User Outcome
 
@@ -74,15 +76,23 @@ smallest demonstrable slice — without an interview and without being marked
 - **Output feeds, never promotes.** The frame can feed `groom-backlog`; it does
   not set `ready` and does not change product scope.
 
-## Blocker: why this is `draft`
+## Trigger: why this is `draft`
 
-0.7.0 is the corpus (`SPEC-0034`), and this skill's justification is a comparison
-against three existing skills. Writing it before that evidence would be the exact
-"feature factory" the roadmap forbids. It becomes `ready` when:
+The skill becomes `ready` only when a **named trigger** exists:
 
-1. `SPEC-0034` shows what the incumbent does with an underspecified request, and
-2. the comparison against `groom-backlog`, `capture-idea` and `find-blind-spots`
-   names a gap that is not a rewording of what they already do.
+1. a real session transcript where the incumbent (`capture-idea`,
+   `groom-backlog`, `find-blind-spots`) mishandles an underspecified request in
+   a way those three do not cover, **and**
+2. the comparison names a gap that is not a rewording of what they already do.
+
+The falsified premise stays recorded: `SPEC-0034` `#12` separates 4/5 vs 0/5 in
+the incumbent's favour, so "waiting for the corpus" is no longer a valid reason
+to keep this open. Without a named trigger, this spec is `rejected`, not
+re-paused.
+
+**Draw ceiling.** The first measurement wave is capped at **20 draws** — a
+3-draw smoke plus 5+5 on the first cell — with the total and the discarded draws
+published. Exceeding it needs a new named trigger and a new ceiling.
 
 ## Non-Goals
 
@@ -103,7 +113,9 @@ against three existing skills. Writing it before that evidence would be the exac
 5. **`confirmed`, `assumed` and `open` are distinguishable** in the output.
 6. **The measurement supports create or extend**; without incremental value, the
    decision not to create is recorded.
-7. **No drift.** Every command in `tests:` passes, when it becomes `ready`.
+7. **The first wave stays within 20 draws**, and the total cost including
+   discarded draws is published.
+8. **No drift.** Every command in `tests:` passes, when it becomes `ready`.
 
 ## Open Questions
 
@@ -112,12 +124,18 @@ against three existing skills. Writing it before that evidence would be the exac
   judgment. The corpus must say which part is graded and which is human.
 - **Is this a skill or a section in `groom-backlog`?** Extension is the cheaper
   hypothesis and should be tested first.
+- **Where does the named trigger come from?** The 2026-11-07 sample has no
+
+  framing cluster; the trigger has to come from a new transcript, not from the
+  same sample that already answered.
 
 ## Prompt Notes
 
 - **Requirements**: short frame, three states, blocking-only questions, optional
   catalogued template, no promotion to `ready`.
 - **Entities**: frame, assumption, open question, slice, template capability.
-- **Approach**: compare with the incumbent set first; extend if equal.
-- **Safeguards**: no invented business rule, no product decision, no registry.
-- **Tests**: reply assertions for the frame; human review for relevance.
+- The `tests:` command was updated on 2026-11-15: the old
+  `run-evals.mjs --list --check` no longer exists (`SPEC-0060` consolidated the
+  CLI), and `check-staleness` was missing.
+- `files:` moved the corpus to `evals/solution-framing/cases.md` (`SPEC-0058`);
+  a case never lives inside the skill.
