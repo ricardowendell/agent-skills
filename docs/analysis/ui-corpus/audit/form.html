@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Payout settings — Ledgerly</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <h1>Payout settings</h1>
+      <p class="intro">
+        Money leaves your Ledgerly balance to this account. Changes take effect
+        on the next payout run.
+      </p>
+
+      <form class="payout-form" action="/settings/payouts" method="post">
+        <div class="field">
+          <input type="text" name="account_name" placeholder="Account holder name" />
+          <p class="helper">Exactly as it appears on the bank statement.</p>
+        </div>
+
+        <div class="field">
+          <input type="text" name="routing_number" placeholder="Routing number" inputmode="numeric" />
+          <p class="helper">Nine digits. Ask your bank if you are unsure.</p>
+        </div>
+
+        <div class="field">
+          <input type="text" name="account_number" placeholder="Account number" inputmode="numeric" />
+          <p class="helper">Checking or savings. We do not store the full number.</p>
+        </div>
+
+        <div class="field">
+          <select name="cadence">
+            <option value="">Payout schedule</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="manual">Manual only</option>
+          </select>
+          <p class="helper">Manual payouts still need a confirmation from an admin.</p>
+        </div>
+
+        <div class="field">
+          <input type="text" name="threshold" placeholder="Minimum payout amount" inputmode="decimal" />
+          <p class="helper">Leave empty to pay out every balance.</p>
+        </div>
+
+        <p class="error">We could not verify the routing number.</p>
+
+        <button class="primary" type="submit">Save payout settings</button>
+      </form>
+    </main>
+  </body>
+</html>

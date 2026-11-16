@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Workspace settings — Ledgerly</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <p class="sidebar-label">Workspace</p>
+        <nav>
+          <a href="/settings/profile">Profile</a>
+          <a class="current" href="/settings/members">Members</a>
+          <a href="/settings/billing">Billing</a>
+        </nav>
+      </aside>
+
+      <main class="content">
+        <header class="head">
+          <h1>Members</h1>
+          <p class="sub">Six people can see this workspace. Two are admins.</p>
+        </header>
+
+        <section class="panel">
+          <h2>Invite a teammate</h2>
+          <p class="hint">They get a link that expires in 48 hours.</p>
+          <form class="invite">
+            <input type="email" name="email" placeholder="name@company.com" aria-label="Email address" />
+            <select name="role" aria-label="Role">
+              <option value="member">Member</option>
+              <option value="admin">Admin</option>
+            </select>
+            <button type="submit">Send invite</button>
+          </form>
+        </section>
+
+        <section class="panel">
+          <h2>Pending invites</h2>
+          <p class="hint">Expired invites are removed automatically.</p>
+          <ul class="list">
+            <li>
+              <span class="who">sam@northwind.test</span>
+              <span class="role">Admin</span>
+              <span class="expires">expires in 2 days</span>
+            </li>
+          </ul>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
