@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "external_run_id": "d34d1710-105b-4fa0-b91b-fdcc1cabe418",
+  "slug": "SPEC-0096-migrate-data-pipeline",
+  "events": [
+    {
+      "stage": "dispatch",
+      "attempt_id": 1,
+      "status": "ok",
+      "started_at": "2026-11-15T18:16:56.196Z",
+      "ended_at": "2026-11-15T18:16:57.084Z",
+      "duration_ms": 888,
+      "source": "harness",
+      "measurement_method": "wall-clock",
+      "context": {
+        "spec_sha": "f4200df097d38c545fa10fc9c2997c3eedecb3c0da941ab3125b71b0b63c6962",
+        "head_sha": "e49d023f7fa2a10591fcdb31697a27d973faaa8f",
+        "policy_hash": "ec5b53e979d132000cb31f63acf3aca4856d4bdf165bdcf9682013c1466d3f4f"
+      }
+    }
+  ]
+}
