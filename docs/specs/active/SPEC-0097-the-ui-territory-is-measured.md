@@ -1,7 +1,7 @@
 ---
 id: SPEC-0097
 title: The UI territory is measured, not assumed
-status: blocked
+status: paused
 priority: P0
 task: TASK-120
 created_at: 2026-11-15
@@ -54,10 +54,12 @@ cover the visual territory: no measurement exists."* `companion-skills.json`
 exists for exactly this and says an entry needs a measurement; `impeccable` has
 none.
 
-The skill is installed at `skills/impeccable` (`pbakaus/impeccable`, skill
-`4.8.1`, engine `0.1.19`) and that directory is **gitignored**, so a corpus at
-the repo root under `evals/impeccable/` would break CI: `node scripts/eval.mjs
-check --root skills` stages every case, and the skill is not in a clean checkout.
+The skill is installed in the host's skills root at `~/.agents/skills/impeccable`
+(`pbakaus/impeccable`, skill `4.8.1`, engine `0.1.19`); this checkout has no
+`skills/impeccable` (the path is listed in `.gitignore` for hosts that install
+in-tree), so a corpus at the repo root under `evals/impeccable/` would break CI:
+`node scripts/eval.mjs check --root skills` stages every case, and the skill is
+not in a clean checkout.
 
 The data program already solved this shape (`SPEC-0085`): the durable corpus
 lives in `docs/analysis/`, the runnable staging lives in a **gitignored mirror**,
@@ -97,7 +99,9 @@ whether a skill is missing, not to justify one.
 `ui-cases.md` defines the four cases in the eval format (`prompt`, `why`,
 `expect`, `assert:`), using only the closed set of assertion kinds in
 `README.md` (`reply`, `noreply`, `file`, `filematch`, `unchanged`, `changed`,
-`dir`, `nofile`, `verdict`). **No visual oracle**: the `(b)` decision of
+`dir`, `nofile`, `verdict`), plus `skill` — the pre-existing load gate
+`SPEC-0085` uses to name a draw that never reached the skill under review.
+**No visual oracle**: the `(b)` decision of
 `SPEC-0077` stands, so the visual judgment is a declared human-review item per
 case, never a claimed deterministic pass. Freeze-compatible by construction.
 
@@ -120,6 +124,20 @@ committed.
   with the run directories, per-draw status and cost.
 - A cell is `separator`, `non-discriminator` or `unresolved`, with the reason;
   a non-discriminator is a valid result and is published as such.
+
+**Staged scope (amended 2026-11-16).** The measurement was split, because the
+four-cell wave does not fit the ceiling:
+
+- **F4a — `critique`, measured.** Five draws per arm on the pinned model; the
+  per-cell verdict and the costs are published in
+  [`docs/analysis/ui-corpus/decision.md`](../../analysis/ui-corpus/decision.md)
+  §5.
+- **F4b — `audit`, `empty-state`, `document`, gated.** Not run: at the measured
+  price per draw (US$ 0.026674 with the skill, US$ 0.009354 without) the full
+  40-draw wave costs US$ 0.713–0.829 including the discarded smoke, 1.43×–1.66×
+  the US$ 0.50 ceiling. The remaining three cells need a budget decision (raise
+  the ceiling to about US$ 0.85, or fund a screening and publish it as one); they
+  are `unresolved` until then. The reason is cost, not design.
 
 ### F5 — the registry, only with evidence
 
@@ -155,7 +173,8 @@ already publishes there and the queue forbids the collision.
 
 ## Data
 
-- `skills/impeccable/` — the installed skill (gitignored); copied verbatim.
+- `~/.agents/skills/impeccable` — the installed skill (host state, gitignored;
+  copied verbatim into the mirror).
 - `docs/analysis/data-corpus/` — the template: README, `ab-cases.md`,
   `decision.md`, the gitignored mirror.
 - `evals/review-code/cases.md` — the case-format reference, including the
@@ -213,11 +232,10 @@ already publishes there and the queue forbids the collision.
 
 ## Results
 
-**Status: blocked on F4/F5 — the paid wave was stopped at the human gate on
-2026-11-16 because the spec's own arithmetic does not close.** F1–F3 and F6
-landed; the instrument stages cleanly and the evidence for the blocker is
-published. Nothing was invented to fill the gap, and no cell is reported as a
-result.
+**Status: paused.** F1–F3 and F6 landed; **F4a measured the `critique` cell**
+(5+5) and it is a **non-discriminator**; **F4b** (the other three cells) is
+gated on a budget decision; **F5** waits on F4b. Nothing was invented to fill the
+gap and no cell is reported beyond what ran.
 
 ### F1 — the durable corpus (done)
 
@@ -232,60 +250,118 @@ read-only).
 ### F2 — the cases (done)
 
 `ui-cases.md` defines four cells with `prompt`/`why`/`expect`/`assert:`. Kinds
-used: `skill impeccable` (load gate), `reply`, `changed`, `unchanged`, `file`,
-`filematch` — all existing. No visual oracle: the visual half is a declared
-human-review item per case, listed in each `AGENTS.md` and in `decision.md` §5.
+used: `skill impeccable` (the pre-existing load gate, listed with the others in
+`README.md` §Assertions), `reply`, `changed`, `unchanged`, `file`, `filematch`.
+No visual oracle: the visual half is a declared human-review item per case,
+listed in each `AGENTS.md` and in `decision.md` §7.
 
 ### F3 — the mirror (done)
 
 `.lane/pinned/impeccable/` (gitignored) holds `skills/impeccable` copied verbatim
-(staged tree hash `b1fbb5d8…`, identical to the install) and
-`evals/impeccable/cases.md` + four fixtures. `node scripts/eval.mjs check --root
+(staged tree hash `b1fbb5d8…`, identical to the `~/.agents/skills/impeccable`
+install) and `evals/impeccable/cases.md` + four fixtures. `check --root
 .lane/pinned/impeccable` → `Parsed 4 case(s): 4 runnable, 0 manual; 4 fixture(s)
 staged. / No findings.` (three warnings = case 4's declared `DESIGN.md` create
 target). `--root skills` is unchanged: 110 cases parsed, 108 staged, no findings.
 
-### F4 — the smoke, and the blocker (smoke done, wave not run)
+### F4 — the smoke and the cost arithmetic
 
 Six discarded calibration draws on case 1, model `agentworks/deepseek-v4-1-flash`,
-detector `cf2e2e319d975a5b`, seatbelt isolation enforced:
+detector `cf2e2e319d975a5b`, seatbelt isolation enforced, `repoSha 4c09690`:
 
 | Run directory | Prompt | Draws | Loaded | Status | Cost |
 | --- | --- | --- | --- | --- | --- |
 | `2026-11-15T22-32-09--impeccable--agentworks-deepseek-v4-1-flash` | `e310e713…` | 3 | 1/3 | r2 5/5; r1, r3 red on the load gate only | US$ 0.041130 |
-| `2026-11-15T22-37-09--impeccable--agentworks-deepseek-v4-1-flash` | `20b4297e…` | 3 | 2/3 | r2, r3 5/5; r1 red on the load gate only | US$ 0.066955 |
+| `2026-11-15T22-37-09--impeccable--agentworks-deepseek-v4-1-flash` | `20b4297e…` | 3 | 2/3 | r2, r3 5/5; r1 red on the load gate only | US$ 0.066954 |
 
-**Total spend: US$ 0.108085 (6 discarded draws).** The prompt was calibrated to
+**Smoke spend: US$ 0.108084 (6 discarded draws).** The prompt was calibrated to
 the skill's own vocabulary ("UX review … critique the visual hierarchy") after
 the first smoke's 1/3 load rate, before any control draw; both prompt hashes are
-published and no assertion changed after a draw. `check-eval-run` on both runs:
+published and no assertion changed in that phase. `check-eval-run` on both runs:
 only the load misses as findings, `skillLeaks=0 hostReads=0 isolated=yes`.
 
-Measured per-draw cost is US$ 0.0292 with the skill (5–7 steps) and US$ 0.0094
-without (2 steps). The specified 40-draw wave therefore costs **US$ 0.640–0.772**,
-and **US$ 0.748–0.880 including the discarded smoke** — 1.5× to 1.8× the US$ 0.50
-ceiling. Holding 5+5 per cell needs ~US$ 1.00; holding US$ 0.50 allows 2+2 (a
-screening, not evidence). The human gate chose to stop rather than raise the
-ceiling inside the measurement. Per-cell class: **`unresolved`** for all four,
-with the reason in `decision.md` §4–§5; no control arm ran, so no cell is
-`separator` or `non-discriminator`.
+Measured per-draw cost: **US$ 0.026674** with the skill (three loaded draws:
+0.021640 / 0.026729 / 0.031654) and **US$ 0.009354** without (three 2-step
+draws: 0.010086 / 0.009405 / 0.008572). The full 40-draw wave therefore costs
+**US$ 0.721** all-load and **US$ 0.605** at the observed 2/3 load rate; with the
+smoke, **US$ 0.713–0.829** — 1.43× to 1.66× the US$ 0.50 ceiling. The human gate
+chose to stop the four-cell wave and fund **one** cell (F4a). See the amended
+staged scope in §Scope and `decision.md` §4.
+
+### F4a — the critique cell, measured (5+5)
+
+Same prompt (`20b4297e…`) and fixture (`ae60be75…`) in both arms; five draws
+each, `repeat 5`, `agentworks/deepseek-v4-1-flash`, detector
+`cf2e2e319d975a5b`, isolation enforced.
+
+| Arm | Run directory |
+| --- | --- |
+| without skill | `2026-11-16T09-56-17--impeccable--agentworks-deepseek-v4-1-flash--without-skill` |
+| with skill | `2026-11-16T09-47-18--impeccable--agentworks-deepseek-v4-1-flash` |
+
+| Draw | Arm | Loaded | As-run | Cost (US$) | Steps |
+| --- | --- | --- | --- | --- | --- |
+| r1 | with | no | red: `skill` | 0.011534 | 2 |
+| r2 | with | yes | pass 5/5 | 0.038313 | 8 |
+| r3 | with | yes | pass 5/5 | 0.033803 | 9 |
+| r4 | with | no | red: `skill`, `reply hierarchy` | 0.008502 | 2 |
+| r5 | with | yes | pass 5/5 | 0.037834 | 7 |
+| r1 | without | — | red: `skill`, `reply hierarchy` | 0.008158 | 2 |
+| r2–r5 | without | — | red: `skill` | 0.009578 / 0.008213 / 0.008672 / 0.008392 | 2 |
+
+**Cell cost: US$ 0.173000** (with 0.129987 + without 0.043013); **accumulated
+with the smoke: US$ 0.281084** — within the ceiling.
+
+`check-eval-run`: with-skill `cases=1 reps=5 findings=2 warnings=0 skillLeaks=0
+hostReads=0 isolated=yes deniedDraws=0` (exit 1, the two `gate-miss` r1/r4);
+without-skill `findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes
+deniedDraws=0` (exit 0). No contamination, no leak, no host read, no denied draw.
+
+**Oracle correction, published with both readings.** The as-run reds on
+`reply [Hh]ierarchy` (with r4, control r1) were strong critiques that never use
+the literal word — "no type scale", "nothing is primary". The assertion misread
+the draw, so it became `reply ([Hh]ierarchy|[Pp]rimary|type[- ]scale)` and the
+**same ten paid draws** were re-judged model-free with `inspect --replay` (no new
+draw, no new cost): both `reply` reds become passes; the seven `skill` reds stay
+red. The as-run count is not erased.
+
+| Arm | Clean | Loaded | Scored | Behavioural (all but `skill`) |
+| --- | --- | --- | --- | --- |
+| with skill | 5/5 | **3/5** | 3/5 | **5/5** (4/5 as-run) |
+| without skill | 5/5 | 0/5 by construction | 0/5 | **5/5** (4/5 as-run) |
+
+**Verdict: `non-discriminator`.** The control reproduces every behavioural
+assertion in 5/5 clean draws, and the skill arm does the same: a bare model reads
+two files and names the nine identical CTAs, the missing primary action and the
+flat type scale. The 3/5 vs 0/5 scored split is the declared load gate (routing
+3/5), published as a failure of the skill arm, not re-judged and not read as a
+separator (`SPEC-0092` precedent). The visual half is not scored here; it stays
+with §7's human-review items over the ten transcripts.
+
+### F4b — the other three cells (not run, gated)
+
+`audit`, `empty-state` and `document` are `unresolved`: no draw of either arm.
+Their fixtures stage clean, and their cases parse. The gate is the budget
+decision in `decision.md` §4 — raise the ceiling to about US$ 0.85 for 5+5 on
+each, or fund a 2+2 screening and publish it as one.
 
 ### F5 — the registry (entry withheld)
 
 `companion-skills.json` has **no** `impeccable` entry: the manifest admits
-measured companions, and this wave produced no measurement. The facts an entry
-needs are recorded in `decision.md` §6 — source `pbakaus/impeccable`, licence
-Apache-2.0 (confirmed 2026-11-16, Copyright 2025 Paul Bakaus), skill `4.8.1`,
-engine `0.1.19`, staged tree hash `b1fbb5d8…` — so the entry waits on the draws,
-not on the facts. The upstream `4.8.1` tag was not verified against a remote; that
-check belongs to the wave that lands the entry.
+measured companions, and one cell of four — a non-discriminator on a page-level
+critique — is not the measurement the entry would rest on. The facts it needs are
+in `decision.md` §8: source `pbakaus/impeccable`, licence Apache-2.0 (confirmed
+2026-11-16, Copyright 2025 Paul Bakaus), skill `4.8.1`, engine `0.1.19`, staged
+tree hash `b1fbb5d8…`. It waits on F4b, not on the facts; the upstream `4.8.1`
+tag is also still unverified against a remote.
 
 ### F6 — the pointer (done)
 
 `docs/analysis/ui-corpus/README.md` is the entry point: the four trees, the case
 rules (existing kinds, no visual oracle), the gitignored mirror and its rebuild
-commands, the paid command, and the rules. `docs/evals/coverage.md` is untouched
-(the `SPEC-0096` collision is avoided); nothing from the mirror is committed.
+commands, the two-arm command and the replay correction, and the rules.
+`docs/evals/coverage.md` is untouched (the `SPEC-0096` collision is avoided);
+nothing from the mirror is committed.
 
 ### Gates
 
@@ -294,19 +370,20 @@ commands, the paid command, and the rules. `docs/evals/coverage.md` is untouched
 | `node scripts/validate-skills.mjs --root skills` | pass — 15 SKILL.md, all clear |
 | `node scripts/eval.mjs check --root skills` | pass — 110 cases, 108 staged, no findings |
 | `node scripts/eval.mjs check --root .lane/pinned/impeccable` | pass — 4 cases, 4 staged, no findings |
-| `node --test scripts/lib/evals/*.test.mjs` | pass |
-| `node --test scripts/lib/*.test.mjs` | pass |
-| `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` | pass |
-| `node scripts/check-sensor-parity.mjs` | pass |
-| `node scripts/check-evidence.mjs` | pass — no citation swept from `ui-corpus/` |
-| `node scripts/check-staleness.mjs` | pass (report; no cell cites this corpus) |
-| `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0097-the-ui-territory-is-measured.md --base main` | pass |
+| `node --test scripts/lib/evals/*.test.mjs` | pass — 574 tests |
+| `node --test scripts/lib/*.test.mjs` | pass — 24 tests |
+| `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` | pass — 42 tests |
+| `node scripts/check-sensor-parity.mjs` | pass — 2/2 fixtures in parity |
+| `node scripts/check-evidence.mjs` | pass — 6 documents, 0 errors, 0 warnings |
+| `node scripts/check-staleness.mjs` | pass (report: 77 cited, 49 stale, 3 uncited — pre-existing; this corpus is not cited there) |
+| `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0097-the-ui-territory-is-measured.md --base main` | pass — one warning, `files-declared-untouched companion-skills.json` (F5 withheld) |
 
 ### What is left
 
-- **F4 (wave):** 5+5 per case at `agentworks/deepseek-v4-1-flash` (~US$ 1.00),
-  then the per-cell classes with counts.
-- **F5 (entry):** add `impeccable` to `companion-skills.json` once the wave
-  exists; also verify the `4.8.1` tag on the upstream remote while adding it.
+- **F4b:** `audit`, `empty-state`, `document` at 5+5 on the pinned model — about
+  US$ 0.454 (2/3 load) to US$ 0.540 (all-load) for the three, which needs the
+  ceiling raised to about US$ 0.85 including what is already spent.
+- **F5:** add `impeccable` to `companion-skills.json` once F4b exists, verifying
+  the `4.8.1` tag on the upstream remote while adding it.
 - **Nothing else:** no skill, harness, assertion kind, detector or
   `docs/evals/coverage.md` change is owed.

@@ -31,7 +31,7 @@ Each tree's `AGENTS.md` carries the same split for the agent: the task contract
    - expect: Human review (visual): every claim is tied to what `index.html` and `styles.css` show (label, class, size, order), not to taste or an invented screenshot.
    - expect: Human review (visual): the critique would change the page if a designer applied it; "it looks fine" or a generic list of heuristics fails.
    - assert: skill impeccable
-   - assert: reply [Hh]ierarchy
+   - assert: reply ([Hh]ierarchy|[Pp]rimary|type[- ]scale)
    - assert: reply (Start free trial|Book a demo|Read the docs)
    - assert: unchanged index.html
    - assert: unchanged styles.css

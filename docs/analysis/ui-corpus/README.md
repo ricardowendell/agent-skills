@@ -30,7 +30,7 @@ network — so a fixture is the directory itself.
 
 - **Only existing assertion kinds.** The machine half uses `reply`,
   `changed`/`unchanged`, `file`, `filematch` and `skill` — every one of them is
-  in the closed list in `CONTRIBUTING.md`/`README.md`. The one `skill
+  in the closed list in `README.md` §Assertions. The one `skill
   impeccable` assertion is the load gate `SPEC-0085` already uses: a draw that
   never reached the skill is named, not read as a behavioural pass. No new kind,
   matcher or flag was added.
@@ -41,9 +41,11 @@ network — so a fixture is the directory itself.
 
 ## The mirror (gitignored)
 
-The skill under measurement is installed at `skills/impeccable`, and that
-directory is gitignored: staging the cases from the repository root would break
-CI on a clean checkout. The runnable copy therefore lives in a gitignored mirror,
+The skill under measurement is installed in the host's skills root at
+`~/.agents/skills/impeccable`, outside this checkout — there is no
+`skills/impeccable` in the repo (the path is in `.gitignore` for hosts that
+install in-tree). Staging the cases from the repository root would therefore
+break CI on a clean checkout. The runnable copy lives in a gitignored mirror,
 the same shape `SPEC-0085` uses for the contract corpus:
 
 ```
@@ -86,16 +88,28 @@ node scripts/eval.mjs check --root skills                    # the CI path, unch
 Paid, one cell at a time (the model is the one the spec pins):
 
 ```sh
-node scripts/eval.mjs compare impeccable 1 --repeat 5 \
+node scripts/eval.mjs run impeccable 1 --arm with --repeat 5 \
+  --root .lane/pinned/impeccable --model agentworks/deepseek-v4-1-flash
+node scripts/eval.mjs run impeccable 1 --arm without --repeat 5 \
   --root .lane/pinned/impeccable --model agentworks/deepseek-v4-1-flash
 ```
 
-`compare` runs both arms: the control with no skill staged, and the candidate
-with `.lane/pinned/impeccable/skills/impeccable` staged in the scratch. Five
-draws per arm is the evidence floor; a lower count is a screening and must be
-published as one. Read the cost of a draw **before** starting a wave — see
-`decision.md` §4, where the measured per-draw price outran the spec's ceiling and
-the wave was stopped.
+(`compare impeccable 1 --repeat 5` runs both arms in one invocation; the two
+`run` calls above are the same thing in two run directories. Case numbers are
+the mirror's: 1 critique, 2 audit, 3 empty-state, 4 document.) The control arm
+stages no skill — the skill tool is denied — and the candidate arm stages
+`.lane/pinned/impeccable/skills/impeccable` in the scratch. Five draws per arm is
+the evidence floor; a lower count is a screening and must be published as one.
+Read the cost of a draw **before** starting a wave: `decision.md` §4 records the
+measured per-draw price against the spec's ceiling.
+
+When a transcript assertion turns out to misclassify what a paid draw did, the
+case is corrected and the stored draws are re-judged model-free — never
+re-scored by eye:
+
+```sh
+node scripts/eval.mjs inspect <run-dir> --replay --root .lane/pinned/impeccable/skills --verbose
+```
 
 ## Rules
 
@@ -107,7 +121,8 @@ the wave was stopped.
 - The upstream skill is copied, never edited, and never committed. A mirror that
   differs from the install (`treeHash`) invalidates the measurement.
 - A case that fails on staging is fixed in `ui-cases.md` or the tree and
-  re-probed; a draw that misclassifies what the transcript did is published with
-  the finding, not silently re-scored.
+  re-probed. A draw that a transcript assertion misread is corrected and
+  re-judged with `inspect --replay` over the same paid draws; an as-run red is
+  never quietly replaced, both readings are published.
 - `docs/evals/coverage.md` is not edited for this corpus: this README and
   `decision.md` are the discoverable entry point.
