@@ -8,7 +8,8 @@ mistake.
 
 - The bundle is a 24h snapshot. Refresh (`agentworks builder init --out .`) after
   `manifest.expires_at` or after any auth/catalog/model/MCP/policy change.
-- `include: "embedded-fallback"` means "no authenticated scope", not "no access".
+- `include: "embedded-fallback"` ships no authenticated scope; it says nothing
+  about access.
 - Prefer live reads (`cluster_context`, `tools/list`, `validate_agent`) over any
   prose or cached catalog.
 
@@ -18,7 +19,7 @@ mistake.
   grant access to it.
 - Affordances: `allowed` is advisory until the API accepts the mutation;
   `denied` is a hard boundary; `not_configured` means a prerequisite resource is
-  missing — create or request it, do not work around it.
+  missing. Create or request it; do not work around it.
 - Roles: `developer` authors agents/skills/deployments only in named workspaces.
   Models, environments, capability policies, tool permissions, tenant policy,
   external authority and service accounts are tenant-admin/operator territory.

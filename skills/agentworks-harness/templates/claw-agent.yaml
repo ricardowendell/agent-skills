@@ -1,4 +1,4 @@
-# Governed Claw agent — real code execution inside an OpenShell sandbox.
+# Governed Claw agent: real code execution inside an OpenShell sandbox.
 #
 # Preconditions (check cluster_context first): capability_policies + claw.create
 # + deploy affordances are `allowed` and the sandbox runtime is ready. Create the
@@ -19,7 +19,7 @@ memory_config:
   enabled: true                  # run-only memory (the default)
   llm_model_id: "<MODEL_REF>"
   # Run-only memory needs no embedding model. Shared memory
-  # (shared_across_users: true) also needs one — and a deliberate decision:
+  # (shared_across_users: true) also needs one, and a deliberate decision:
   # embedding_model_id: "<EMBEDDING_MODEL_REF>"
 
 claw_spec:

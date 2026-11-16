@@ -1,5 +1,5 @@
 # Minimal valid configured agent. The platform synthesizes the flow from
-# goal + model_ref — no graph needed.
+# goal + model_ref: no graph needed.
 #
 # check.mjs reads JSON only; for YAML the live validator is the gate:
 #   agentworks agent validate -f templates/configured-agent.yaml

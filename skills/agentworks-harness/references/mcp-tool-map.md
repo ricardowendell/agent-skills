@@ -39,7 +39,7 @@ your role, workspace membership and tags.
   bridge sends `_meta.activeScope` on every call and the API re-checks
   membership and permissions each time.
 - Empty `AGENTWORKS_BEARER_TOKEN` in the harness config means "unset" so the
-  profile credential applies — do not export a token into the server env.
+  profile credential applies. Do not export a token into the server env.
 - A human PAT with several workspaces and no explicit selection gets
   `404: active workspace could not be resolved` even though the tool list
   appears (it is advertised locally).

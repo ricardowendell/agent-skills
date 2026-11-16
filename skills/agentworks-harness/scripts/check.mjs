@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// check.mjs — deterministic offline pre-flight for AgentWorks Agent Specs.
+// check.mjs: deterministic offline pre-flight for AgentWorks Agent Specs.
 //
 // S0 bundle freshness · S1 graph structure · S2 data edges · S3 hygiene.
 // S4 (validate_agent) stays live; S5 (skill pack) lives in the CLI.
@@ -51,7 +51,7 @@ if (!noBundle) {
     resolve(process.env.HOME || ".", ".agentworks/bundle/manifest.json");
 
   if (!existsSync(bundlePath)) {
-    W(`S0: no manifest found (${bundlePath}) — pass --no-bundle if you are not touching the cluster now`);
+    W(`S0: no manifest found (${bundlePath}): pass --no-bundle if you are not touching the cluster now`);
   } else {
     let bundle = null;
     try {
@@ -61,11 +61,11 @@ if (!noBundle) {
     }
     if (bundle) {
       if (bundle.include !== "full-ops") {
-        E(`S0: include=${JSON.stringify(bundle.include)} — authenticate and run 'agentworks builder init --out .' before any resource work`);
+        E(`S0: include=${JSON.stringify(bundle.include)}: authenticate and run 'agentworks builder init --out .' before any resource work`);
       }
       const exp = bundle.expires_at ? Date.parse(bundle.expires_at) : NaN;
       if (!Number.isNaN(exp) && exp < Date.now()) {
-        E(`S0: bundle expired at ${bundle.expires_at} — refresh before any resource work`);
+        E(`S0: bundle expired at ${bundle.expires_at}: refresh before any resource work`);
       }
     }
   }
@@ -83,16 +83,16 @@ try {
 try {
   spec = JSON.parse(text);
 } catch (e) {
-  E(`spec is not valid JSON (${e.message}) — for YAML specs use 'agentworks agent validate -f'`);
+  E(`spec is not valid JSON (${e.message}): for YAML specs use 'agentworks agent validate -f'`);
 }
 
 // ---- S3: secret scan (runs even when JSON fails) ----------------------------
 const secretRe = /\b(sk-[A-Za-z0-9_-]{8,}|sa-[A-Za-z0-9-]{8,}|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{20,}|xox[abp]-[A-Za-z0-9-]{8,}|Bearer\s+[A-Za-z0-9._-]{12,})/;
 const hit = text.match(secretRe);
-if (hit) E(`S3: possible secret in the spec ("${hit[0].slice(0, 12)}…") — credentials never belong in a spec`);
+if (hit) E(`S3: possible secret in the spec ("${hit[0].slice(0, 12)}…"): credentials never belong in a spec`);
 for (const key of ["api_key", "apiKey", "secret", "password", "bearer_token"]) {
   const re = new RegExp(`"${key}"\\s*:\\s*"[^"]{4,}"`, "i");
-  if (re.test(text)) W(`S3: field '${key}' has a literal value — prefer external authority`);
+  if (re.test(text)) W(`S3: field '${key}' has a literal value: prefer external authority`);
 }
 
 function report() {
@@ -114,13 +114,13 @@ if (!spec) report();
 // Accept either a full Agent Spec ({...spec, flow}) or a bare Flow document.
 const flow = spec.flow || (spec.component_type === "Flow" ? spec : null);
 if (!flow) {
-  W("spec has no 'flow' — configured agents are covered by the live validator (S4)");
+  W("spec has no 'flow': configured agents are covered by the live validator (S4)");
   report();
 }
 
 if (flow.component_type !== "Flow") W(`S1: flow.component_type=${JSON.stringify(flow.component_type)} (expected "Flow")`);
 if (flow.execution_contract_version !== 2) {
-  W(`S1: execution_contract_version=${JSON.stringify(flow.execution_contract_version)} — contract 2 enables durable gates`);
+  W(`S1: execution_contract_version=${JSON.stringify(flow.execution_contract_version)}: contract 2 enables durable gates`);
 }
 
 const nodes = Array.isArray(flow.nodes) ? flow.nodes : [];
@@ -137,7 +137,7 @@ for (const n of nodes) {
 
 const starts = nodes.filter((n) => n && n.component_type === "StartNode");
 const ends = nodes.filter((n) => n && n.component_type === "EndNode");
-if (starts.length !== 1) E(`S1: ${starts.length} StartNode(s) — exactly 1 required`);
+if (starts.length !== 1) E(`S1: ${starts.length} StartNode(s): exactly 1 required`);
 if (ends.length < 1) E("S1: no EndNode");
 const startId = flow.start_node?.id || starts[0]?.id;
 if (flow.start_node?.id && !byId.has(flow.start_node.id)) E(`S1: start_node '${flow.start_node.id}' does not exist`);
@@ -145,7 +145,7 @@ if (flow.start_node?.id && !byId.has(flow.start_node.id)) E(`S1: start_node '${f
 const ctrl = Array.isArray(flow.control_flow_connections) ? flow.control_flow_connections : [];
 const data = Array.isArray(flow.data_flow_connections) ? flow.data_flow_connections : [];
 if (!ctrl.length) E("S1: control_flow_connections is empty");
-if (!data.length) W("S2: data_flow_connections is empty — confirm this is intentional");
+if (!data.length) W("S2: data_flow_connections is empty: confirm this is intentional");
 
 const outCount = new Map();
 const inCount = new Map();
@@ -225,7 +225,7 @@ data.forEach((e, i) => {
   if (e.source_output === "route") {
     routeFed.add(d);
     const dn = byId.get(d);
-    if (dn && dn.component_type !== "BranchingNode") W(`S2: data[${i}] route -> '${d}' (${dn.component_type}) — expected BranchingNode`);
+    if (dn && dn.component_type !== "BranchingNode") W(`S2: data[${i}] route -> '${d}' (${dn.component_type}): expected BranchingNode`);
     if (dn && dn.condition_input && dn.condition_input !== "route") {
       W(`S2: BranchingNode '${d}' condition_input='${dn.condition_input}' but the edge feeds 'route'`);
     }
@@ -240,6 +240,6 @@ for (const [id, node] of byId) {
 }
 
 // ---- S3: spec-level placeholders -------------------------------------------
-if (/"workspace_id"\s*:\s*""/.test(text)) W("S3: empty workspace_id — use the active workspace from cluster_context");
+if (/"workspace_id"\s*:\s*""/.test(text)) W("S3: empty workspace_id: use the active workspace from cluster_context");
 
 report();
