@@ -58,6 +58,20 @@
         "dependencies": ["datacontract"]
       },
       "evidence": "SPEC-0085 (0.9.0)"
+    },
+    {
+      "id": "impeccable",
+      "group": "ui",
+      "scope": "global",
+      "source": "pbakaus/impeccable",
+      "sourceUrl": "https://github.com/pbakaus/impeccable",
+      "pin": "4.8.1",
+      "path": "skills/impeccable",
+      "license": "Apache-2.0",
+      "signals": {
+        "files": ["**/*.css", "**/*.html"]
+      },
+      "evidence": "SPEC-0097 (critique + audit cells: non-discriminator)"
     }
   ]
 }

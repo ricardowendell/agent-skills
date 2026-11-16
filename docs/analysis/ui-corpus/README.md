@@ -101,7 +101,8 @@ stages no skill — the skill tool is denied — and the candidate arm stages
 `.lane/pinned/impeccable/skills/impeccable` in the scratch. Five draws per arm is
 the evidence floor; a lower count is a screening and must be published as one.
 Read the cost of a draw **before** starting a wave: `decision.md` §4 records the
-measured per-draw price against the spec's ceiling.
+measured per-draw price, the amendment that funded two cells, and the two cells
+`TASK-121` still owes.
 
 When a transcript assertion turns out to misclassify what a paid draw did, the
 case is corrected and the stored draws are re-judged model-free — never

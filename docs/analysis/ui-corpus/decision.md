@@ -2,14 +2,14 @@
 
 - **Spec:** SPEC-0097 — The UI territory is measured, not assumed
 - **Date:** 2026-11-16
-- **Status:** the instrument is built and stages (F1–F3). **One cell is
-  measured** — `critique`, five draws per arm (F4a) — and it is a
-  **non-discriminator**: the control reproduces every behavioural assertion. The
-  other three cells (F4b) are gated on a budget decision: at the measured
-  per-draw price the four-cell wave costs US$ 0.721–0.829 including the discarded
-  smoke, above the spec's US$ 0.50 ceiling. `companion-skills.json` has no
-  `impeccable` entry: one cell is not the four the entry would rest on (§8). No
-  skill is created by this memo.
+- **Status:** the instrument is built and stages (F1–F3). **Two cells are
+  measured** — `critique` and `audit`, five draws per arm each — and both are
+  **non-discriminators**: the control reproduces every behavioural assertion. The
+  funded stage is closed at two cells; `empty-state` and `document` are deferred
+  to `TASK-121` (follow-up), not measured. The stage spent **US$ 0.449202**,
+  inside the amended US$ 0.95 ceiling; the smoke's six discarded draws are
+  included. `companion-skills.json` carries `impeccable` with the partial
+  measurement named in its evidence (§9). No skill is created by this memo.
 
 ## 1. The instrument (F1–F2)
 
@@ -125,10 +125,11 @@ cell (§5), and it was corrected before publication. The load misses were true
 misses: in each, only `skill impeccable` was red and the critique was strong, so
 calling it green would have hidden that the skill was never used.
 
-## 4. The cost arithmetic, and why the four-cell wave did not run (F4b)
+## 4. The cost arithmetic and the funded stage
 
-The spec's full wave is 5+5 draws on each of four cells — 40 draws — with a
-ceiling of **US$ 0.50 total, discarded draws included**.
+The spec's full wave is 5+5 draws on each of four cells — 40 draws — under the
+original **US$ 0.50** ceiling, later amended to **US$ 0.95** for the funded stage
+(two cells plus the smoke). The arithmetic below is what drove that amendment.
 
 Measured at this pin, the two costs a draw actually has:
 
@@ -140,7 +141,7 @@ Measured at this pin, the two costs a draw actually has:
 Projected four-cell wave:
 
 - all 20 candidate draws load: `20 × 0.026674 + 20 × 0.009354` = **US$ 0.721**;
-- a 2/3 load rate (what the calibrated smoke and the measured cell observed):
+- a 2/3 load rate (what the calibrated smoke and the measured cells observed):
   `20 × (0.667 × 0.026674 + 0.333 × 0.009354) + 20 × 0.009354` = **US$ 0.605**.
 
 With the US$ 0.108084 already spent on the smoke, the total is **US$ 0.713 to
@@ -149,23 +150,41 @@ draws: it leaves US$ 0.0098 per draw after the smoke, which is the price of a
 draw that never loads the skill.
 
 The human gate on 2026-11-16 chose to stop the **four-cell** wave rather than
-raise the ceiling inside a measurement, then approved **one** cell as F4a (§5).
-Two ways to unblock F4b, both human decisions:
+raise the ceiling inside a measurement, then approved **one** cell (critique, §5),
+then a **second** cell (audit, §6), then closed the stage at those two and
+deferred the other two to `TASK-121`. The stage's ceiling was amended to
+**US$ 0.95** for the smoke plus the two cells, and the spend landed at
+**US$ 0.449202** — the smoke's US$ 0.108084, the critique cell's US$ 0.173000
+and the audit cell's US$ 0.168118.
 
-1. **Raise the ceiling to about US$ 0.85** and run the remaining three cells
-   unchanged (5+5 each, 30 draws): US$ 0.454 at the observed 2/3 load rate,
-   US$ 0.540 all-load, so the total lands at US$ 0.735–0.822 with the smoke and
-   the critique cell already spent.
-2. **Keep US$ 0.50** and cut F4b to a screening (2+2 per cell, 4 draws per
-   remaining cell at about US$ 0.061 each): US$ 0.182 for the three cells,
-   US$ 0.463 accumulated. That is published as a screening, never as evidence.
+Per-cell cost, measured (both arms, five draws each):
 
-**The staged scope is therefore F4a + F4b.** F4a measured `critique` (this
-memo); F4b — `audit`, `empty-state`, `document` — is gated on that budget
-decision, and its cells are `unresolved` (§6). The reason is cost, not design:
-all three fixtures stage clean and their cases parse.
+| Cell | With skill | Control | Cell | Draws |
+| --- | --- | --- | --- | --- |
+| critique (§5) | 0.129987 | 0.043013 | **0.173000** | 10 |
+| audit (§6) | 0.092201 | 0.075918 | **0.168118** | 10 |
+| smoke (§3, discarded) | — | — | **0.108084** | 6 |
+| **stage total** | | | **0.449202** | 26 |
 
-## 5. The critique cell (F4a), measured
+The two deferred cells are not a gap in the instrument: their fixtures stage
+clean and their cases parse (§7). At the observed per-cell price
+(US$ 0.168–0.173) they are ≈ US$ 0.34 of follow-up work, which `TASK-121` owes
+with the same 5+5 shape.
+
+**One attempt was cancelled.** `2026-11-16T10-54-59--impeccable--agentworks-deepseek-v4-1-flash`
+(case 3, `empty-state`, with-skill arm) was stopped before scoring: the manifest
+records `status: running`, `finishedAt: null`, `counts: null`, and
+`cases/impeccable--03/` holds no `result.json` and no transcript. It is **zero
+draws and no recorded cost** — `check-eval-run` reports `cases=0 reps=0
+findings=2` (`incomplete manifest`, `incomplete impeccable--03 r0`), which is the
+artifact of a cancelled run, not a measurement. It is not counted anywhere above
+and nothing was reconstructed from it.
+
+**The staged scope is therefore two cells.** `critique` and `audit` are measured
+and both are non-discriminators; `empty-state` and `document` are `unresolved`
+and deferred to `TASK-121` (§7). The reason is budget, not design.
+
+## 5. The critique cell, measured (5+5)
 
 Five draws per arm on case 1, one run directory each, same prompt
 (`20b4297e…`) and same fixture (`ae60be75…`) in both arms. Model
@@ -194,7 +213,6 @@ detector `cf2e2e319d975a5b`, seatbelt isolation enforced, `repoSha 4c09690`,
 | r5 | without | — | red: `skill` | 0.008392 | 2 |
 
 **Cell cost: US$ 0.129987 (with) + US$ 0.043013 (without) = US$ 0.173000.**
-**Accumulated including the six discarded smoke draws: US$ 0.281084.**
 
 `check-eval-run` on the two runs:
 
@@ -259,25 +277,87 @@ So the cell is a **non-discriminator**, published as one. Its routing split
 (3/5) is named but is not read as a separator: the same model that skipped the
 skill wrote the same critique the skill arm wrote. What is *not* measured here is
 the visual half — whether the proposals are good — which stays with the human
-review (§7) and is not scored by this memo.
+review (§8) and is not scored by this memo.
 
-## 6. Per-cell status
+## 6. The audit cell, measured (5+5)
+
+Five draws per arm on case 2, one run directory each, same prompt
+(`13f6ea0a…`) and same fixture (`63c05d32…`) in both arms. Same model, agent,
+level and detector as §5; `repoSha 759b7af`, `repeat 5`, isolation enforced.
+
+| Arm | Run directory |
+| --- | --- |
+| without skill (control) | `2026-11-16T10-51-31--impeccable--agentworks-deepseek-v4-1-flash--without-skill` |
+| with skill | `2026-11-16T10-47-01--impeccable--agentworks-deepseek-v4-1-flash` |
+
+### Per draw
+
+| Draw | Arm | Loaded | As-run | Cost (US$) | Steps |
+| --- | --- | --- | --- | --- | --- |
+| r1 | with | yes | pass 5/5 | 0.021288 | 8 |
+| r2 | with | no | red: `skill` | 0.015047 | 3 |
+| r3 | with | no | red: `skill` | 0.016855 | 3 |
+| r4 | with | no | red: `skill` | 0.013558 | 4 |
+| r5 | with | yes | pass 5/5 | 0.025453 | 5 |
+| r1 | without | — | red: `skill` | 0.015140 | 5 |
+| r2 | without | — | red: `skill` | 0.016458 | 3 |
+| r3 | without | — | red: `skill` | 0.015463 | 3 |
+| r4 | without | — | red: `skill` | 0.011098 | 3 |
+| r5 | without | — | red: `skill` | 0.017759 | 4 |
+
+**Cell cost: US$ 0.092201 (with) + US$ 0.075918 (without) = US$ 0.168118.**
+
+`check-eval-run` on the two runs:
+
+```
+with skill:    cases=1 reps=5 findings=3 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0   (exit 1)
+without skill: cases=1 reps=5 findings=0 warnings=0 skillLeaks=0 hostReads=0 isolated=yes deniedDraws=0   (exit 0)
+```
+
+The three `findings` are `gate-miss impeccable#2 r2`, `r3`, `r4`: the skill was
+not loaded. Published as failures of the skill arm, not re-judged. No
+contamination, no leak, no host read, no denied draw.
+
+### Counts
+
+| Arm | Clean draws | Loaded | Scored (all assertions) | Behavioural (all but `skill`) |
+| --- | --- | --- | --- | --- |
+| with skill | 5/5 | **2/5** (r1, r5) | **2/5** (r1, r5) | **5/5** |
+| without skill | 5/5 | 0/5 by construction | **0/5** (the load assertion) | **5/5** |
+
+Per-assertion failures: `skill impeccable` — 3 with-skill draws, 5 control draws;
+`reply (label|aria)`, `reply (contrast|WCAG|4.5|ratio)`, `unchanged form.html`,
+`unchanged styles.css` — **0 failures in all ten draws**. Both loaded draws and
+every control draw name the unlabelled fields and the helper-text contrast in the
+reply. No assertion was corrected for this cell.
+
+### Verdict: non-discriminator
+
+The control reproduces the whole behavioural half in **5/5** clean draws — the
+per-field label findings and the contrast finding with a ratio — and the skill
+arm matches it in **5/5**, including both draws that loaded the skill. The scored
+2/5 vs 0/5 split is the load gate (routing 2/5), published as a skill-arm
+failure, not a separator. As with §5, the visual half (whether the fixes are the
+right ones) is human review (§8).
+
+## 7. Per-cell status
 
 | Cell | Class | Reason |
 | --- | --- | --- |
 | 1 — `critique/` | **non-discriminator** | measured 5+5 (§5): control 5/5 behavioural, skill 5/5 behavioural, load gate 3/5. The bare model already produces the critique. |
-| 2 — `audit/` | **unresolved** | F4b, gated on the budget decision (§4). No draw of either arm; the fixture stages clean. |
-| 3 — `empty-state/` | **unresolved** | F4b, same gate. The fixture stages clean. |
-| 4 — `document/` | **unresolved** | F4b, same gate. The fixture stages clean. |
+| 2 — `audit/` | **non-discriminator** | measured 5+5 (§6): control 5/5 behavioural, skill 5/5 behavioural, load gate 2/5. The bare model already finds the labels and the contrast. |
+| 3 — `empty-state/` | **unresolved** | deferred to `TASK-121`: not funded in this stage, no draw of either arm. The fixture stages clean and the case parses. |
+| 4 — `document/` | **unresolved** | deferred to `TASK-121` for the same reason. The fixture stages clean and the case parses. |
 
-`unresolved` on cells 2–4 is not a claim: nothing was compared there.
+`unresolved` on cells 3–4 is not a claim: nothing was compared there, and the
+cancelled `empty-state` attempt (§4) produced no draw to count.
 
-## 7. The declared human-review items (listed, not scored)
+## 8. The declared human-review items (listed, not scored)
 
 Every case states these in its `AGENTS.md`; they are the visual half, so no
-assertion stands in for them. For the measured critique cell they are the part
-this memo deliberately does not score — the reader opens the ten transcripts in
-§5's run directories.
+assertion stands in for them. For the two measured cells they are the part this
+memo deliberately does not score — the reader opens the ten transcripts in §5's
+and §6's run directories.
 
 **critique/ (case 1 — measured)**
 
@@ -288,7 +368,7 @@ this memo deliberately does not score — the reader opens the ten transcripts i
   not to taste or an invented screenshot?
 - Would applying it change the page — or is it "it looks fine" plus heuristics?
 
-**audit/ (case 2 — not run)**
+**audit/ (case 2 — measured)**
 
 - Are the unlabelled fields named one by one, not "add labels" in general?
 - Is the helper-text contrast named with a ratio or a threshold?
@@ -298,7 +378,7 @@ this memo deliberately does not score — the reader opens the ten transcripts i
 - Does the audit avoid inventing a browser session, a computed-style dump or a
   conformance claim the two files cannot support?
 
-**empty-state/ (case 3 — not run)**
+**empty-state/ (case 3 — not run, `TASK-121`)**
 
 - Is the empty state a designed state — a reason and a next step — rather than
   `No data` reworded?
@@ -308,7 +388,7 @@ this memo deliberately does not score — the reader opens the ten transcripts i
 - Is the state reachable without a mouse, and does the copy avoid inventing
   data, permissions or an account the page does not have?
 
-**document/ (case 4 — not run)**
+**document/ (case 4 — not run, `TASK-121`)**
 
 - Does `DESIGN.md` document the tokens the CSS defines, with their values,
   rather than a wishlist?
@@ -318,38 +398,57 @@ this memo deliberately does not score — the reader opens the ten transcripts i
 - Does it name what is missing (motion, dark theme, breakpoints) instead of
   inventing it?
 
-## 8. The registry decision (F5)
+## 9. The registry decision (F5)
 
-**`impeccable` does not enter `companion-skills.json` this wave.** The manifest's
-rule is one entry per *measured* companion, and one cell of four is not the
-measurement the entry would rest on — a page-level critique is the easiest of the
-four, and it separated in neither direction. Everything the entry needs is
-recorded above — source, `sourceUrl`, licence Apache-2.0, pin `4.8.1`, engine
-`0.1.19`, staged tree hash `b1fbb5d8…` — so it is a data edit away once F4b
-exists. It waits on the draws, not on the facts.
+**`impeccable` enters `companion-skills.json`** with the partial measurement
+named in its evidence:
 
-The bootstrap's install step would `git checkout 4.8.1` before copying
-`skills/impeccable`; the tag was not verified against the upstream remote in this
-wave (the version comes from the installed skill's own `metadata.version`). That
-is a second reason to keep the entry closed until someone checks the tag while
-preparing it — and a fact to record in the entry when it lands.
+```json
+{
+  "id": "impeccable",
+  "group": "ui",
+  "scope": "global",
+  "source": "pbakaus/impeccable",
+  "sourceUrl": "https://github.com/pbakaus/impeccable",
+  "pin": "4.8.1",
+  "path": "skills/impeccable",
+  "license": "Apache-2.0",
+  "signals": { "files": ["**/*.css", "**/*.html"] },
+  "evidence": "SPEC-0097 (critique + audit cells: non-discriminator)"
+}
+```
 
-## 9. Known limitations
+- **Scope `global`** because a UI review applies to any host repo that has a
+  surface; the file signals are what the bootstrap intersects to decide whether
+  this repo has one. No `directories`/`dependencies` signal was invented.
+- **Pin `4.8.1`** is the installed skill's own `metadata.version` (engine
+  `0.1.19` from `scripts/VERSION`). **The upstream tag was not verified against
+  the remote**, so a bootstrap that runs `git checkout 4.8.1` should confirm it
+  resolves first — that check is owed to `TASK-121`, not claimed here.
+- **Licence Apache-2.0**, Copyright 2025 Paul Bakaus, confirmed 2026-11-16 in
+  the repository's `LICENSE`; no upstream file is redistributed, so no `NOTICE`
+  obligation is triggered.
+- **Evidence is the two measured cells, and says so.** The entry does not claim
+  the four-cell measurement the follow-up still owes; when `TASK-121` lands, the
+  evidence string is the line to update.
+
+## 10. Known limitations
 
 - **No visual oracle.** The `(b)` decision of `SPEC-0077` stands. The page's
   rendered appearance is never read by the harness; a claim about how the result
-  *looks* is a person's reading, listed in §7.
-- **The load gate is a routing measurement.** `skill impeccable` is red when the
-  skill was neither called nor read from the scratch copy. It loaded in 3/5
-  draws here, so a B arm's scored count depends on a trigger the case cannot
-  force without naming the skill in the prompt — which would make the arm a
-  command, not a capability.
-- **One cell is one cell.** A non-discriminator on a page-level critique says
-  nothing about the empty-state or design-system cells; the instrument's own
-  data programme found exactly that split between two composition screens
-  (`docs/analysis/data-corpus/decision.md` §4). F4b is the cell set that could;
-  it is unfunded, not unneeded.
-- **The `reply` oracle is a keyword gate.** The corrected form
+  *looks* is a person's reading, listed in §8.
+- **Two of four cells.** Both measured cells are non-discriminators on
+  page-level review; `empty-state` (a design that writes to the tree) and
+  `document` (an artifact the agent authors, `DESIGN.md`) are the harder shapes
+  and are unmeasured. The instrument's own data programme found exactly that
+  split between two composition screens (`docs/analysis/data-corpus/decision.md`
+  §4), so this is not a formality: the deferral is where a capability could still
+  show.
+- **The load gate is a routing measurement.** `skill impeccable` was red in 2/5
+  (critique) and 3/5 (audit) candidate draws. A B arm's scored count therefore
+  depends on a trigger the case cannot force without naming the skill in the
+  prompt — which would make the arm a command, not a capability.
+- **The `reply` oracle is a keyword gate.** The corrected critique form
   (`hierarchy|primary|type scale`) is what these critiques write; a critique that
   ranks by other vocabulary would read red. It is backed by the human review, and
   its correction is published rather than folded into the as-run count.
@@ -359,19 +458,20 @@ preparing it — and a fact to record in the entry when it lands.
 - **The skill is a launcher plus an engine binary.** `scripts/impeccable`
   resolves `scripts/bin/darwin-arm64/impeccable` (18 MB) from inside the scratch
   copy; the skill's own documented degraded path applies when the launcher cannot
-  run. The measured cell did not need it, and no draw was asked to render a page.
+  run. Neither measured cell needed it, and no draw was asked to render a page.
 - **n=5.** Five clean draws per arm can show a large separation or its absence;
   it cannot bound a small delta.
 - **The cost figures are recorded provider cost**, not a billing statement: the
   `step-finish` events' `cost` summed per draw, at `agentworks`' declared prices
-  for this model.
+  for this model. The cancelled attempt (§4) recorded none.
 
-## 10. What this memo does not decide
+## 11. What this memo does not decide
 
-- Whether `impeccable` separates from the control on three of the four cells —
-  F4b did not run.
-- Whether a UI/UX skill is missing. `SPEC-0036` and `SPEC-0038` stay paused until
-  the evidence exists; a single non-discriminator does not close or reopen them.
+- Whether `impeccable` separates on `empty-state` or `document` — those cells did
+  not run; `TASK-121` owns them.
+- Whether a UI/UX skill is missing. `SPEC-0036` and `SPEC-0038` stay paused: two
+  page-level non-discriminators do not close or reopen them, and the two
+  artifact-shaped cells are the ones that could.
 - Whether `simplify` needs the same treatment — it lives outside this repo.
-- Whether the ceiling should move. That is a human gate; §4 publishes what the
-  remaining cells would cost.
+- Whether the upstream `4.8.1` tag resolves — the entry records the pin and this
+  memo records the check as owed.
