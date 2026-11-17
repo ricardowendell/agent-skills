@@ -162,6 +162,39 @@ informal exercise is not a harness run, a pass rate, or candidate/control eviden
 
 ## Evaluation Plan
 
+**Measured outcome, 2026-11-17.** Three iterations, each falsified or confirmed on
+the default model (`opencode-go/deepseek-v4.1-flash`).
+
+*Round 1 — micro-fix judgment (cases 3–7).* No separation. The skill did not load
+on short fix prompts (1/3, 1/12 on `gpt-oss-120b`), and where it loaded the
+control solved the fixture the same way. Cases 6 and 7 were retired with that
+reason. This measured the router, not the judgment: a one-line "fix it" is the
+case where the harness skips a skill.
+
+*Round 2 — design judgment (cases 3, 5, 8, 9).* Still no separation. #8 (a green
+suite over a latent equality defect) and #9 (share line math without a layer)
+both read 1/1 vs 1/1: the control rejected the PR and kept the change flat
+without help.
+
+*Round 3 — codebase analysis (case 10).* **Separator at evidence level.** Case 10
+stages a two-year-old ledger with five defects; the skill answers **5/5** and the
+control **0/5** (`2026-11-17T10-23-12--python-luminary` /
+`2026-11-17T10-18-13--python-luminary--without-skill`, both clean), reproducing
+the 3/3 vs 0/3 screening. The discriminating assertion is process with
+consequence: the skill runs `scripts/analyze.py` (which also drives ruff and ty),
+the control reads the module and never runs a tool, so its findings carry no
+`file:line` evidence. Canary #1 held at 10/12 clean with two infrastructure
+stalls.
+
+*Known weakness.* #9 regressed 1/3 vs 3/3: one draw piped `unittest` through
+`tail` and read `$?`, which reports tail's status, and one never loaded the
+skill. The core already says to keep the exit status visible; the draw is
+evidence that a pipe still looks like the way to shorten output. Logged, not
+patched here, because editing the tree would stale the #10 measurement.
+
+The candidate is kept and scoped to codebase analysis. The micro-fix and design
+claims are dropped with their measurements, in the description and in the body.
+
 **Review findings addressed, 2026-11-17.** Three findings from an independent
 read-only review of draft PR #23, all non-blocking:
 
@@ -183,9 +216,10 @@ before any fix (`FAILED (failures=2)`, `(errors=6)`, `(failures=1)`, `(errors=1)
 claim about the skill.
 
 Establish that each unfixed behavior fixture fails its documented command without
-editing the protected tests. Follow CONTRIBUTING.md's load canary, then compare
-candidate and without-skill arms on cases 3–6, starting with screening draws.
-Retain a case only when its oracle measures meaningful behavior. Review
-architecture quality and tool restraint beyond the machine assertions.
+editing the protected tests, then measure candidate and control arms on the cells
+that carry the candidate's claim: case 10 for analysis, cases 8 and 9 for review
+judgment and layer restraint, case 3 for the data model. Retain a case only when
+its oracle measures meaningful behavior. Review architecture quality and tool
+restraint beyond the machine assertions.
 Publish raw counts and actual run directories only after the run checker passes.
 No budget or superiority claim is inferred from this draft request.
