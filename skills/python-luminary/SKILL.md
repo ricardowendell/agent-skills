@@ -1,6 +1,6 @@
 ---
 name: python-luminary
-description: "Implement, refactor, or review Python using idiomatic data models, clear architectural boundaries, and proportionate verification. Use for Python design work: functions versus dataclasses versus protocols, a refactor across modules, equality, hashing, iteration or resource ownership, a review where structure matters, or a change considering a new layer. Complements spec-driven implementation and diff review; does not replace their gates."
+description: "Analyze existing Python code and produce a prioritized refactoring plan, then execute it in reviewable steps. Use when asked to review, audit, clean up or refactor a Python codebase: unstable hashing, misplaced effects, layers that hide nothing, coupling, or a module grown hard to change. Runs a bundled deterministic scan (ruff and ty when available) and reports findings with file:line. Complements spec-driven implementation and diff review; does not replace their gates."
 ---
 
 # Python Luminary
@@ -50,6 +50,45 @@ mandatory phases or a reason to redesign a small fix.
   configured limits, but do not invent universal line limits, coverage floors,
   abstraction counts, or a mandatory architecture.
 
+## Analyze existing code
+
+When the task is to improve a codebase rather than answer a question, work in
+four phases. Do not skip to edits: a refactor without a plan is a rewrite with
+extra steps, and the plan is what makes each change reviewable on its own.
+
+**1. Acquire.** Run `python3 scripts/analyze.py PATH` on the module or package.
+It runs `ruff` and `ty` when they are installed and adds its own findings for
+the rules neither tool can see. Read its output as hints, not verdicts: every
+finding names its own blind spot, and a false positive is a question to answer,
+not a line to delete.
+
+Then read the code itself. The scan cannot tell a deliberate facade from a
+wrapper that hides nothing, or a mutable key from one that is never used as a
+key. Name the invariants the module actually protects, the public contract, and
+where effects enter.
+
+**2. Map.** Trace dependency direction, where each invariant is owned, and which
+calls reach the outside world. The map decides what is safe to move; it is also
+the answer to "why is this coupled".
+
+**3. Report.** Group the findings into:
+
+- **Defects** — behavior is wrong or fragile (unstable hash as a key, a shared
+  mutable default, a swallowed failure). Each with `file:line`, the rule, and the
+  consequence.
+- **Structure** — coupling, layers, ownership. Each with what the change buys.
+- **Proportion** — what to leave alone. Naming a healthy module explicitly is
+  what stops the next agent from "fixing" it.
+
+**4. Plan, then execute.** Order the work by risk and payoff: mechanical
+quick wins first (they buy trust for the structural ones), then the changes that
+move a boundary. One refactoring per commit-sized step, with the repository's
+checks green between steps, so each can be reviewed or reverted alone. Ask before
+restructuring beyond the scope the user named.
+
+Never apply a mechanical fix the scan suggested without confirming the finding is
+real in this codebase. A tool that reports a smell proves a shape, not a problem.
+
 ## Load only the relevant layer
 
 Start with the core above. Read the matching reference when a concrete decision
@@ -63,8 +102,7 @@ requires it; do not preload the whole directory.
 | Coupling, module boundaries, forwarding layers, side effects | [Architecture and boundaries](references/architecture-and-boundaries.md) |
 | Exceptions, transactions, retries, cleanup and ownership | [Errors and resources](references/errors-and-resources.md) |
 | Async, cancellation, bounded work, measured optimization | [Concurrency and performance](references/concurrency-and-performance.md) |
-| Target versions, existing tools, tests and checks | [Tooling and verification](references/tooling-and-verification.md) |
-| A design tradeoff or whether a refactor earns its cost | [Review examples](references/review-examples.md) |
+| Running the bundled scan, or reading tool output | [Tooling and verification](references/tooling-and-verification.md) || A design tradeoff or whether a refactor earns its cost | [Review examples](references/review-examples.md) |
 | Provenance or a language detail requiring authoritative confirmation | [Sources](references/sources.md) |
 
 ## Verify the guarantees that changed

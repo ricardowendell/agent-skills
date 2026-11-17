@@ -41,6 +41,9 @@ files:
   - evals/python-luminary/fixtures/9/AGENTS.md
   - evals/python-luminary/fixtures/9/statements.py
   - evals/python-luminary/fixtures/9/tests/test_statements.py
+  - evals/python-luminary/fixtures/10/AGENTS.md
+  - evals/python-luminary/fixtures/10/ledger.py
+  - skills/python-luminary/scripts/analyze.py
   - skills.index.json
   - skills/python-luminary/SKILL.md
   - skills/python-luminary/agents/openai.yaml

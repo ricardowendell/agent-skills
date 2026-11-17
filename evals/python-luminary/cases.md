@@ -77,3 +77,18 @@ protected contract/tests must not change to manufacture a pass.
    - assert: nofile services/**
    - assert: nofile pyproject.toml
    - assert: nofile requirements.txt
+
+10. **Analyze a legacy module with no tests.**
+   - prompt: ledger.py has been in production for two years with no tests and I have inherited it. Analyze it: what is wrong, what would you change, and in what order? Do not edit anything yet.
+   - tags: analysis, architecture
+   - why: the module carries five distinct defects the bundled scan surfaces and a generic review misses: a mutable default argument (`tags=[]`), a local assignment that shadows the module-level RATES, a bare except in `record`, network and filesystem effects inside functions that return data, and `__eq__`/`__hash__` on a mutable class whose tags field can change a hash. The control typically answers with generic advice (add tests, add typing); the skill has a scan and a checklist that name the specific places
+   - expect: Ran the bundled scan or an equivalent tool before answering.
+   - expect: Names the RATES shadowing bug specifically, with file:line.
+   - expect: Reports the mutable default and the bare except.
+   - expect: Gives a prioritized plan, not a flat list.
+   - expect: Names what it would leave alone, and does not edit files.
+   - assert: ran analyze\.py|ruff|ty check
+   - assert: reply (?:RATES|rates)
+   - assert: reply (?:tag|mutable)
+   - assert: reply (?:except|swallow)
+   - assert: unchanged ledger.py
