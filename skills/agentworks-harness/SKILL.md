@@ -51,7 +51,8 @@ create/import → deploy exact versions → smoke → inspect → report
    create|deploy|run`, `agentworks skill pack|import`).
 6. **Skills.** Pack deterministically, import with explicit scope, record the
    immutable `skill_version_id` and digest, pin exact IDs in `skill_version_ids`.
-   A slug is not an execution pin.
+   A slug is not an execution pin. A catalog entry is invisible to a run until
+   the deployment lists its version, which is a separate step from importing.
 7. **Inspect.** `inspect_run`, `list_observations`/`show_observation`, and the
    checkpoint tools (`get_resumable_run_checkpoint`, `run resume`).
 8. **Report.** Fill `templates/build-report.json`; submit via
@@ -88,6 +89,10 @@ create/import → deploy exact versions → smoke → inspect → report
 - `references/catalog-practices.md`: scope, tags, naming, versions and
   workspaces. Read it before promoting a skill beyond its workspace or
   organizing a growing catalog.
+- `references/skill-package-contract.md`: package shape, physical limits, runtime
+  execution differences, the governance overlay, digest verification and
+  exposure. Read it when a package is rejected or a skill needs typed arguments
+  or a network policy.
 - `references/mcp-tool-map.md`: MCP tools by function, CLI equivalents and write
   gating. Read it before choosing MCP versus CLI for an operation.
 - `references/flow-recipes.md`: validated graph patterns and edge rules. Read it
