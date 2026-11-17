@@ -57,26 +57,39 @@ four phases. Do not skip to edits: a refactor without a plan is a rewrite with
 extra steps, and the plan is what makes each change reviewable on its own.
 
 **1. Acquire.** Run `python3 scripts/analyze.py PATH` on the module or package.
-It runs `ruff` and `ty` when they are installed and adds its own findings for
-the rules neither tool can see. Read its output as hints, not verdicts: every
-finding names its own blind spot, and a false positive is a question to answer,
-not a line to delete.
+It runs `ruff`, `ty` and `vulture` when installed (fetching each through `uvx`
+otherwise) from the target's own project root, so their configuration and
+environment apply. It also prints a `[shape]` block — module size, fan-in and
+fan-out, largest functions, effect sites, declared importlinter layers and import
+cycles. Read its output as hints, not verdicts: every finding names its own blind
+spot, and a false positive is a question to answer, not a line to delete.
 
 Then read the code itself. The scan cannot tell a deliberate facade from a
 wrapper that hides nothing, or a mutable key from one that is never used as a
 key. Name the invariants the module actually protects, the public contract, and
 where effects enter.
 
-**2. Map.** Trace dependency direction, where each invariant is owned, and which
-calls reach the outside world. The map decides what is safe to move; it is also
-the answer to "why is this coupled".
+**2. Map.** Start from the `[shape]` block: it names where the weight is. Then
+trace dependency direction, where each invariant is owned, and which calls reach
+the outside world. The map decides what is safe to move; it is also the answer to
+"why is this coupled".
+
+Read the architecture in three parts, and do not conflate them. *Weight* — a
+1,300-line module next to 40 small ones is a splitting candidate. *Topology* — a
+cycle, or an edge that runs against the declared direction, is a defect; a hub
+with high fan-in usually is not. *Discoverability* — 37 flat modules with an
+enforced layer contract is a naming preference, while 37 flat modules with no
+contract and no stated direction is an absence of architecture. Check what the
+project declares before calling the layout wrong.
 
 **3. Report.** Group the findings into:
 
 - **Defects** — behavior is wrong or fragile (unstable hash as a key, a shared
   mutable default, a swallowed failure). Each with `file:line`, the rule, and the
   consequence.
-- **Structure** — coupling, layers, ownership. Each with what the change buys.
+- **Structure** — coupling, layers, ownership, and size. Each with what the
+  change buys. Separate a real topology defect (a cycle, an inverted edge) from a
+  discoverability preference (flat folders over an enforced contract).
 - **Proportion** — what to leave alone. Naming a healthy module explicitly is
   what stops the next agent from "fixing" it.
 

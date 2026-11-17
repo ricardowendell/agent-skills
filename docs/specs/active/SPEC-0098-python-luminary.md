@@ -195,6 +195,44 @@ patched here, because editing the tree would stale the #10 measurement.
 The candidate is kept and scoped to codebase analysis. The micro-fix and design
 claims are dropped with their measurements, in the description and in the body.
 
+**Iteration 4, 2026-11-17 — the scan learns architecture.** A field trial against
+a real 134-file kit (`ai4de-kit`) exposed two gaps the fixtures could not. First,
+the scan answered line-level questions only: it named defects but said nothing
+about where the weight was, so the Map phase ran on hand-written analysis while
+the tool stayed silent. Second, both external tools ran from the skill's own
+directory, which made `ty` resolve imports against the wrong environment — 458
+diagnostics on a project whose own gate was green, 367 of them `import-not-found`
+for its own first-party modules. The measurement under test did not cover either,
+because case 10 has one module and no layering.
+
+What changed, all in `scripts/`:
+
+- `analyze.py` is now a 142-line CLI over a `scan/` package (model, classes,
+  errors, effects, rules, shape, summary, tools). The entry point keeps its path
+  and its asserted invocation; the rules moved, none changed.
+- A `[shape]` block prints module count, largest modules with fan-in/fan-out,
+  largest functions, effect sites, declared importlinter layers and import
+  cycles. It also renders as `architecture` in `--json`.
+- Every external tool runs with the target project's root as its working
+  directory. On `ai4de-kit` this took `ty` from 458 diagnostics to 1.
+- `vulture` gains the `uvx` fallback `ty` already had, so a project without the
+  tool installed still gets dead-code coverage.
+- A tool that ran and was clean is now reported as `clean` instead of omitted;
+  silence was indistinguishable from "not run".
+
+Package `__init__` facades are contracted out of the graph before cycle detection.
+Without that, a re-exporting package (`pkg/__init__.py -> pkg.cli` plus
+`pkg.runner -> pkg.__init__`) reports as circular, and the trial's first run
+claimed four cycles in a project whose own import-linter contract passes. A real
+cycle still reports: a two-module fixture where `a` imports `b` and `b` imports
+`a` gives `cycles: 1`.
+
+Re-measurement is required before this iteration can be called measured. The tree
+hash moved, so the case 10 evidence (`5/5 vs 0/5`) belongs to the previous tree.
+The claim under test is unchanged — case 10 still asserts `ran analyze.py` and the
+five named defects — but the artifact that satisfies it is now larger, and an
+unmeasured increase in agent-visible surface is exactly what the canary is for.
+
 **Review findings addressed, 2026-11-17.** Three findings from an independent
 read-only review of draft PR #23, all non-blocking:
 

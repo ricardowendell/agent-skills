@@ -13,11 +13,42 @@ python3 scripts/analyze.py PATH      # bundled scan; also runs ruff and ty when 
 ```
 
 `scripts/analyze.py` shells out to `ruff`, to `ty` (via `uvx` when `ty` is not
-installed) and to `vulture` when it is present, then adds its own syntax-level
+installed) and to `vulture` (also via `uvx`), then adds its own syntax-level
 findings. Use `--no-tools` when only the local scan is wanted, `--json` for
 machine output. Every finding carries the blind spot of the rule that produced
-it. A tool that is absent is reported as `unavailable` with the reason; it is
-never read as clean.
+it. A tool that is absent is reported as `unavailable` with the reason; one that
+ran and found nothing is reported as `clean`; neither is ever silently omitted,
+because silence reads as "not checked".
+
+Every tool runs with the **target project's root** as its working directory.
+This matters: a type checker started from the skill's own directory resolves
+imports against the wrong environment and reports every first-party import as
+missing. On a real 73-module project this was the difference between 458
+diagnostics and 1. When the target has no `pyproject.toml`, the scan falls back
+to the target directory.
+
+The scan also prints a `[shape]` block before the findings: module count, largest
+modules with their fan-in/fan-out, the largest functions, effect sites, declared
+importlinter layers with how many modules map to one, and any import cycle. That
+block is the raw material for the Map phase — it describes proportion, not
+correctness. Package `__init__` facades are contracted out of the graph, so a
+re-exporting package is not reported as a cycle.
+
+## What the shape block does and does not answer
+
+The architecture question has three parts, and only the first two are mechanical:
+
+| Question | Answered by | Still judgment |
+| --- | --- | --- |
+| Where is the weight? | shape block: lines per module, largest functions | whether a long module should be split |
+| Does the graph cycle or invert? | shape block: cycles, declared layers vs actual edges | whether a violation is a deliberate exception |
+| Is the layout discoverable? | nothing — read the tree | whether physical grouping earns its diff |
+
+A flat directory with an enforced layer contract is not the same defect as a flat
+directory with no contract. Read the contract first: if the project declares
+layers (import-linter, `tach`, module-boundary docs) and the graph respects them,
+the missing folders are a discoverability preference, not an architecture defect.
+Say which one you found.
 
 ## The layers, and what each one actually proves
 
@@ -29,6 +60,7 @@ never read as clean.
 | Complexity | `radon cc` / `complexipy` (if configured) | functions that are hard to follow | a long cohesive function can be healthy |
 | Dead code | `vulture` (if configured) | names nothing reaches | false positives on framework hooks; verify before deleting |
 | Layers | `import-linter` / `grimp` / `tach` (if configured) | a dependency direction the project forbids | needs a declared contract to be meaningful |
+| Shape | `scripts/analyze.py --json` → `architecture` | module size, fan-in/fan-out, cycles, layer mapping | proportion and topology, not whether a boundary is drawn in the right place |
 
 ## Why `ty`
 
