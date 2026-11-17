@@ -37,6 +37,25 @@ your workspace. So:
 An empty `tags` list is not an error: an untagged skill is visible to the
 workspace, the default posture.
 
+## Tags exist on skills, not on agents
+
+The two resources are asymmetric, and assuming otherwise wastes a write attempt:
+
+| Resource | Tag mechanism | Indexed |
+| --- | --- | --- |
+| Skill | `tags` in `SkillPatch` (`PATCH /v1/skills/{id}`) | yes, first-class |
+| Agent | **no `tags` field**; `metadata.tags` accepts an array | no, stored verbatim |
+
+`AgentPatch` accepts only `name`, `slug` and `metadata`; `AgentCreate` and the GET
+response have no `tags`. `model_tags` and `tool_tags` exist but select models and
+tools, which is a different meaning entirely.
+
+So an agent tag lives in `metadata.tags`. It survives a read-back and a human
+reader can filter on it, but the platform does not index it: do not promise a
+server-side tag filter for agents. Label transient agents in a field a human reads
+(`metadata.tags: [do-not-use]`) rather than relying on deletion, which a developer
+cannot perform.
+
 ## Organizing a pipeline: tags for membership, a flow for order
 
 A tag says which pipeline a skill belongs to; it cannot say what comes first.
@@ -49,6 +68,8 @@ The pairing that works:
    the catalog skill it serves, so the graph is the readable sequence.
 3. Pin the version at deploy (`--skill-version-id`), never in the tag: a tag
    answers "which pipeline", a version id answers "which bytes".
+4. Tag the flow agent too, in `metadata.tags`, with the same prefix plus its kind
+   (`pipeline:pdlc`, `kind:flow`) so the two artifacts are discoverable together.
 
 Neither artifact alone is the workflow.
 
