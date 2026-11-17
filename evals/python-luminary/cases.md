@@ -80,3 +80,19 @@ protected contract/tests must not change to manufacture a pass.
    - assert: nofile uv.lock
    - assert: nofile ruff.toml
    - assert: nofile requirements.txt
+
+7. **A discount bug in a silent repository.**
+   - prompt: order_total in pricing.py applies the discount after tax, so discounted orders come out high. Fix it.
+   - tags: regression, architecture
+   - why: the fixture's AGENTS.md states the business rule but says nothing about structure, so whether the fix stays inside order_total or grows a service/repository/pricing-engine layer is the model's judgment; the seed already has a `_line_cents` helper and a module constant, which invites extraction
+   - expect: Keeps the fix inside pricing.py as plain functions; the discount applies to the taxable base.
+   - expect: Does not add a PricingService, repository, strategy or factory hierarchy.
+   - expect: Preserves the existing helper and constant rather than rewriting the module.
+   - assert: changed pricing.py
+   - assert: unchanged tests/test_pricing.py
+   - assert: unchanged AGENTS.md
+   - assert: ranpass python3 -m unittest discover -s tests
+   - assert: nofile src/**
+   - assert: nofile services/**
+   - assert: nofile pyproject.toml
+   - assert: nofile requirements.txt

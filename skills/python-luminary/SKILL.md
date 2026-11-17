@@ -1,6 +1,6 @@
 ---
 name: python-luminary
-description: "Implement, refactor, or review Python using idiomatic data models, clear architectural boundaries, and proportionate verification. Use for Python design choices, tangled implementations, custom protocols, streaming, resource ownership, or concurrency. Complements spec-driven implementation and diff review; does not replace their gates."
+description: "Implement, refactor, fix, or review Python using idiomatic data models, clear architectural boundaries, and proportionate verification. Use whenever touching Python code: a behavior fix, a tangled implementation, design choices, custom protocols, streaming, resource ownership, or concurrency, even a small edit to a Python file. Complements spec-driven implementation and diff review; does not replace their gates."
 ---
 
 # Python Luminary
@@ -74,6 +74,11 @@ for the affected surface; add tests for consequential behavior and failure paths
 For refactoring, preserve the public contract; for optimization, compare the same
 workload and environment; for concurrency, examine cancellation and cleanup.
 Do not weaken a test or gate to make the implementation pass.
+
+Run the checks with their exit status visible to whoever invoked you. Piping a
+test command through `tail` or `head` discards that status, so a passing run
+becomes indistinguishable from a failed one in your report. Write output to a
+file and excerpt it when you need a shorter view.
 
 Keep verification proportionate. A tiny fix does not require a new framework,
 architecture document, benchmark suite, or comprehensive testing campaign.
