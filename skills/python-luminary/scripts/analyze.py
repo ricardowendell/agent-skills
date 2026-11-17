@@ -361,21 +361,33 @@ def external_findings(paths):
     targets = [str(p) for p in paths if Path(p).exists()]
 
     if shutil.which("ruff"):
-        cmd = ["ruff", "check", "--select", RUFF_SELECT, "--output-format", "concise", *targets]
+        cmd = [
+            "ruff",
+            "check",
+            "--select",
+            RUFF_SELECT,
+            "--output-format",
+            "concise",
+            *targets,
+        ]
         ok, out, reason = run_tool(cmd)
-        results.append({
-            "tool": "ruff",
-            "command": " ".join(cmd),
-            "status": "clean" if ok else ("findings" if out else "error"),
-            "output": out,
-            "reason": reason,
-        })
+        results.append(
+            {
+                "tool": "ruff",
+                "command": " ".join(cmd),
+                "status": "clean" if ok else ("findings" if out else "error"),
+                "output": out,
+                "reason": reason,
+            }
+        )
     else:
-        results.append({
-            "tool": "ruff",
-            "status": "unavailable",
-            "reason": "not on PATH; install with 'uv tool install ruff'",
-        })
+        results.append(
+            {
+                "tool": "ruff",
+                "status": "unavailable",
+                "reason": "not on PATH; install with 'uv tool install ruff'",
+            }
+        )
 
     if shutil.which("ty"):
         cmd = ["ty", "check", *targets]
@@ -387,19 +399,47 @@ def external_findings(paths):
         cmd = None
     if cmd:
         ok, out, reason = run_tool(cmd)
-        results.append({
-            "tool": cmd[1] if cmd[0] == "uvx" else cmd[0],
-            "command": " ".join(cmd),
-            "status": "clean" if ok else ("findings" if out else "error"),
-            "output": out,
-            "reason": reason,
-        })
+        results.append(
+            {
+                "tool": cmd[1] if cmd[0] == "uvx" else cmd[0],
+                "command": " ".join(cmd),
+                "status": "clean" if ok else ("findings" if out else "error"),
+                "output": out,
+                "reason": reason,
+            }
+        )
     else:
-        results.append({
-            "tool": "type-check",
-            "status": "unavailable",
-            "reason": "no ty, uvx or mypy on PATH: types are unread this run",
-        })
+        results.append(
+            {
+                "tool": "type-check",
+                "status": "unavailable",
+                "reason": "no ty, uvx or mypy on PATH: types are unread this run",
+            }
+        )
+
+    if shutil.which("vulture"):
+        cmd = ["vulture", "--min-confidence", "80", *targets]
+        ok, out, reason = run_tool(cmd)
+        results.append(
+            {
+                "tool": "vulture",
+                "command": " ".join(cmd),
+                "status": "clean" if ok else ("findings" if out else "error"),
+                "output": out,
+                "reason": reason,
+                "note": "unused-name candidates; verify before deleting (framework hooks and "
+                "dynamic use look dead to it)",
+            }
+        )
+    else:
+        results.append(
+            {
+                "tool": "vulture",
+                "status": "unavailable",
+                "reason": "not on PATH; dead code is unread this run "
+                "(uv tool install vulture)",
+            }
+        )
     return results
 
 
@@ -437,7 +477,9 @@ def main(argv):
     tools = external_findings(args) if use_tools else []
     if as_json:
         print(
-            json.dumps({"scanned": scanned, "findings": findings, "tools": tools}, indent=2)
+            json.dumps(
+                {"scanned": scanned, "findings": findings, "tools": tools}, indent=2
+            )
         )
         return 0
     for t in tools:
