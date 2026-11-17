@@ -64,8 +64,9 @@ wording.
 
 ## Skills
 
-Fifteen first-party skills, grouped into five scopes — `pipeline`, `verify`,
-`observe`, `maintain`, `record` — in [`skills.index.json`](skills.index.json).
+First-party skills are grouped by purpose in
+[`skills.index.json`](skills.index.json): `pipeline`, `verify`, `observe`,
+`maintain`, and `record`, with `data` reserved for measured additions.
 The index is data for humans and tooling; agents route by each `SKILL.md`
 `description`, so editing the index changes no `skillHash`.
 
@@ -77,6 +78,7 @@ The index is data for humans and tooling; agents route by each `SKILL.md`
 | `groom-backlog` | Turns a backlog item into a small spec with acceptance criteria | `/groom` |
 | `write-implementation-prompt` | Turns a `ready` spec into a scoped implementation prompt | `/prompt` |
 | `implement-from-prompt` | Builds it, tests it, and flips the spec to `implemented` | `/implement` |
+| `python-luminary` | Python implementation, refactoring and review with idiomatic data models and clear boundaries (draft; unmeasured) | name the skill |
 | `review-code` | Reviews a diff or PR against its spec; returns APPROVE or REJECT with evidence | `/review-code` |
 | `find-blind-spots` | Interviews you until every branch of a plan is closed | `/blind-spots` |
 | `audit-docs` | Read-only drift and contradiction audit of the product docs | `/docs-check` |
@@ -86,6 +88,14 @@ The index is data for humans and tooling; agents route by each `SKILL.md`
 | `sync-branch` | Brings a branch up to date with its base: fetch, ff/rebase/merge, stop on conflict | `/sync-branch` |
 | `report-project-status` | One-page status from open issues, backlog, specs and CI; at most three next steps | `/status` |
 | `audit-code-quality` | Read-only audit of coupling, duplication, tests and debt; ranked register, no score | `/quality-check` |
+
+`python-luminary` is an authored draft for Python implementation judgment. Its
+compact core routes to references for the data model, iteration, domain types,
+architecture, resource ownership, concurrency, tooling and review tradeoffs.
+It complements the implementation and review skills and preserves existing
+project tools. Its six evaluation candidates are **unmeasured**; see
+[`docs/evals/coverage.md`](docs/evals/coverage.md). It claims no demonstrated
+advantage over an agent without the skill.
 
 ## The loop
 

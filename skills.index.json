@@ -1,16 +1,17 @@
 {
   "version": 1,
-  "about": "First-party scope index for the 15 skills under skills/. It is data, not frontmatter: a host routes by SKILL.md description, so editing 15 frontmatters would change every skillHash and mark measured cells stale for no consumer benefit. Every id appears exactly once. A skill that only makes sense in one repo type belongs to a scope, not to a stack-specific filter.",
+  "about": "First-party scope index for the 16 indexed skills under skills/. It is data, not frontmatter: a host routes by SKILL.md description, so editing all frontmatters would change every skillHash and mark measured cells stale for no consumer benefit. Every id appears exactly once. A skill that only makes sense in one repo type belongs to a scope, not to a stack-specific filter.",
   "scopes": {
     "pipeline": {
-      "about": "Move an idea to a reviewed change: capture, process, groom, prompt, implement, and the optional blind-spot pass.",
+      "about": "Move an idea to a reviewed change: capture, process, groom, prompt, implement, optional blind-spot review, and Python implementation judgment.",
       "skills": [
         "capture-idea",
         "process-inbox",
         "groom-backlog",
         "find-blind-spots",
         "write-implementation-prompt",
-        "implement-from-prompt"
+        "implement-from-prompt",
+        "python-luminary"
       ]
     },
     "verify": {
