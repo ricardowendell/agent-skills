@@ -150,6 +150,26 @@ informal exercise is not a harness run, a pass rate, or candidate/control eviden
 
 ## Evaluation Plan
 
+**Review findings addressed, 2026-11-17.** Three findings from an independent
+read-only review of draft PR #23, all non-blocking:
+
+1. The coverage row now counts (`6` cases, `2` trigger) and the totals move to
+   `120/37/2`; drafts belong to the table because they hold real authored cases,
+   unlike the accepted-on-human-review skills in the note below it.
+2. The core states that repository rules win when they disagree with this skill's
+   preferences, so the core cannot be read as authority over a consuming repo.
+3. Cases 4 and 5 gain the `nofile pyproject.toml` / `nofile requirements.txt`
+   guards their expectations already implied, matching cases 3 and 6.
+
+Verified while addressing them, on head `7d839cf` in a throwaway worktree:
+`validate-skills --root skills` reported `All clear`; `eval.mjs check` parsed 120
+cases with no findings; `spec-check --base main` held; `check-evidence` reported
+six documents with zero errors; the harness, helper and bootstrap suites and
+sensor parity passed. The four behavior fixtures fail their documented command
+before any fix (`FAILED (failures=2)`, `(errors=6)`, `(failures=1)`, `(errors=1)`)
+— the expected red baseline, recorded here as the measured state rather than a
+claim about the skill.
+
 Establish that each unfixed behavior fixture fails its documented command without
 editing the protected tests. Follow CONTRIBUTING.md's load canary, then compare
 candidate and without-skill arms on cases 3–6, starting with screening draws.
