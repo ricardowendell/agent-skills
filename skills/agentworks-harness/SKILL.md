@@ -21,6 +21,11 @@ If `include` is `embedded-fallback` or `expires_at` has passed: authenticate and
 run `agentworks builder init --out .` first. Read an empty fallback context as
 "unknown".
 
+Check `scope.tenant` in the cluster context against the tenant you intend to
+write to. A bundle generated under another tenant still lists models, workspaces
+and affordances, and every one of them can be wrong for the request you are about
+to make.
+
 ## Loop
 
 ```
@@ -78,6 +83,9 @@ create/import → deploy exact versions → smoke → inspect → report
 
 - `references/practices.md`: the curated rules behind each loop step; read it
   before deciding how to proceed.
+- `references/auth-and-tenants.md`: tenant switching, the two credential layers,
+  which endpoint reads which, and the measured limits of a developer role. Read it
+  before any 401/403 diagnosis or tenant change.
 - `references/catalog-practices.md`: scope, tags, naming, versions and
   workspaces. Read it before promoting a skill beyond its workspace or
   organizing a growing catalog.

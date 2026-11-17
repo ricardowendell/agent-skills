@@ -19,18 +19,43 @@ The import target and the consumers are different decisions: the first picks
 where the skill lives, the deployment's `skill_version_ids` picks who uses it.
 Two agents in the same workspace can pin different versions of the same skill.
 
-## Tags: request, do not assign
+## Tags: plain tags are self-service, grants are not
 
-Skills carry a `tags` field (alongside `visibility` and `metadata`), but tag
-governance is tenant-admin territory: a developer asks, an admin assigns. Tags
-with grants are visibility fences (TBAC): a skill tagged for an audience your
-token has no grant for is invisible to you even inside your own workspace.
+`PATCH /v1/skills/{skill_id}` accepts `tags` (an array of strings) plus `name`,
+`description`, `visibility`, `owner_principal`, `metadata` and `status`. A
+developer can set plain tags on a skill in their own workspace; measured across
+ten skills in one call, every one applied.
 
-Request tags when a skill must reach a narrower audience than the workspace
-(for example: only the data-contract reviewers), or when a tag convention
-already exists for catalog discovery. Do not treat an empty `tags` list as an
-error: an untagged skill is simply visible to the workspace, which is the
-default posture.
+What stays admin territory is a tag **with a grant**: TBAC tags are visibility
+fences, and a skill tagged for an audience your token has no grant for is
+invisible to you even inside your own workspace. So the rule is narrower than
+"never assign tags":
+
+- Plain organizational tags (`pipeline:pdlc`, `quality:python`): assign them
+  yourself. They are catalog metadata, not a permission.
+- Tags that gate access: request them from a tenant admin, naming the audience
+  and the reason.
+
+Do not treat an empty `tags` list as an error: an untagged skill is visible to the
+workspace, which is the default posture.
+
+## Organizing a pipeline: tags for membership, a flow for order
+
+A tag says which pipeline a skill belongs to; it cannot say what comes first.
+Measured pattern for publishing a multi-stage workflow:
+
+1. Import the stage skills with a shared prefix tag: `pipeline:product` on
+   capture-idea, process-inbox, groom-backlog; `pipeline:pdlc` on
+   write-implementation-prompt, implement-from-prompt, review-code.
+2. Create one flow agent per pipeline whose `AgentNode`s are the stages, in order,
+   with `HumanInputNode`s where a human decides. The node `description` names the
+   catalog skill it serves, so the graph is the readable sequence.
+3. Pin the skill version at deploy (`--skill-version-id`), not in the tag. A tag
+   answers "which pipeline", a version id answers "which bytes".
+
+Result: a reader with no repository access filters by tag to find the stages, then
+reads the flow to get the order. Neither artifact alone is the workflow; together
+they are.
 
 ## Naming
 
@@ -72,4 +97,5 @@ slugs, descriptions and tags, not more workspaces.
    reference them.
 3. Promotion to tenant scope has a named second consumer and an admin's
    approval.
-4. Tag requests name the audience and the reason, not just the tag.
+4. Tag requests name the audience and the reason; a plain organizational tag does
+   not need approval and should be applied by whoever imports the skill.

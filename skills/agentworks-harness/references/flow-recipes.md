@@ -9,7 +9,11 @@ stable once deployed.
 - `control_flow_connections`: `{from_node:{id}, to_node:{id}}`. From a gate or
   branch node, add `from_branch`.
   - `HumanInputNode`: `from_branch` is the **action name** (`approve`, `revise`,
-    `reject`, …).
+    `reject`, …), and the node's `branches` list uses the same names. A gate
+    declaring actions `approve`/`reject` with edges labelled `on_approve` fails
+    with *"Missing routes for <gate>: ['approve', 'reject']"* — the platform
+    routes by action name, and any naming convention like `on_<action>` is
+    rejected at create.
   - `BranchingNode`: `branches` lists **target node IDs**; `from_branch` equals
     the target ID; `mapping` maps the worker's `route` value to a target ID.
 - `data_flow_connections`: `{source_node, source_output, destination_node,
@@ -27,9 +31,39 @@ stable once deployed.
 - Contract 2 (`execution_contract_version: 2`) is required for durable gates;
   every transitive subflow must also be contract 2.
 
+## Create-time rules the validator does not enforce
+
+`agent validate` is more permissive than `POST /v1/agents`. Four failures measured
+in one session, in the order they appeared:
+
+1. **`component_type: Flow` must be inside the `flow` block.** Validation infers
+   the abstraction level and passes without it; create fails with *"Agent Spec
+   payload must have component_type 'Flow'"*. The envelope also matters: the graph
+   lives under the `flow` key of `UnifiedAgentCreate`, not at the top level.
+2. **`LlmConfig`, not `LLMConfig`.** The literal is case-sensitive against
+   `LlmConfig | VllmConfig | OllamaConfig | OpenAiConfig |
+   OpenAiCompatibleConfig`. Validation does not exercise the enum.
+3. **`start_node` is a reference, not a node.** It is `{id: "<start-id>"}`; the
+   full node goes in `nodes`. A full object there fails as *"Component entries
+   must be objects"*.
+4. **Every gate action needs a route with that exact name.** See the edge rules
+   above.
+
+Read-back after create: the flow materialises to a `graph_version_id`, and
+`GET /v1/graph-versions/{id}` returns `.dsl` with `nodes` and
+`control_flow_connections`. `GET /v1/agents/{id}` reports `current_version` as an
+**integer**, so the graph is not on that response — if you check there, you will
+wrongly conclude the flow did not persist.
+
 ## Recipes
 
 - **Gate triad**: `templates/flow-gate-triad.json`.
+- **Direct-action gate** (validated): a `HumanInputNode` whose per-action edges go
+  straight to the next node, with no `gate_apply`/`gate_route` pair. Two real
+  pipelines (7 nodes, 2 and 1 gates) were created this way: the gate's `actions`
+  and `branches` use the same names, and each action has an edge with that
+  `from_branch`. Use the triad only when the decision must be merged into state by
+  a worker; use direct edges when the branch is the whole decision.
 - **Retry loop**: `templates/flow-retry-loop.json` (self data edge + attempt
   counter in state; enforce the cap in the worker, e.g. ≤3).
 - **PDLC delivery**: `templates/data-product-delivery.json` (capture → triage →

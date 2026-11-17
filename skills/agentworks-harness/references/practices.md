@@ -12,6 +12,10 @@ mistake.
   about access.
 - Prefer live reads (`cluster_context`, `tools/list`, `validate_agent`) over any
   prose or cached catalog.
+- Check `scope.tenant` in `cluster-context.json` before trusting its catalogs: a
+  bundle written under another tenant lists that tenant's models and workspaces.
+  After switching tenant, `builder init --workspace <id>` before any authoring that
+  references catalog entries.
 
 ## Scope and authority
 
@@ -24,6 +28,23 @@ mistake.
   Models, environments, capability policies, tool permissions, tenant policy,
   external authority and service accounts are tenant-admin/operator territory.
   Tag denies override role.
+- Measured limits for a developer, consistent across two tenants, so treat them as
+  role properties rather than one tenant's policy: `environment.create`,
+  `capability_policy.create` and `service_account.create` are denied, and
+  `DELETE /v1/agents/{id}` returns 403 even for an agent the same principal
+  created. Consequences: you can create and deploy an agent definition but not
+  give it somewhere to run; you cannot delete a test agent, so name it
+  `…-do-not-use` at creation; and external-agent reporting is closed while reading
+  reported runs stays allowed.
+- `approval.request` being allowed does not mean an escalation path exists: it
+  needs an admin-published access profile and policy. An empty
+  `access-profile list` means the request has nothing to attach to; check before
+  promising it.
+- A 200 from a mutation is not proof it applied. `PATCH /v1/agents/{id}` accepts
+  only `name`, `slug` and `metadata` and silently discards anything else, so
+  `{"is_enabled": false}` returns 200 and changes nothing. Read the resource back
+  and assert the field; when no field exists for the intent, report the operation
+  as unsupported.
 
 ## Authoring
 
