@@ -7,44 +7,36 @@ mistake.
 ## Freshness
 
 - The bundle is a 24h snapshot. Refresh (`agentworks builder init --out .`) after
-  `manifest.expires_at` or after any auth/catalog/model/MCP/policy change.
+  `manifest.expires_at` or after any auth, catalog, model, MCP or policy change.
 - `include: "embedded-fallback"` ships no authenticated scope; it says nothing
-  about access.
-- Prefer live reads (`cluster_context`, `tools/list`, `validate_agent`) over any
-  prose or cached catalog.
+  about access. Read an empty fallback context as "unknown".
 - Check `scope.tenant` in `cluster-context.json` before trusting its catalogs: a
   bundle written under another tenant lists that tenant's models and workspaces.
-  After switching tenant, `builder init --workspace <id>` before any authoring that
-  references catalog entries.
+  After a tenant switch, re-run `builder init --workspace <id>` before authoring
+  that references catalog entries.
+- Prefer live reads (`cluster_context`, `tools/list`, `validate_agent`) over prose
+  or a cached catalog.
 
 ## Scope and authority
 
 - One active tenant and workspace per MCP bridge. Selecting a workspace does not
   grant access to it.
-- Affordances: `allowed` is advisory until the API accepts the mutation;
-  `denied` is a hard boundary; `not_configured` means a prerequisite resource is
-  missing. Create or request it; do not work around it.
-- Roles: `developer` authors agents/skills/deployments only in named workspaces.
+- Affordances: `allowed` is advisory until the API accepts the mutation; `denied`
+  is a hard boundary; `not_configured` means a prerequisite is missing. Create or
+  request it; do not work around it.
+- `developer` authors agents, skills and deployments only in named workspaces.
   Models, environments, capability policies, tool permissions, tenant policy,
-  external authority and service accounts are tenant-admin/operator territory.
-  Tag denies override role.
-- Measured limits for a developer, consistent across two tenants, so treat them as
-  role properties rather than one tenant's policy: `environment.create`,
+  external authority and service accounts are admin/operator territory. Tag
+  denies override role.
+- Measured as role properties, identical in two tenants: `environment.create`,
   `capability_policy.create` and `service_account.create` are denied, and
-  `DELETE /v1/agents/{id}` returns 403 even for an agent the same principal
-  created. Consequences: you can create and deploy an agent definition but not
-  give it somewhere to run; you cannot delete a test agent, so name it
-  `…-do-not-use` at creation; and external-agent reporting is closed while reading
-  reported runs stays allowed.
-- `approval.request` being allowed does not mean an escalation path exists: it
-  needs an admin-published access profile and policy. An empty
-  `access-profile list` means the request has nothing to attach to; check before
-  promising it.
-- A 200 from a mutation is not proof it applied. `PATCH /v1/agents/{id}` accepts
-  only `name`, `slug` and `metadata` and silently discards anything else, so
-  `{"is_enabled": false}` returns 200 and changes nothing. Read the resource back
-  and assert the field; when no field exists for the intent, report the operation
-  as unsupported.
+  `DELETE /v1/agents/{id}` is 403 even for an agent the same principal created.
+  Consequences: you can author an agent but not give it somewhere to run; name
+  anything transient `…-do-not-use` because you cannot delete it; external-agent
+  reporting stays closed while reading reported runs is allowed.
+- `approval.request` allowed ≠ escalation exists. It needs an admin-published
+  access profile and policy; an empty `access-profile list` means there is nothing
+  to attach to. Check before promising it.
 
 ## Authoring
 

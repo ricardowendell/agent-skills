@@ -45,11 +45,10 @@ create/import → deploy exact versions → smoke → inspect → report
    catalog hygiene (S3).
 4. **Validate live.** `validate_agent` (MCP) or `agentworks agent validate -f`.
    Require `valid: true` **and** `missing_permissions: []`. Iterate at most three
-   times; report what still fails instead of shipping a warning you do not
-   understand.
-5. **Write.** MCP write tools exist only when the bridge runs with
-   `--allow-write` or `AGENTWORKS_MCP_ALLOW_WRITE=1`; otherwise use the CLI
-   (`agentworks agent create|deploy|run`, `agentworks skill pack|import`, …).
+   times, then report what still fails.
+5. **Write.** MCP write tools need the bridge running with `--allow-write` or
+   `AGENTWORKS_MCP_ALLOW_WRITE=1`; otherwise use the CLI (`agentworks agent
+   create|deploy|run`, `agentworks skill pack|import`).
 6. **Skills.** Pack deterministically, import with explicit scope, record the
    immutable `skill_version_id` and digest, pin exact IDs in `skill_version_ids`.
    A slug is not an execution pin.

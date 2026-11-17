@@ -33,37 +33,32 @@ stable once deployed.
 
 ## Create-time rules the validator does not enforce
 
-`agent validate` is more permissive than `POST /v1/agents`. Four failures measured
-in one session, in the order they appeared:
+`agent validate` is more permissive than `POST /v1/agents`. Four failures, in the
+order they appear:
 
-1. **`component_type: Flow` must be inside the `flow` block.** Validation infers
-   the abstraction level and passes without it; create fails with *"Agent Spec
-   payload must have component_type 'Flow'"*. The envelope also matters: the graph
-   lives under the `flow` key of `UnifiedAgentCreate`, not at the top level.
-2. **`LlmConfig`, not `LLMConfig`.** The literal is case-sensitive against
-   `LlmConfig | VllmConfig | OllamaConfig | OpenAiConfig |
-   OpenAiCompatibleConfig`. Validation does not exercise the enum.
-3. **`start_node` is a reference, not a node.** It is `{id: "<start-id>"}`; the
-   full node goes in `nodes`. A full object there fails as *"Component entries
-   must be objects"*.
-4. **Every gate action needs a route with that exact name.** See the edge rules
-   above.
+1. **`component_type: Flow` inside the `flow` block.** Validation infers the level
+   and passes; create fails with *"Agent Spec payload must have component_type
+   'Flow'"*. The graph also belongs under the `flow` key of `UnifiedAgentCreate`,
+   not at the top level.
+2. **`LlmConfig`, not `LLMConfig`.** Case-sensitive against `LlmConfig |
+   VllmConfig | OllamaConfig | OpenAiConfig | OpenAiCompatibleConfig`.
+3. **`start_node` is a reference.** `{id: "<start-id>"}`; the full node goes in
+   `nodes`. A full object fails as *"Component entries must be objects"*.
+4. **Every gate action needs a route with that exact name.**
 
-Read-back after create: the flow materialises to a `graph_version_id`, and
+Read-back: the flow materialises to a `graph_version_id`, and
 `GET /v1/graph-versions/{id}` returns `.dsl` with `nodes` and
 `control_flow_connections`. `GET /v1/agents/{id}` reports `current_version` as an
-**integer**, so the graph is not on that response — if you check there, you will
-wrongly conclude the flow did not persist.
+integer, so the graph is not on that response.
 
 ## Recipes
 
 - **Gate triad**: `templates/flow-gate-triad.json`.
-- **Direct-action gate** (validated): a `HumanInputNode` whose per-action edges go
-  straight to the next node, with no `gate_apply`/`gate_route` pair. Two real
-  pipelines (7 nodes, 2 and 1 gates) were created this way: the gate's `actions`
-  and `branches` use the same names, and each action has an edge with that
-  `from_branch`. Use the triad only when the decision must be merged into state by
-  a worker; use direct edges when the branch is the whole decision.
+- **Direct-action gate**: `HumanInputNode` whose per-action edges go straight to
+  the next node, no `gate_apply`/`gate_route` pair. Validated on two real
+  pipelines (7 nodes, 2 and 1 gates): `actions` and `branches` use the same names
+  and each has an edge with that `from_branch`. Use the triad only when a worker
+  must merge the decision into state.
 - **Retry loop**: `templates/flow-retry-loop.json` (self data edge + attempt
   counter in state; enforce the cap in the worker, e.g. ≤3).
 - **PDLC delivery**: `templates/data-product-delivery.json` (capture → triage →

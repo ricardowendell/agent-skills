@@ -21,41 +21,36 @@ Two agents in the same workspace can pin different versions of the same skill.
 
 ## Tags: plain tags are self-service, grants are not
 
-`PATCH /v1/skills/{skill_id}` accepts `tags` (an array of strings) plus `name`,
+`PATCH /v1/skills/{skill_id}` accepts `tags` (array of strings) plus `name`,
 `description`, `visibility`, `owner_principal`, `metadata` and `status`. A
-developer can set plain tags on a skill in their own workspace; measured across
-ten skills in one call, every one applied.
+developer can set plain tags in their own workspace; measured across ten skills in
+one pass, every one applied.
 
-What stays admin territory is a tag **with a grant**: TBAC tags are visibility
-fences, and a skill tagged for an audience your token has no grant for is
-invisible to you even inside your own workspace. So the rule is narrower than
-"never assign tags":
+Admin territory is a tag **with a grant**: TBAC tags are visibility fences, and a
+skill tagged for an audience your token has no grant for is invisible even inside
+your workspace. So:
 
 - Plain organizational tags (`pipeline:pdlc`, `quality:python`): assign them
   yourself. They are catalog metadata, not a permission.
-- Tags that gate access: request them from a tenant admin, naming the audience
-  and the reason.
+- Access-gating tags: request from a tenant admin, naming audience and reason.
 
-Do not treat an empty `tags` list as an error: an untagged skill is visible to the
-workspace, which is the default posture.
+An empty `tags` list is not an error: an untagged skill is visible to the
+workspace, the default posture.
 
 ## Organizing a pipeline: tags for membership, a flow for order
 
 A tag says which pipeline a skill belongs to; it cannot say what comes first.
-Measured pattern for publishing a multi-stage workflow:
+The pairing that works:
 
-1. Import the stage skills with a shared prefix tag: `pipeline:product` on
-   capture-idea, process-inbox, groom-backlog; `pipeline:pdlc` on
-   write-implementation-prompt, implement-from-prompt, review-code.
-2. Create one flow agent per pipeline whose `AgentNode`s are the stages, in order,
-   with `HumanInputNode`s where a human decides. The node `description` names the
-   catalog skill it serves, so the graph is the readable sequence.
-3. Pin the skill version at deploy (`--skill-version-id`), not in the tag. A tag
+1. Import the stage skills with a shared prefix tag (`pipeline:product`,
+   `pipeline:pdlc`, `quality:python`).
+2. Create one flow agent per pipeline whose `AgentNode`s are the stages in order,
+   with `HumanInputNode`s where a human decides. Each node's `description` names
+   the catalog skill it serves, so the graph is the readable sequence.
+3. Pin the version at deploy (`--skill-version-id`), never in the tag: a tag
    answers "which pipeline", a version id answers "which bytes".
 
-Result: a reader with no repository access filters by tag to find the stages, then
-reads the flow to get the order. Neither artifact alone is the workflow; together
-they are.
+Neither artifact alone is the workflow.
 
 ## Naming
 
