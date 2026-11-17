@@ -7,6 +7,17 @@ project uses [Semantic Versioning](https://semver.org/). The artifact is the set
 of skills plus the evidence that backs them, so a version is a claim: which
 skills, which cases, and which published measurements.
 
+## [Unreleased]
+
+### Added
+
+- Draft `python-luminary`: a compact Python engineering core with optional
+  references for data-model fluency, architectural boundaries, typing, iteration,
+  errors/resources, concurrency/performance, tooling and review judgment.
+  Six candidate evals live outside the skill; behavior is unmeasured and no
+  advantage over the no-skill control is claimed. Existing toolchains are
+  preserved. Sources are attributed; no upstream skill or book text is vendored.
+
 ## [0.9.7] — 2026-11-15
 
 `review/ops` is decided: **do not add** a review/ops skill or a `review-code`

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Python Luminary"
+  short_description: "Idiomatic Python, clear boundaries, sound judgment"
+  default_prompt: "Use $python-luminary to implement or review this Python change with clear contracts and proportionate verification."
