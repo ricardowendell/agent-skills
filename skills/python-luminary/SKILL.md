@@ -1,6 +1,6 @@
 ---
 name: python-luminary
-description: "Implement, refactor, fix, or review Python using idiomatic data models, clear architectural boundaries, and proportionate verification. Use whenever touching Python code: a behavior fix, a tangled implementation, design choices, custom protocols, streaming, resource ownership, or concurrency, even a small edit to a Python file. Complements spec-driven implementation and diff review; does not replace their gates."
+description: "Implement, refactor, or review Python using idiomatic data models, clear architectural boundaries, and proportionate verification. Use for Python design work: functions versus dataclasses versus protocols, a refactor across modules, equality, hashing, iteration or resource ownership, a review where structure matters, or a change considering a new layer. Complements spec-driven implementation and diff review; does not replace their gates."
 ---
 
 # Python Luminary

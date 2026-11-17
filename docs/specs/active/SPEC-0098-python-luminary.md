@@ -35,6 +35,12 @@ files:
   - evals/python-luminary/fixtures/7/AGENTS.md
   - evals/python-luminary/fixtures/7/pricing.py
   - evals/python-luminary/fixtures/7/tests/test_pricing.py
+  - evals/python-luminary/fixtures/8/AGENTS.md
+  - evals/python-luminary/fixtures/8/catalogue.py
+  - evals/python-luminary/fixtures/8/tests/test_catalogue.py
+  - evals/python-luminary/fixtures/9/AGENTS.md
+  - evals/python-luminary/fixtures/9/statements.py
+  - evals/python-luminary/fixtures/9/tests/test_statements.py
   - skills.index.json
   - skills/python-luminary/SKILL.md
   - skills/python-luminary/agents/openai.yaml
