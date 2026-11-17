@@ -17,7 +17,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from .model import RUFF_SELECT, TOOL_TIMEOUT
+from .model import RUFF_SELECT, TOOL_TIMEOUT, iter_py_files
 
 
 def run_tool(cmd, cwd=None):
@@ -99,7 +99,31 @@ def _type_checker(targets, project_root):
     return _record(name, cmd, project_root, ok, out, reason)
 
 
-def _vulture(targets, project_root):
+def _vulture_files(paths, project_root):
+    """Expand targets into Python files, skipping environments and build output.
+
+    vulture does not read ruff's `extend-exclude`, so handing it a directory
+    sweeps the installed `.venv` and buries 19 real findings under 125 from
+    site-packages. Expanding with the scan's own skip list keeps the dead-code
+    pass on the project's code.
+    """
+    out = []
+    for raw in paths:
+        path = Path(raw)
+        if not path.exists():
+            continue
+        if path.is_file():
+            if path.suffix == ".py":
+                out.append(str(path))
+            continue
+        out.extend(str(p) for p in iter_py_files(path))
+    return _relative_targets(out, project_root)
+
+
+def _vulture(paths, project_root):
+    targets = _vulture_files(paths, project_root)
+    if not targets:
+        return _unavailable("vulture", "no Python files found to check")
     if shutil.which("vulture"):
         cmd = ["vulture", "--min-confidence", "80", *targets]
     elif shutil.which("uvx"):
@@ -123,12 +147,33 @@ def _vulture(targets, project_root):
     )
 
 
+def _relative_targets(targets, project_root):
+    """Targets as the project names them, so its own exclude config applies.
+
+    A tool given an absolute path applies its own defaults; given a path relative
+    to the project root, it reads the `pyproject.toml` beside it and honors the
+    project's excludes. On a real project this is the difference between
+    reporting 19 unused test variables and sweeping 125 out of an installed
+    `.venv` the config already skips.
+    """
+    try:
+        root = Path(project_root).resolve()
+        out = []
+        for raw in targets:
+            resolved = Path(raw).resolve()
+            out.append(str(resolved.relative_to(root)) or ".")
+        return out
+    except ValueError:
+        return [str(t) for t in targets]
+
+
 def external_findings(paths):
     """Run ruff, a type checker and vulture; report each one's own output."""
     targets = [str(p) for p in paths if Path(p).exists()]
     project_root = project_root_for(targets)
+    relative = _relative_targets(targets, project_root)
     return [
-        _ruff(targets, project_root),
-        _type_checker(targets, project_root),
+        _ruff(relative, project_root),
+        _type_checker(relative, project_root),
         _vulture(targets, project_root),
     ]

@@ -40,26 +40,44 @@ def _shapes(files, project_root):
     return shapes
 
 
+def _is_test_module(name):
+    """A module under a test tree, whose edges measure test coverage not coupling."""
+    parts = name.lower().split(".")
+    return any(p in ("tests", "test", "testing") for p in parts) or any(
+        p.startswith("test_") for p in parts
+    )
+
+
 def _couple(shapes, files, project_root):
-    """Attach fan-in, fan-out and declared layer to each module shape."""
+    """Attach fan-in, fan-out and declared layer to each module shape.
+
+    Edges from test modules are excluded from fan-in and fan-out. A module with
+    20 test files is covered, not coupled; counting those edges makes every
+    well-tested module look like a hub and buries the production graph.
+    """
     modules, edges, facades = internal_graph(files, project_root)
     contracted = contract_facades(edges, facades)
+    production = {
+        src: {t for t in targets if not _is_test_module(t)}
+        for src, targets in contracted.items()
+        if not _is_test_module(src)
+    }
     fan_in = {name: 0 for name in modules}
-    for targets in contracted.values():
+    for targets in production.values():
         for target in targets:
             fan_in[target] = fan_in.get(target, 0) + 1
     root_package, layers = _module_layer_map(project_root)
     for shape in shapes:
         shape["fan_in"] = fan_in.get(shape["module"], 0)
-        shape["fan_out"] = len(contracted.get(shape["module"], ()))
+        shape["fan_out"] = len(production.get(shape["module"], ()))
         shape["layer"] = _resolve_layer(shape["module"], layers, root_package)
-    return contracted, root_package
+    return contracted, production, root_package
 
 
 def architecture_summary(files, project_root: Path):
     """Fold per-module shape, coupling and layering into one summary record."""
     shapes = _shapes(files, project_root)
-    contracted, root_package = _couple(shapes, files, project_root)
+    contracted, production, root_package = _couple(shapes, files, project_root)
     biggest = sorted(shapes, key=lambda s: s["lines"], reverse=True)
     biggest_functions = sorted(
         (
@@ -131,6 +149,7 @@ def _print_modules(largest):
             f"    {m['lines']:5d}L {m['functions']:3d}fn {m['module'] or m['file']}"
             f"  (fan-in {m['fan_in']}, fan-out {m['fan_out']}{layer})"
         )
+    print("  (fan-in/fan-out count production imports; test modules are excluded)")
 
 
 def _print_effects(effectful):
