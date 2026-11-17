@@ -136,6 +136,18 @@ fixture baseline, Python example execution, or model-based comparison was run.
 PR CI is the available structural verification surface; its result belongs in
 the PR. This spec deliberately remains draft and TASK-122 remains To Do.
 
+Structural CI passed for the initial draft commit `dedbd262` in
+[Actions run 43989076852](https://github.com/ricardowendell/agent-skills/actions/runs/43989076852):
+the validator reported `All clear`, corpus checking/staging and the spec contract
+passed, harness/helper/bootstrap suites had 635 passes, five skips and zero
+failures, and both sensor fixtures were in parity. These are repository checks,
+not executions of the four new Python behavior fixtures.
+
+A separate read-only usage exercise loaded the core and architecture reference
+and proposed a two-function offline-pricing refactor. It preserved validation
+before charging and added no layers. The proposed code was not executed; this
+informal exercise is not a harness run, a pass rate, or candidate/control evidence.
+
 ## Evaluation Plan
 
 Establish that each unfixed behavior fixture fails its documented command without
