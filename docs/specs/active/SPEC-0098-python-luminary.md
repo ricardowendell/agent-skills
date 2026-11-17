@@ -227,11 +227,36 @@ claimed four cycles in a project whose own import-linter contract passes. A real
 cycle still reports: a two-module fixture where `a` imports `b` and `b` imports
 `a` gives `cycles: 1`.
 
-Re-measurement is required before this iteration can be called measured. The tree
-hash moved, so the case 10 evidence (`5/5 vs 0/5`) belongs to the previous tree.
-The claim under test is unchanged — case 10 still asserts `ran analyze.py` and the
-five named defects — but the artifact that satisfies it is now larger, and an
-unmeasured increase in agent-visible surface is exactly what the canary is for.
+**Iteration 4 measured, 2026-11-17 — the separator holds.** Re-measured on the
+tree that carries the shape block and the tool-context fixes
+(`6bb8632`), on the same default model. Case 10: **skill 5/5, control 0/5**
+(`2026-11-17T13-43-48--python-luminary` /
+`2026-11-17T10-18-13--python-luminary--without-skill`; both `findings=0`,
+`isolated=yes`, `skillLeaks=0`, `hostReads=0`). Canary #1: **7/8** with one
+infrastructure stall, retried once (`2026-11-17T13-51-04--python-luminary`). The
+control arm was reused rather than re-run: the without-skill arm stages no skill,
+so a change to the skill tree cannot reach it.
+
+This is the third reproduction of the same separator — screening 3/3 vs 0/3, then
+evidence 5/5 vs 0/5 on two different trees. The artifact grew from a single file
+to a 142-line CLI over an eight-module package and the measurement did not move,
+which is the property that matters: the claim is about running the scan and
+citing `file:line`, not about the scan being small.
+
+**Two defects the re-measurement cycle found in the scan itself**, both fixed in
+`6bb8632` and both invisible to the fixture corpus:
+
+1. `vulture` does not read ruff's `extend-exclude`, so passing it a directory
+   swept an installed `.venv` and buried 19 real findings under 125 from
+   `site-packages`. Targets are now expanded with the scan's own skip list.
+2. Fan-in and fan-out counted test edges. A module with 20 test files is
+   covered, not coupled: on the trial kit this read `workspace` as fan-in 6
+   instead of its real 3, and made `cli` look like a hub. Test modules are now
+   excluded from the production graph, and the block says so.
+
+Neither defect had a fixture. They surfaced by running the scan against a real
+project, which is the argument for keeping one external target in the loop
+alongside the corpus.
 
 **Review findings addressed, 2026-11-17.** Three findings from an independent
 read-only review of draft PR #23, all non-blocking:
