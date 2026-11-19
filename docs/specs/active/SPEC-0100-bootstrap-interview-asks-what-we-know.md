@@ -1,7 +1,7 @@
 ---
 id: SPEC-0100
 title: The bootstrap interview asks what we know
-status: draft
+status: ready
 priority: high
 task: TASK-124
 created_at: 2026-11-19
@@ -17,6 +17,7 @@ files:
   - skills/bootstrap-project-harness/SKILL.md
   - docs/evals/coverage.md
   - docs/specs/active/SPEC-0100-bootstrap-interview-asks-what-we-know.md
+  - docs/prompts/SPEC-0100-bootstrap-interview-asks-what-we-know.prompt.md
   - CHANGELOG.md
 tests:
   - node scripts/validate-skills.mjs --root skills
@@ -82,6 +83,21 @@ bootstrap.
   solution-as-candidate rule must not derail additive preservation). Record the
   skillHash change, the staleness delta and the reason in `docs/evals/coverage.md`.
   A screening is a direction, not a separation claim.
+
+  **Pass criterion, fixed before the first draw.** Case 1 has machine `assert:`
+  lines (the canonical `docs/` tree, `AGENTS.md`, `.opencode/opencode.json`,
+  `nofile .husky`) and human `expect:` lines ("does not invent product
+  direction"). The change touches both, so "it reads better" cannot be the test.
+  Screening passes only if **both** hold: the machine assertions of case 1 and
+  case 2 stand at their recorded counts, **and** the transcript shows the three
+  facts and names `investigate` as the next action. Either half failing is a
+  fail.
+
+  **Stop after the first draw.** One draw of case 1 answers whether the interview
+  change breaks document creation; only if it holds do draws 2–3 and case 2 run.
+
+  **Fallback, decided now.** If the report confuses the flow, narrow the report —
+  the topics stay. Reverting the interview change is not the first answer.
 - **F5 — publish.** A `CHANGELOG.md` `[Unreleased]` entry naming what changed and
   what did not.
 
@@ -147,7 +163,9 @@ cannot mark.
    rule are unchanged (`grep` of the section shows the same limits).
 7. Screening runs on cases 1 and 2 at 1–3 draws and is recorded in
    `docs/evals/coverage.md` with the skillHash change, the staleness delta and
-   the words "screening, not a separation claim".
+   the words "screening, not a separation claim"; the first draw of case 1 is run
+   alone, and the pass criterion in Scope > F4 is met in both halves — machine
+   assertions standing and the three facts visible in the transcript.
 8. `node scripts/validate-skills.mjs --root skills` prints `All clear` and
    `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0100-bootstrap-interview-asks-what-we-know.md`
    reports no errors.
