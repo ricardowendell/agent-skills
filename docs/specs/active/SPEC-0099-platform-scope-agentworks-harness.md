@@ -1,7 +1,7 @@
 ---
 id: SPEC-0099
 title: The first-party index names the platform scope
-status: in_progress
+status: implemented
 priority: high
 task: TASK-123
 created_at: 2026-11-19
@@ -151,6 +151,9 @@ Observed after the edit, not quoted from the plan:
 Acceptance criteria 1–6 hold against those outputs. AC 5's "no `SKILL.md` is
 modified" holds because the only files touched are `skills.index.json` and this
 spec.
+
+Landed in `37f913a`. The status flip to `implemented` and the close of TASK-123
+are the bookkeeping commit that follows it, per `Pdlc-Bookkeeping`.
 
 ## Open Questions
 

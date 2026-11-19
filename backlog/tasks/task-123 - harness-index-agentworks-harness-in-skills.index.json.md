@@ -1,7 +1,7 @@
 ---
 id: TASK-123
 title: 'harness: index agentworks-harness in skills.index.json'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-19T14:01:00Z'
 labels:
