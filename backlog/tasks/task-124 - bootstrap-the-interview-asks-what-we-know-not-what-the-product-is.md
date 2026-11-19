@@ -1,9 +1,10 @@
 ---
 id: TASK-124
 title: 'bootstrap: the interview asks what we know, not what the product is'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-11-19T14:01:00Z'
+updated_date: '2026-11-19T17:15:00Z'
 labels:
   - skills
 dependencies: []
