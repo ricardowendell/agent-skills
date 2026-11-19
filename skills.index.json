@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "about": "First-party scope index for the 17 indexed skills under skills/. It is data, not frontmatter: a host routes by SKILL.md description, so editing all frontmatters would change every skillHash and mark measured cells stale for no consumer benefit. Every id appears exactly once. A skill that only makes sense in one repo type belongs to a scope, not to a stack-specific filter.",
+  "about": "First-party scope index for the 17 indexed skills under skills/. It is data, not frontmatter: a host routes by SKILL.md description, so editing all frontmatters would change every skillHash and mark measured cells stale for no consumer benefit. Every id appears exactly once. A skill that only makes sense in one repo type belongs to a scope, not to a stack-specific filter. The scopes answer where a skill sits in the lifecycle, not what a user can ask for: the question-shaped view of the workflow lives in README.md. This is catalog organization, not a selection registry — #9 excludes building a template/stack catalogue here.",
   "scopes": {
     "pipeline": {
       "about": "Move an idea to a reviewed change: capture, process, groom, prompt, implement, optional blind-spot review, and Python implementation judgment.",
