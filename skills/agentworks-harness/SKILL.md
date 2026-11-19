@@ -83,9 +83,10 @@ create/import → deploy exact versions → smoke → inspect → report
 
 - `references/practices.md`: the curated rules behind each loop step; read it
   before deciding how to proceed.
-- `references/auth-and-tenants.md`: tenant switching, the two credential layers,
-  which endpoint reads which, and the measured limits of a developer role. Read it
-  before any 401/403 diagnosis or tenant change.
+- `references/auth-and-tenants.md`: tenant switching, the three credential layers
+  (session, MCP PAT, gateway key), which endpoint reads which, gateway-key
+  rotation and 401 diagnosis, and the measured limits of a developer role. Read
+  it before any 401/403 diagnosis or tenant change.
 - `references/catalog-practices.md`: scope, tags, naming, versions and
   workspaces. Read it before promoting a skill beyond its workspace or
   organizing a growing catalog.
