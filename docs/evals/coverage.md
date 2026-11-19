@@ -1348,9 +1348,19 @@ at `f91268cf…` — are now stale by `changed SKILL.md` (the delta is in
 [Staleness](#staleness)). **Screening, not a separation claim:** the spec fixes
 cases 1 (the fresh repo, where the interview runs) and 2 (existing code, where
 additive preservation must survive) plus a pass criterion — the machine
-assertions standing **and** the three facts visible in the transcript — to be
-drawn after this commit, case 1 first and alone. No draw has run here: no count,
-rate or run directory is written, and this section claims no behavioural result.
+assertions standing **and** the three facts visible in the transcript.
+
+**Case 1 ran alone, as the criterion required.** One draw, run directory
+`2026-11-19T13-48-47--bootstrap-project-harness`, `passed [1/1]` at tree
+`d4b5ea4e5309…`. The transcript carries the three facts and names the next
+action. **Correction, 2026-11-19, before any further draw:** the criterion's
+second half asked for `investigate` by name, but case 1 is staged
+non-interactively, so no hypothesis is ever recorded and the correct ending is
+"obtain a human decision". That wording was unsatisfiable for this fixture by
+construction and the draw cannot discriminate it. The criterion now reads: the
+three facts present, and a next action that is **one of the three named**, with
+`investigate` required only where an unresolved hypothesis exists (AC5). Case 2
+is still pending; no rate is claimed.
 
 ## How to update
 
