@@ -7,6 +7,28 @@ project uses [Semantic Versioning](https://semver.org/). The artifact is the set
 of skills plus the evidence that backs them, so a version is a claim: which
 skills, which cases, and which published measurements.
 
+## [Unreleased]
+
+### Changed
+
+- `bootstrap-project-harness`: the product interview asks what is known instead
+  of what the product is. Seven topics replace the "describe the product"
+  prompts (problem and audience through a concrete situation, desired outcome
+  independent of a proposed feature, evidence actually observed, the proposed
+  solution as a candidate unless the operator says it is decided, the assumption
+  most likely to change direction, constraints split into imposed requirements
+  and preferences, first learning objective and the autonomy granted), and a
+  question the repository can answer is not asked. The completion report is
+  three independent facts — the quoted `harness-state.mjs` outcome, the
+  interview's product understanding, and a next action of `implement`,
+  `investigate` or a human decision — so a working environment with an
+  unresolved hypothesis is a successful bootstrap. The seven-question cap, the
+  skip rule and the stub rule are unchanged; templates, scripts and exit codes
+  are untouched. The product checklist stops being the verdict and now checks the
+  new content, which also demotes two formerly unconditional boxes — "language
+  maps product terms to code entities" and "principles are actionable" — to
+  conditional checks that apply when those terms or rules were supplied.
+
 ## [0.9.8] — 2026-11-19
 
 ### Added

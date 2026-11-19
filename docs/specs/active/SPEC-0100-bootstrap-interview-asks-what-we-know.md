@@ -90,11 +90,19 @@ bootstrap.
   direction"). The change touches both, so "it reads better" cannot be the test.
   Screening passes only if **both** hold: the machine assertions of case 1 and
   case 2 stand at their recorded counts, **and** the transcript shows the three
-  facts and names `investigate` as the next action. Either half failing is a
-  fail.
+  facts with a next action that is one of the three named. Either half failing is
+  a fail.
+
+  **Correction, 2026-11-19, after the first draw and before any further one.**
+  This criterion first required the word `investigate` by name. Case 1 is staged
+  non-interactively, so no hypothesis is ever recorded and the correct ending is
+  "obtain a human decision"; the wording was unsatisfiable for the fixture by
+  construction. AC 5 keeps `investigate` for the interviewed case it describes;
+  the screening criterion now asks for a named action, not one specific action.
+  The run directory and the reason are in `docs/evals/coverage.md`.
 
   **Stop after the first draw.** One draw of case 1 answers whether the interview
-  change breaks document creation; only if it holds do draws 2–3 and case 2 run.
+  change breaks document creation; it passed, so case 2 runs next.
 
   **Fallback, decided now.** If the report confuses the flow, narrow the report —
   the topics stay. Reverting the interview change is not the first answer.
@@ -165,10 +173,30 @@ cannot mark.
    `docs/evals/coverage.md` with the skillHash change, the staleness delta and
    the words "screening, not a separation claim"; the first draw of case 1 is run
    alone, and the pass criterion in Scope > F4 is met in both halves — machine
-   assertions standing and the three facts visible in the transcript.
+   assertions standing and the three facts visible in the transcript, with a next
+   action that is one of the three the skill names.
 8. `node scripts/validate-skills.mjs --root skills` prints `All clear` and
    `node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0100-bootstrap-interview-asks-what-we-know.md`
    reports no errors.
+
+## Results
+
+Implemented in the `pdlc/SPEC-0100-bootstrap-interview-asks-what-we-know` worktree.
+
+- Baseline and after-edit `node scripts/validate-skills.mjs --root skills`: `All clear` both times.
+- `node scripts/spec-check.mjs --spec …` → `contract holds`.
+- Full `selftest` in the worktree: `eval check` parsed 121 cases, 574 + 24 + 42 tests passing, sensor parity 2/2, `check-evidence` 6 documents 0 errors.
+- Tree hash moved `f91268cf93d5…` → `d4b5ea4e5309…`; `check-staleness` moved 57 → 59 stale cited cells, the two new ones being `bootstrap-project-harness#1` and `#15`.
+- **Screening, case 1, one draw:** `2026-11-19T13-48-47--bootstrap-project-harness`, `passed [1/1]` at tree `d4b5ea4e5309…`. The transcript states the three facts, and the next action is "obtain a human decision" — correct for a non-interactive fixture, which is why the criterion was corrected above with its run directory cited.
+- **Screening, case 2, one draw:** `2026-11-19T13-59-59--bootstrap-project-harness`, `passed [1/1]` at the same tree. The transcript states the three facts and reports additive preservation in named terms (`dev`/`start`/`custom:build` untouched, `package.json` merged without changing a key, no second tool added).
+
+Two draws are a direction, not a rate, and this is screening, not a separation claim.
+
+The Product Checklist was rewritten as a gate rather than a verdict, which demotes
+two former unconditional boxes ("language maps product terms to code entities",
+"principles are actionable") to conditional checks. That is inside the spec's blast
+radius but it is a visible change to the checklist, so it is named in `CHANGELOG.md`
+and here rather than left to be discovered in a diff.
 
 ## Open Questions
 

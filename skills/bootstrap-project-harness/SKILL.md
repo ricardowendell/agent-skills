@@ -303,22 +303,54 @@ docs/
 Run these **after** the technical harness, and only with a human present.
 
 16. **Detect existing docs.** If `docs/` already holds any non-empty `.md` (outside the skeleton just created), or the README has a product/about section: stop the product phase. Write no product content — do not add, move, rename, or delete any existing file. Record what you found as open questions in `AGENTS.md`, then stop with: _"Existing docs found — run `/process-inbox` to classify."_
-17. **Interview for gaps.** Bounded — one pass, ≤7 questions, each skippable. Ask only what is knowable now:
-    - `product/vision.md` — problem, audience, solution
-    - `product/language.md` — a few core domain terms
-    - `principles/product-principles.md` — short, decision-driving rules
-    - design system / voice — only if the project has UI
-      Do **not** ask about the roadmap — that belongs to `groom-backlog`.
-18. **Write answers into the template shapes.** Use `templates/product-*.md` as the structure. Transcribe the user's words; do not invent.
+17. **Interview for gaps.** Bounded — one pass, ≤7 questions, each skippable. Ask
+    only what is knowable now, and **never ask a question the repository can
+    answer**: the state script and the stack/profile detection own the technical
+    half, so the interview covers only what the repository cannot supply. Ask
+    these seven topics, one prompt each, and stop at seven:
+    1. **Problem and audience** — "Who is in this situation, and what happens to
+       them today?" Ask for one concrete situation, not a category of user.
+    2. **Desired outcome** — "What should be different afterwards?" Record the
+       outcome on its own terms, independent of any feature proposed to deliver
+       it.
+    3. **Evidence actually observed** — "What have you seen that supports this?"
+       Personal experience, user feedback and an existing workaround are
+       evidence; "I think" or "everyone knows" is a hypothesis. Record which one
+       the answer is.
+    4. **Proposed solution** — "What solution do you have in mind?" Record it as
+       a **candidate** unless the operator says it is **decided**; only their
+       explicit decision makes it an accepted one, never the interviewer's
+       inference from their enthusiasm.
+    5. **The assumption most likely to change direction** — "What would have to
+       be true for this to be the wrong direction?" Record the assumption, not a
+       defence of it.
+    6. **Constraints, split in two** — "What must this respect, and what would
+       you merely prefer?" **Imposed requirements** must be respected (platform,
+       existing integrations, data boundaries, budget); **preferences** are
+       wishes, not requirements. Ask which is which; do not decide for the
+       operator.
+    7. **First learning objective** — "What should be learned first, and what
+       may be done to learn it?" Record the objective and the **autonomy
+       granted** within it. Record it; do not run an investigation.
+
+    Do **not** ask about the roadmap — that belongs to `groom-backlog`. There is
+    no eighth question: a topic the operator cannot answer now becomes a stub
+    (step 19), not another prompt.
+18. **Write answers into the template shapes.** Use `templates/product-*.md` as the structure. Transcribe the user's words; do not invent. Keep a **candidate** labelled as a candidate in the sentence that records it; never write one into `docs/architecture.md` or `docs/principles/design.md` (both loaded as instructions), and never record a preference as an imposed requirement.
 19. **Degrade to stubs.** For every skipped or unanswered question, leave the heading plus `<!-- Q: … -->` so `process-inbox` can resolve it later.
 
 ### Product Checklist
 
-Before marking product steps done, verify:
+This checklist gates the product steps; it is not the completion report — that is
+the three facts below. Before promoting experimental work, verify:
 
 - [ ] Vision answers: why, for whom, what problem
-- [ ] Language maps product terms to code entities
-- [ ] Principles are actionable (guide decisions, not just inspirational)
+- [ ] Desired outcome stands without naming a feature
+- [ ] Evidence and hypothesis are distinguished in the text
+- [ ] A proposed solution is labelled a candidate unless the operator decided it
+- [ ] Constraints are recorded as imposed requirements or as preferences
+- [ ] Language maps product terms to code entities (when terms were supplied)
+- [ ] Principles are actionable (when rules were supplied)
 - [ ] Design System has colors, fonts, component patterns (if UI)
 - [ ] Voice has both "do" and "avoid" examples (if UI)
 - [ ] Unanswered questions are stubs carrying their question, not invented content
@@ -472,13 +504,34 @@ ls docs/experience/ docs/system/ docs/decisions/
 
 **Do NOT mark any step as completed until its audit command passes.**
 
-### Final gate
+### Final gate — the completion report is three independent facts
 
-Only after EVERY audit command passes, state the result explicitly: list which
-commands ran, their output, and anything that failed or was skipped. Do not claim
-"done" on a partial pass — report the gap instead. The result names each detected
-slot (runtime, package manager, linter, formatter, test runner, hook manager) as
-**preserved** or **filled**, and every skipped step carries its diagnostic.
+Only after EVERY audit command above passes, stop the session with three facts,
+each from its own source. A populated checklist is not a fourth fact and does not
+stand in for any of them. Do not claim "done" on a partial pass — report the gap
+instead.
+
+1. **Technical environment — quote the state script.** Report the outcome
+   `node scripts/harness-state.mjs .` returned: exit `0` complete, `1` partial,
+   `2` empty, `3` project without harness (and `4` ambiguous stack, `5` conflict,
+   `64` unreadable directory when that is what it printed). Quote the `state:`
+   line and the exit code; never re-derive the verdict from which files exist.
+   If the script could not run, say the fact is read by hand. Name each detected
+   slot — runtime, package manager, linter, formatter, test runner, hook
+   manager — as **preserved** or **filled**, and every skipped step with its
+   diagnostic.
+2. **Product understanding — from the interview.** State what is confirmed, what
+   is provisional and what is unknown: observed evidence versus hypothesis, a
+   **candidate** versus an **accepted decision**, imposed requirements versus
+   preferences. An unknown stays unknown; do not promote a candidate in the
+   report.
+3. **Next action — one of three.** **implement** a known change, **investigate**
+   an uncertainty, or **obtain a human decision**. Name the specific change,
+   uncertainty or decision behind it.
+
+A working technical environment with an unresolved hypothesis is a **successful
+bootstrap**: fact 1 reports the script's own outcome, fact 2 says the hypothesis
+is open, and fact 3 is `investigate`. A missing solution never blocks completion.
 
 ## Later Sensors
 
