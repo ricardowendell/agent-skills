@@ -47,4 +47,18 @@ created: 2026-11-17T14:43:02.301Z
 Measured outcome 2026-11-17: keep, scoped to codebase analysis. Round 1 (micro-fix judgment, cases 3-7) and round 2 (design judgment, cases 8-9) showed no separation on deepseek-v4.1-flash; cases 6 and 7 retired. Round 3 (codebase analysis, case 10) is a separator at evidence level: skill 5/5 vs control 0/5 (2026-11-17T10-23-12--python-luminary / 2026-11-17T10-18-13--python-luminary--without-skill, both clean), reproducing 3/3 vs 0/3 screening. The control describes the defects but never runs a tool; the skill runs scripts/analyze.py (ruff/ty/vulture orchestration) and reports file:line with each rule's blind spot. Known weakness: #9 regressed 1/3 vs 3/3 on an exit-masking draw, logged not patched to keep the #10 measurement valid. PR #23 marked ready.
 
 ---
+
+created: 2026-11-19T14:02:20.450Z
+
+---
+
+Exit status of the bundled analyzer, appended 2026-11-19 from the inbox verification in docs/inbox/2026-11-19-skills-componiveis-com-evidencia.md (10:52).
+
+skills/python-luminary/scripts/analyze.py returns 0 on every path (lines 128, 144, 150) and calls sys.exit(main(...)) at 154, so a scan with findings and a clean scan are indistinguishable by exit code. That is acceptable as evidence and unusable as a gate: no caller can read success as clean.
+
+Related composition gap, owned elsewhere: the skill fetches missing tools through uvx (SKILL.md:60) while review-code:140 and audit-code-quality:33,147 forbid installing during their operation. TASK-129 holds the contract that the caller's authority prevails.
+
+Not changed here: this spec's measurement is at the current tree, and editing the tree would stale case 10's run.
+
+---
 <!-- COMMENTS:END -->

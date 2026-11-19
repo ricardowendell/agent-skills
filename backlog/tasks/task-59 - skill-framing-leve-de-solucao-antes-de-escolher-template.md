@@ -49,4 +49,16 @@ created: 2026-11-08T02:11:00Z
 Repriorizada em 2026-11-08: medium -> low, e a SPEC-0037 foi para paused/P3. Base: nenhum cluster da analise de 58 sessoes mapeia para framing; capture-idea, groom-backlog e find-blind-spots ja cobrem o territorio. Reabre se a SPEC-0034 mostrar que o incumbent erra um pedido mal especificado de um jeito que as tres nao cobrem, e houver sinal de demanda.
 
 ---
+
+created: 2026-11-19T14:02:11.822Z
+
+---
+
+Bounded investigation, appended 2026-11-19 from inbox notes docs/inbox/2026-11-19-experimentos-para-resolver-incerteza.md (09:50) and docs/inbox/2026-11-19-skills-componiveis-com-evidencia.md (10:48).
+
+Compare against capture-idea, groom-backlog and find-blind-spots before any new skill is considered. find-blind-spots should classify each unknown by what would resolve it — human judgment, inspection of documentation or code, a bounded probe, or a comparison of prototypes against a concrete follow-up change — and end with an experiment assignment instead of only a question. process-inbox should say whether a small experiment could answer an exploratory item, preserving the distinction between an idea, evidence and a decision. groom-backlog keeps its readiness role and, when readiness is blocked, names the smallest investigation that would unblock it.
+
+An operator answer is not evidence: it must not be the only path out of an unknown. This stays a candidate. No skill is created before the corpus shows a gap, and bounded investigation is proposed as behaviour inside the existing discovery skills.
+
+---
 <!-- COMMENTS:END -->
