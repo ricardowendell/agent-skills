@@ -192,6 +192,12 @@ Implemented in the `pdlc/SPEC-0100-bootstrap-interview-asks-what-we-know` worktr
 
 Two draws are a direction, not a rate, and this is screening, not a separation claim.
 
+The Product Checklist was rewritten as a gate rather than a verdict, which demotes
+two former unconditional boxes ("language maps product terms to code entities",
+"principles are actionable") to conditional checks. That is inside the spec's blast
+radius but it is a visible change to the checklist, so it is named in `CHANGELOG.md`
+and here rather than left to be discovered in a diff.
+
 ## Open Questions
 
 - **Is `find-blind-spots` territory creeping in?** The seventh topic asks for the

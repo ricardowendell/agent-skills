@@ -24,7 +24,10 @@ skills, which cases, and which published measurements.
   `investigate` or a human decision — so a working environment with an
   unresolved hypothesis is a successful bootstrap. The seven-question cap, the
   skip rule and the stub rule are unchanged; templates, scripts and exit codes
-  are untouched.
+  are untouched. The product checklist stops being the verdict and now checks the
+  new content, which also demotes two formerly unconditional boxes — "language
+  maps product terms to code entities" and "principles are actionable" — to
+  conditional checks that apply when those terms or rules were supplied.
 
 ## [0.9.8] — 2026-11-19
 
