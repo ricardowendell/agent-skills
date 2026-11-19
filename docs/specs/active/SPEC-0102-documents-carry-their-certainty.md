@@ -26,6 +26,7 @@ files:
   - docs/evals/coverage.md
   - CHANGELOG.md
   - docs/specs/active/SPEC-0102-documents-carry-their-certainty.md
+  - docs/prompts/SPEC-0102-documents-carry-their-certainty.prompt.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0102-documents-carry-their-certainty.md
@@ -192,6 +193,12 @@ Two draws are a direction, not a rate; this is screening, not a separation claim
 - **Portuguese or English section keys?** The templates are English and the
   consumer's docs may be Portuguese. This spec keeps keys in English, matching the
   headings it labels; a repo that renames its headings renames its keys.
+- **First observed drift, 2026-11-19.** In the case-1 draw the model wrote
+  `docs/product/language.md` with a key `terms` that has no matching heading — the
+  glossary table in that document is headless. The template-level criterion held,
+  and that document was not the one the pass criterion named, but it is the exact
+  failure this design fears. SPEC-0103 and any later sensor work should read it as
+  evidence, not as an accident.
 
 ## Prompt Notes
 
