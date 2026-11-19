@@ -1,7 +1,18 @@
+---
+certainty:
+  in-scope-now: accepted
+  out-of-scope-for-now: accepted
+  boundaries: confirmed
+  see-also: confirmed
+---
+
 # Product Scope Template
 
 > The current product boundary. Specs must fall inside it; anything outside is a
 > Non-Goal or a future phase. Answers come from the user — never invent scope.
+>
+> **Certainty:** `certainty:` in the frontmatter labels each section; the four
+> values are defined in `product-language.md`.
 
 ## In Scope (now)
 

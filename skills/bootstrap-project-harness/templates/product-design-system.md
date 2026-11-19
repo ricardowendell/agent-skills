@@ -1,4 +1,16 @@
+---
+certainty:
+  colors: accepted
+  typography: accepted
+  spacing: accepted
+  components: open
+  icons: open
+---
+
 # Design System Template
+
+> **Certainty:** `certainty:` in the frontmatter labels each section; the four
+> values are defined in `product-language.md`.
 
 ## Colors
 

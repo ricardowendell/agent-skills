@@ -1,4 +1,16 @@
+---
+certainty:
+  problem: confirmed
+  audience: confirmed
+  solution: hypothesis
+  why-this-exists: hypothesis
+  non-goals: accepted
+---
+
 # Product Vision Template
+
+> **Certainty:** `certainty:` in the frontmatter labels each section; the four
+> values are defined in `product-language.md`.
 
 > **Guiding phrase:** [one-liner that captures the product's core purpose]
 

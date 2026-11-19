@@ -336,7 +336,7 @@ Run these **after** the technical harness, and only with a human present.
     Do **not** ask about the roadmap — that belongs to `groom-backlog`. There is
     no eighth question: a topic the operator cannot answer now becomes a stub
     (step 19), not another prompt.
-18. **Write answers into the template shapes.** Use `templates/product-*.md` as the structure. Transcribe the user's words; do not invent. Keep a **candidate** labelled as a candidate in the sentence that records it; never write one into `docs/architecture.md` or `docs/principles/design.md` (both loaded as instructions), and never record a preference as an imposed requirement.
+18. **Write answers into the template shapes.** Use `templates/product-*.md` as the structure and fill each template's `certainty:` frontmatter as you write its sections. Transcribe the user's words; do not invent. Write a **candidate** with its label — `candidate:` in the sentence that records it — never laundered into declarative prose, and never into `docs/architecture.md` or `docs/principles/design.md` (both loaded as instructions). Write a **preference** as a preference, not as an imposed requirement.
 19. **Degrade to stubs.** For every skipped or unanswered question, leave the heading plus `<!-- Q: … -->` so `process-inbox` can resolve it later.
 
 ### Product Checklist

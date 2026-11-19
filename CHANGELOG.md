@@ -28,6 +28,15 @@ skills, which cases, and which published measurements.
   new content, which also demotes two formerly unconditional boxes — "language
   maps product terms to code entities" and "principles are actionable" — to
   conditional checks that apply when those terms or rules were supplied.
+- `bootstrap-project-harness`: the seven generated product documents carry a
+  `certainty:` frontmatter map — one label per existing section heading, from a
+  closed set (`confirmed`, `accepted`, `hypothesis`, `open`) defined once in
+  `product-language.md` and referenced by the other templates — so a bootstrap
+  hypothesis no longer reads like a decision. The glossary marks its Code Entity
+  column optional until the entity exists, with an empty cell in its sample row,
+  and step 18 writes a candidate with its label and a preference as a
+  preference. No template heading, script, sensor or loaded-instruction file
+  changes.
 
 ## [0.9.8] — 2026-11-19
 

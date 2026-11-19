@@ -1,4 +1,13 @@
+---
+certainty:
+  principle-1: accepted
+  principle-2: accepted
+---
+
 # Product Principles Template
+
+> **Certainty:** `certainty:` in the frontmatter labels each section; the four
+> values are defined in `product-language.md`.
 
 ## [Principle 1]
 
