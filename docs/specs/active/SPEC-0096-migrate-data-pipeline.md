@@ -1,7 +1,7 @@
 ---
 id: SPEC-0096
 title: A migration skill, measured on a tree that cannot be re-pointed
-status: ready
+status: implemented
 priority: P1
 task: TASK-82
 created_at: 2026-11-15
