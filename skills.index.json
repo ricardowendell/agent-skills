@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "about": "First-party scope index for the 16 indexed skills under skills/. It is data, not frontmatter: a host routes by SKILL.md description, so editing all frontmatters would change every skillHash and mark measured cells stale for no consumer benefit. Every id appears exactly once. A skill that only makes sense in one repo type belongs to a scope, not to a stack-specific filter.",
+  "about": "First-party scope index for the 17 indexed skills under skills/. It is data, not frontmatter: a host routes by SKILL.md description, so editing all frontmatters would change every skillHash and mark measured cells stale for no consumer benefit. Every id appears exactly once. A skill that only makes sense in one repo type belongs to a scope, not to a stack-specific filter.",
   "scopes": {
     "pipeline": {
       "about": "Move an idea to a reviewed change: capture, process, groom, prompt, implement, optional blind-spot review, and Python implementation judgment.",
@@ -25,6 +25,10 @@
     "maintain": {
       "about": "Set up and keep the harness current: bootstrap, tighten one gate, catch a branch up with its base.",
       "skills": ["bootstrap-project-harness", "tighten-harness", "sync-branch"]
+    },
+    "platform": {
+      "about": "Operate a live external platform the repo is wired to: cluster catalog, flows, deployments, runs and the skills that serve them. One member today; a second member needs its own evidence.",
+      "skills": ["agentworks-harness"]
     },
     "record": {
       "about": "Write a decision down, including what was traded away.",
