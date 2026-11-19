@@ -109,6 +109,13 @@ status declared in `backlog/config.yml`.
 8. Run the validator; the bar is `All clear`, not "no errors". Warnings are how
    drift, stack hardcoding and missing consent clauses surface.
 
+9. A script bundled inside the skill (`skills/<id>/scripts/`) is **skill
+   content**, not harness mechanism: it sits outside the `docs/pipeline.md`
+   freeze and it is measured with the skill. Two rules still bind it — it never
+   installs a dependency implicitly, and its exit status separates findings from
+   the checks it could not run. The freeze covers the eval mechanism, the pdlc
+   stages and the store schema, not what a skill carries.
+
 ## Adding a case
 
 Every skill keeps its cases in `evals/<id>/cases.md`, beside the skill roots —
