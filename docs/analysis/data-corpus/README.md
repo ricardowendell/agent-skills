@@ -1,6 +1,6 @@
 # Data corpus
 
-Eight small, realistic data-pipeline trees and the deterministic oracles that judge
+Nine small, realistic data-pipeline trees and the deterministic oracles that judge
 them, plus the four contract A/B fixtures under `contract-ab/`. The corpus is an
 **instrument**: it exists so a later spec can measure whether a skill sees a data
 defect. The 0.8.3 trees are not skills and are not staged under `evals/`; the
@@ -17,6 +17,7 @@ are in [`ab-cases.md`](ab-cases.md).
 | `join-duplicate-keys` | defect | `join/quality` | 1 |
 | `migration-retry-backfill` | defect | `migration` | 1 |
 | `migration-sliced-cutover` | defect | `migration` | 1 |
+| `migration-staged-only` | defect, **staged-only** (no switch) | `migration` | 1 |
 | `incompatible-contract` | defect, **holdout** | `contract` | 1 |
 | `schema-drift-documented` | documented drift (must pass) | `contract` | 0 |
 | `negative-healthy` | negative | `join/quality`, `migration` | 0 |
@@ -54,6 +55,12 @@ the defect and the fix without editing a file:
   independence is a test in `decision.md` rather than a claim.
 
 The negatives have no switch: their only state is the healthy one.
+`migration-staged-only` has no switch either, and for the opposite reason: it is
+the same two faults with the `corrected` branch deleted, so the only route to
+exit 0 is to repair `connect`, `load_mapping` and `cutover`. It exists because
+the `migration` composition screen (SPEC-0093) could not separate a fix from a
+re-pointed fixture state; the staged-only copy was measured (SPEC-0096) and the
+measurement is in `decision.md` §4.
 
 ## Requirements
 
@@ -84,6 +91,12 @@ FIXTURE_STATE=corrected \
 python3 docs/analysis/data-corpus/migration-sliced-cutover/check.py        # exit 1
 FIXTURE_STATE=corrected \
   python3 docs/analysis/data-corpus/migration-sliced-cutover/check.py      # exit 0
+
+# migration-staged-only: one state, both faults, no switch — nothing makes it
+# exit 0 except a fix to pipeline.py
+python3 docs/analysis/data-corpus/migration-staged-only/check.py           # exit 1
+FIXTURE_STATE=corrected \
+  python3 docs/analysis/data-corpus/migration-staged-only/check.py         # exit 1 (the variable does nothing here)
 
 # incompatible-contract (holdout): defect, then fixed
 python3 docs/analysis/data-corpus/incompatible-contract/check.py           # exit 1

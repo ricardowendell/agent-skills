@@ -5,7 +5,7 @@ status: ready
 priority: P1
 task: TASK-82
 created_at: 2026-11-15
-updated_at: 2026-11-15
+updated_at: 2026-11-19
 source_docs:
   - backlog/tasks/task-82 - data-migrate-data-pipeline-com-equivalencia-semantica-e-rollback-issue-17.md
   - docs/analysis/data-corpus/decision.md
@@ -60,6 +60,11 @@ control cited, and the limits named.
 
 ## Scope
 
+> **Outcome, 2026-11-19:** the staged-only cell refuted the `build`. The plan
+> below is kept as approved; the skill and the eval corpus it names were built,
+> measured and removed. See [Outcome](#outcome-2026-11-19) for the counts and the
+> scope that shipped.
+
 - **F0 — the staged-only fixture.** `evals/migrate-data-pipeline/fixtures/1/`
   copies the 0.9.4 tree and removes the `FIXTURE_STATE` switch entirely: one
   state, both faults, one check. `check.py` keeps its two finding lines and its
@@ -85,10 +90,12 @@ control cited, and the limits named.
   raw counts and reds named, classified.
 - **F4 — publish.** The `migration` section of
   `docs/analysis/data-corpus/decision.md` records the build's first cell and its
-  counts beside the `build` decision; the coverage gains the new corpus row; one
-  `CHANGELOG.md` entry under `[Unreleased]`. `TASK-82` closes only if the skill
-  arm passes and the control fails; otherwise the counts are published and the
-  task stays open with the gap named.
+  counts; the coverage records the measurement as a note (no corpus row, because
+  no skill ships) and one `CHANGELOG.md` entry under `[Unreleased]`. `TASK-82`
+  closes on the measured outcome: a separation closes it as the `build` landing,
+  a non-discriminator closes it as a negative result (`do not add`, the skill
+  removed). The counts decided the second case — see
+  [Corrections during implementation](#corrections-during-implementation).
 
 **Blast radius.** One new skill file, the index and README rows, one corpus with
 a three-file fixture, the decision memo, the coverage and the release entry.
@@ -118,9 +125,14 @@ a three-file fixture, the decision memo, the coverage and the release entry.
 
 - `docs/analysis/data-corpus/migration-sliced-cutover/` — the read-only source
   of the fixture.
-- `evals/migrate-data-pipeline/` — the new corpus.
-- `skills/migrate-data-pipeline/SKILL.md`.
-- `docs/analysis/data-corpus/decision.md`, `docs/evals/coverage.md`,
+- `docs/analysis/data-corpus/migration-staged-only/` — the preserved instrument:
+  the copy with the switch removed, kept after the retraction.
+- `evals/migrate-data-pipeline/` — **removed**: the candidate's corpus, deleted
+  with the skill when the cell refuted the build.
+- `skills/migrate-data-pipeline/SKILL.md` — **removed**: built, measured, no
+  delta against the control.
+- `docs/analysis/data-corpus/decision.md`,
+  `docs/analysis/data-corpus/README.md`, `docs/evals/coverage.md`,
   `CHANGELOG.md`.
 - Run directories under `~/.local/share/opencode/evals/runs/`.
 
@@ -136,8 +148,11 @@ a three-file fixture, the decision memo, the coverage and the release entry.
    check and the contract means a state flip or a contract rewrite cannot pass.
 4. **The cell is measured**: five draws per arm, model, detector, both run
    directories, raw counts and reds recorded.
-5. **The decision follows the counts**: a separation closes `TASK-82`; anything
-   else publishes the counts and leaves the task open with the gap named.
+5. **The decision follows the counts**: a non-discriminator resolves `TASK-82`
+   as `do not add` and removes the skill (measured; the closing was authorised at
+   the merge gate — see Corrections during implementation); a separation would
+   have closed it as the `build` landing. Either way the counts and the ordered
+   history are published.
 6. **Publication is complete** and `files:` is honest (`spec-check` clean);
    every `tests:` command passes.
 
@@ -165,3 +180,38 @@ a three-file fixture, the decision memo, the coverage and the release entry.
 - **Safeguards**: no switch in the fixture, no check edit in the case, no new
   assertion kind.
 - **Tests**: the gates above; `validate-skills` proves the new skill's shape.
+
+## Outcome (2026-11-19)
+
+The staged-only cell was built and measured, and it **refuted the build**. With
+no `corrected` branch to re-point, the control fixed the duplicated mapping key,
+the retry upsert and the cutover's backup order in **5/5** clean draws; the skill
+arm matched it at **5/5** behavioural (**4/5** scored, one load-gate miss), so
+the class is **non-discriminator** and the **0/10** of SPEC-0093 was the switch,
+not a capability the platform lacked. The skill was authored, measured and
+removed for having no delta: `skills.index.json`'s `data` scope stays empty, no
+case is staged, and the corpus returns to the case set it had before the
+branch — 121 cases after the merge with `main`, whose additions stay. The
+instrument is kept as
+`docs/analysis/data-corpus/migration-staged-only/`, and `TASK-82` closes on the
+negative result. The oracle's limit — the check reads the pipeline's own
+constants, so a hardcoded loader could pass — is recorded in `decision.md` §6.
+
+## Corrections during implementation
+
+**The task's closing rule (F4/AC5).** The spec as approved said `TASK-82` "closes
+only if the skill arm passes and the control fails; otherwise the counts are
+published and the task stays open with the gap named". The measured cell was a
+**non-discriminator** — the control fixed both faults 5/5 without a skill — so by
+that letter the task would stay open. At the merge gate the owner ruled the other
+way for a measured negative: the gap the task recorded was the switch, not a
+missing capability, so the counts *are* the answer, `TASK-82` closes as `do not
+add` with the skill removed, and the tree stays as the instrument. F4 and AC5
+above carry the corrected rule; the original wording is quoted here because it
+is the contract the worker ran under.
+
+**The scope the plan lost.** The approved `files:` named a skill and an eval
+corpus. Both were built and measured, and both were removed when the cell
+refuted the build, so `files:` now lists the instrument and the publications
+only, and `## Data` marks the two removed paths. Nothing else in the plan moved:
+one staged-only tree, one case, five draws per arm, one publication.

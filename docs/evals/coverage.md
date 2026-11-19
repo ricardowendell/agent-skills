@@ -673,7 +673,8 @@ staged skill to be the route: it is 3/5 on the join screen and 1/5 on the
 migration screen, so it is not. `extend review-code` would add a reference for
 grain/cardinality — the one dimension the control reaches 5/5 without a skill —
 and for migration/idempotency/cutover, where the only measurement is a builder
-screen with no rate whose oracle cannot separate a fix from a state flip; a
+screen with no rate whose oracle cannot separate a fix from a state flip (the
+staged-only cell refuted the `build`; see the note below); a
 reference without a case is a pointer, not a claim. `build` for review/ops is not
 underwritten by either screen: the migration gap is a builder gap, already
 decided as `build` in the `migration` section with `TASK-82`'s follow-up as its
@@ -681,6 +682,63 @@ owner. No `review-code` file changes in this branch.
 `docs/analysis/data-corpus/decision.md` §4 carries the decision, the counts, the
 old `do not add` as history, and the reopen condition: a review-shaped case (a
 diff to judge, not a pipeline to fix) measured against `review-code`.
+
+## The migration refutation (SPEC-0096)
+
+A note, not a corpus row: the cell below measured a candidate, was decided by its
+counts, and the candidate was removed. The `build` in
+`docs/analysis/data-corpus/decision.md` §4 `migration` owed a staged-only cell —
+a copy of `migration-sliced-cutover` with no `corrected` branch — so a draw could
+not green the check by re-pointing which state is the default. That cell was
+built, measured, and it **refuted the build**. The tree stays as the instrument,
+at `docs/analysis/data-corpus/migration-staged-only/` (`FIXTURE_STATE` removed,
+one state, both faults, one check): the two finding lines are byte-identical to
+the 0.9.4 `staged` output (`C-200 x2`; 8 `orders_v2` rows for 6 migrated orders;
+rollback restores 1 of 7), and no environment variable changes them. Durable
+treeHash
+`8ff1947dbf41b9fd93f4769536bca923a713eba39ed365ac6eb3e65e53b00f84` (per file
+`AGENTS.md` `5573d62d…`, `check.py` `ccde1c56…`, `pipeline.py` `aac5df1c…`); the
+measured fixture was the same bytes before the move (`e3017d61…`), when only the
+check command differed.
+
+The case asked the SPEC-0093 prompt, unchanged — "The migration is failing its
+contract. Fix it." — and asserted the skill under test, the tree's own `check.py`
+(`ranpass`), `changed pipeline.py`, and `unchanged check.py`/`AGENTS.md`. A state
+flip was impossible and the oracle could not be rewritten in place, so the only
+passing shape was an edit to the migration. Measured 2026-11-19 with
+`node scripts/eval.mjs compare migrate-data-pipeline 1 --repeat 5 --root skills`
+at `repoSha d625d1e`, five draws per arm, `opencode-go/deepseek-v4.1-flash`
+(config default), detector `cf2e2e319d975a5b`.
+
+| arm | run directory | clean / `check-eval-run` | scored | behavioural | reds |
+| --- | --- | --- | --- | --- | --- |
+| without skill | `2026-11-19T09-08-40--migrate-data-pipeline--without-skill` | 5/5, `findings=0`, `isolated=yes` | 0/5 | 5/5 | r1–r5 `skill migrate-data-pipeline` (declared load) |
+| with skill | `2026-11-19T09-15-09--migrate-data-pipeline` | 5/5, `findings=1`, `isolated=yes` | 4/5 | 5/5 | r2 `skill migrate-data-pipeline` (load gate) |
+
+**The reds, named.** The control's five reds are the declared `skill` assertion,
+which no control draw can pass; all four behavioural assertions pass in every
+control draw. The skill arm's r2 never loaded the skill (`skillGate.source:
+null`) and fixed both faults anyway, so `check-eval-run` counts the miss as a
+gate finding; r1, r3, r4 and r5 loaded the skill and passed every assertion.
+
+**Class: non-discriminator — and the retraction.** The control fixed the missing
+unique key, the upsert on retry and the backup-before-delete cutover in **5/5**
+clean draws without a skill, and left `check.py`/`AGENTS.md` byte-identical; the
+skill arm matched it at **5/5** behavioural. What SPEC-0093 read as a capability
+gap (**0/10** touching the fault body) was the answer key: once it is gone the
+bare model reaches both faults from one sentence. So the skill authored for the
+`build` was measured here, had no delta, and was removed — no migration skill
+ships, `skills.index.json` is back to `main`'s state (16 ids across six
+scopes, `data` empty), and `TASK-82`
+closes on this negative result. `docs/analysis/data-corpus/decision.md` §4
+`migration` carries the ordered history (0/10 → build → refutation) with the
+`build` wording kept as history.
+
+**The limits, named.** The check derives its expectations from `pipeline.py`'s own
+constants, so a loader hardcoded to the expected snapshot could pass; `changed
+pipeline.py` catches only an untouched file. n=5 cannot exclude a small effect.
+One earlier attempt contributes no count:
+`2026-11-15T15-22-12--migrate-data-pipeline--without-skill` is **history** — an `infrastructure` attempt (four draws stalled at 0 tokens / 0 steps after a host restart, zero clean draws, `isolated=unknown`), not evidence.
 
 ## Discriminating set (issue #5)
 

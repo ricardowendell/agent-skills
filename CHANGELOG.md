@@ -18,6 +18,41 @@ skills, which cases, and which published measurements.
   advantage over the no-skill control is claimed. Existing toolchains are
   preserved. Sources are attributed; no upstream skill or book text is vendored.
 
+### Changed
+
+The `migration` **build** is retracted. The staged-only cell it owed was built
+and measured, the control fixed both faults without a skill, and the migration
+skill was built, measured, and removed for having no delta. No skill is added;
+`TASK-82` closes on this negative result.
+
+The instrument is kept at `docs/analysis/data-corpus/migration-staged-only/`:
+the 0.9.4 `migration-sliced-cutover` tree with `FIXTURE_STATE` deleted — one
+state, both faults, one check (treeHash `8ff1947d…`; `pipeline.py` `aac5df1c…`,
+`check.py` `ccde1c56…`, `AGENTS.md` `5573d62d…`). Its two finding lines are
+byte-identical to the 0.9.4 `staged` output and no environment variable changes
+them, so exit 0 is reachable only by fixing `connect`, `load_mapping` and
+`cutover`. The corpus `README.md` and `decision.md` §1/§3 carry the tree and its
+command; `TASK-82` closes.
+
+Measured 2026-11-19 at `repoSha d625d1e` (`opencode-go/deepseek-v4.1-flash`
+config default, detector `cf2e2e319d975a5b`, five draws per arm): control **5/5**
+behavioural and **0/5** scored
+(`2026-11-19T09-08-40--migrate-data-pipeline--without-skill`, clean); skill
+**5/5** behavioural and **4/5** scored (`2026-11-19T09-15-09--migrate-data-pipeline`,
+r2 never loaded it). Both arms fixed the mapping key, the retry upsert and the
+cutover order, so the class is **non-discriminator**. The 0/10 of SPEC-0093 was
+the state switch, not a capability the platform lacked; the ordered history
+(0/10 → `build` → refutation) and the oracle limits — the check reads the
+pipeline's own constants, so a hardcoded loader could pass — are in
+`docs/analysis/data-corpus/decision.md` §4 `migration` and §6, with the counts in
+`docs/evals/coverage.md`. `skills/migrate-data-pipeline/`,
+`evals/migrate-data-pipeline/` and the index/README rows are removed, and the
+case count is `main`'s — 121 after the merge, whose additions stay. One earlier
+attempt
+(`2026-11-15T15-22-12--migrate-data-pipeline--without-skill`) is history — four
+stalled draws, no tokens, no count — and the oracle was not edited after the
+first draw.
+
 ## [0.9.7] — 2026-11-15
 
 `review/ops` is decided: **do not add** a review/ops skill or a `review-code`

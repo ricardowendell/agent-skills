@@ -29,6 +29,7 @@ The proof is the exit code plus the finding line; the commands are repeated in
 | `migration-sliced-cutover` | `FIXTURE_STATE=corrected` | **0** | `PASS migration-sliced-cutover: 6 orders in orders_v2 from 3 mapping rows; rollback restored 7 legacy rows` |
 | `migration-sliced-cutover` | `FIXTURE_STATE=mapping-fixed` | **1** | only `rollback did not restore the pre-cutover legacy table: 1 of 7 orders_legacy rows restored; the cutover copied the legacy table after deleting the migrated rows` |
 | `migration-sliced-cutover` | `FIXTURE_STATE=cutover-fixed` | **1** | only `customer_map is not unique on legacy_id: C-200 x2; the slice join wrote 8 orders_v2 rows for 6 migrated orders (2 extra)` |
+| `migration-staged-only` | one state, no switch | **1** | both `migration-sliced-cutover` `staged` lines, byte-identical; `FIXTURE_STATE` does nothing |
 | `incompatible-contract` | `FIXTURE_STATE=staged` | **1** | `required column customer_id is missing; the producer renamed or dropped it`; `column customer_ref is not declared by the contract` |
 | `incompatible-contract` | `FIXTURE_STATE=corrected` | **0** | `PASS incompatible-contract: table orders_export matches 4 required column(s)` |
 | `schema-drift-documented` | documented (tree) | **0** | `PASS schema-drift-documented: table orders_export accepts 1 documented additive column(s)` |
@@ -41,6 +42,20 @@ The two `migration-sliced-cutover` mixed states are the independence proof: fixi
 the mapping alone leaves the rollback line red, and fixing the cutover alone
 leaves the duplicated-`legacy_id` line red. The default `staged` state reports
 both; `corrected` reports neither.
+
+`migration-staged-only` is the same two faults with the switch deleted: one
+state, no `corrected` branch, no environment variable, and the two finding lines
+byte-identical to the `staged` output above. It was written for the `build`
+follow-up (SPEC-0096) because the composition screen could not separate a fix
+from a re-pointed state; its measurement refuted the build, and the tree is kept
+as the instrument that proves a draw cannot read the answer (§4 `migration`).
+Its treeHash is
+`8ff1947dbf41b9fd93f4769536bca923a713eba39ed365ac6eb3e65e53b00f84`, and the
+per-file hashes are recorded beside the measurement in §4; `pipeline.py` keeps
+the same three faults and the same defaults, with the switch, `state()`/`fixes()`
+and the `fixture_state` parameters removed, and `check.py` keeps the same
+sequence and the same two finding lines and `PASS` line, with the switch call
+sites, the docstring and the documented command adjusted.
 
 The four `contract-ab/` trees added by SPEC-0085 obey the same rule; the exact
 commands are in [`contract-ab/README.md`](contract-ab/README.md) §"The proofs"
@@ -159,6 +174,12 @@ three negatives. Every run below returned exit 0 with zero `FAIL` lines.
 
 No check manufactured a defect on the healthy state of its own capability.
 
+`migration-staged-only` contributes no row here: it has no healthy state by
+construction, since the switch that selected one was deleted. Its acceptance
+side is `negative-safe-cutover` (exit 0 on a sliced migration whose backup
+precedes the delete), and the five control draws of the SPEC-0096 measurement
+reached exit 0 only by fixing the three code paths — a fix, not a state.
+
 ## 4. Decision per capability
 
 For `join/quality` and `migration` the B arm is `unknown`: dbt Labs and
@@ -273,25 +294,26 @@ apply unchanged; n=5, as everywhere, does not exclude a small effect.
 - **B arm:** `unknown` for the same reason.
 - **Composition arm:** measured — SPEC-0093 staged `migration-sliced-cutover` as
   `implement-from-prompt` case 15 and ran five draws per arm, 2026-11-15.
-- **Decision:** **build** — measured on the composition arm, not assumed. The
-  platform skill does not fix the two faults: **1/5** draws scored, and every
-  draw in both arms re-pointed which fixture state is the default instead of
-  touching the fault bodies — **10/10** did (nine on `state()`'s default, the
-  control's r1 on the `staged` line of `fixes()`), and **0/10** touched
-  `connect`, `load_mapping` or `cutover`, where the duplicated key, the missing
-  upsert and the backup-after-delete live. The control is **2/5** under the same
-  oracle, so composition supplies no route either: what is missing is the
-  procedure — fix the mapping key and the cutover's backup order where the
-  fault is, and do not re-point the state at the pre-fixed branch. That is what
-  a migration capability would underwrite. The old wording — **build new,
-  provisional**: "the B arm is not staged, and `review-code`/`audit-code-quality`
-  were not measured against these trees" — is kept as history: the decision no
-  longer rests on it.
-- **Next step:** a `build` follow-up spec, which owes the one cell this screen
-  cannot supply: a staged-only copy of `migration-sliced-cutover` (no
-  `corrected` branch, no state switch) as its first case, so a draw cannot green
-  the check by flipping the default. `TASK-82` stays open until that follow-up
-  lands. The oracle's limit is named below and is not an edit after the draws.
+- **Decision:** **do not add** — no local migration skill ships. The `build` this
+  section carried rested on an artifact of the switch: the first cell it owed was
+  built and measured (SPEC-0096), and that cell refuted the build. With no
+  `corrected` branch to re-point, the control fixed the duplicated mapping key,
+  the retry upsert and the cutover's backup order in **5/5** clean draws, and the
+  skill arm matched it at **5/5** behavioural (**4/5** scored, one load-gate
+  miss). No rate separates the arms, so the class is **non-discriminator**: the
+  platform covers the capability the screen said it missed. The history, in
+  order: the 0.9.4 screen read **0/10** touching the fault bodies and **10/10**
+  re-pointing the state, which justified **build**; the staged-only cell then
+  showed those counts measured the answer key, not the model; the skill was
+  built, measured and removed for having no delta. The **build** and **build
+  new, provisional** wordings above are kept as the history of the decision, not
+  as its current state.
+- **Next step:** no migration skill is authored; `TASK-82` closes on the
+  refutation. `docs/analysis/data-corpus/migration-staged-only/` stays as the
+  instrument that proves a draw cannot read the answer. The oracle's limits —
+  the check's expected rows are the pipeline's own constants, so a hardcoded
+  loader could pass — are named below and are a follow-up with its own budget,
+  not an edit after the draws.
 
 **The composition arm, measured (SPEC-0093).**
 `evals/implement-from-prompt/fixtures/15/` is `migration-sliced-cutover/` copied
@@ -362,6 +384,63 @@ the run is green) — and it would not repair the switch either, because
 tree, the oracle stays as specified, and the tree's embedded answer key is the
 declared limit (section 6), not a thing to edit after the draws.
 
+**The build's first cell refuted the build (SPEC-0096; the run dirs are kept).**
+`docs/analysis/data-corpus/migration-staged-only/` is `migration-sliced-cutover/`
+copied with the `FIXTURE_STATE` switch removed: one state, both faults, one
+check. The two finding lines are byte-identical to the `staged` output above, and
+no environment variable changes the result; `pipeline.py` keeps the missing
+unique key on `customer_map.legacy_id`, the plain insert on retry and the
+backup-after-delete cutover, so exit 0 is reachable only by fixing those three
+code paths. treeHash
+`8ff1947dbf41b9fd93f4769536bca923a713eba39ed365ac6eb3e65e53b00f84`; per file
+`AGENTS.md` `5573d62d…`, `check.py` `ccde1c56…` (the 0.9.4 tree's `1c3d7525…`),
+`pipeline.py` `aac5df1c…` (the 0.9.4 tree's `3d05b256…`) — the pipeline keeps the
+same three faults and defaults with the switch, `state()`/`fixes()` and the
+`fixture_state` parameters removed; the check keeps its sequence, findings and
+`PASS` line with the switch call sites and the documented command adjusted.
+
+The case asked the SPEC-0093 prompt, unchanged — "The migration is failing its
+contract. Fix it." — and asserted the skill under test, the tree's own `check.py`
+(`ranpass`), `changed pipeline.py`, and `unchanged check.py`/`AGENTS.md`.
+
+Measured 2026-11-19 with `node scripts/eval.mjs compare migrate-data-pipeline 1
+--repeat 5 --root skills` at `repoSha d625d1e`; model
+`opencode-go/deepseek-v4.1-flash` (config default), level `behavior`,
+concurrency 4, detector `cf2e2e319d975a5b`, five draws per arm. Both arms staged
+the same fixture (`fixtureHash e3017d61…`, the staged tree as it was measured
+before the move) and prompt (`promptHash 20739417…`).
+
+| arm | run directory | clean / check-eval-run | scored | behavioural | red assertions |
+| --- | --- | --- | --- | --- | --- |
+| without skill | `2026-11-19T09-08-40--migrate-data-pipeline--without-skill` | 5/5, `findings=0` | 0/5 | 5/5 | r1–r5 `skill migrate-data-pipeline` (declared load; control arm) |
+| with skill | `2026-11-19T09-15-09--migrate-data-pipeline` | 5/5, `findings=1` | 4/5 | 5/5 | r2 `skill migrate-data-pipeline` (load gate) |
+
+**The reds, named.** Every control red is the declared `skill` load assertion,
+which the control arm cannot pass by construction; the four behavioural
+assertions pass in all five control draws. On the skill arm r2 never loaded the
+skill — `skillGate.source` is null, so `check-eval-run` counts the miss
+(`findings=1`) — and fixed both faults anyway; r1, r3, r4 and r5 loaded it and
+passed every assertion. Both runs are `isolated=yes`, `skillLeaks=0`,
+`hostReads=0`.
+
+**Class: non-discriminator — and the retraction.** With the answer key removed,
+the control closed the mapping key, the retry upsert and the backup-before-delete
+cutover in **5/5** clean draws, on the fault bodies, and left `check.py` and
+`AGENTS.md` byte-identical; the skill arm reached the same fix in **5/5**
+behavioural draws with r2 never loading the skill. No rate separates the arms, so
+the cell does not underwrite the skill: **0/10** of SPEC-0093 was the state
+switch, not a gap the model could not cross. The skill this section had decided
+to build was authored, measured on this tree and **removed** for having no delta;
+`TASK-82` closes on that negative result. The tree is kept as the instrument, not
+as a candidate's fixture.
+
+**The limits, named.** The check derives its expectations from `pipeline.py`'s own
+constants, so a loader hardcoded to the expected snapshot could pass; `changed
+pipeline.py` catches only an untouched file. n=5, as everywhere in this memo,
+cannot exclude a small effect. The abandoned first attempt
+`2026-11-15T15-22-12--migrate-data-pipeline--without-skill` is `history` — four
+draws stalled at 0 tokens / 0 steps after a host restart, no clean draw, no
+count.
 
 ### `contract`
 
@@ -480,7 +559,19 @@ declared limit (section 6), not a thing to edit after the draws.
   on that switch (nine on `state()`'s default, one on `fixes()`'s `staged` line)
   and none on the fault body, and `ranpass` recorded three of them as passes.
   `migration` therefore still needs the staged-only copy, and it is the `build`
-  follow-up's first cell rather than a screen.
+  follow-up's first cell rather than a screen. That copy now exists
+  (`docs/analysis/data-corpus/migration-staged-only/`, SPEC-0096) and its
+  measured cell is a **non-discriminator** (§4 `migration`): with the switch gone
+  the control fixes both faults in 5/5 clean draws, so the answer-key limit is
+  closed here, the **build is retracted**, and the skill the section had
+  underwritten was removed for having no delta.
+- **The migration check reads the pipeline's own constants.** The staged-only
+  check derives its expected rows, slices and mapping from `pipeline.py` itself,
+  so a loader hardcoded to that snapshot can pass without being idempotent, and
+  `changed pipeline.py` catches only an untouched file. Replacing it with a
+  property-based check is a follow-up with its own budget; it is not an edit
+  after the draws. The same limit applies to every Python tree here, and to the
+  SQL trees through their own inline constants.
 - **The A/B control also solves the contract cells.** The measured model
   reproduced every non-load assertion in all four cells without a skill (section
   7). That is a limit of the measurement's discriminating power, not evidence
