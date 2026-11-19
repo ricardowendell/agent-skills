@@ -1,7 +1,7 @@
 ---
 id: SPEC-0102
 title: Generated documents carry their certainty
-status: ready
+status: implemented
 priority: high
 task: TASK-125
 created_at: 2026-11-19
