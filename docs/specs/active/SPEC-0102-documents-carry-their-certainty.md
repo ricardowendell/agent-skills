@@ -1,7 +1,7 @@
 ---
 id: SPEC-0102
 title: Generated documents carry their certainty
-status: draft
+status: ready
 priority: high
 task: TASK-125
 created_at: 2026-11-19
@@ -81,6 +81,19 @@ that has no code yet.
   product tree) at 1–2 draws each, and record the skillHash, the staleness delta
   and the reason in `docs/evals/coverage.md` with the words "screening, not a
   separation claim".
+
+  **Pass criterion, fixed before the first draw.** Case 6 and case 1 machine
+  `assert:` lines must stand at their recorded counts, **and** the generated
+  `docs/product/vision.md` in the draw must carry a `certainty:` frontmatter map
+  whose keys match its section headings. A draw that creates the tree without the
+  map has not exercised this change, whatever its assertions say.
+
+  **Stop after the first draw.** One draw of case 6 answers whether the templates
+  survive being written; only if it holds does case 1 run.
+
+  **Fallback, decided now.** If the map is dropped by the model while the
+  assertions pass, the answer is a template that makes the map harder to omit —
+  not a claim that the label exists.
 - **F6 — publish.** One `CHANGELOG.md` `[Unreleased]` line.
 
 **Blast radius.** Seven template bodies and one step of `SKILL.md`, plus the
@@ -152,7 +165,9 @@ certainty:
    `node --test skills/bootstrap-project-harness/scripts/*.test.mjs` passes
    (template parity included), and `spec-check` reports no errors.
 7. Screening on cases 6 and 1 is recorded with the skillHash move, the staleness
-   delta and the words "screening, not a separation claim"; no rate is written.
+   delta and the words "screening, not a separation claim"; the first draw of case
+   6 runs alone, the pass criterion in Scope > F5 holds in both halves, and no
+   rate is written.
 
 ## Open Questions
 
