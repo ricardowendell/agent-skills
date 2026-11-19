@@ -1,7 +1,7 @@
 ---
 id: SPEC-0101
 title: The index keeps stage scopes and names what it is not
-status: in_progress
+status: implemented
 priority: low
 task: TASK-131
 created_at: 2026-11-19

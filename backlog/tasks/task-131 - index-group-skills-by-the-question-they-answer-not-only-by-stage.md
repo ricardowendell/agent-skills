@@ -1,7 +1,7 @@
 ---
 id: TASK-131
 title: 'index: group skills by the question they answer, not only by stage'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-11-19T14:01:00Z'
 labels:
@@ -28,3 +28,21 @@ Origin: docs/inbox/2026-11-19-skills-componiveis-com-evidencia.md (10:48). Curre
 - [ ] #3 The file stays data: no SKILL.md frontmatter edited, no skillHash moves.
 - [ ] #4 The selection-registry boundary is stated in the file's `about`.
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-11-19T16:20:10.091Z
+
+---
+
+Decided 2026-11-19 and landed in SPEC-0101 (15421a2): keep the stage scopes, do not regroup.
+
+The deciding fact is structural, not aesthetic. The proposed six groups are establish the environment, understand and decide, prepare and implement, verify, observe, maintain, and capture-idea plus record-decision appear in none of them; the note places them "available throughout", which a closed index with an exactly-once invariant cannot encode. Adopting the groups would either orphan two skills or reintroduce the catch-all bucket SPEC-0086 deliberately avoided.
+
+What was traded: the index keeps answering "where in the lifecycle", not "what can I ask for". README.md carries the workflow, so nothing described the usage view twice. about now says both things, including that this is catalog organization and not a selection registry (#9).
+
+No member moved and no SKILL.md was edited, so check-staleness is unchanged at 85 cited / 55 stale / 3 uncited.
+
+---
+<!-- COMMENTS:END -->
