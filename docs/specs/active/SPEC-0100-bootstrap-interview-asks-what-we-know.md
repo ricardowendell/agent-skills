@@ -1,7 +1,7 @@
 ---
 id: SPEC-0100
 title: The bootstrap interview asks what we know
-status: ready
+status: implemented
 priority: high
 task: TASK-124
 created_at: 2026-11-19
