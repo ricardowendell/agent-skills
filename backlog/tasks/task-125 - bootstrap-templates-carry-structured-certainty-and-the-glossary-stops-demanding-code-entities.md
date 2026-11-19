@@ -3,9 +3,10 @@ id: TASK-125
 title: >-
   bootstrap: templates carry structured certainty, and the glossary stops
   demanding code entities
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-11-19T14:01:00Z'
+updated_date: '2026-11-19T18:33:00Z'
 labels:
   - skills
 dependencies:
