@@ -26,6 +26,7 @@ files:
   - docs/evals/coverage.md
   - CHANGELOG.md
   - docs/specs/active/SPEC-0102-documents-carry-their-certainty.md
+  - docs/prompts/SPEC-0102-documents-carry-their-certainty.prompt.md
 tests:
   - node scripts/validate-skills.mjs --root skills
   - node scripts/spec-check.mjs --spec docs/specs/active/SPEC-0102-documents-carry-their-certainty.md
