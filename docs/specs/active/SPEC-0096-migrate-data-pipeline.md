@@ -15,16 +15,14 @@ related_decisions: []
 depends_on: []
 blocks: []
 files:
-  - skills/migrate-data-pipeline/SKILL.md
-  - skills.index.json
-  - README.md
-  - evals/migrate-data-pipeline/cases.md
-  - evals/migrate-data-pipeline/fixtures/1/AGENTS.md
-  - evals/migrate-data-pipeline/fixtures/1/pipeline.py
-  - evals/migrate-data-pipeline/fixtures/1/check.py
+  - docs/analysis/data-corpus/migration-staged-only/AGENTS.md
+  - docs/analysis/data-corpus/migration-staged-only/pipeline.py
+  - docs/analysis/data-corpus/migration-staged-only/check.py
+  - docs/analysis/data-corpus/README.md
   - docs/analysis/data-corpus/decision.md
   - docs/evals/coverage.md
   - CHANGELOG.md
+  - backlog/tasks/task-82 - data-migrate-data-pipeline-com-equivalencia-semantica-e-rollback-issue-17.md
   - docs/specs/active/SPEC-0096-migrate-data-pipeline.md
 tests:
   - node scripts/validate-skills.mjs --root skills
