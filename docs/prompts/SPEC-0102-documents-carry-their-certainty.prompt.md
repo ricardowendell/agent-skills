@@ -1,13 +1,13 @@
 ---
 spec: SPEC-0102
-spec_sha: 8317d535a61a3d038ce75c7b33783506a3ba4dc9e07f90c365198abb7b496ca6
+spec_sha: 0fb2e0b8413a175123f661320cd674f1d2125b642464aecbc39fae953caa99b4
 ---
 
 # Implementation Prompt: SPEC-0102 Generated documents carry their certainty
 
 ## Source Spec
 
-- `docs/specs/active/SPEC-0102-documents-carry-their-certainty.md` (pin `8317d535…`)
+- `docs/specs/active/SPEC-0102-documents-carry-their-certainty.md` (pin `0fb2e0b8…`)
 - Blocks: SPEC-0103 (the loading boundary), which needs this vocabulary to exist.
 - Sibling: SPEC-0100 (implemented) already made the interview record a candidate
   and report three facts; this spec gives those answers a place to land.
