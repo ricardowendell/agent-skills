@@ -1,13 +1,13 @@
 ---
 spec: SPEC-0100
-spec_sha: 973e3aed895020ac44a88fb37791e971facbb4b0ba8ef9713a97f951bbe6707a
+spec_sha: 750d0b6f4c1802d9cdcab00fb083397e62ca2f88c498df3bc6ee43d736ceca9c
 ---
 
 # Implementation Prompt: SPEC-0100 The bootstrap interview asks what we know
 
 ## Source Spec
 
-- `docs/specs/active/SPEC-0100-bootstrap-interview-asks-what-we-know.md` (pin `973e3aed…`)
+- `docs/specs/active/SPEC-0100-bootstrap-interview-asks-what-we-know.md` (pin `750d0b6f…`)
 - Depends on: nothing. `SPEC-0099` (implemented) is a sibling, not a prerequisite.
 - Unblocks: `TASK-125` (templates carry structured certainty).
 

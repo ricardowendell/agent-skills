@@ -188,8 +188,9 @@ Implemented in the `pdlc/SPEC-0100-bootstrap-interview-asks-what-we-know` worktr
 - Full `selftest` in the worktree: `eval check` parsed 121 cases, 574 + 24 + 42 tests passing, sensor parity 2/2, `check-evidence` 6 documents 0 errors.
 - Tree hash moved `f91268cf93d5…` → `d4b5ea4e5309…`; `check-staleness` moved 57 → 59 stale cited cells, the two new ones being `bootstrap-project-harness#1` and `#15`.
 - **Screening, case 1, one draw:** `2026-11-19T13-48-47--bootstrap-project-harness`, `passed [1/1]` at tree `d4b5ea4e5309…`. The transcript states the three facts, and the next action is "obtain a human decision" — correct for a non-interactive fixture, which is why the criterion was corrected above with its run directory cited.
+- **Screening, case 2, one draw:** `2026-11-19T13-59-59--bootstrap-project-harness`, `passed [1/1]` at the same tree. The transcript states the three facts and reports additive preservation in named terms (`dev`/`start`/`custom:build` untouched, `package.json` merged without changing a key, no second tool added).
 
-Case 2 is pending; no rate is claimed anywhere, and this is screening, not a separation claim.
+Two draws are a direction, not a rate, and this is screening, not a separation claim.
 
 ## Open Questions
 

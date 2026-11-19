@@ -1359,8 +1359,14 @@ non-interactively, so no hypothesis is ever recorded and the correct ending is
 "obtain a human decision". That wording was unsatisfiable for this fixture by
 construction and the draw cannot discriminate it. The criterion now reads: the
 three facts present, and a next action that is **one of the three named**, with
-`investigate` required only where an unresolved hypothesis exists (AC5). Case 2
-is still pending; no rate is claimed.
+`investigate` required only where an unresolved hypothesis exists (AC5).
+
+**Case 2 then ran, one draw.** Run directory
+`2026-11-19T13-59-59--bootstrap-project-harness`, `passed [1/1]` at the same
+tree. Its transcript states the three facts and records additive preservation
+explicitly: `dev`/`start`/`custom:build` untouched, `package.json` merged without
+changing an existing key, no second linter/formatter/runner/hook manager. No rate
+is claimed for either case: two draws are a direction.
 
 ## How to update
 
