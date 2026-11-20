@@ -55,7 +55,11 @@ function changedFiles(base) {
 }
 
 function specCorpus(root) {
-  const dirs = [join(root, "docs", "specs"), join(root, "docs", "specs", "active")]
+  const dirs = [
+    join(root, "docs", "specs"),
+    join(root, "docs", "specs", "active"),
+    join(root, "docs", "specs", "done"),
+  ]
   const specs = []
   for (const dir of dirs) {
     if (!existsSync(dir)) continue
