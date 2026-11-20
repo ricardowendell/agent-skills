@@ -16,6 +16,33 @@ skills/find-skills/
 skills/orchestration/
 skills/skill-creator/
 
+# Vendored upstream skill packs (Vercel, Anthropic, Databricks, Data Contract CLI,
+# oh-my-opencode-slim, Hardik Pandya). Kept for local use; see SKILL-SOURCES.md
+# in the opencode-config repo for provenance.
+skills/breaking-change-check/
+skills/clonedeps/
+skills/create-data-contract/
+skills/databricks-core/
+skills/databricks-dabs/
+skills/databricks-jobs/
+skills/databricks-pipelines/
+skills/databricks-serverless/
+skills/datacontract-cli/
+skills/simplify/
+skills/stop-slop/
+skills/vercel-react-best-practices/
+skills/webapp-testing/
+
+# Installed as one collection (ships agents/openai.yaml)
+skills/big-pics-little-words/
+skills/design-artifact/
+skills/html/
+skills/html-plan/
+skills/one-pager/
+
+# Symlink into Homebrew: /opt/homebrew/opt/hunk/libexec/skills/hunk-review
+skills/hunk-review
+
 # Secrets
 .env*
 .lane/
